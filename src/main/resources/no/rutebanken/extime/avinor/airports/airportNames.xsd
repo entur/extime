@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="airportNames">
+    <xs:annotation>
+      <xs:documentation xml:lang="en">Root element</xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="airportName" minOccurs="0" maxOccurs="unbounded">
+          <xs:complexType>
+            <xs:attribute name="code" type="airportIDType" use="required"/>
+            <xs:attribute name="name" type="nameType" use="required"/>
+            <xs:attribute name="icao" type="icaoType" use="optional"/>
+            <xs:attribute name="shortname8" type="name8Type" use="optional"/>
+            <xs:attribute name="shortname15" type="name15Type" use="optional"/>
+            <xs:attribute name="name_uk" type="nameType" use="optional"/>
+            <xs:attribute name="shortname8_uk" type="name8Type" use="optional"/>
+            <xs:attribute name="shortname15_uk" type="name15Type" use="optional"/>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:simpleType name="airportIDType">
+    <xs:restriction base="xs:NMTOKEN">
+      <xs:pattern value="([0-9A-Z]){3}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="icaoType">
+    <xs:restriction base="xs:NMTOKEN">
+      <xs:pattern value="([0-9A-Z]){4}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="nameType">
+    <xs:restriction base="xs:string">
+      <xs:maxLength value="30"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="name8Type">
+    <xs:restriction base="xs:string">
+      <xs:maxLength value="8"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="name15Type">
+    <xs:restriction base="xs:string">
+      <xs:maxLength value="15"/>
+    </xs:restriction>
+  </xs:simpleType>
+</xs:schema>

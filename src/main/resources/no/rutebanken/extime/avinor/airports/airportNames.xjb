@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<jaxb:bindings version="2.1" xmlns:jaxb="http://java.sun.com/xml/ns/jaxb"
+	xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	
+	<jaxb:globalBindings>
+		<jaxb:javaType name="java.util.Date" xmlType="xs:date"
+			parseMethod="no.rutebanken.extime.jaxb.DateAdapter.parseDate"
+			printMethod="no.rutebanken.extime.jaxb.DateAdapter.printDate"/>
+		<jaxb:javaType name="java.util.Date" xmlType="xs:dateTime"
+			parseMethod="no.rutebanken.extime.jaxb.DateAdapter.parseDate"
+			printMethod="no.rutebanken.extime.jaxb.DateAdapter.printDate"/>
+		<jaxb:serializable uid="1"/>
+	</jaxb:globalBindings>
+	
+	
+	<jaxb:bindings schemaLocation="airportNames.xsd" node="/xs:schema">
+		<jaxb:schemaBindings>
+			<jaxb:package name="no.avinor.flydata.airports"/>
+		</jaxb:schemaBindings>
+	</jaxb:bindings>
+	
+</jaxb:bindings>
