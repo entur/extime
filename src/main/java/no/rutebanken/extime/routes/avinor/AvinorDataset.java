@@ -1,17 +1,10 @@
 package no.rutebanken.extime.routes.avinor;
 
 import java.io.Serializable;
-import java.util.List;
-
-import no.avinor.flydata.airlines.AirlineNames;
-import no.avinor.flydata.airports.AirportNames;
-import no.avinor.flydata.traffic.Airport;
 
 public class AvinorDataset implements Serializable {
 
-	/**
-	 * 
-	 */
+/*
 	private static final long serialVersionUID = -325255143988978232L;
 
 	private List<Airport> airports;
@@ -43,5 +36,6 @@ public class AvinorDataset implements Serializable {
 	private AirportNames airportNames;
 	
 	private AirlineNames airlineNames;
-	
+*/
+
 }

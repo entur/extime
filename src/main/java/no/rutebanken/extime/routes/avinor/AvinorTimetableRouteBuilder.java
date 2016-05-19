@@ -1,17 +1,13 @@
 package no.rutebanken.extime.routes.avinor;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import no.rutebanken.extime.routes.BaseRouteBuilder;
 import org.apache.camel.Exchange;
 import org.apache.camel.converter.jaxb.JaxbDataFormat;
 import org.apache.camel.processor.aggregate.AggregationStrategy;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import no.avinor.flydata.airlines.AirlineNames;
-import no.avinor.flydata.traffic.Airport;
-import no.rutebanken.extime.routes.BaseRouteBuilder;
+import java.util.ArrayList;
 
 /**
  * Performs deeper validation of GTFS files and distribute further.
@@ -105,6 +101,7 @@ public class AvinorTimetableRouteBuilder extends BaseRouteBuilder {
     class AirlineNameAggregationStrategy implements AggregationStrategy {
         
     	  public Exchange aggregate(Exchange original, Exchange resource) {
+/*
     	        @SuppressWarnings("unchecked")
 				List<Airport> originalBody = (List<Airport>) original.getIn().getBody();
     	        Object mergeResult = originalBody; // TODO
@@ -114,7 +111,9 @@ public class AvinorTimetableRouteBuilder extends BaseRouteBuilder {
     	            original.getIn().setBody(mergeResult);
     	        }
     	        return original;
-    	    }
+*/
+              return original;
+          }
     }
 
     class AirportNameAggregationStrategy implements AggregationStrategy {

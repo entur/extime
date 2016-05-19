@@ -61,6 +61,14 @@
     </dependencyManagement>
 
     <dependencies>
+        <!-- Compile Scope -->
+        <dependency>
+            <groupId>org.jvnet.jaxb2_commons</groupId>
+            <artifactId>jaxb2-basics-runtime</artifactId>
+            <version>0.11.0</version>
+            <scope>compile</scope>
+        </dependency>
+
         <!-- Camel -->
         <dependency>
             <groupId>org.apache.camel</groupId>
@@ -187,48 +195,71 @@
             <plugin>
                 <groupId>org.jvnet.jaxb2.maven2</groupId>
                 <artifactId>maven-jaxb2-plugin</artifactId>
-                <version>0.12.3</version>
+                <version>0.13.1</version>
                 <executions>
                     <execution>
-                        <id>airlines</id>
+                        <id>xjc-flights</id>
+                        <phase>generate-sources</phase>
                         <goals>
                             <goal>generate</goal>
                         </goals>
                         <configuration>
-                            <schemaDirectory>src/main/resources/no/rutebanken/extime/avinor/airlines</schemaDirectory>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>airports</id>
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
-                        <configuration>
-                            <schemaDirectory>src/main/resources/no/rutebanken/extime/avinor/airports</schemaDirectory>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>feed</id>
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
-                        <configuration>
+                            <extension>true</extension>
+                            <generatePackage>no.avinor.flydata.xjc.model.feed</generatePackage>
+                            <generateDirectory>${project.build.directory}/generated-sources/feed</generateDirectory>
+                            <args>
+                                <arg>-Xequals</arg>
+                                <arg>-XhashCode</arg>
+                                <arg>-XtoString</arg>
+                            </args>
                             <schemaDirectory>src/main/resources/no/rutebanken/extime/avinor/feed</schemaDirectory>
+                            <schemaIncludes>
+                                <include>XmlFeed-Named.xsd</include>
+                            </schemaIncludes>
+                            <bindingIncludes>
+                                <include>feed.xjb</include>
+                            </bindingIncludes>
+                            <plugins>
+                                <plugin>
+                                    <groupId>org.jvnet.jaxb2_commons</groupId>
+                                    <artifactId>jaxb2-basics</artifactId>
+                                    <version>0.11.0</version>
+                                </plugin>
+                            </plugins>
                         </configuration>
                     </execution>
                     <execution>
-                        <id>statuses</id>
+                        <id>xjc-airports</id>
+                        <phase>generate-sources</phase>
                         <goals>
                             <goal>generate</goal>
                         </goals>
                         <configuration>
-                            <schemaDirectory>src/main/resources/no/rutebanken/extime/avinor/statuses</schemaDirectory>
+                            <extension>true</extension>
+                            <generatePackage>no.avinor.flydata.xjc.model.airport</generatePackage>
+                            <generateDirectory>${project.build.directory}/generated-sources/airports</generateDirectory>
+                            <args>
+                                <arg>-Xequals</arg>
+                                <arg>-XhashCode</arg>
+                                <arg>-XtoString</arg>
+                            </args>
+                            <schemaDirectory>src/main/resources/no/rutebanken/extime/avinor/airports</schemaDirectory>
+                            <schemaIncludes>
+                                <include>airportNames.xsd</include>
+                            </schemaIncludes>
+                            <bindingIncludes>
+                                <include>airportNames.xjb</include>
+                            </bindingIncludes>
+                            <plugins>
+                                <plugin>
+                                    <groupId>org.jvnet.jaxb2_commons</groupId>
+                                    <artifactId>jaxb2-basics</artifactId>
+                                    <version>0.11.0</version>
+                                </plugin>
+                            </plugins>
                         </configuration>
                     </execution>
                 </executions>
-                <configuration>
-                    <forceRegenerate>true</forceRegenerate>
-                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

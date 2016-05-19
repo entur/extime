@@ -1,16 +1,11 @@
 package no.rutebanken.extime.routes.avinor;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 import org.springframework.stereotype.Component;
-
-import no.avinor.flydata.traffic.Airport;
-import no.avinor.flydata.traffic.Airport.Flights.Flight;
 
 @Component(value = "avinorTimetableParser")
 public class AvinorTimetableParser {
 
+/*
 	public Object parse(List<Airport> airports) {
 
 		for (Airport airport : airports) {
@@ -29,5 +24,6 @@ public class AvinorTimetableParser {
 		return dataset;
 
 	}
+*/
 
 }
