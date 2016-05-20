@@ -1,134 +1,77 @@
 package no.rutebanken.extime.routes.avinor;
 
+import no.rutebanken.extime.model.AirportFlightDataSet;
+import no.rutebanken.extime.model.IATA;
 import no.rutebanken.extime.routes.BaseRouteBuilder;
 import org.apache.camel.Exchange;
-import org.apache.camel.converter.jaxb.JaxbDataFormat;
+import org.apache.camel.LoggingLevel;
+import org.apache.camel.Processor;
+import org.apache.camel.component.http4.HttpMethods;
 import org.apache.camel.processor.aggregate.AggregationStrategy;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
-/**
- * Performs deeper validation of GTFS files and distribute further.
- */
 @Component
 public class AvinorTimetableRouteBuilder extends BaseRouteBuilder {
 
-	@Value("${extime.avinor.airports}")
-	private String airports;
-	
+    static final String HEADER_AIRPORT_IATA = "AirportIATA";
+
     @Override
     public void configure() throws Exception {
         super.configure();
-        
-        String[] airportsSplitted = airports.split(",");
+        getContext().setTracing(true);
 
-        JaxbDataFormat feedFormat = new JaxbDataFormat("no.avinor.flydata.traffic");
-        JaxbDataFormat airlinesFormat = new JaxbDataFormat("no.avinor.flydata.airlines");
-        JaxbDataFormat airportsFormat = new JaxbDataFormat("no.avinor.flydata.airports");
-        
-        // Cron task a few times a day
-        from("quartz2://pollAvinorTimetable?fireNow=true&trigger.repeatCount=0")
-        .log("Getting Avinor timetable")
-        .setBody(constant(airportsSplitted))
-        // For each airport in property extime.avinor.airports fetch data
-        .split(body(),new ArrayListAggregationStrategy())
-	        .parallelProcessing()
-	        .setHeader(Exchange.HTTP_QUERY, simple("TimeFrom=0&TimeTo=24&direction=D&airport=${body}"))
-	        .setHeader(Exchange.HTTP_METHOD, constant(org.apache.camel.component.http4.HttpMethods.GET))
-	        .to("http4://flydata.avinor.no/XmlFeed.asp")
-	        .unmarshal(feedFormat)
-        .end()
-        // Filter away flights to other coutries (dom_int=D(omestic))
-        .to("bean:avinorTimetableParser")
-        // Fetch airline names for use as operator
-      //  .enrich("direct:airlineNames",new AirlineNameAggregationStrategy())
-        // Fetch airport names for use as stop name
-      //  .enrich("direct:airportNames",new AirportNameAggregationStrategy())
-        .to("bean:avinor2GTFSConverter")
-        .to("activemq:queue:ExtimeTimetables")
-        .log("Finished processing timetable")
-        .routeId("avinorTimetable");
-        
-        from("direct:airlineNames")
-        .setHeader(Exchange.HTTP_METHOD, constant(org.apache.camel.component.http4.HttpMethods.GET))
-        .to("http4://flydata.avinor.no/airlineNames.asp")
-        .unmarshal(airlinesFormat)
-        .routeId("avinorAirlineNames")
-        .end();
-        
-        from("direct:airportNames")
-        .setHeader(Exchange.HTTP_METHOD, constant(org.apache.camel.component.http4.HttpMethods.GET))
-        .to("http4://flydata.avinor.no/airportNames.asp")
-        .unmarshal(airportsFormat)
-        .routeId("avinorAirportNames")
-        .end();
-        
-        
-        
-        
-        // Combine/filter flights (example: SDN-SOG-OSL will be returned 3 times, one for each airport)
-        
-        // Serialize data to common format
-        
-        // Send to queue for exchange format serialization
+        from("{{avinor.timetable.scheduler.cron}}")
+                .routeId("AvinorTimetableSchedulerStarter")
+                .process(new AirportIATAProcessor()).id("AirportIATAProcessor")
+                .split(body(), new AirportFlightAggregationStrategy()).parallelProcessing()
+                    .log(LoggingLevel.DEBUG, this.getClass().getName(), "Processing airport: ${body}")
+                    .setHeader(HEADER_AIRPORT_IATA, simple("${body}"))
+                    .to("direct:fetchTimetableForAirport").id("FetchTimetableProcessor")
+                .end()
+                .to("mock:processAggregatedFlights")
+        ;
 
+        from("direct:fetchTimetableForAirport")
+                .routeId("TimetableFetcher")
+                .log(LoggingLevel.DEBUG, this.getClass().getName(), "Fetching flights for ${body}")
+                .setHeader(Exchange.HTTP_METHOD, constant(HttpMethods.GET))
+                .setHeader(Exchange.HTTP_QUERY, simpleF("airport=${header.%s}&timeFrom=0&timeTo=72", HEADER_AIRPORT_IATA))
+                .setBody(constant(null))
+                .doTry()
+                    .to("http4://flydata.avinor.no/XmlFeed.asp").id("FetchTimetableProcessor")
+                .doCatch(Exception.class)
+                    .log(LoggingLevel.ERROR, this.getClass().getName(), "Could not connect to Avinor feed: ${exception}")
+                .end()
+        ;
     }
-    
-  
-     
-    //simply combines Exchange body values into an ArrayList<Object>
-    class ArrayListAggregationStrategy implements AggregationStrategy {
-        
-        @SuppressWarnings("unchecked")
-		public Exchange aggregate(Exchange oldExchange, Exchange newExchange) {
-            Object newBody = newExchange.getIn().getBody();
-            ArrayList<Object> list = null;
+
+    class AirportIATAProcessor implements Processor {
+        @Override
+        public void process(Exchange exchange) throws Exception {
+            exchange.getIn().setBody(IATA.values());
+        }
+    }
+
+    class AirportFlightAggregationStrategy implements AggregationStrategy {
+        @Override
+        public Exchange aggregate(Exchange oldExchange, Exchange newExchange) {
+            String airportIATACode = newExchange.getIn().getHeader(HEADER_AIRPORT_IATA, String.class);
+            @SuppressWarnings("unchecked")
+            AirportFlightDataSet newExchangeBody = newExchange.getIn().getBody(AirportFlightDataSet.class);
             if (oldExchange == null) {
-                list = new ArrayList<Object>();
-                list.add(newBody);
-                newExchange.getIn().setBody(list);
+                Map<String, AirportFlightDataSet> airportFlightsMap = new HashMap<>();
+                airportFlightsMap.put(airportIATACode, newExchangeBody);
+                newExchange.getIn().setBody(airportFlightsMap);
                 return newExchange;
             } else {
-                list = oldExchange.getIn().getBody(ArrayList.class);
-                list.add(newBody);
+                @SuppressWarnings("unchecked")
+                Map<String, AirportFlightDataSet> airportFlightsMap = oldExchange.getIn().getBody(Map.class);
+                airportFlightsMap.put(airportIATACode, newExchangeBody);
                 return oldExchange;
             }
         }
     }
-
-    class AirlineNameAggregationStrategy implements AggregationStrategy {
-        
-    	  public Exchange aggregate(Exchange original, Exchange resource) {
-/*
-    	        @SuppressWarnings("unchecked")
-				List<Airport> originalBody = (List<Airport>) original.getIn().getBody();
-    	        Object mergeResult = originalBody; // TODO
-    	        if (original.getPattern().isOutCapable()) {
-    	            original.getOut().setBody(mergeResult);
-    	        } else {
-    	            original.getIn().setBody(mergeResult);
-    	        }
-    	        return original;
-*/
-              return original;
-          }
-    }
-
-    class AirportNameAggregationStrategy implements AggregationStrategy {
-        
-    	  public Exchange aggregate(Exchange original, Exchange resource) {
-    	        Object originalBody = original.getIn().getBody();
-    	        Object resourceResponse = resource.getIn().getBody();
-    	        Object mergeResult = originalBody; // TODO
-    	        if (original.getPattern().isOutCapable()) {
-    	            original.getOut().setBody(mergeResult);
-    	        } else {
-    	            original.getIn().setBody(mergeResult);
-    	        }
-    	        return original;
-    	    }
-    }
-
 }
