@@ -1,5 +1,6 @@
 package no.rutebanken.extime.routes.avinor;
 
+import no.avinor.flydata.xjc.model.airport.AirportName;
 import no.avinor.flydata.xjc.model.feed.Flight;
 import no.rutebanken.extime.model.AirportFlightDataSet;
 import no.rutebanken.extime.model.FlightDirection;
@@ -47,6 +48,8 @@ public class AvinorTimetableRouteBuilder extends BaseRouteBuilder {
                     .to("direct:fetchAirportDepartures").id("FetchDeparturesProcessor")
                     .to("direct:fetchAirportArrivals").id("FetchArrivalsProcessor")
                 .end()
+                //.bean("enricherBean", "initAggregate")
+                .enrich("direct:fetchAirportNameResource", new AirportEnricherAggregationStrategy())
         ;
 
         from("direct:fetchAirportDepartures")
@@ -75,12 +78,26 @@ public class AvinorTimetableRouteBuilder extends BaseRouteBuilder {
                         HEADER_AIRPORT_IATA, HEADER_FLIGHTS_TIMEFROM, HEADER_FLIGHTS_TIMETO, HEADER_FLIGHTS_DIRECTION))
                 .setBody(constant(null))
                 .doTry()
-                    .to("{{avinor.timetable.feed.endpoint}}").id("TimetableFetchProcessor")
+                    .to("{{avinor.timetable.feed.endpoint}}").id("FetchTimetableFeedProcessor")
                 .doCatch(Exception.class)
                     .log(LoggingLevel.ERROR, this.getClass().getName(), "Could not connect to {{avinor.timetable.feed.endpoint}}: ${exception}")
+                    .to("mock:error")
                 .end()
                 .split(stax(Flight.class, false), new FlightAggregationStrategy()).streaming()
                     .log(LoggingLevel.DEBUG, this.getClass().getName(), "Fetched flight with id: ${body.flightId}")
+                .end()
+        ;
+
+        from("direct:fetchAirportNameResource")
+                .routeId("AirportNameEnricher")
+                .setHeader(Exchange.HTTP_METHOD, constant(HttpMethods.GET))
+                .setHeader(Exchange.HTTP_QUERY, simple("airport=${body}&shortname=Y&ukname=Y"))
+                .setBody(constant(null))
+                .doTry()
+                    .to("{{avinor.airport.feed.endpoint}}").id("FetchAirportFeedProcessor")
+                .doCatch(Exception.class)
+                    .log(LoggingLevel.ERROR, this.getClass().getName(), "Could not connect to {{avinor.airport.feed.endpoint}}: ${exception}")
+                    .to("mock:error")
                 .end()
         ;
     }
@@ -145,7 +162,7 @@ public class AvinorTimetableRouteBuilder extends BaseRouteBuilder {
         }
     }
 
-    private class FlightAggregationStrategy implements AggregationStrategy {
+    class FlightAggregationStrategy implements AggregationStrategy {
         @Override
         public Exchange aggregate(Exchange oldExchange, Exchange newExchange) {
             Flight body = newExchange.getIn().getBody(Flight.class);
@@ -173,6 +190,25 @@ public class AvinorTimetableRouteBuilder extends BaseRouteBuilder {
 
         private boolean isDomesticFlight(Flight flight) {
             return flight.getDomInt().equalsIgnoreCase(FlightType.DOMESTIC.getCode());
+        }
+    }
+
+    class AirportEnricherAggregationStrategy implements AggregationStrategy {
+        static final String PROPERTY_ORIGINAL_BODY = "OriginalBody";
+
+        public void initAggregate(Exchange exchange) {
+            AirportFlightDataSet originalBody = exchange.getIn().getBody(AirportFlightDataSet.class);
+            exchange.setProperty(PROPERTY_ORIGINAL_BODY, originalBody);
+            String enrichParameter = exchange.getIn().getHeader(HEADER_AIRPORT_IATA, String.class);
+            exchange.getIn().setBody(enrichParameter);
+        }
+
+        public Exchange aggregate(Exchange original, Exchange resource) {
+            AirportFlightDataSet originalBody = original.getProperty(PROPERTY_ORIGINAL_BODY, AirportFlightDataSet.class);
+            AirportName enrichment = resource.getIn().getBody(AirportName.class);
+            originalBody.setAirportName(enrichment);
+            original.getIn().setBody(originalBody);
+            return original;
         }
     }
 }
