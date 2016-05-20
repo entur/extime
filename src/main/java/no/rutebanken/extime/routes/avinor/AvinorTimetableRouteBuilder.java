@@ -3,6 +3,7 @@ package no.rutebanken.extime.routes.avinor;
 import no.avinor.flydata.xjc.model.feed.Flight;
 import no.rutebanken.extime.model.AirportFlightDataSet;
 import no.rutebanken.extime.model.FlightDirection;
+import no.rutebanken.extime.model.FlightType;
 import no.rutebanken.extime.model.IATA;
 import no.rutebanken.extime.routes.BaseRouteBuilder;
 import org.apache.camel.Exchange;
@@ -12,10 +13,9 @@ import org.apache.camel.component.http4.HttpMethods;
 import org.apache.camel.processor.aggregate.AggregationStrategy;
 import org.springframework.stereotype.Component;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
+import static org.apache.camel.component.stax.StAXBuilder.stax;
 
 @Component
 public class AvinorTimetableRouteBuilder extends BaseRouteBuilder {
@@ -79,6 +79,9 @@ public class AvinorTimetableRouteBuilder extends BaseRouteBuilder {
                 .doCatch(Exception.class)
                     .log(LoggingLevel.ERROR, this.getClass().getName(), "Could not connect to {{avinor.timetable.feed.endpoint}}: ${exception}")
                 .end()
+                .split(stax(Flight.class, false), new FlightAggregationStrategy()).streaming()
+                    .log(LoggingLevel.DEBUG, this.getClass().getName(), "Fetched flight with id: ${body.flightId}")
+                .end()
         ;
     }
 
@@ -139,6 +142,37 @@ public class AvinorTimetableRouteBuilder extends BaseRouteBuilder {
                 oldExchangeBody.getArrivalFlights().addAll(newExchangeBody);
                 return oldExchange;
             }
+        }
+    }
+
+    private class FlightAggregationStrategy implements AggregationStrategy {
+        @Override
+        public Exchange aggregate(Exchange oldExchange, Exchange newExchange) {
+            Flight body = newExchange.getIn().getBody(Flight.class);
+            if (oldExchange == null) {
+                List<Flight> airportFlights = new ArrayList<>();
+                // @todo: filter away all flights with wrong dates, due to a bug in the Avinor feed
+                // @todo check against requested start date, and if it is less, if so do not add flight
+                if (isDomesticFlight(body)) {
+                    airportFlights.add(body);
+                }
+                newExchange.getIn().setBody(airportFlights);
+                return newExchange;
+            } else {
+                @SuppressWarnings("unchecked")
+                List<Flight> airportFlights = Collections.checkedList(
+                        oldExchange.getIn().getBody(List.class), Flight.class);
+                // @todo: filter away all flights with wrong dates, due to a bug in the Avinor feed
+                // @todo check against requested start date, and if it is less, if so do not add flight
+                if (isDomesticFlight(body)) {
+                    airportFlights.add(body);
+                }
+                return oldExchange;
+            }
+        }
+
+        private boolean isDomesticFlight(Flight flight) {
+            return flight.getDomInt().equalsIgnoreCase(FlightType.DOMESTIC.getCode());
         }
     }
 }
