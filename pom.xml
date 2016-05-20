@@ -245,7 +245,7 @@
                             </args>
                             <schemaDirectory>src/main/resources/no/rutebanken/extime/avinor/airports</schemaDirectory>
                             <schemaIncludes>
-                                <include>airportNames.xsd</include>
+                                <include>airportNames-named.xsd</include>
                             </schemaIncludes>
                             <bindingIncludes>
                                 <include>airportNames.xjb</include>
