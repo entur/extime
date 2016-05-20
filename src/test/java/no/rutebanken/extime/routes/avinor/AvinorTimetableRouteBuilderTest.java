@@ -27,6 +27,11 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
             public String parseProperty(String key, String value, Properties properties) {
                 Map<String, String> testProperties = new HashMap<String, String>() {{
                     put("avinor.timetable.scheduler.cron", "direct:start");
+                    put("avinor.timetable.departures.timefrom", "0");
+                    put("avinor.timetable.departures.timeto", "72");
+                    put("avinor.timetable.arrivals.timefrom", "0");
+                    put("avinor.timetable.arrivals.timeto", "96");
+                    put("avinor.timetable.feed.endpoint", "mock:flightsFeedEndpoint");
                 }};
                 return testProperties.get(key);
             }

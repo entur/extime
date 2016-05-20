@@ -1,6 +1,8 @@
 package no.rutebanken.extime.routes.avinor;
 
+import no.avinor.flydata.xjc.model.feed.Flight;
 import no.rutebanken.extime.model.AirportFlightDataSet;
+import no.rutebanken.extime.model.FlightDirection;
 import no.rutebanken.extime.model.IATA;
 import no.rutebanken.extime.routes.BaseRouteBuilder;
 import org.apache.camel.Exchange;
@@ -10,13 +12,18 @@ import org.apache.camel.component.http4.HttpMethods;
 import org.apache.camel.processor.aggregate.AggregationStrategy;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Component
 public class AvinorTimetableRouteBuilder extends BaseRouteBuilder {
 
     static final String HEADER_AIRPORT_IATA = "AirportIATA";
+    static final String HEADER_FLIGHTS_DIRECTION = "FlightsDirection";
+    static final String HEADER_FLIGHTS_TIMEFROM = "FlightsTimeFrom";
+    static final String HEADER_FLIGHTS_TIMETO = "FlightsTimeTo";
 
     @Override
     public void configure() throws Exception {
@@ -35,15 +42,42 @@ public class AvinorTimetableRouteBuilder extends BaseRouteBuilder {
         ;
 
         from("direct:fetchTimetableForAirport")
+                .routeId("FetchTimetableMulticaster")
+                .multicast().aggregationStrategy(new FlightDirectionAggregationStrategy())
+                    .to("direct:fetchAirportDepartures").id("FetchDeparturesProcessor")
+                    .to("direct:fetchAirportArrivals").id("FetchArrivalsProcessor")
+                .end()
+        ;
+
+        from("direct:fetchAirportDepartures")
+                .routeId("DepartureFlightsFetcher")
+                .process(new DepartureFlightDirectionProcessor())
+                .setHeader(HEADER_FLIGHTS_TIMEFROM, simple("${properties:avinor.timetable.departures.timefrom}"))
+                .setHeader(HEADER_FLIGHTS_TIMETO, simple("${properties:avinor.timetable.departures.timeto}"))
+                .to("direct:fetchAirportFlights")
+                .log(LoggingLevel.DEBUG, this.getClass().getName(), "Fetched departure flights")
+        ;
+
+        from("direct:fetchAirportArrivals")
+                .routeId("ArrivalFlightsFetcher")
+                .process(new ArrivalFlightDirectionProcessor())
+                .setHeader(HEADER_FLIGHTS_TIMEFROM, simple("${properties:avinor.timetable.arrivals.timefrom}"))
+                .setHeader(HEADER_FLIGHTS_TIMETO, simple("${properties:avinor.timetable.arrivals.timeto}"))
+                .to("direct:fetchAirportFlights")
+                .log(LoggingLevel.DEBUG, this.getClass().getName(), "Fetched arrival flights")
+        ;
+
+        from("direct:fetchAirportFlights")
                 .routeId("TimetableFetcher")
                 .log(LoggingLevel.DEBUG, this.getClass().getName(), "Fetching flights for ${body}")
                 .setHeader(Exchange.HTTP_METHOD, constant(HttpMethods.GET))
-                .setHeader(Exchange.HTTP_QUERY, simpleF("airport=${header.%s}&timeFrom=0&timeTo=72", HEADER_AIRPORT_IATA))
+                .setHeader(Exchange.HTTP_QUERY, simpleF("airport=${header.%s}&timeFrom=${header.%s}&timeTo=${header.%s}&direction=${header.%s}",
+                        HEADER_AIRPORT_IATA, HEADER_FLIGHTS_TIMEFROM, HEADER_FLIGHTS_TIMETO, HEADER_FLIGHTS_DIRECTION))
                 .setBody(constant(null))
                 .doTry()
-                    .to("http4://flydata.avinor.no/XmlFeed.asp").id("FetchTimetableProcessor")
+                    .to("{{avinor.timetable.feed.endpoint}}").id("TimetableFetchProcessor")
                 .doCatch(Exception.class)
-                    .log(LoggingLevel.ERROR, this.getClass().getName(), "Could not connect to Avinor feed: ${exception}")
+                    .log(LoggingLevel.ERROR, this.getClass().getName(), "Could not connect to {{avinor.timetable.feed.endpoint}}: ${exception}")
                 .end()
         ;
     }
@@ -52,6 +86,20 @@ public class AvinorTimetableRouteBuilder extends BaseRouteBuilder {
         @Override
         public void process(Exchange exchange) throws Exception {
             exchange.getIn().setBody(IATA.values());
+        }
+    }
+
+    class DepartureFlightDirectionProcessor implements Processor {
+        @Override
+        public void process(Exchange exchange) throws Exception {
+            exchange.getIn().setHeader(HEADER_FLIGHTS_DIRECTION, FlightDirection.DEPARTURE.getCode());
+        }
+    }
+
+    class ArrivalFlightDirectionProcessor implements Processor {
+        @Override
+        public void process(Exchange exchange) throws Exception {
+            exchange.getIn().setHeader(HEADER_FLIGHTS_DIRECTION, FlightDirection.ARRIVAL.getCode());
         }
     }
 
@@ -70,6 +118,25 @@ public class AvinorTimetableRouteBuilder extends BaseRouteBuilder {
                 @SuppressWarnings("unchecked")
                 Map<String, AirportFlightDataSet> airportFlightsMap = oldExchange.getIn().getBody(Map.class);
                 airportFlightsMap.put(airportIATACode, newExchangeBody);
+                return oldExchange;
+            }
+        }
+    }
+
+    class FlightDirectionAggregationStrategy implements AggregationStrategy {
+        @Override
+        public Exchange aggregate(Exchange oldExchange, Exchange newExchange) {
+            @SuppressWarnings("unchecked")
+            List<Flight> newExchangeBody = Collections.checkedList(
+                    newExchange.getIn().getBody(List.class), Flight.class);
+            if (oldExchange == null) {
+                AirportFlightDataSet dataSet = new AirportFlightDataSet();
+                dataSet.getDepartureFlights().addAll(newExchangeBody);
+                newExchange.getIn().setBody(dataSet, AirportFlightDataSet.class);
+                return newExchange;
+            } else {
+                AirportFlightDataSet oldExchangeBody = oldExchange.getIn().getBody(AirportFlightDataSet.class);
+                oldExchangeBody.getArrivalFlights().addAll(newExchangeBody);
                 return oldExchange;
             }
         }
