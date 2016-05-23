@@ -58,6 +58,21 @@ public class FlightRouteMatcher {
                 }
             });
         });
+
+/*
+        Map<String, List<FlightRouteDataSet>> airlineRoutesList =
+                flightRouteDataSetList.stream()
+                        .collect(Collectors.groupingBy(FlightRouteDataSet::getAirlineName));
+        airlineRoutesList.forEach(
+                (airlineIATA, airlineRoutes) ->
+                {
+                    System.out.println(airlineIATA);
+                    airlineRoutes.forEach(
+                            flightRoute -> System.out.printf("   %s%n", flightRoute));
+                }
+        );
+*/
+
         System.out.printf("We have %d matches", flightRouteDataSetList.size());
         return flightRouteDataSetList;
     }
