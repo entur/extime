@@ -1,6 +1,7 @@
 package no.rutebanken.extime.model;
 
 public enum IATA {
+/*
     ALF,
     ANX,
     BDU,
@@ -46,5 +47,10 @@ public enum IATA {
     VAW,
     OLA,
     HOV,
-    AES;
+    AES
+*/
+
+    OSL,
+    BGO,
+    TRD
 }

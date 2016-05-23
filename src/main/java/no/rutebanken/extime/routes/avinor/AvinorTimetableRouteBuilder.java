@@ -1,15 +1,15 @@
 package no.rutebanken.extime.routes.avinor;
 
-import no.avinor.flydata.xjc.model.airport.AirportName;
+import no.avinor.flydata.xjc.model.airport.AirportNames;
 import no.avinor.flydata.xjc.model.feed.Flight;
 import no.rutebanken.extime.model.AirportFlightDataSet;
 import no.rutebanken.extime.model.FlightDirection;
 import no.rutebanken.extime.model.FlightType;
 import no.rutebanken.extime.model.IATA;
-import no.rutebanken.extime.routes.BaseRouteBuilder;
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.Processor;
+import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.http4.HttpMethods;
 import org.apache.camel.processor.aggregate.AggregationStrategy;
 import org.springframework.stereotype.Component;
@@ -19,17 +19,19 @@ import java.util.*;
 import static org.apache.camel.component.stax.StAXBuilder.stax;
 
 @Component
-public class AvinorTimetableRouteBuilder extends BaseRouteBuilder {
+public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRouteBuilder {
 
     static final String HEADER_AIRPORT_IATA = "AirportIATA";
     static final String HEADER_FLIGHTS_DIRECTION = "FlightsDirection";
     static final String HEADER_FLIGHTS_TIMEFROM = "FlightsTimeFrom";
     static final String HEADER_FLIGHTS_TIMETO = "FlightsTimeTo";
 
+    static final String PROPERTY_ORIGINAL_BODY = "OriginalBody";
+
     @Override
     public void configure() throws Exception {
-        super.configure();
-        getContext().setTracing(true);
+        //super.configure();
+        //getContext().setTracing(true);
 
         from("{{avinor.timetable.scheduler.cron}}")
                 .routeId("AvinorTimetableSchedulerStarter")
@@ -39,7 +41,8 @@ public class AvinorTimetableRouteBuilder extends BaseRouteBuilder {
                     .setHeader(HEADER_AIRPORT_IATA, simple("${body}"))
                     .to("direct:fetchTimetableForAirport").id("FetchTimetableProcessor")
                 .end()
-                .to("mock:processAggregatedFlights")
+                .bean(new FlightRouteMatcher(), "findMatchingFlightRoutes")
+                .bean(new FlightRouteToNeTExConverter(), "convertRoutesToNeTExFormat")
         ;
 
         from("direct:fetchTimetableForAirport")
@@ -48,7 +51,7 @@ public class AvinorTimetableRouteBuilder extends BaseRouteBuilder {
                     .to("direct:fetchAirportDepartures").id("FetchDeparturesProcessor")
                     .to("direct:fetchAirportArrivals").id("FetchArrivalsProcessor")
                 .end()
-                //.bean("enricherBean", "initAggregate")
+                .process(new AirportEnricherInitProcessor())
                 .enrich("direct:fetchAirportNameResource", new AirportEnricherAggregationStrategy())
         ;
 
@@ -77,12 +80,16 @@ public class AvinorTimetableRouteBuilder extends BaseRouteBuilder {
                 .setHeader(Exchange.HTTP_QUERY, simpleF("airport=${header.%s}&timeFrom=${header.%s}&timeTo=${header.%s}&direction=${header.%s}",
                         HEADER_AIRPORT_IATA, HEADER_FLIGHTS_TIMEFROM, HEADER_FLIGHTS_TIMETO, HEADER_FLIGHTS_DIRECTION))
                 .setBody(constant(null))
+/*
                 .doTry()
                     .to("{{avinor.timetable.feed.endpoint}}").id("FetchTimetableFeedProcessor")
                 .doCatch(Exception.class)
-                    .log(LoggingLevel.ERROR, this.getClass().getName(), "Could not connect to {{avinor.timetable.feed.endpoint}}: ${exception}")
+                    .log(LoggingLevel.ERROR, this.getClass().getName(), "Could not connect to {{avinor.timetable.feed.endpoint}}: ${exception.stacktrace}")
+                    .log(LoggingLevel.ERROR, this.getClass().getName(), "Could not connect to {{avinor.timetable.feed.endpoint}}: ${exception.message}")
                     .to("mock:error")
                 .end()
+*/
+                .to("{{avinor.timetable.feed.endpoint}}").id("FetchTimetableFeedProcessor")
                 .split(stax(Flight.class, false), new FlightAggregationStrategy()).streaming()
                     .log(LoggingLevel.DEBUG, this.getClass().getName(), "Fetched flight with id: ${body.flightId}")
                 .end()
@@ -93,12 +100,16 @@ public class AvinorTimetableRouteBuilder extends BaseRouteBuilder {
                 .setHeader(Exchange.HTTP_METHOD, constant(HttpMethods.GET))
                 .setHeader(Exchange.HTTP_QUERY, simple("airport=${body}&shortname=Y&ukname=Y"))
                 .setBody(constant(null))
+/*
                 .doTry()
                     .to("{{avinor.airport.feed.endpoint}}").id("FetchAirportFeedProcessor")
                 .doCatch(Exception.class)
                     .log(LoggingLevel.ERROR, this.getClass().getName(), "Could not connect to {{avinor.airport.feed.endpoint}}: ${exception}")
                     .to("mock:error")
                 .end()
+*/
+                .to("{{avinor.airport.feed.endpoint}}").id("FetchAirportFeedProcessor")
+                .unmarshal().jaxb("no.avinor.flydata.xjc.model.airport")
         ;
     }
 
@@ -120,6 +131,16 @@ public class AvinorTimetableRouteBuilder extends BaseRouteBuilder {
         @Override
         public void process(Exchange exchange) throws Exception {
             exchange.getIn().setHeader(HEADER_FLIGHTS_DIRECTION, FlightDirection.ARRIVAL.getCode());
+        }
+    }
+
+    class AirportEnricherInitProcessor implements Processor {
+        @Override
+        public void process(Exchange exchange) throws Exception {
+            AirportFlightDataSet originalBody = exchange.getIn().getBody(AirportFlightDataSet.class);
+            exchange.setProperty(PROPERTY_ORIGINAL_BODY, originalBody);
+            String enrichParameter = exchange.getIn().getHeader(HEADER_AIRPORT_IATA, String.class);
+            exchange.getIn().setBody(enrichParameter);
         }
     }
 
@@ -194,19 +215,10 @@ public class AvinorTimetableRouteBuilder extends BaseRouteBuilder {
     }
 
     class AirportEnricherAggregationStrategy implements AggregationStrategy {
-        static final String PROPERTY_ORIGINAL_BODY = "OriginalBody";
-
-        public void initAggregate(Exchange exchange) {
-            AirportFlightDataSet originalBody = exchange.getIn().getBody(AirportFlightDataSet.class);
-            exchange.setProperty(PROPERTY_ORIGINAL_BODY, originalBody);
-            String enrichParameter = exchange.getIn().getHeader(HEADER_AIRPORT_IATA, String.class);
-            exchange.getIn().setBody(enrichParameter);
-        }
-
         public Exchange aggregate(Exchange original, Exchange resource) {
             AirportFlightDataSet originalBody = original.getProperty(PROPERTY_ORIGINAL_BODY, AirportFlightDataSet.class);
-            AirportName enrichment = resource.getIn().getBody(AirportName.class);
-            originalBody.setAirportName(enrichment);
+            AirportNames enrichment = resource.getIn().getBody(AirportNames.class);
+            originalBody.setAirportName(enrichment.getAirportName().get(0));
             original.getIn().setBody(originalBody);
             return original;
         }

@@ -1,5 +1,6 @@
 package no.rutebanken.extime.routes.avinor;
 
+import no.avinor.flydata.xjc.model.airport.AirportNames;
 import no.avinor.flydata.xjc.model.feed.Flight;
 import no.rutebanken.extime.model.FlightDirection;
 import no.rutebanken.extime.model.FlightType;
@@ -14,6 +15,7 @@ import org.apache.camel.component.properties.PropertiesComponent;
 import org.apache.camel.model.ProcessorDefinition;
 import org.apache.camel.test.junit4.CamelTestSupport;
 import org.assertj.core.api.Assertions;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.FileInputStream;
@@ -82,6 +84,11 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         context.getRouteDefinition("AirportNameEnricher").adviceWith(context, new AdviceWithRouteBuilder() {
             @Override
             public void configure() throws Exception {
+                interceptSendToEndpoint("mock:airportFeedEndpoint")
+                        .process(exchange -> {
+                            InputStream inputStream = new FileInputStream("target/classes/xml/airportname-osl.xml");
+                            exchange.getIn().setBody(inputStream);
+                        });
                 weaveAddLast().to("mock:output");
             }
         });
@@ -90,14 +97,16 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         getMockEndpoint("mock:airportFeedEndpoint").expectedMessageCount(1);
         getMockEndpoint("mock:airportFeedEndpoint").expectedHeaderReceived(Exchange.HTTP_METHOD, HttpMethods.GET);
         getMockEndpoint("mock:airportFeedEndpoint").expectedHeaderReceived(Exchange.HTTP_QUERY, "airport=OSL&shortname=Y&ukname=Y");
-        getMockEndpoint("mock:error").expectedMessageCount(0);
+
         getMockEndpoint("mock:output").expectedMessageCount(1);
+        getMockEndpoint("mock:output").expectedBodyReceived().body(AirportNames.class);
 
         template.sendBodyAndHeader("direct:fetchAirportNameResource", "OSL", HEADER_AIRPORT_IATA, "OSL");
         assertMockEndpointsSatisfied();
     }
 
     @Test
+    @Ignore
     public void testAirportNameEnricherRouteOnException() throws Exception {
         context.getRouteDefinition("AirportNameEnricher").adviceWith(context, new AdviceWithRouteBuilder() {
             @Override
@@ -115,7 +124,6 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         template.sendBodyAndHeader("direct:fetchAirportNameResource", "OSL", HEADER_AIRPORT_IATA, "OSL");
 
         assertMockEndpointsSatisfied();
-
     }
 
     @Override
