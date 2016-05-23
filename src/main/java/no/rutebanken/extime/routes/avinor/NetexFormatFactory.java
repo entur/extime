@@ -1,6 +1,7 @@
 package no.rutebanken.extime.routes.avinor;
 
 import no.rutebanken.netex.model.*;
+import org.springframework.stereotype.Component;
 
 import javax.xml.bind.JAXBElement;
 import javax.xml.datatype.DatatypeConfigurationException;
@@ -10,6 +11,7 @@ import java.math.BigInteger;
 import java.time.LocalTime;
 import java.time.ZonedDateTime;
 
+@Component(value = "netexFormatFactory")
 public class NetexFormatFactory {
 
     public PublicationDeliveryStructure createPublicationDeliveryStructure() {
@@ -33,13 +35,12 @@ public class NetexFormatFactory {
     public CompositeFrame createCompositeFrame() {
         return new ObjectFactory().createCompositeFrame()
                 .withVersion("1")
-                .withId("norwegian:cf:cf01")
+                .withId("sas:cf:cf01")
                 .withFrames(createFramesRelStructure());
     }
 
     public Frames_RelStructure createFramesRelStructure() {
-        return new ObjectFactory().createFrames_RelStructure()
-                .withCommonFrame(createTimetableFrameElement("", ""));
+        return new ObjectFactory().createFrames_RelStructure();
     }
 
     public PublicationRequestStructure createPublicationRequestStructure() {
@@ -136,7 +137,8 @@ public class NetexFormatFactory {
                 .withId(id)
                 .withOrder(BigInteger.valueOf(order))
                 //.withScheduledStopPointRef();
-                .withDeparture(createDepartureStructure(departureTime));
+                .withDeparture(createDepartureStructure(departureTime))
+                .withNote(createMultilingualString("Departure"));
     }
 
     public Call createArrivalCall(String id, Long order, LocalTime arrivalTime) {
@@ -144,7 +146,8 @@ public class NetexFormatFactory {
                 .withId(id)
                 .withOrder(BigInteger.valueOf(order))
                 //.withScheduledStopPointRef();
-                .withArrival(createArrivalStructure(arrivalTime));
+                .withArrival(createArrivalStructure(arrivalTime))
+                .withNote(createMultilingualString("Arrival"));
     }
 
     public DepartureStructure createDepartureStructure(LocalTime departureTime) {
@@ -162,7 +165,7 @@ public class NetexFormatFactory {
                 .withValue(value);
     }
 
-    public static Duration createDuration(String lexicalRepresentation) {
+    public Duration createDuration(String lexicalRepresentation) {
         try {
             return DatatypeFactory.newInstance().newDuration(lexicalRepresentation);
         } catch (DatatypeConfigurationException ex) {

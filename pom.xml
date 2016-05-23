@@ -143,6 +143,11 @@
             <artifactId>joda-time</artifactId>
             <version>2.9.3</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.4</version>
+        </dependency>
 
         <!-- Testing -->
         <dependency>
@@ -259,6 +264,39 @@
                             </plugins>
                         </configuration>
                     </execution>
+<!--
+                    <execution>
+                        <id>xjc-airlines</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <extension>true</extension>
+                            <generatePackage>no.avinor.flydata.xjc.model.airline</generatePackage>
+                            <generateDirectory>${project.build.directory}/generated-sources/airlines</generateDirectory>
+                            <args>
+                                <arg>-Xequals</arg>
+                                <arg>-XhashCode</arg>
+                                <arg>-XtoString</arg>
+                            </args>
+                            <schemaDirectory>src/main/resources/no/rutebanken/extime/avinor/airlines</schemaDirectory>
+                            <schemaIncludes>
+                                <include>airlineNames-named.xsd</include>
+                            </schemaIncludes>
+                            <bindingIncludes>
+                                <include>airlineNames.xjb</include>
+                            </bindingIncludes>
+                            <plugins>
+                                <plugin>
+                                    <groupId>org.jvnet.jaxb2_commons</groupId>
+                                    <artifactId>jaxb2-basics</artifactId>
+                                    <version>0.11.0</version>
+                                </plugin>
+                            </plugins>
+                        </configuration>
+                    </execution>
+-->
                 </executions>
             </plugin>
             <plugin>

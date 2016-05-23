@@ -12,7 +12,7 @@ import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-@Component
+@Component(value = "flightRouteMatcher")
 public class FlightRouteMatcher {
 
     public List<FlightRouteDataSet> findMatchingFlightRoutes(@Body HashMap<String, AirportFlightDataSet> airportFlightsMap) {
@@ -58,23 +58,14 @@ public class FlightRouteMatcher {
                 }
             });
         });
+        return flightRouteDataSetList;
 
 /*
-        Map<String, List<FlightRouteDataSet>> airlineRoutesList =
+        Map<String, List<FlightRouteDataSet>> airlineRoutesMap =
                 flightRouteDataSetList.stream()
                         .collect(Collectors.groupingBy(FlightRouteDataSet::getAirlineName));
-        airlineRoutesList.forEach(
-                (airlineIATA, airlineRoutes) ->
-                {
-                    System.out.println(airlineIATA);
-                    airlineRoutes.forEach(
-                            flightRoute -> System.out.printf("   %s%n", flightRoute));
-                }
-        );
+        return airlineRoutesMap;
 */
-
-        System.out.printf("We have %d matches", flightRouteDataSetList.size());
-        return flightRouteDataSetList;
     }
 
     private Predicate<Flight> createMatchingFlightPredicate(String airportIATA, Flight departureFlight) {

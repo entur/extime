@@ -2,10 +2,7 @@ package no.rutebanken.extime.routes.avinor;
 
 import no.avinor.flydata.xjc.model.airport.AirportNames;
 import no.avinor.flydata.xjc.model.feed.Flight;
-import no.rutebanken.extime.model.AirportFlightDataSet;
-import no.rutebanken.extime.model.FlightDirection;
-import no.rutebanken.extime.model.FlightType;
-import no.rutebanken.extime.model.IATA;
+import no.rutebanken.extime.model.*;
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.Processor;
@@ -22,6 +19,7 @@ import static org.apache.camel.component.stax.StAXBuilder.stax;
 public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRouteBuilder {
 
     static final String HEADER_AIRPORT_IATA = "AirportIATA";
+    static final String HEADER_AIRLINE_IATA_MAP = "AirlineIATAMap";
     static final String HEADER_FLIGHTS_DIRECTION = "FlightsDirection";
     static final String HEADER_FLIGHTS_TIMEFROM = "FlightsTimeFrom";
     static final String HEADER_FLIGHTS_TIMETO = "FlightsTimeTo";
@@ -42,7 +40,8 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                     .to("direct:fetchTimetableForAirport").id("FetchTimetableProcessor")
                 .end()
                 .bean(new FlightRouteMatcher(), "findMatchingFlightRoutes")
-                .bean(new FlightRouteToNeTExConverter(), "convertRoutesToNeTExFormat")
+                .process(new AirlineIATAProcessor()).id("AirlineIATAProcessor")
+                .bean(new FlightRouteToNeTExConverter(), "convertRoutesToNetexFormat")
         ;
 
         from("direct:fetchTimetableForAirport")
@@ -116,7 +115,18 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
     class AirportIATAProcessor implements Processor {
         @Override
         public void process(Exchange exchange) throws Exception {
-            exchange.getIn().setBody(IATA.values());
+            exchange.getIn().setBody(AirportIATA.values());
+        }
+    }
+
+    class AirlineIATAProcessor implements Processor {
+        @Override
+        public void process(Exchange exchange) throws Exception {
+            Map<String, String> airlineIATAMap = new HashMap<>();
+            for (AirlineIATA airlineIATA : AirlineIATA.values()) {
+                airlineIATAMap.put(airlineIATA.name(), airlineIATA.getAirportName());
+            }
+            exchange.getIn().setHeader(HEADER_AIRLINE_IATA_MAP, airlineIATAMap);
         }
     }
 
@@ -141,6 +151,12 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
             exchange.setProperty(PROPERTY_ORIGINAL_BODY, originalBody);
             String enrichParameter = exchange.getIn().getHeader(HEADER_AIRPORT_IATA, String.class);
             exchange.getIn().setBody(enrichParameter);
+        }
+    }
+
+    class AirlineEnricherInitProcessor implements Processor {
+        @Override
+        public void process(Exchange exchange) throws Exception {
         }
     }
 
