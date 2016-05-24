@@ -1,5 +1,6 @@
 package no.rutebanken.extime.routes.avinor;
 
+import no.avinor.flydata.xjc.model.airport.AirportName;
 import no.rutebanken.extime.model.FlightRouteDataSet;
 import no.rutebanken.netex.model.*;
 import org.apache.camel.Body;
@@ -42,10 +43,10 @@ public class FlightRouteToNeTExConverter {
 
     private PublicationDeliveryStructure convertToNetex(String airlineName, String flightId, List<FlightRouteDataSet> flightRouteList) {
         ObjectFactory netexObjectFactory = new ObjectFactory();
-        String departureAirportName = flightRouteList.get(0).getDepartureAirportName().getName().trim();
-        String arrivalAirportName = flightRouteList.get(0).getArrivalAirportName().getName().trim();
-        String routeString = generateRouteString(departureAirportName, arrivalAirportName);
-        String routeName = generateRouteName(departureAirportName, arrivalAirportName);
+        AirportName departureAirportName = flightRouteList.get(0).getDepartureAirportName();
+        AirportName arrivalAirportName = flightRouteList.get(0).getArrivalAirportName();
+        String routeString = generateRouteString(departureAirportName.getName(), arrivalAirportName.getName());
+        String routeName = generateRouteName(departureAirportName.getName(), arrivalAirportName.getName());
 
         Route route = netexObjectFactory.createRoute()
                 .withVersion("any")
@@ -90,15 +91,15 @@ public class FlightRouteToNeTExConverter {
 
             StopPlace departureStopPlace = netexObjectFactory.createStopPlace()
                     .withVersion("any")
-                    .withName(createMultilingualString(departureAirportName))
-                    .withShortName(createMultilingualString(departureAirportName))
+                    .withName(createMultilingualString(departureAirportName.getName()))
+                    .withShortName(createMultilingualString(departureAirportName.getCode()))
                     //.withCentroid()
                     .withTransportMode(VehicleModeEnumeration.AIR)
                     .withStopPlaceType(StopTypeEnumeration.AIRPORT);
             StopPlace arrivalStopPlace = netexObjectFactory.createStopPlace()
                     .withVersion("any")
-                    .withName(createMultilingualString(arrivalAirportName))
-                    .withShortName(createMultilingualString(arrivalAirportName))
+                    .withName(createMultilingualString(arrivalAirportName.getName()))
+                    .withShortName(createMultilingualString(arrivalAirportName.getCode()))
                     //.withCentroid()
                     .withTransportMode(VehicleModeEnumeration.AIR)
                     .withStopPlaceType(StopTypeEnumeration.AIRPORT);
