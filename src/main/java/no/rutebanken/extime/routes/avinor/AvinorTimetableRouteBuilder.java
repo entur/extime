@@ -45,8 +45,9 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .bean(new FlightRouteToNeTExConverter(), "convertRoutesToNetexFormat")
                 .split(body())
                     //.to("direct:validateNetexFormat") // split list and validate netex structure
-                    .setHeader(Exchange.FILE_NAME, constant("netex-sample.xml"))
-                    .to("file://target")
+                    .convertBodyTo(String.class)
+                    .log(LoggingLevel.DEBUG, this.getClass().getName(), "Generated NeTEx XML: ${body}")
+                    .to("mock:jmsQueue")
                 .end()
         ;
 

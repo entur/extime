@@ -4,8 +4,6 @@ import no.rutebanken.extime.model.FlightRouteDataSet;
 import no.rutebanken.netex.model.*;
 import org.apache.camel.Body;
 import org.apache.camel.Header;
-import org.apache.commons.lang3.time.DateFormatUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.xml.bind.JAXBElement;
@@ -26,19 +24,23 @@ public class FlightRouteToNeTExConverter {
     public List<PublicationDeliveryStructure> convertRoutesToNetexFormat(
             @Header(HEADER_AIRLINE_IATA_MAP) Map<String, String> airlineIATAMap,
             @Body List<FlightRouteDataSet> flightRouteList) {
-        List<FlightRouteDataSet> sasFlightList = flightRouteList.stream()
-                .filter(flightRouteDataSet -> flightRouteDataSet.getFlightId().equalsIgnoreCase("SK260"))
-                .collect(Collectors.toList());
-
-        System.out.println("Complete SK260 flights list:");
-        sasFlightList.stream().forEach(System.out::println);
-
-        return Arrays.asList(convertToNetex(sasFlightList));
+        List<PublicationDeliveryStructure> netexStructures = new ArrayList<>();
+        Map<String, List<FlightRouteDataSet>> flightRouteMap =
+                flightRouteList.stream()
+                        .collect(Collectors.groupingBy(FlightRouteDataSet::getFlightId));
+        flightRouteMap.forEach(
+                (flightId, flightRoutesByFlightId) -> {
+                    PublicationDeliveryStructure publicationDeliveryStructure = convertToNetex(flightId, flightRoutesByFlightId);
+                    if (publicationDeliveryStructure != null) {
+                        netexStructures.add(publicationDeliveryStructure);
+                    }
+                }
+        );
+        return netexStructures;
     }
 
-    private PublicationDeliveryStructure convertToNetex(List<FlightRouteDataSet> sasFlightList) {
+    private PublicationDeliveryStructure convertToNetex(String flightId, List<FlightRouteDataSet> sasFlightList) {
         ObjectFactory netexObjectFactory = new ObjectFactory();
-        String flightId = sasFlightList.get(0).getFlightId().trim();
         String departureAirportName = sasFlightList.get(0).getDepartureAirportName().getName().trim();
         String arrivalAirportName = sasFlightList.get(0).getArrivalAirportName().getName().trim();
         String routeString = generateRouteString(departureAirportName, arrivalAirportName);
