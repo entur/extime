@@ -6,6 +6,7 @@ import no.rutebanken.extime.model.*;
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.Processor;
+import org.apache.camel.ValidationException;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.http4.HttpMethods;
 import org.apache.camel.processor.aggregate.AggregationStrategy;
@@ -42,6 +43,11 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .bean(new FlightRouteMatcher(), "findMatchingFlightRoutes")
                 .process(new AirlineIATAProcessor()).id("AirlineIATAProcessor")
                 .bean(new FlightRouteToNeTExConverter(), "convertRoutesToNetexFormat")
+                .split(body())
+                    //.to("direct:validateNetexFormat") // split list and validate netex structure
+                    .setHeader(Exchange.FILE_NAME, constant("netex-sample.xml"))
+                    .to("file://target")
+                .end()
         ;
 
         from("direct:fetchTimetableForAirport")
@@ -109,6 +115,17 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
 */
                 .to("{{avinor.airport.feed.endpoint}}").id("FetchAirportFeedProcessor")
                 .unmarshal().jaxb("no.avinor.flydata.xjc.model.airport")
+        ;
+
+        from("direct:validateNetexFormat")
+                .routeId("NetexValidator")
+                .doTry()
+                    //.to("validator:https://raw.githubusercontent.com/rutebanken/NeTEx-XML/master/schema/1.03/xsd/NeTEx_publication_timetable.xsd?failOnNullBody=true")
+                    .log(LoggingLevel.DEBUG, this.getClass().getName(), "Validation against XSD passed")
+                .doCatch(ValidationException.class)
+                    .log(LoggingLevel.DEBUG, this.getClass().getName(), "Validation failed")
+                    .to("mock:invalid")
+                .end()
         ;
     }
 
