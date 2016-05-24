@@ -30,7 +30,8 @@ public class FlightRouteToNeTExConverter {
                         .collect(Collectors.groupingBy(FlightRouteDataSet::getFlightId));
         flightRouteMap.forEach(
                 (flightId, flightRoutesByFlightId) -> {
-                    PublicationDeliveryStructure publicationDeliveryStructure = convertToNetex(flightId, flightRoutesByFlightId);
+                    String airlineName = airlineIATAMap.get(flightRouteList.get(0).getAirlineIATA());
+                    PublicationDeliveryStructure publicationDeliveryStructure = convertToNetex(airlineName, flightId, flightRoutesByFlightId);
                     if (publicationDeliveryStructure != null) {
                         netexStructures.add(publicationDeliveryStructure);
                     }
@@ -39,16 +40,12 @@ public class FlightRouteToNeTExConverter {
         return netexStructures;
     }
 
-    private PublicationDeliveryStructure convertToNetex(String flightId, List<FlightRouteDataSet> sasFlightList) {
+    private PublicationDeliveryStructure convertToNetex(String airlineName, String flightId, List<FlightRouteDataSet> flightRouteList) {
         ObjectFactory netexObjectFactory = new ObjectFactory();
-        String departureAirportName = sasFlightList.get(0).getDepartureAirportName().getName().trim();
-        String arrivalAirportName = sasFlightList.get(0).getArrivalAirportName().getName().trim();
+        String departureAirportName = flightRouteList.get(0).getDepartureAirportName().getName().trim();
+        String arrivalAirportName = flightRouteList.get(0).getArrivalAirportName().getName().trim();
         String routeString = generateRouteString(departureAirportName, arrivalAirportName);
         String routeName = generateRouteName(departureAirportName, arrivalAirportName);
-
-        // @todo: Add SiteFrame with stopPlaces/StopPlace
-
-        // @todo: Add ServiceFrame with routes, lines, and scheduledStopPoints
 
         Route route = netexObjectFactory.createRoute()
                 .withVersion("any")
@@ -73,9 +70,42 @@ public class FlightRouteToNeTExConverter {
         ValidityConditions_RelStructure validityConditionsRelStructure = netexObjectFactory.createValidityConditions_RelStructure();
                 //.withValidityConditionRefOrValidBetweenOrValidityCondition_(availabilityCondition);
 
-        // iterate over all flightroutes and create a corresponding service journey
+        Codespace codespace = netexObjectFactory.createCodespace()
+                .withId(airlineName.toLowerCase())
+                .withXmlns(airlineName.toLowerCase())
+                .withXmlnsUrl(String.format("http://%s.no", airlineName.toLowerCase()))
+                .withDescription(String.format("Namespace for %s", airlineName));
+        Codespaces_RelStructure codespacesRelStructure = netexObjectFactory.createCodespaces_RelStructure()
+                .withCodespaceRefOrCodespace(codespace);
+        CodespaceRefStructure codespaceRefStructure = netexObjectFactory.createCodespaceRefStructure()
+                .withRef(airlineName.toLowerCase());
+        VersionFrameDefaultsStructure versionFrameDefaultsStructure = netexObjectFactory.createVersionFrameDefaultsStructure()
+                .withDefaultCodespaceRef(codespaceRefStructure);
+
+        // iterate over all flightroutes and create a corresponding stop places, service journeys, etc...
+        List<StopPlace> stopPlaceList = new ArrayList<>();
         List<ServiceJourney> serviceJourneyList = new ArrayList<>();
-        sasFlightList.forEach(flightRouteDataSet -> {
+        flightRouteList.forEach(flightRouteDataSet -> {
+            /* -==STOP-PLACES-PART==-*/
+
+            StopPlace departureStopPlace = netexObjectFactory.createStopPlace()
+                    .withVersion("any")
+                    .withName(createMultilingualString(departureAirportName))
+                    .withShortName(createMultilingualString(departureAirportName))
+                    //.withCentroid()
+                    .withTransportMode(VehicleModeEnumeration.AIR)
+                    .withStopPlaceType(StopTypeEnumeration.AIRPORT);
+            StopPlace arrivalStopPlace = netexObjectFactory.createStopPlace()
+                    .withVersion("any")
+                    .withName(createMultilingualString(arrivalAirportName))
+                    .withShortName(createMultilingualString(arrivalAirportName))
+                    //.withCentroid()
+                    .withTransportMode(VehicleModeEnumeration.AIR)
+                    .withStopPlaceType(StopTypeEnumeration.AIRPORT);
+            stopPlaceList.add(departureStopPlace);
+            stopPlaceList.add(arrivalStopPlace);
+
+            /* -==SERVICE-JOURNEY-PART==-*/
 /*
             Date departureTime = flightRouteDataSet.getDepartureFlight().getScheduleTime();
             String departureTimeFormat = DateFormatUtils.formatUTC(
@@ -130,6 +160,17 @@ public class FlightRouteToNeTExConverter {
             serviceJourneyList.add(serviceJourney);
         });
 
+        StopPlacesInFrame_RelStructure stopPlacesInFrameRelStructure = netexObjectFactory.createStopPlacesInFrame_RelStructure()
+                .withStopPlace(stopPlaceList);
+
+        SiteFrame siteFrame = netexObjectFactory.createSiteFrame()
+                .withVersion("any")
+                .withId(String.format("%s:sf:1", flightId.toLowerCase()))
+                .withStopPlaces(stopPlacesInFrameRelStructure);
+        JAXBElement<SiteFrame> siteFrameElement = netexObjectFactory.createSiteFrame(siteFrame);
+
+        // @todo: Add ServiceFrame with routes, lines, and scheduledStopPoints here
+
         JourneysInFrame_RelStructure journeysInFrameRelStructure = netexObjectFactory.createJourneysInFrame_RelStructure();
         journeysInFrameRelStructure.getDatedServiceJourneyOrDeadRunOrServiceJourney().addAll(serviceJourneyList);
 
@@ -143,11 +184,15 @@ public class FlightRouteToNeTExConverter {
                 .withVehicleJourneys(journeysInFrameRelStructure);
         JAXBElement<TimetableFrame> timetableFrameElement = netexObjectFactory.createTimetableFrame(timetableFrame);
         Frames_RelStructure framesRelStructure = netexObjectFactory.createFrames_RelStructure();
+        framesRelStructure.getCommonFrame().add(siteFrameElement);
         framesRelStructure.getCommonFrame().add(timetableFrameElement);
 
         CompositeFrame compositeFrame = netexObjectFactory.createCompositeFrame()
                 .withVersion("1")
                 .withId(String.format("%s:cf:cf01", flightId.toLowerCase()))
+                //.withValidityConditions()
+                .withCodespaces(codespacesRelStructure)
+                .withFrameDefaults(versionFrameDefaultsStructure)
                 .withFrames(framesRelStructure);
         JAXBElement<CompositeFrame> compositeFrameElement = netexObjectFactory.createCompositeFrame(compositeFrame);
 
@@ -174,7 +219,7 @@ public class FlightRouteToNeTExConverter {
                 .withVersion("1.0")
                 .withRequestTimestamp(ZonedDateTime.now())
                 .withParticipantRef("RUTEBANKEN")
-                .withDescription(createMultilingualString(String.format("Request object for %s timetable", flightId)))
+                .withDescription(createMultilingualString(String.format("Request object of timetable for %s flight %s", airlineName, flightId)))
                 .withTopics(topics);
 
         return netexObjectFactory.createPublicationDeliveryStructure()

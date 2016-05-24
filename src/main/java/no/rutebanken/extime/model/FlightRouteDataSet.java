@@ -8,7 +8,7 @@ import java.util.List;
 public class FlightRouteDataSet {
 
     private String flightId;
-    private String airlineName;
+    private String airlineIATA;
     private AirportName departureAirportName;
     private AirportName arrivalAirportName;
 
@@ -25,12 +25,12 @@ public class FlightRouteDataSet {
         this.flightId = flightId;
     }
 
-    public String getAirlineName() {
-        return airlineName;
+    public String getAirlineIATA() {
+        return airlineIATA;
     }
 
-    public void setAirlineName(String airlineName) {
-        this.airlineName = airlineName;
+    public void setAirlineIATA(String airlineIATA) {
+        this.airlineIATA = airlineIATA;
     }
 
     public Flight getDepartureFlight() {
@@ -81,7 +81,7 @@ public class FlightRouteDataSet {
         FlightRouteDataSet that = (FlightRouteDataSet) o;
 
         if (flightId != null ? !flightId.equals(that.flightId) : that.flightId != null) return false;
-        if (airlineName != null ? !airlineName.equals(that.airlineName) : that.airlineName != null) return false;
+        if (airlineIATA != null ? !airlineIATA.equals(that.airlineIATA) : that.airlineIATA != null) return false;
         if (departureAirportName != null ? !departureAirportName.equals(that.departureAirportName) : that.departureAirportName != null)
             return false;
         if (arrivalAirportName != null ? !arrivalAirportName.equals(that.arrivalAirportName) : that.arrivalAirportName != null)
@@ -97,7 +97,7 @@ public class FlightRouteDataSet {
     @Override
     public int hashCode() {
         int result = flightId != null ? flightId.hashCode() : 0;
-        result = 31 * result + (airlineName != null ? airlineName.hashCode() : 0);
+        result = 31 * result + (airlineIATA != null ? airlineIATA.hashCode() : 0);
         result = 31 * result + (departureAirportName != null ? departureAirportName.hashCode() : 0);
         result = 31 * result + (arrivalAirportName != null ? arrivalAirportName.hashCode() : 0);
         result = 31 * result + (departureFlight != null ? departureFlight.hashCode() : 0);
@@ -110,7 +110,7 @@ public class FlightRouteDataSet {
     public String toString() {
         final StringBuilder sb = new StringBuilder("FlightRouteDataSet{");
         sb.append("flightId='").append(flightId).append('\'');
-        sb.append(", airlineName='").append(airlineName).append('\'');
+        sb.append(", airlineIATA='").append(airlineIATA).append('\'');
         sb.append(", departureAirportName=").append(departureAirportName.getName());
         sb.append(", arrivalAirportName=").append(arrivalAirportName.getName());
         sb.append(", departureFlight=").append(departureFlight.getUniqueID());
@@ -118,4 +118,5 @@ public class FlightRouteDataSet {
         sb.append('}');
         return sb.toString();
     }
+
 }

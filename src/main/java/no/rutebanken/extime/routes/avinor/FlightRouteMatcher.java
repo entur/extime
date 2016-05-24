@@ -47,7 +47,7 @@ public class FlightRouteMatcher {
                 if (optionalArrivalFlight.isPresent()) {
                     Flight matchingArrivalFlight = optionalArrivalFlight.get();
                     FlightRouteDataSet flightRouteDataSet = new FlightRouteDataSet();
-                    flightRouteDataSet.setAirlineName(departureFlight.getAirline());
+                    flightRouteDataSet.setAirlineIATA(departureFlight.getAirline());
                     flightRouteDataSet.setFlightId(departureFlight.getFlightId());
                     flightRouteDataSet.setDepartureAirportName(airportNameCache.get(airportIATA));
                     flightRouteDataSet.setArrivalAirportName(airportNameCache.get(departureFlight.getAirport()));
@@ -59,13 +59,6 @@ public class FlightRouteMatcher {
             });
         });
         return flightRouteDataSetList;
-
-/*
-        Map<String, List<FlightRouteDataSet>> airlineRoutesMap =
-                flightRouteDataSetList.stream()
-                        .collect(Collectors.groupingBy(FlightRouteDataSet::getAirlineName));
-        return airlineRoutesMap;
-*/
     }
 
     private Predicate<Flight> createMatchingFlightPredicate(String airportIATA, Flight departureFlight) {
