@@ -203,6 +203,37 @@
                 <version>0.13.1</version>
                 <executions>
                     <execution>
+                        <id>xjc-scheduled</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <extension>true</extension>
+                            <generatePackage>no.avinor.flydata.xjc.model.scheduled</generatePackage>
+                            <generateDirectory>${project.build.directory}/generated-sources/scheduled</generateDirectory>
+                            <args>
+                                <arg>-Xequals</arg>
+                                <arg>-XhashCode</arg>
+                                <arg>-XtoString</arg>
+                            </args>
+                            <schemaDirectory>src/main/resources/no/rutebanken/extime/avinor/scheduled</schemaDirectory>
+                            <schemaIncludes>
+                                <include>XmlFeedScheduled-Named.xsd</include>
+                            </schemaIncludes>
+                            <bindingIncludes>
+                                <include>XmlFeedScheduled.xjb</include>
+                            </bindingIncludes>
+                            <plugins>
+                                <plugin>
+                                    <groupId>org.jvnet.jaxb2_commons</groupId>
+                                    <artifactId>jaxb2-basics</artifactId>
+                                    <version>0.11.0</version>
+                                </plugin>
+                            </plugins>
+                        </configuration>
+                    </execution>
+                    <execution>
                         <id>xjc-flights</id>
                         <phase>generate-sources</phase>
                         <goals>
