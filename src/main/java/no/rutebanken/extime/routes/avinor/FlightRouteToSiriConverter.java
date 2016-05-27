@@ -11,9 +11,11 @@ import java.util.List;
 
 public class FlightRouteToSiriConverter {
 
-    public List<Siri> convertRoutesToSiriFormat() {
+    //public List<Siri> convertRoutesToSiriFormat() {
+    public Siri convertRoutesToSiriFormat() {
         Siri siri = convertToSiri();
-        return Arrays.asList(siri);
+        return siri;
+        //return Arrays.asList(siri);
     }
 
     private Siri convertToSiri() {
@@ -117,9 +119,12 @@ public class FlightRouteToSiriConverter {
         callNoteOne.setValue("Starts here");
         estimatedCallOne.getCallNotes().add(callNoteOne);
 
-        estimatedCallOne.setAimedArrivalTime(ZonedDateTime.now());
+        estimatedCallOne.setAimedDepartureTime(ZonedDateTime.now());
         estimatedCallOne.setArrivalBoardingActivity(ArrivalBoardingActivityEnumeration.NO_ALIGHTING);
-        estimatedCallOne.setAimedDepartureTime(ZonedDateTime.now().plusHours(1L));
+        estimatedCallOne.setAimedArrivalTime(ZonedDateTime.now().plusHours(1L));
+
+        estimatedCallOne.setExpectedDepartureTime(ZonedDateTime.now().plusHours(1L));
+        estimatedCallOne.setExpectedArrivalTime(ZonedDateTime.now().plusHours(2L));
 
         NaturalLanguageStringStructure departurePlatform = factory.createNaturalLanguageStringStructure();
         departurePlatform.setValue("1");
@@ -146,6 +151,9 @@ public class FlightRouteToSiriConverter {
         estimatedCallTwo.setArrivalBoardingActivity(ArrivalBoardingActivityEnumeration.NO_ALIGHTING);
         estimatedCallTwo.setAimedDepartureTime(ZonedDateTime.now().plusHours(1L));
 
+        estimatedCallTwo.setExpectedDepartureTime(ZonedDateTime.now().plusHours(1L));
+        estimatedCallTwo.setExpectedArrivalTime(ZonedDateTime.now().plusHours(2L));
+
         NaturalLanguageStringStructure departurePlatformTwo = factory.createNaturalLanguageStringStructure();
         departurePlatformTwo.setValue("2");
         estimatedCallTwo.setDeparturePlatformName(departurePlatformTwo);
@@ -156,6 +164,7 @@ public class FlightRouteToSiriConverter {
 
         estimatedVersionFrameStructure.getEstimatedVehicleJourneies().add(estimatedVehicleJourney);
         estimatedTimetableDeliveryStructure.getEstimatedJourneyVersionFrames().add(estimatedVersionFrameStructure);
+        serviceDelivery.getEstimatedTimetableDeliveries().add(estimatedTimetableDeliveryStructure);
         siri.setServiceDelivery(serviceDelivery);
 
         return siri;
