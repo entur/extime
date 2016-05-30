@@ -62,7 +62,7 @@ public class FlightRouteMatcher {
     }
 
     private Predicate<Flight> createMatchingFlightPredicate(String airportIATA, Flight departureFlight) {
-        Predicate<Flight> uniquieIdPredicate = arrivalFlight ->
+        Predicate<Flight> uniqueIdPredicate = arrivalFlight ->
                 arrivalFlight.getUniqueID().subtract(departureFlight.getUniqueID()).equals(BigInteger.ONE);
         Predicate<Flight> airlineIATAPredicate = arrivalFlight ->
                 arrivalFlight.getAirline().equalsIgnoreCase(departureFlight.getAirline());
@@ -70,7 +70,7 @@ public class FlightRouteMatcher {
                 arrivalFlight.getFlightId().equalsIgnoreCase(departureFlight.getFlightId());
         Predicate<Flight> airportIATAPredicate = arrivalFlight ->
                 arrivalFlight.getAirport().equalsIgnoreCase(airportIATA);
-        return uniquieIdPredicate
+        return uniqueIdPredicate
                 .and(airlineIATAPredicate)
                 .and(flightIdPredicate)
                 .and(airportIATAPredicate);

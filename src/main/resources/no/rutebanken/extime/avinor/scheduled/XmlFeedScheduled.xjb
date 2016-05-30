@@ -2,12 +2,14 @@
 <jaxb:bindings version="2.1" xmlns:jaxb="http://java.sun.com/xml/ns/jaxb"
                xmlns:xs="http://www.w3.org/2001/XMLSchema">
     <jaxb:globalBindings localScoping="toplevel">
-        <jaxb:javaType name="java.util.Date" xmlType="xs:date"
-                       parseMethod="no.rutebanken.extime.jaxb.DateAdapter.parseDate"
-                       printMethod="no.rutebanken.extime.jaxb.DateAdapter.printDate"/>
-        <jaxb:javaType name="java.util.Date" xmlType="xs:dateTime"
-                       parseMethod="no.rutebanken.extime.jaxb.DateAdapter.parseDate"
-                       printMethod="no.rutebanken.extime.jaxb.DateAdapter.printDate"/>
-        <jaxb:serializable uid="1"/>
+        <jaxb:javaType name="java.time.ZonedDateTime" xmlType="xs:dateTime"
+                       printMethod="java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME.format"
+                       parseMethod="java.time.ZonedDateTime.parse"/>
+        <jaxb:javaType name="java.time.LocalDate" xmlType="xs:date"
+                       printMethod="java.time.format.DateTimeFormatter.ISO_OFFSET_DATE.format"
+                       parseMethod="java.time.LocalDate.parse"/>
+        <jaxb:javaType name="java.time.LocalTime" xmlType="xs:time"
+                       printMethod="java.time.format.DateTimeFormatter.ISO_OFFSET_TIME.format"
+                       parseMethod="java.time.LocalTime.parse"/>
     </jaxb:globalBindings>
 </jaxb:bindings>
