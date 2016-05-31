@@ -14,7 +14,9 @@ import javax.xml.datatype.Duration;
 import java.math.BigInteger;
 import java.time.LocalTime;
 import java.time.ZonedDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEADER_AIRLINE_IATA_MAP;

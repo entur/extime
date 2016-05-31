@@ -1,11 +1,14 @@
 package no.rutebanken.extime.model;
 
-public enum FlightDirection {
+/**
+ * @todo: change type name to StopVisitType
+ */
+public enum StopVisitType {
     DEPARTURE("D"), ARRIVAL("A");
 
     private String code;
 
-    FlightDirection(String code) {
+    StopVisitType(String code) {
         this.code = code;
     }
 

@@ -10,7 +10,6 @@ import org.apache.camel.ValidationException;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.http4.HttpMethods;
 import org.apache.camel.processor.aggregate.AggregationStrategy;
-import org.springframework.stereotype.Component;
 
 import java.util.*;
 
@@ -152,14 +151,14 @@ public class AvinorRealTimeRouteBuilder extends RouteBuilder {
     class DepartureFlightDirectionProcessor implements Processor {
         @Override
         public void process(Exchange exchange) throws Exception {
-            exchange.getIn().setHeader(HEADER_FLIGHTS_DIRECTION, FlightDirection.DEPARTURE.getCode());
+            exchange.getIn().setHeader(HEADER_FLIGHTS_DIRECTION, StopVisitType.DEPARTURE.getCode());
         }
     }
 
     class ArrivalFlightDirectionProcessor implements Processor {
         @Override
         public void process(Exchange exchange) throws Exception {
-            exchange.getIn().setHeader(HEADER_FLIGHTS_DIRECTION, FlightDirection.ARRIVAL.getCode());
+            exchange.getIn().setHeader(HEADER_FLIGHTS_DIRECTION, StopVisitType.ARRIVAL.getCode());
         }
     }
 

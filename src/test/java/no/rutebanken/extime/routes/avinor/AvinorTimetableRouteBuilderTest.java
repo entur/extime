@@ -2,7 +2,7 @@ package no.rutebanken.extime.routes.avinor;
 
 import no.avinor.flydata.xjc.model.airport.AirportNames;
 import no.avinor.flydata.xjc.model.feed.Flight;
-import no.rutebanken.extime.model.FlightDirection;
+import no.rutebanken.extime.model.StopVisitType;
 import no.rutebanken.extime.model.FlightType;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
@@ -59,7 +59,7 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         headers.put(HEADER_TIMETABLE_AIRPORT_IATA, "OSL");
         headers.put(HEADER_FLIGHTS_TIMEFROM, "0");
         headers.put(HEADER_FLIGHTS_TIMETO, "72");
-        headers.put(HEADER_FLIGHTS_DIRECTION, FlightDirection.DEPARTURE.getCode());
+        headers.put(HEADER_FLIGHTS_DIRECTION, StopVisitType.DEPARTURE.getCode());
 
         template.sendBodyAndHeaders("direct:fetchAirportFlights", "OSL", headers);
 

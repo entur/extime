@@ -44,7 +44,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                     .setHeader(HEADER_TIMETABLE_AIRPORT_IATA, simple("${body}"))
                     .to("direct:fetchTimetableForAirport").id("FetchTimetableProcessor")
                 .end()
-                .bean(ScheduledFlightRouteAnalyzer.class, "analyzeFlightRoutes")
+                .bean(ScheduledFlightConverter.class, "convertToScheduledFlights")
                 //.bean(ScheduledRouteToNetexConverter.class)
                 .to("mock:jms:queue")
         ;

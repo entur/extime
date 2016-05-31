@@ -1,8 +1,15 @@
 package no.rutebanken.extime.model;
 
+import com.google.common.base.Joiner;
+import no.avinor.flydata.xjc.model.scheduled.Flight;
+
 import java.math.BigInteger;
 import java.time.LocalDate;
-import java.util.List;
+import java.util.*;
+import java.util.function.Supplier;
+
+import static java.util.stream.Collectors.collectingAndThen;
+import static java.util.stream.Collectors.toList;
 
 public class ScheduledStopoverFlight {
 
@@ -46,7 +53,17 @@ public class ScheduledStopoverFlight {
     }
 
     public List<ScheduledStopover> getScheduledStopovers() {
-        return scheduledStopovers;
+        if (scheduledStopovers == null) {
+            scheduledStopovers = new ArrayList<>();
+        }
+        return this.scheduledStopovers;
+    }
+
+    public String getRoutePath() {
+        List<String> airportIATAs = scheduledStopovers.stream()
+                .map(ScheduledStopover::getAirportIATA)
+                .collect(collectingAndThen(toList(), Collections::unmodifiableList));
+        return Joiner.on("-").join(airportIATAs);
     }
 
     @Override
@@ -61,7 +78,6 @@ public class ScheduledStopoverFlight {
         if (!dateOfOperation.equals(that.dateOfOperation)) return false;
         if (!routeString.equals(that.routeString)) return false;
         return scheduledStopovers.equals(that.scheduledStopovers);
-
     }
 
     @Override

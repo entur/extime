@@ -6,8 +6,6 @@ import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.Duration;
 import java.time.ZonedDateTime;
-import java.util.Arrays;
-import java.util.List;
 
 public class FlightRouteToSiriConverter {
 

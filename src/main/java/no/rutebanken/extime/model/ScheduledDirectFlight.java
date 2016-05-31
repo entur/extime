@@ -1,15 +1,15 @@
 package no.rutebanken.extime.model;
 
 import java.math.BigInteger;
+import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.ZonedDateTime;
 
 public class ScheduledDirectFlight {
 
     private BigInteger flightId;
     private String airlineIATA;
     private String airlineFlightId;
-    private ZonedDateTime dateOfOperation;
+    private LocalDate dateOfOperation;
     private String departureAirportIATA;
     private String arrivalAirportIATA;
     private LocalTime timeOfDeparture;
@@ -39,11 +39,11 @@ public class ScheduledDirectFlight {
         this.airlineFlightId = airlineFlightId;
     }
 
-    public ZonedDateTime getDateOfOperation() {
+    public LocalDate getDateOfOperation() {
         return dateOfOperation;
     }
 
-    public void setDateOfOperation(ZonedDateTime dateOfOperation) {
+    public void setDateOfOperation(LocalDate dateOfOperation) {
         this.dateOfOperation = dateOfOperation;
     }
 
