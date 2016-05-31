@@ -14,9 +14,9 @@ import java.util.stream.Collectors;
 public class ScheduledFlightConverter {
 
     public ScheduledFlightDataSet convertToScheduledFlights(List<Flight> scheduledFlights) {
-        Map<String, List<Flight>> flightsByDepartureAirport = scheduledFlights.stream()
-                .collect(Collectors.groupingBy(Flight::getDepartureStation));
-
+        Map<String, List<Flight>> flightsByDepartureAirport =
+                scheduledFlights.stream()
+                        .collect(Collectors.groupingBy(Flight::getDepartureStation));
         ScheduledFlightDataSet scheduledFlightDataSet = new ScheduledFlightDataSet();
         List<ScheduledDirectFlight> scheduledDirectFlights = new ArrayList<>();
         List<ScheduledStopoverFlight> scheduledStopoverFlights = new ArrayList<>();

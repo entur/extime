@@ -31,7 +31,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
     @Override
     public void configure() throws Exception {
         //super.configure();
-        getContext().setTracing(true);
+        //getContext().setTracing(true);
 
         from("{{avinor.timetable.scheduler.cron}}")
                 .routeId("AvinorTimetableSchedulerStarter")
@@ -81,7 +81,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 @SuppressWarnings("unchecked")
                 List<Flight> scheduledFlights = Collections.checkedList(
                         oldExchange.getIn().getBody(List.class), Flight.class);
-                scheduledFlights.addAll(scheduledFlights);
+                scheduledFlights.addAll(newExchangeBody);
                 return oldExchange;
             }
         }
