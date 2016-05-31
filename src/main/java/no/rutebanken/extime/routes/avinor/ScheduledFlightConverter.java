@@ -99,10 +99,6 @@ public class ScheduledFlightConverter {
     }
 
     public Flight findPresentStopoverFlight(Flight currentFlight, List<Flight> destinationFlights) {
-        if (destinationFlights == null) {
-            System.out.println("DESTINATION FLIGHTS IS NULL!!!");
-            System.out.println("CURRENT FLIGHT INFO: " + currentFlight);
-        }
         Optional<Flight> optionalStopoverFlight = destinationFlights.stream()
                 .filter(createStopoverFlightPredicate(currentFlight))
                 .findFirst();
