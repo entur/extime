@@ -1,6 +1,7 @@
 package no.rutebanken.extime.model;
 
 public enum AirportIATA {
+/*
     ALF,
     ANX,
     BDU,
@@ -47,4 +48,10 @@ public enum AirportIATA {
     OLA,
     HOV,
     AES
+*/
+
+    OSL,
+    BGO,
+    HOV,
+    SOG
 }

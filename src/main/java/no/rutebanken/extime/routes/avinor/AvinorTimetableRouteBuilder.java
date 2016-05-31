@@ -1,5 +1,6 @@
 package no.rutebanken.extime.routes.avinor;
 
+import com.google.common.base.Strings;
 import no.avinor.flydata.xjc.model.scheduled.Flight;
 import no.rutebanken.extime.model.AirportIATA;
 import org.apache.camel.Exchange;
@@ -38,7 +39,8 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                     exchange.getIn().setBody(AirportIATA.values());
                 }).id("TimetableAirportIATAProcessor")
                 .setHeader(HEADER_TIMETABLE_PERIOD_FROM, simple("${date:now:yyyy-MM-dd}Z"))
-                .split(body(), new ScheduledFlightListAggregationStrategy()).parallelProcessing()
+                // @todo: enable parallell processing after testing
+                .split(body(), new ScheduledFlightListAggregationStrategy())//.parallelProcessing()
                     .log(LoggingLevel.DEBUG, this.getClass().getName(),
                             "Processing scheduled flights for airport with IATA code: ${body}")
                     .setHeader(HEADER_TIMETABLE_AIRPORT_IATA, simple("${body}"))
@@ -106,6 +108,18 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 }
                 return oldExchange;
             }
+        }
+
+        private boolean isValidFlight(Flight flight) {
+            return flight.getId() != null &&
+                    !Strings.isNullOrEmpty(flight.getAirlineDesignator()) &&
+                    !Strings.isNullOrEmpty(flight.getFlightNumber()) &&
+                    flight.getDateOfOperation() != null &&
+                    !Strings.isNullOrEmpty(flight.getDepartureStation()) &&
+                    flight.getStd() != null &&
+                    !Strings.isNullOrEmpty(flight.getArrivalStation()) &&
+                    flight.getSta() != null &&
+                    isDomesticFlight(flight);
         }
 
         private boolean isDomesticFlight(Flight flight) {

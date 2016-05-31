@@ -21,7 +21,16 @@ public class ScheduledFlightConverter {
         List<ScheduledDirectFlight> scheduledDirectFlights = new ArrayList<>();
         List<ScheduledStopoverFlight> scheduledStopoverFlights = new ArrayList<>();
 
-        scheduledFlights.forEach(scheduledFlight -> {
+        // @todo: remove this mod after testing
+        List<Flight> scheduledFlightsMod = scheduledFlights.stream()
+                .filter(flight ->
+                        flight.getArrivalStation().equalsIgnoreCase("OSL") ||
+                        flight.getArrivalStation().equalsIgnoreCase("BGO") ||
+                        flight.getArrivalStation().equalsIgnoreCase("HOV") ||
+                        flight.getArrivalStation().equalsIgnoreCase("SOG"))
+                .collect(Collectors.toList());
+
+        scheduledFlightsMod.forEach(scheduledFlight -> {
             scheduledDirectFlights.add(convertToScheduledDirectFlight(scheduledFlight));
 
             List<ScheduledStopover> scheduledStopovers = findPossibleStopoversForFlight(scheduledFlight, flightsByDepartureAirport);
@@ -90,6 +99,10 @@ public class ScheduledFlightConverter {
     }
 
     public Flight findPresentStopoverFlight(Flight currentFlight, List<Flight> destinationFlights) {
+        if (destinationFlights == null) {
+            System.out.println("DESTINATION FLIGHTS IS NULL!!!");
+            System.out.println("CURRENT FLIGHT INFO: " + currentFlight);
+        }
         Optional<Flight> optionalStopoverFlight = destinationFlights.stream()
                 .filter(createStopoverFlightPredicate(currentFlight))
                 .findFirst();
