@@ -1,5 +1,6 @@
 package no.rutebanken.extime.routes.avinor;
 
+import com.google.common.collect.Lists;
 import no.avinor.flydata.xjc.model.scheduled.Flight;
 import no.rutebanken.extime.model.*;
 import org.apache.commons.lang3.tuple.ImmutableTriple;
@@ -21,16 +22,7 @@ public class ScheduledFlightConverter {
         List<ScheduledDirectFlight> scheduledDirectFlights = new ArrayList<>();
         List<ScheduledStopoverFlight> scheduledStopoverFlights = new ArrayList<>();
 
-        // @todo: remove this mod after testing
-        List<Flight> scheduledFlightsMod = scheduledFlights.stream()
-                .filter(flight ->
-                        flight.getArrivalStation().equalsIgnoreCase("OSL") ||
-                        flight.getArrivalStation().equalsIgnoreCase("BGO") ||
-                        flight.getArrivalStation().equalsIgnoreCase("HOV") ||
-                        flight.getArrivalStation().equalsIgnoreCase("SOG"))
-                .collect(Collectors.toList());
-
-        scheduledFlightsMod.forEach(scheduledFlight -> {
+        scheduledFlights.forEach(scheduledFlight -> {
             scheduledDirectFlights.add(convertToScheduledDirectFlight(scheduledFlight));
 
             List<ScheduledStopover> scheduledStopovers = findPossibleStopoversForFlight(scheduledFlight, flightsByDepartureAirport);
@@ -50,9 +42,10 @@ public class ScheduledFlightConverter {
 
     public List<ScheduledStopover> findPossibleStopoversForFlight(Flight currentFlight, Map<String, List<Flight>> flightsByDepartureAirport) {
         List<ScheduledStopover> scheduledStopovers = new ArrayList<>();
-        List<Flight> foundStopoverFlights = findPossibleStopoversForFlight(currentFlight, flightsByDepartureAirport, new ArrayList<>());
-        if (!foundStopoverFlights.isEmpty()) {
-            List<Triple<StopVisitType, String, LocalTime>> stopovers = extractStopoversFromFlights(foundStopoverFlights);
+        LinkedList<Flight> stopoverFlights = findPossibleStopoversForFlight(currentFlight, flightsByDepartureAirport, Lists.newLinkedList());
+        if (!stopoverFlights.isEmpty()) {
+            stopoverFlights.addFirst(currentFlight);
+            List<Triple<StopVisitType, String, LocalTime>> stopovers = extractStopoversFromFlights(stopoverFlights);
             Triple<StopVisitType, String, LocalTime> tempArrivalStopover = null;
             for (ListIterator<Triple<StopVisitType, String, LocalTime>> it = stopovers.listIterator(); it.hasNext(); ) {
                 Triple<StopVisitType, String, LocalTime> stopover = it.next();
@@ -83,19 +76,15 @@ public class ScheduledFlightConverter {
         }
     }
 
-    public List<Flight> findPossibleStopoversForFlight(Flight currentFlight,
-                                                       Map<String, List<Flight>> flightsByDepartureAirport, List<Flight> stopoverFlights) {
+    public LinkedList<Flight> findPossibleStopoversForFlight(Flight currentFlight,
+                                                       Map<String, List<Flight>> flightsByDepartureAirport, LinkedList<Flight> stopoverFlights) {
         List<Flight> destinationFlights = flightsByDepartureAirport.get(currentFlight.getArrivalStation());
         Flight foundStopoverFlight = findPresentStopoverFlight(currentFlight, destinationFlights);
         if (foundStopoverFlight != null) {
             stopoverFlights.add(foundStopoverFlight);
             findPossibleStopoversForFlight(foundStopoverFlight, flightsByDepartureAirport, stopoverFlights);
         }
-        if (stopoverFlights.isEmpty()) {
-            return Collections.emptyList();
-        } else {
-            return Collections.unmodifiableList(stopoverFlights);
-        }
+        return stopoverFlights;
     }
 
     public Flight findPresentStopoverFlight(Flight currentFlight, List<Flight> destinationFlights) {

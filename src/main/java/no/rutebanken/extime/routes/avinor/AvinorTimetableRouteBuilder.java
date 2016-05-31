@@ -39,8 +39,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                     exchange.getIn().setBody(AirportIATA.values());
                 }).id("TimetableAirportIATAProcessor")
                 .setHeader(HEADER_TIMETABLE_PERIOD_FROM, simple("${date:now:yyyy-MM-dd}Z"))
-                // @todo: enable parallell processing after testing
-                .split(body(), new ScheduledFlightListAggregationStrategy())//.parallelProcessing()
+                .split(body(), new ScheduledFlightListAggregationStrategy()).parallelProcessing()
                     .log(LoggingLevel.DEBUG, this.getClass().getName(),
                             "Processing scheduled flights for airport with IATA code: ${body}")
                     .setHeader(HEADER_TIMETABLE_AIRPORT_IATA, simple("${body}"))
