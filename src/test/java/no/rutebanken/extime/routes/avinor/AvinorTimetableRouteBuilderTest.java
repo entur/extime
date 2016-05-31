@@ -1,7 +1,7 @@
 package no.rutebanken.extime.routes.avinor;
 
 import no.avinor.flydata.xjc.model.airport.AirportNames;
-import no.avinor.flydata.xjc.model.feed.Flight;
+import no.avinor.flydata.xjc.model.scheduled.Flight;
 import no.rutebanken.extime.model.StopVisitType;
 import no.rutebanken.extime.model.FlightType;
 import org.apache.camel.Exchange;
@@ -31,6 +31,52 @@ import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.*;
 
 public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
 
+    @Test
+    @Ignore
+        public void testAirportFlightsFeedRoute() throws Exception {
+        context.getRouteDefinition("FetchTimetableForAirport").adviceWith(context, new AdviceWithRouteBuilder() {
+            @Override
+            public void configure() throws Exception {
+                interceptSendToEndpoint("mock:flightFeedEndpoint")
+                        .process(exchange -> {
+                            InputStream inputStream = new FileInputStream("target/classes/xml/sched-departures-bgo.xml");
+                            exchange.getIn().setBody(inputStream);
+                        });
+                weaveAddLast().to("mock:output");
+            }
+        });
+        context.start();
+
+        getMockEndpoint("mock:flightFeedEndpoint").expectedMessageCount(1);
+        getMockEndpoint("mock:flightFeedEndpoint").expectedHeaderReceived(Exchange.HTTP_METHOD, HttpMethods.GET);
+        getMockEndpoint("mock:flightFeedEndpoint").expectedHeaderReceived(
+                Exchange.HTTP_QUERY, "airport=BGO&direction=D&PeriodFrom=2016-05-31Z&PeriodTo=2016-06-02Z");
+
+        getMockEndpoint("mock:output").expectedMessageCount(1);
+
+        Map<String, Object> headers = new HashMap<>();
+        headers.put(HEADER_TIMETABLE_AIRPORT_IATA, "BGO");
+        headers.put(HEADER_TIMETABLE_PERIOD_FROM, "2016-05-31Z");
+
+        template.sendBodyAndHeaders("direct:fetchTimetableForAirport", "BGO", headers);
+
+        assertMockEndpointsSatisfied();
+
+        MockEndpoint mockOutput = getMockEndpoint("mock:output");
+        mockOutput.expectedMessageCount(1);
+        Object body = mockOutput.getReceivedExchanges().get(0).getIn().getBody();
+
+        Assertions.assertThat(body).asList()
+                .isNotNull()
+                .isInstanceOf(List.class);
+
+        Assertions.assertThat((List<Flight>) body)
+                .isNotEmpty()
+                .hasSize(37)
+                .doesNotHaveDuplicates();
+    }
+
+/*
     @Test
     @Ignore
     public void testAirportFlightsFeedRoute() throws Exception {
@@ -127,6 +173,7 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
 
         assertMockEndpointsSatisfied();
     }
+*/
 
     @Override
     protected RouteBuilder createRouteBuilder() throws Exception {
@@ -142,6 +189,7 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
                     put("avinor.timetable.arrivals.timeto", "96");
                     put("avinor.timetable.feed.endpoint", "mock:flightFeedEndpoint");
                     put("avinor.airport.feed.endpoint", "mock:airportFeedEndpoint");
+                    put("avinor.timetable.periodto", "2016-06-02Z");
                 }};
                 return testProperties.get(key);
             }

@@ -237,7 +237,7 @@
                                 <include>XmlFeedScheduled-Named.xsd</include>
                             </schemaIncludes>
                             <bindingIncludes>
-                                <include>XmlFeedScheduled.xjb</include>
+                                <include>XmlFeedScheduled-mod.xjb</include>
                             </bindingIncludes>
                             <plugins>
                                 <plugin>
