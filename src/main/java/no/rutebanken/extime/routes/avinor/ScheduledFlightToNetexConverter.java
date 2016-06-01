@@ -10,9 +10,11 @@ import javax.xml.bind.JAXBElement;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.Duration;
+import java.math.BigInteger;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static no.rutebanken.netex.model.PublicationDeliveryStructure.DataObjects;
@@ -68,7 +70,7 @@ public class ScheduledFlightToNetexConverter {
         Codespace nhrCodespace = new Codespace()
                 .withId("nhr")
                 .withXmlns("NHR")
-                .withXmlnsUrl("http://www.rutebanken.no/nasjonltholdeplassregister");
+                .withXmlnsUrl("http://www.rutebanken.no/nasjonaltholdeplassregister");
         return new Codespaces_RelStructure()
                 .withCodespaceRefOrCodespace(Arrays.asList(avinorCodespace, nhrCodespace));
     }
@@ -134,10 +136,34 @@ public class ScheduledFlightToNetexConverter {
     }
 
     public JAXBElement<ServiceFrame> createServiceFrame() {
+        Network network = new Network()
+                .withVersion("1")
+                .withChanged(ZonedDateTime.now())
+                .withId("AVI:GroupOfLine:AvinorFly")
+                .withName(createMultilingualString("Avinor"));
+
+        Direction direction = new Direction()
+                .withName(createMultilingualString(""))
+                .withDirectionType(DirectionTypeEnumeration.OUTBOUND);
+        DirectionsInFrame_RelStructure directionsInFrame = new DirectionsInFrame_RelStructure()
+                .withDirection(direction);
+
+        RoutePointsInFrame_RelStructure routePointsInFrame = new RoutePointsInFrame_RelStructure()
+                .withRoutePoint(createRoutePoints(null)); //@todo: change null argument to a real collection
+
+        ServicePatternsInFrame_RelStructure servicePatternsInFrame = new ServicePatternsInFrame_RelStructure();
+
         ServiceFrame serviceFrame = new ServiceFrame()
                 .withVersion("any")
                 .withId("AVI:ServiceFrame:WF149") // @todo: make dynamic
-                ;
+                .withNetwork(network)
+                .withDirections(directionsInFrame)
+                .withRoutePoints(routePointsInFrame)
+                .withRoutes(createRoutes(null))
+                .withLines(createLines()) // @todo: change null argument to real collection
+                //.withDestinationDisplays()
+                .withScheduledStopPoints(createScheduledStopPoints(null)) // @todo: change null argument to real collection
+                .withServicePatterns(servicePatternsInFrame);
         return new ObjectFactory().createServiceFrame(serviceFrame);
     }
 
@@ -217,6 +243,99 @@ public class ScheduledFlightToNetexConverter {
                 .withCalls(callsRelStructure);
         serviceJourneyList.add(datedServiceJourney);
         return serviceJourneyList;
+    }
+
+    public List<RoutePoint> createRoutePoints(ScheduledStopoverFlight stopoverFlight) {
+        List<RoutePoint> routePoints = new ArrayList<>();
+        List<ScheduledStopover> scheduledStopovers = stopoverFlight.getScheduledStopovers();
+        scheduledStopovers.forEach(stopover -> {
+            PointRefStructure pointRefStructure = new PointRefStructure()
+                    .withVersion("1")
+                    .withRef("AVI:StopPoint:0061101001"); // @todo: refer to an existing StopPoint here
+            PointProjection pointProjection = new PointProjection()
+                    .withVersion("any")
+                    .withId("AVI:PointProjection:0061101A0A0061101001");
+                    //.withProjectedPointRef();  // @todo: make dynamic
+            Projections_RelStructure projections = new Projections_RelStructure()
+                    .withProjectionRefOrProjection(new ObjectFactory().createPointProjection(pointProjection));
+            RoutePoint routePoint = new RoutePoint()
+                    .withVersion("1")
+                    .withId("AVI:RoutePoint:0061101A0A0061101001") // @todo: make dynamic
+                    .withProjections(projections);
+            routePoints.add(routePoint);
+        });
+        return routePoints;
+    }
+
+    public RoutesInFrame_RelStructure createRoutes(ScheduledStopoverFlight stopoverFlight) {
+        RoutesInFrame_RelStructure routesInFrame = new RoutesInFrame_RelStructure();
+        List<ScheduledStopover> scheduledStopovers = stopoverFlight.getScheduledStopovers();
+        PointsOnRoute_RelStructure pointsOnRoute = new PointsOnRoute_RelStructure();
+        scheduledStopovers.forEach(stopover -> {
+            RoutePointRefStructure routePointReference = new RoutePointRefStructure()
+                    .withVersion("1")
+                    .withRef("AVI:RoutePoint:0061101A0A0061101001"); // @todo: fix real ref. here
+            PointOnRoute pointOnRoute = new PointOnRoute()
+                    .withVersion("any")
+                    .withId("AVI:PointOnRoute:0061101001-0")
+                    //.withOrder(BigInteger.valueOf(stopover.getOrder())); // @todo: fix support for order values or implement counter
+                    .withPointRef(new ObjectFactory().createRoutePointRef(routePointReference));
+            pointsOnRoute.getPointOnRoute().add(pointOnRoute);
+        });
+        Route route = new Route()
+                .withVersion("1")
+                .withId("AVI:Route:0061101")
+                .withName(createMultilingualString("WF149"))
+                .withPointsInSequence(pointsOnRoute); // @todo: make dynamic
+                //.withDirectionRef();
+        routesInFrame.getRoute_().add(new ObjectFactory().createRoute(route));
+        return routesInFrame;
+    }
+
+    private LinesInFrame_RelStructure createLines() {
+        LinesInFrame_RelStructure linesInFrame = new LinesInFrame_RelStructure();
+        RouteRefStructure routeRefStructure = new RouteRefStructure()
+                .withVersion("1")
+                .withRef("AVI:Route:0061101");
+        RouteRefs_RelStructure routeRefs = new RouteRefs_RelStructure()
+                .withRouteRef(routeRefStructure);
+        Line line = new Line()
+                .withVersion("any")
+                .withId("AVI:Line:WF149")
+                .withName(createMultilingualString("Oslo-Bergen")) // @todo: make dynamic
+                .withTransportMode(AllVehicleModesOfTransportEnumeration.AIR)
+                .withPublicCode("WF149") // @todo: make dynamic
+                .withRoutes(routeRefs);
+        linesInFrame.getLine_().add(new ObjectFactory().createLine(line));
+        return null;
+    }
+
+    private ScheduledStopPointsInFrame_RelStructure createScheduledStopPoints(ScheduledStopoverFlight stopoverFlight) {
+        ScheduledStopPointsInFrame_RelStructure scheduledStopPointsInFrame = new ScheduledStopPointsInFrame_RelStructure();
+        List<ScheduledStopover> scheduledStopovers = stopoverFlight.getScheduledStopovers();
+        scheduledStopovers.forEach(stopover -> {
+            ScheduledStopPoint scheduledStopPoint = new ScheduledStopPoint()
+                    .withVersion("1")
+                    .withId("AVI:StopPoint:0061101001")
+                    .withName(createMultilingualString(stopover.getAirportIATA())); // @todo: change to airport name when available
+            scheduledStopPointsInFrame.getScheduledStopPoint().add(scheduledStopPoint);
+        });
+        return scheduledStopPointsInFrame;
+    }
+
+    public ServicePatternsInFrame_RelStructure createServicePatterns(List<ScheduledStopPoint> scheduledStopPoints) {
+        ServicePattern servicePattern = new ServicePattern()
+                .withVersion("1")
+                .withId("AVI:ServicePattern:0061101")
+                .withName(createMultilingualString("WF149"))
+                .withRouteRef(new RouteRefStructure().withVersion("1").withRef("AVI:Route:0061101"));
+        ServicePatternsInFrame_RelStructure servicePatternsInFrame = new ServicePatternsInFrame_RelStructure()
+                .withServicePatternOrJourneyPatternView(servicePattern);
+
+        scheduledStopPoints.forEach(scheduledStopPoint -> {
+
+        });
+        return servicePatternsInFrame;
     }
 
     public MultilingualString createMultilingualString(String value) {
