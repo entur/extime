@@ -86,7 +86,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
 
         from("direct:convertDirectFlightsToNetex")
                 .routeId("DirectFlightsNetexConverter")
-                .log(LoggingLevel.DEBUG, this.getClass().getName(), "Converting to scheduled direct flights to NeTEx")
+                .log(LoggingLevel.DEBUG, this.getClass().getName(), "Converting scheduled direct flights to NeTEx")
                 .split(body()).parallelProcessing()
                     .log(LoggingLevel.DEBUG, this.getClass().getName(), "Converting scheduled direct flight with id: ${body.flightId}")
                     .bean(ScheduledFlightToNetexConverter.class, "convertToNetex")
@@ -96,9 +96,9 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
 
         from("direct:convertStopoverFlightsToNetex")
                 .routeId("StopoverFlightsNetexConverter")
-                .log(LoggingLevel.DEBUG, this.getClass().getName(), "Converting to scheduled direct flights to NeTEx")
+                .log(LoggingLevel.DEBUG, this.getClass().getName(), "Converting scheduled stopover flights to NeTEx")
                 .split(body()).parallelProcessing()
-                    .log(LoggingLevel.DEBUG, this.getClass().getName(), "Converting scheduled direct flight with id: ${body.flightId}")
+                    .log(LoggingLevel.DEBUG, this.getClass().getName(), "Converting scheduled stopover flight with id: ${body.flightId}")
                     .bean(ScheduledFlightToNetexConverter.class, "convertToNetex")
                     .to("mock:jms:queue")
                 .end()
