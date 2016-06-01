@@ -4,6 +4,7 @@ import no.rutebanken.extime.model.ScheduledDirectFlight;
 import no.rutebanken.extime.model.ScheduledStopover;
 import no.rutebanken.extime.model.ScheduledStopoverFlight;
 import no.rutebanken.netex.model.*;
+import no.rutebanken.netex.model.PublicationDeliveryStructure.DataObjects;
 import org.springframework.stereotype.Component;
 
 import javax.xml.bind.JAXBElement;
@@ -14,10 +15,7 @@ import java.math.BigInteger;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
-
-import static no.rutebanken.netex.model.PublicationDeliveryStructure.DataObjects;
 
 /**
  * @todo: inject the netex object factory as a spring bean instead of doing: new ObjectFactory() each call
@@ -151,8 +149,6 @@ public class ScheduledFlightToNetexConverter {
         RoutePointsInFrame_RelStructure routePointsInFrame = new RoutePointsInFrame_RelStructure()
                 .withRoutePoint(createRoutePoints(null)); //@todo: change null argument to a real collection
 
-        ServicePatternsInFrame_RelStructure servicePatternsInFrame = new ServicePatternsInFrame_RelStructure();
-
         ServiceFrame serviceFrame = new ServiceFrame()
                 .withVersion("any")
                 .withId("AVI:ServiceFrame:WF149") // @todo: make dynamic
@@ -163,7 +159,8 @@ public class ScheduledFlightToNetexConverter {
                 .withLines(createLines()) // @todo: change null argument to real collection
                 //.withDestinationDisplays()
                 .withScheduledStopPoints(createScheduledStopPoints(null)) // @todo: change null argument to real collection
-                .withServicePatterns(servicePatternsInFrame);
+                .withServicePatterns(createServicePatterns(null)) // @todo: change null argument to real collection
+                .withStopAssignments(createStopAssignments(null)); // @todo: change null argument to real collection
         return new ObjectFactory().createServiceFrame(serviceFrame);
     }
 
@@ -324,18 +321,37 @@ public class ScheduledFlightToNetexConverter {
     }
 
     public ServicePatternsInFrame_RelStructure createServicePatterns(List<ScheduledStopPoint> scheduledStopPoints) {
+        StopPointsInJourneyPattern_RelStructure stopPointsInJourneyPattern = new StopPointsInJourneyPattern_RelStructure();
+        scheduledStopPoints.forEach(stopPoint -> {
+            StopPointInJourneyPattern stopPointInJourneyPattern = new StopPointInJourneyPattern()
+                    .withVersion("1")
+                    .withId("AVI:StopPointInJourneyPattern:0061101001")
+                    .withOrder(BigInteger.ONE) // @todo: fix a counter
+                    .withScheduledStopPointRef(new ObjectFactory().createScheduledStopPointRef(new ScheduledStopPointRefStructure().withVersion("1").withRef("AVI:StopPoint:0061101001")));
+            stopPointsInJourneyPattern.getStopPointInJourneyPattern().add(stopPointInJourneyPattern);
+        });
         ServicePattern servicePattern = new ServicePattern()
                 .withVersion("1")
                 .withId("AVI:ServicePattern:0061101")
                 .withName(createMultilingualString("WF149"))
-                .withRouteRef(new RouteRefStructure().withVersion("1").withRef("AVI:Route:0061101"));
-        ServicePatternsInFrame_RelStructure servicePatternsInFrame = new ServicePatternsInFrame_RelStructure()
+                .withRouteRef(new RouteRefStructure().withVersion("1").withRef("AVI:Route:0061101"))
+                .withPointsInSequence(stopPointsInJourneyPattern);
+        return new ServicePatternsInFrame_RelStructure()
                 .withServicePatternOrJourneyPatternView(servicePattern);
+    }
 
-        scheduledStopPoints.forEach(scheduledStopPoint -> {
-
+    public StopAssignmentsInFrame_RelStructure createStopAssignments(List<ScheduledStopPoint> scheduledStopPoints) {
+        StopAssignmentsInFrame_RelStructure stopAssignmentsInFrame = new StopAssignmentsInFrame_RelStructure();
+        scheduledStopPoints.forEach(stopPoint -> {
+            PassengerStopAssignment passengerStopAssignment = new PassengerStopAssignment()
+                    .withVersion("any")
+                    .withOrder(BigInteger.ONE)
+                    .withId("AVI:PassengerStopAssignment:0061101001")
+                    .withScheduledStopPointRef(new ScheduledStopPointRefStructure().withVersion("1").withRef("AVI:StopPoint:0061101001"))
+                    .withStopPlaceRef(new StopPlaceRefStructure().withVersion("1").withRef("NHR:StopArea:03011521"));
+            stopAssignmentsInFrame.getStopAssignment().add(new ObjectFactory().createStopAssignment(passengerStopAssignment));
         });
-        return servicePatternsInFrame;
+        return stopAssignmentsInFrame;
     }
 
     public MultilingualString createMultilingualString(String value) {
