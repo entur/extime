@@ -14,17 +14,19 @@ import java.util.stream.Collectors;
 
 public class ScheduledFlightConverter {
 
-    public ScheduledFlightDataSet convertToScheduledFlights(List<Flight> scheduledFlights) {
-        Map<String, List<Flight>> flightsByDepartureAirport =
-                scheduledFlights.stream()
-                        .collect(Collectors.groupingBy(Flight::getDepartureStation));
-        ScheduledFlightDataSet scheduledFlightDataSet = new ScheduledFlightDataSet();
+    public List<ScheduledDirectFlight> convertToScheduledDirectFlights(List<Flight> scheduledFlights) {
         List<ScheduledDirectFlight> scheduledDirectFlights = new ArrayList<>();
+        scheduledFlights.forEach(scheduledFlight -> scheduledDirectFlights.add(convertToScheduledDirectFlight(scheduledFlight)));
+        return scheduledDirectFlights;
+    }
+
+    public List<ScheduledStopoverFlight> convertToScheduledStopoverFlights(List<Flight> scheduledFlights) {
+        Map<String, List<Flight>> flightsByDepartureAirport = scheduledFlights.stream()
+                .collect(Collectors.groupingBy(Flight::getDepartureStation));
+
         List<ScheduledStopoverFlight> scheduledStopoverFlights = new ArrayList<>();
 
         scheduledFlights.forEach(scheduledFlight -> {
-            scheduledDirectFlights.add(convertToScheduledDirectFlight(scheduledFlight));
-
             List<ScheduledStopover> scheduledStopovers = findPossibleStopoversForFlight(scheduledFlight, flightsByDepartureAirport);
             if (!scheduledStopovers.isEmpty()) {
                 ScheduledStopoverFlight scheduledStopoverFlight = new ScheduledStopoverFlight();
@@ -35,9 +37,7 @@ public class ScheduledFlightConverter {
                 scheduledStopoverFlights.add(scheduledStopoverFlight);
             }
         });
-        scheduledFlightDataSet.getScheduledDirectFlights().addAll(scheduledDirectFlights);
-        scheduledFlightDataSet.getScheduledStopoverFlights().addAll(scheduledStopoverFlights);
-        return scheduledFlightDataSet;
+        return scheduledStopoverFlights;
     }
 
     public List<ScheduledStopover> findPossibleStopoversForFlight(Flight currentFlight, Map<String, List<Flight>> flightsByDepartureAirport) {

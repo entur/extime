@@ -45,9 +45,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                     .setHeader(HEADER_TIMETABLE_AIRPORT_IATA, simple("${body}"))
                     .to("direct:fetchTimetableForAirport").id("FetchTimetableProcessor")
                 .end()
-                .bean(ScheduledFlightConverter.class, "convertToScheduledFlights")
-                //.bean(ScheduledRouteToNetexConverter.class)
-                .to("mock:jms:queue")
+                .to("direct:convertTimetableForAirports")
         ;
 
         from("direct:fetchTimetableForAirport")
@@ -61,6 +59,48 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .split(stax(Flight.class, false), new ScheduledAirportFlightsAggregationStrategy()).streaming()
                     .log(LoggingLevel.DEBUG, this.getClass().getName(),
                             "Fetched flight with id: ${body.airlineDesignator}${body.flightNumber}")
+                .end()
+        ;
+
+        from("direct:convertTimetableForAirports")
+                .routeId("TimetableConverter")
+                .multicast()
+                    .to("direct:convertToDirectFlights").id("ConvertDirectFlightsProcessor")
+                    .to("direct:convertToStopoverFlights").id("ConvertStopoverFlightsProcessor")
+                .end()
+        ;
+
+        from("direct:convertToDirectFlights")
+                .routeId("DirectFlightsConverter")
+                .log(LoggingLevel.DEBUG, this.getClass().getName(), "Converting to scheduled direct flights")
+                .bean(ScheduledFlightConverter.class, "convertToScheduledDirectFlights")
+                .to("direct:convertDirectFlightsToNetex")
+        ;
+
+        from("direct:convertToStopoverFlights")
+                .routeId("StopoverFlightsConverter")
+                .log(LoggingLevel.DEBUG, this.getClass().getName(), "Converting to scheduled stopover flights")
+                .bean(ScheduledFlightConverter.class, "convertToScheduledStopoverFlights")
+                .to("direct:convertStopoverFlightsToNetex")
+        ;
+
+        from("direct:convertDirectFlightsToNetex")
+                .routeId("DirectFlightsNetexConverter")
+                .log(LoggingLevel.DEBUG, this.getClass().getName(), "Converting to scheduled direct flights to NeTEx")
+                .split(body()).parallelProcessing()
+                    .log(LoggingLevel.DEBUG, this.getClass().getName(), "Converting scheduled direct flight with id: ${body.flightId}")
+                    .bean(ScheduledFlightToNetexConverter.class, "convertToNetex")
+                    .to("mock:jms:queue")
+                .end()
+        ;
+
+        from("direct:convertStopoverFlightsToNetex")
+                .routeId("StopoverFlightsNetexConverter")
+                .log(LoggingLevel.DEBUG, this.getClass().getName(), "Converting to scheduled direct flights to NeTEx")
+                .split(body()).parallelProcessing()
+                    .log(LoggingLevel.DEBUG, this.getClass().getName(), "Converting scheduled direct flight with id: ${body.flightId}")
+                    .bean(ScheduledFlightToNetexConverter.class, "convertToNetex")
+                    .to("mock:jms:queue")
                 .end()
         ;
     }
