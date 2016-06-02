@@ -1,5 +1,6 @@
 package no.rutebanken.extime.routes.avinor;
 
+import com.google.common.collect.Lists;
 import no.rutebanken.extime.NetexModelConfig;
 import no.rutebanken.extime.model.ScheduledDirectFlight;
 import no.rutebanken.extime.model.ScheduledStopover;
@@ -18,6 +19,7 @@ import java.math.BigInteger;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 @Component
@@ -33,13 +35,16 @@ public class ScheduledFlightToNetexConverter {
 
     public PublicationDeliveryStructure convertToNetex(ScheduledDirectFlight directFlight) {
         String routePath = String.format("%s-%s", directFlight.getDepartureAirportIATA(), directFlight.getArrivalAirportIATA());
-        ScheduledStopPointsInFrame_RelStructure scheduledStopPointsStructure = createScheduledStopPoints(directFlight);
-        List<ScheduledStopPoint> scheduledStopPoints = scheduledStopPointsStructure.getScheduledStopPoint();
+
+        Direction direction = createDirection(directFlight.getAirlineFlightId());
+        List<ScheduledStopPoint> scheduledStopPoints = createScheduledStopPoints(directFlight);
+        List<RoutePoint> routePoints = createRoutePoints(scheduledStopPoints, directFlight.getAirlineFlightId());
+        List<JAXBElement<Route>> routes = createRoutes(routePoints, directFlight.getAirlineFlightId(), routePath, direction);
 
         Frames_RelStructure frames = new Frames_RelStructure();
         frames.getCommonFrame().add(createResourceFrame(directFlight.getAirlineIATA()));
         frames.getCommonFrame().add(createSiteFrame(directFlight));
-        frames.getCommonFrame().add(createServiceFrame(scheduledStopPointsStructure));
+        frames.getCommonFrame().add(createServiceFrame(direction, scheduledStopPoints, routePoints, routes));
         //framesRelStructure.getCommonFrame().add(createServiceCalendarFrame());
         //framesRelStructure.getCommonFrame().add(createTimetableFrame());
 
@@ -163,32 +168,36 @@ public class ScheduledFlightToNetexConverter {
         return getObjectFactory().createSiteFrame(siteFrame);
     }
 
-    public JAXBElement<ServiceFrame> createServiceFrame(ScheduledStopPointsInFrame_RelStructure scheduledStopPoints) {
+    public JAXBElement<ServiceFrame> createServiceFrame(Direction direction, List<ScheduledStopPoint> scheduledStopPoints,
+                                                        List<RoutePoint> routePoints, List<JAXBElement<Route>> routes) {
         Network network = new Network()
                 .withVersion("1")
                 .withChanged(ZonedDateTime.now())
                 .withId(String.format("%s:GroupOfLine:%s", AVINOR_ID, AVINOR_NAME))
                 .withName(createMultilingualString(AVINOR_NAME));
 
-        Direction direction = new Direction()
-                .withName(createMultilingualString("Outbound"))
-                .withDirectionType(DirectionTypeEnumeration.OUTBOUND);
         DirectionsInFrame_RelStructure directionsInFrame = new DirectionsInFrame_RelStructure()
                 .withDirection(direction);
 
-        RoutePointsInFrame_RelStructure routePointsInFrame = new RoutePointsInFrame_RelStructure();
-                //.withRoutePoint(createRoutePoints(null)); //@todo: change null argument to a real collection
+        RoutePointsInFrame_RelStructure routePointsInFrame = new RoutePointsInFrame_RelStructure()
+                .withRoutePoint(routePoints);
+
+        RoutesInFrame_RelStructure routesInFrame = new RoutesInFrame_RelStructure();
+        routesInFrame.getRoute_().addAll(routes);
+
+        ScheduledStopPointsInFrame_RelStructure scheduledStopPointsInFrame = new ScheduledStopPointsInFrame_RelStructure()
+                .withScheduledStopPoint(scheduledStopPoints);
 
         ServiceFrame serviceFrame = new ServiceFrame()
                 .withVersion("any")
                 .withId("AVI:ServiceFrame:WF149") // @todo: make dynamic
                 .withNetwork(network)
                 .withDirections(directionsInFrame)
-                //.withRoutePoints(routePointsInFrame)
-                //.withRoutes(createRoutes(null))
+                .withRoutePoints(routePointsInFrame)
+                .withRoutes(routesInFrame)
                 //.withLines(createLines()) // @todo: change null argument to real collection
                 //.withDestinationDisplays()
-                .withScheduledStopPoints(scheduledStopPoints);
+                .withScheduledStopPoints(scheduledStopPointsInFrame);
                 //.withServicePatterns(createServicePatterns(null)) // @todo: change null argument to real collection
                 //.withStopAssignments(createStopAssignments(null)); // @todo: change null argument to real collection
         return getObjectFactory().createServiceFrame(serviceFrame);
@@ -320,6 +329,27 @@ public class ScheduledFlightToNetexConverter {
         return serviceJourneyList;
     }
 
+    public List<RoutePoint> createRoutePoints(List<ScheduledStopPoint> scheduledStopPoints, String flightId) {
+        List<RoutePoint> routePoints = new ArrayList<>();
+        scheduledStopPoints.forEach(stopPoint -> {
+            PointRefStructure pointRefStructure = new PointRefStructure()
+                    .withVersion("1")
+                    .withRef(stopPoint.getId());
+            PointProjection pointProjection = new PointProjection()
+                    .withVersion("any")
+                    .withId(String.format("%s:PointProjection:%s101A0A0061101001", AVINOR_ID, flightId)) // @todo: generate postfix id in a serie
+                    .withProjectedPointRef(pointRefStructure);
+            Projections_RelStructure projections = new Projections_RelStructure()
+                    .withProjectionRefOrProjection(getObjectFactory().createPointProjection(pointProjection));
+            RoutePoint routePoint = new RoutePoint()
+                    .withVersion("1")
+                    .withId(String.format("%s:RoutePoint:%s101A0A0061101001", AVINOR_ID, flightId)) // @todo: generate postfix id in a serie
+                    .withProjections(projections);
+            routePoints.add(routePoint);
+        });
+        return routePoints;
+    }
+
     public List<RoutePoint> createRoutePoints(ScheduledStopoverFlight stopoverFlight) {
         List<RoutePoint> routePoints = new ArrayList<>();
         List<ScheduledStopover> scheduledStopovers = stopoverFlight.getScheduledStopovers();
@@ -340,6 +370,30 @@ public class ScheduledFlightToNetexConverter {
             routePoints.add(routePoint);
         });
         return routePoints;
+    }
+
+    public List<JAXBElement<Route>> createRoutes(List<RoutePoint> routePoints, String flightId, String routePath, Direction direction) {
+        PointsOnRoute_RelStructure pointsOnRoute = new PointsOnRoute_RelStructure();
+        routePoints.forEach(routePoint -> {
+            RoutePointRefStructure routePointReference = new RoutePointRefStructure()
+                    .withVersion("1")
+                    .withRef(routePoint.getId());
+            PointOnRoute pointOnRoute = new PointOnRoute()
+                    .withVersion("any")
+                    .withId(String.format("%s:PointOnRoute:%s101001-0", AVINOR_ID, flightId)) // @todo: fix generation of serial numbers
+                    //.withOrder(BigInteger.valueOf(stopover.getOrder())); // @todo: fix support for order values or implement counter
+                    .withPointRef(getObjectFactory().createRoutePointRef(routePointReference));
+            pointsOnRoute.getPointOnRoute().add(pointOnRoute);
+        });
+        DirectionRefStructure directionRefStructure = new DirectionRefStructure()
+                .withRef(direction.getId());
+        Route route = new Route()
+                .withVersion("1")
+                .withId(String.format("%s:Route:%s101", AVINOR_ID, flightId))
+                .withName(createMultilingualString(String.format("%s: %s", flightId, routePath)))
+                .withPointsInSequence(pointsOnRoute)
+                .withDirectionRef(directionRefStructure);
+        return Collections.singletonList(getObjectFactory().createRoute(route));
     }
 
     public RoutesInFrame_RelStructure createRoutes(ScheduledStopoverFlight stopoverFlight) {
@@ -385,22 +439,16 @@ public class ScheduledFlightToNetexConverter {
         return null;
     }
 
-    private ScheduledStopPointsInFrame_RelStructure createScheduledStopPoints(ScheduledDirectFlight directFlight) {
-        ScheduledStopPointsInFrame_RelStructure scheduledStopPointsInFrame = new ScheduledStopPointsInFrame_RelStructure();
-
+    private List<ScheduledStopPoint> createScheduledStopPoints(ScheduledDirectFlight directFlight) {
         ScheduledStopPoint scheduledDepartureStopPoint = new ScheduledStopPoint()
                 .withVersion("1")
                 .withId(String.format("%s:StopPoint:%s101001", AVINOR_ID, directFlight.getAirlineFlightId()))
                 .withName(createMultilingualString(directFlight.getDepartureAirportIATA())); // @todo: change to airport name when available
-        scheduledStopPointsInFrame.getScheduledStopPoint().add(scheduledDepartureStopPoint);
-
         ScheduledStopPoint scheduledArrivalStopPoint = new ScheduledStopPoint()
                 .withVersion("1")
                 .withId(String.format("%s:StopPoint:%s101002", AVINOR_ID, directFlight.getAirlineFlightId()))
                 .withName(createMultilingualString(directFlight.getArrivalAirportIATA())); // @todo: change to airport name when available
-        scheduledStopPointsInFrame.getScheduledStopPoint().add(scheduledArrivalStopPoint);
-
-        return scheduledStopPointsInFrame;
+        return Lists.newArrayList(scheduledDepartureStopPoint, scheduledArrivalStopPoint);
     }
 
     private ScheduledStopPointsInFrame_RelStructure createScheduledStopPoints(ScheduledStopoverFlight stopoverFlight) {
@@ -448,6 +496,13 @@ public class ScheduledFlightToNetexConverter {
             stopAssignmentsInFrame.getStopAssignment().add(getObjectFactory().createStopAssignment(passengerStopAssignment));
         });
         return stopAssignmentsInFrame;
+    }
+
+    public Direction createDirection(String flightId) {
+        return new Direction()
+                .withId(String.format("%s:Route:%s101:Direction", AVINOR_ID, flightId))
+                .withName(createMultilingualString("Outbound"))
+                .withDirectionType(DirectionTypeEnumeration.OUTBOUND);
     }
 
     public MultilingualString createMultilingualString(String value) {
