@@ -33,12 +33,10 @@ public class ScheduledFlightToNetexConverter {
     public PublicationDeliveryStructure convertToNetex(ScheduledDirectFlight directFlight) {
         String routePath = String.format("%s-%s", directFlight.getDepartureAirportIATA(), directFlight.getArrivalAirportIATA());
 
-        JAXBElement<ResourceFrame> resourceFrame = createResourceFrame(directFlight.getAirlineIATA());
-
         Frames_RelStructure frames = new Frames_RelStructure();
-        frames.getCommonFrame().add(resourceFrame);
-        //framesRelStructure.getCommonFrame().add(createSiteFrame());
-        //framesRelStructure.getCommonFrame().add(createSiteFrame());
+        frames.getCommonFrame().add(createResourceFrame(directFlight.getAirlineIATA()));
+        frames.getCommonFrame().add(createSiteFrame(directFlight));
+        //framesRelStructure.getCommonFrame().add(createServiceFrame());
         //framesRelStructure.getCommonFrame().add(createServiceCalendarFrame());
         //framesRelStructure.getCommonFrame().add(createTimetableFrame());
 
@@ -102,6 +100,39 @@ public class ScheduledFlightToNetexConverter {
                 .withFrameDefaults(versionFrameDefaultsStructure)
                 .withOrganisations(organisationsInFrame);
         return getObjectFactory().createResourceFrame(resourceFrame);
+    }
+
+    public JAXBElement<SiteFrame> createSiteFrame(ScheduledDirectFlight directFlight) {
+        List<StopPlace> stopPlaces = new ArrayList<>();
+        StopPlace departureStopPlace = new StopPlace()
+                .withVersion("1")
+                .withId("NHR:StopArea:03011537") // @todo: retrieve the actual stopplace id from NHR
+                .withName(createMultilingualString(directFlight.getDepartureAirportIATA())) // @todo: change to airportname when available
+                .withShortName(createMultilingualString(directFlight.getDepartureAirportIATA()))
+                // .withQuays() // @todo: consider adding quays to stopplace, refering to gates in aviation, if available
+                .withTransportMode(VehicleModeEnumeration.AIR)
+                .withStopPlaceType(StopTypeEnumeration.AIRPORT);
+        stopPlaces.add(departureStopPlace);
+
+        StopPlace arrivalStopPlace = new StopPlace()
+                .withVersion("1")
+                .withId("NHR:StopArea:03011521")  // @todo: retrieve the actual stopplace id from NHR
+                .withName(createMultilingualString(directFlight.getArrivalAirportIATA())) // @todo: change to airportname when available
+                .withShortName(createMultilingualString(directFlight.getArrivalAirportIATA()))
+                // .withQuays() // @todo: consider adding quays to stopplace, refering to gates in aviation, if available
+                .withTransportMode(VehicleModeEnumeration.AIR)
+                .withStopPlaceType(StopTypeEnumeration.AIRPORT);
+        stopPlaces.add(arrivalStopPlace);
+
+        StopPlacesInFrame_RelStructure stopPlacesInFrameRelStructure =
+                new StopPlacesInFrame_RelStructure()
+                        .withStopPlace(stopPlaces);
+
+        SiteFrame siteFrame = new SiteFrame()
+                .withVersion("any")
+                .withId(String.format("%s:SiteFrame:SF01", AVINOR_ID))
+                .withStopPlaces(stopPlacesInFrameRelStructure);
+        return getObjectFactory().createSiteFrame(siteFrame);
     }
 
     public JAXBElement<SiteFrame> createSiteFrame(List<ScheduledStopover> stopovers) {

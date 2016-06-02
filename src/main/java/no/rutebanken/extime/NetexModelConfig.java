@@ -1,17 +1,17 @@
 package no.rutebanken.extime;
 
 import no.rutebanken.netex.model.*;
-import org.springframework.beans.factory.annotation.Autowire;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Scope;
 
 import javax.xml.bind.JAXBElement;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Externalize all properties
+ */
 @Configuration
 public class NetexModelConfig {
 
@@ -53,6 +53,9 @@ public class NetexModelConfig {
         return operator;
     }
 
+    /**
+     * Extract to common method, to be used by all operator beans
+     */
     @Bean(name = "DY")
     public Operator norwegianOperator() {
         JAXBElement<String> companyNumber = netexObjectFactory().createOrganisation_VersionStructureCompanyNumber("912084949");
@@ -74,10 +77,4 @@ public class NetexModelConfig {
                 .withRest(jaxbElements);
     }
 
-/*
-    @Bean
-    public Foo foo(@Qualifier("bar1") Bar bar1) {
-        return new Foo(bar1);
-    }
-*/
 }
