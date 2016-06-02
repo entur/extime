@@ -1,11 +1,14 @@
 package no.rutebanken.extime.routes.avinor;
 
+import no.rutebanken.extime.NetexModelConfig;
 import no.rutebanken.extime.model.ScheduledDirectFlight;
 import no.rutebanken.extime.model.ScheduledStopover;
 import no.rutebanken.extime.model.ScheduledStopoverFlight;
 import no.rutebanken.netex.model.*;
 import no.rutebanken.netex.model.PublicationDeliveryStructure.DataObjects;
-import org.springframework.stereotype.Component;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.stereotype.Service;
 
 import javax.xml.bind.JAXBElement;
 import javax.xml.datatype.DatatypeConfigurationException;
@@ -17,11 +20,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * @todo: inject the netex object factory as a spring bean instead of doing: new ObjectFactory() each call
- */
-@Component(value = "scheduledFlightToNetexConverter")
+@Service
 public class ScheduledFlightToNetexConverter {
+
+    private static final String AVINOR_ID = "AVI";
+
+    private ApplicationContext context = new AnnotationConfigApplicationContext(NetexModelConfig.class);
+    private ObjectFactory objectFactory = context.getBean("netexObjectFactory", ObjectFactory.class);
+    private Codespace avinorCodespace = context.getBean("avinorCodespace", Codespace.class);
+    private Codespace nhrCodespace = context.getBean("nhrCodespace", Codespace.class);
 
     public PublicationDeliveryStructure convertToNetex(ScheduledDirectFlight directFlight) {
         String routePath = String.format("%s-%s", directFlight.getDepartureAirportIATA(), directFlight.getArrivalAirportIATA());
@@ -34,43 +41,30 @@ public class ScheduledFlightToNetexConverter {
 
     public PublicationDeliveryStructure createPublicationDeliveryStructure(String flightId, String routePath) {
         DataObjects dataObjects = new DataObjects();
-        dataObjects.getCompositeFrameOrCommonFrame().add(createCompositeFrame());
+        dataObjects.getCompositeFrameOrCommonFrame().add(createCompositeFrame(flightId));
 
         return new PublicationDeliveryStructure()
                 .withVersion("1.0")
                 .withPublicationTimestamp(ZonedDateTime.now())
-                .withParticipantRef("AVI")
-                //.withPublicationRequest(publicationRequestStructure)
-                //.withPublicationRefreshInterval(createDuration("P24H"))
+                .withParticipantRef(AVINOR_ID) // should this be Avinor or the actual flight airline?
                 .withPublicationRefreshInterval(createDuration(""))
-                .withDescription(createMultilingualString(String.format("Rute flight %s: %s", flightId, routePath)))
+                .withDescription(createMultilingualString(String.format("Flight %s: %s", flightId, routePath)))
                 .withDataObjects(dataObjects);
     }
 
-    public JAXBElement<CompositeFrame> createCompositeFrame() {
+    public JAXBElement<CompositeFrame> createCompositeFrame(String flightId) {
         CompositeFrame compositeFrame = new CompositeFrame()
                 .withVersion("1")
                 .withCreated(ZonedDateTime.now())
-                .withId("AVI:Norway:CompositeFrame:WF149") // @todo: make dynamic
+                .withId(String.format("%s:Norway:CompositeFrame:%s", AVINOR_ID, flightId))
                 .withCodespaces(createCodespaces())
                 .withFrames(createFrames());
-        return new ObjectFactory().createCompositeFrame(compositeFrame);
+        return getObjectFactory().createCompositeFrame(compositeFrame);
     }
 
-    /**
-     * @todo: make these codespaces accessible at class level, for references
-     */
     public Codespaces_RelStructure createCodespaces() {
-        Codespace avinorCodespace = new Codespace()
-                .withId("avinor")
-                .withXmlns("AVI")
-                .withXmlnsUrl("https://avinor.no/");
-        Codespace nhrCodespace = new Codespace()
-                .withId("nhr")
-                .withXmlns("NHR")
-                .withXmlnsUrl("http://www.rutebanken.no/nasjonaltholdeplassregister");
         return new Codespaces_RelStructure()
-                .withCodespaceRefOrCodespace(Arrays.asList(avinorCodespace, nhrCodespace));
+                .withCodespaceRefOrCodespace(Arrays.asList(getAvinorCodespace(), getNhrCodespace()));
     }
 
     public Frames_RelStructure createFrames() {
@@ -85,7 +79,7 @@ public class ScheduledFlightToNetexConverter {
 
     public JAXBElement<ResourceFrame> createResourceFrame() {
         CodespaceRefStructure codespaceRefStructure = new CodespaceRefStructure()
-                .withRef("avinor"); // @todo: make dynamic, maps to Codespace with id=avinor
+                .withRef(getAvinorCodespace().getId());
 
         LocaleStructure localeStructure = new LocaleStructure()
                 .withTimeZone("CET")
@@ -99,14 +93,14 @@ public class ScheduledFlightToNetexConverter {
 
         OrganisationsInFrame_RelStructure organisationsInFrame = new OrganisationsInFrame_RelStructure();
         organisationsInFrame.getOrganisation_().add(createAuthority());
-        organisationsInFrame.getOrganisation_().add(createOperator());
+        organisationsInFrame.getOrganisation_().add(createOperator("SAS"));
 
         ResourceFrame resourceFrame = new ResourceFrame()
                 .withVersion("any")
                 .withId("AVI:ResourceFrame:RF1")
                 .withFrameDefaults(versionFrameDefaultsStructure) // @todo: make dynamic
                 .withOrganisations(organisationsInFrame);
-        return new ObjectFactory().createResourceFrame(resourceFrame);
+        return getObjectFactory().createResourceFrame(resourceFrame);
     }
 
     public JAXBElement<SiteFrame> createSiteFrame(List<ScheduledStopover> stopovers) {
@@ -131,7 +125,7 @@ public class ScheduledFlightToNetexConverter {
                 .withVersion("any")
                 .withId("AVI:SiteFrame:SF01") // @todo: make dynamic
                 .withStopPlaces(stopPlacesInFrameRelStructure);
-        return new ObjectFactory().createSiteFrame(siteFrame);
+        return getObjectFactory().createSiteFrame(siteFrame);
     }
 
     public JAXBElement<ServiceFrame> createServiceFrame() {
@@ -162,12 +156,12 @@ public class ScheduledFlightToNetexConverter {
                 .withScheduledStopPoints(createScheduledStopPoints(null)) // @todo: change null argument to real collection
                 .withServicePatterns(createServicePatterns(null)) // @todo: change null argument to real collection
                 .withStopAssignments(createStopAssignments(null)); // @todo: change null argument to real collection
-        return new ObjectFactory().createServiceFrame(serviceFrame);
+        return getObjectFactory().createServiceFrame(serviceFrame);
     }
 
     public JAXBElement<ServiceCalendarFrame> createServiceCalendarFrame() {
         ServiceCalendarFrame serviceCalendarFrame = new ServiceCalendarFrame();
-        return new ObjectFactory().createServiceCalendarFrame(serviceCalendarFrame);
+        return getObjectFactory().createServiceCalendarFrame(serviceCalendarFrame);
     }
 
     public JAXBElement<TimetableFrame> createTimetableFrame() {
@@ -186,7 +180,7 @@ public class ScheduledFlightToNetexConverter {
                 .withName(createMultilingualString("Rute for 3 dager frem i tid"))
                 .withVehicleModes(VehicleModeEnumeration.AIR)
                 .withVehicleJourneys(journeysInFrameRelStructure);
-        return new ObjectFactory().createTimetableFrame(timetableFrame);
+        return getObjectFactory().createTimetableFrame(timetableFrame);
     }
 
     /**
@@ -195,46 +189,46 @@ public class ScheduledFlightToNetexConverter {
     public JAXBElement<Authority> createAuthority() {
         Authority authority = new Authority()
                 .withVersion("1")
-                .withId("RUT:Company:1");
+                .withId(String.format("%s:Company:1", AVINOR_ID));
 
-        JAXBElement<String> companyNumber = new ObjectFactory().createOrganisation_VersionStructureCompanyNumber("991609407");
-        JAXBElement<MultilingualString> name = new ObjectFactory().createOrganisation_VersionStructureName(createMultilingualString("Avinor"));
-        JAXBElement<MultilingualString> legalName = new ObjectFactory().createOrganisation_VersionStructureLegalName(createMultilingualString("AVINOR AS"));
-        JAXBElement<List<OrganisationTypeEnumeration>> organisationTypes = new ObjectFactory().createOrganisation_VersionStructureOrganisationType(Arrays.asList(OrganisationTypeEnumeration.AUTHORITY));
+        JAXBElement<String> companyNumber = getObjectFactory().createOrganisation_VersionStructureCompanyNumber("985198292");
+        JAXBElement<MultilingualString> name = getObjectFactory().createOrganisation_VersionStructureName(createMultilingualString("Avinor"));
+        JAXBElement<MultilingualString> legalName = getObjectFactory().createOrganisation_VersionStructureLegalName(createMultilingualString("AVINOR AS"));
+        JAXBElement<List<OrganisationTypeEnumeration>> organisationTypes = getObjectFactory().createOrganisation_VersionStructureOrganisationType(Arrays.asList(OrganisationTypeEnumeration.AUTHORITY));
 
         ContactStructure contactStructure = new ContactStructure()
                 .withPhone("0047 815 30 550")
                 .withUrl("http://avinor.no/")
                 .withFurtherDetails(createMultilingualString("Kontaktskjema på websider"));
 
-        JAXBElement<ContactStructure> contactDetails = new ObjectFactory().createOrganisation_VersionStructureContactDetails(contactStructure);
+        JAXBElement<ContactStructure> contactDetails = getObjectFactory().createOrganisation_VersionStructureContactDetails(contactStructure);
         List<JAXBElement<?>> jaxbElements = Arrays.asList(companyNumber, name, legalName, organisationTypes, contactDetails);
         authority.withRest(jaxbElements);
-        return new ObjectFactory().createAuthority(authority);
+        return getObjectFactory().createAuthority(authority);
     }
 
     /**
      * @todo: Rework and make more generic..
      */
-    public JAXBElement<Operator> createOperator() {
+    public JAXBElement<Operator> createOperator(String airlineIATA) {
         Operator operator = new Operator()
                 .withVersion("1")
-                .withId("RUT:Company:1");
+                .withId(String.format("%s:Company:2", airlineIATA));
 
-        JAXBElement<String> companyNumber = new ObjectFactory().createOrganisation_VersionStructureCompanyNumber("985615616");
-        JAXBElement<MultilingualString> name = new ObjectFactory().createOrganisation_VersionStructureName(createMultilingualString("Unibuss"));
-        JAXBElement<MultilingualString> legalName = new ObjectFactory().createOrganisation_VersionStructureLegalName(createMultilingualString("UNIBUSS AS"));
-        JAXBElement<List<OrganisationTypeEnumeration>> organisationTypes = new ObjectFactory().createOrganisation_VersionStructureOrganisationType(Arrays.asList(OrganisationTypeEnumeration.OPERATOR));
+        JAXBElement<String> companyNumber = getObjectFactory().createOrganisation_VersionStructureCompanyNumber("985615616");
+        JAXBElement<MultilingualString> name = getObjectFactory().createOrganisation_VersionStructureName(createMultilingualString("Unibuss"));
+        JAXBElement<MultilingualString> legalName = getObjectFactory().createOrganisation_VersionStructureLegalName(createMultilingualString("UNIBUSS AS"));
+        JAXBElement<List<OrganisationTypeEnumeration>> organisationTypes = getObjectFactory().createOrganisation_VersionStructureOrganisationType(Arrays.asList(OrganisationTypeEnumeration.OPERATOR));
 
         ContactStructure contactStructure = new ContactStructure()
                 .withPhone("0047 177")
                 .withUrl("http://www.ruter.no")
                 .withFurtherDetails(createMultilingualString("Kontaktskjema på websider"));
 
-        JAXBElement<ContactStructure> contactDetails = new ObjectFactory().createOrganisation_VersionStructureContactDetails(contactStructure);
+        JAXBElement<ContactStructure> contactDetails = getObjectFactory().createOrganisation_VersionStructureContactDetails(contactStructure);
         List<JAXBElement<?>> jaxbElements = Arrays.asList(companyNumber, name, legalName, organisationTypes, contactDetails);
         operator.withRest(jaxbElements);
-        return new ObjectFactory().createOperator(operator);
+        return getObjectFactory().createOperator(operator);
     }
 
     /**
@@ -259,7 +253,7 @@ public class ScheduledFlightToNetexConverter {
             ScheduledStopPointRefStructure scheduledStopPointReference = new ScheduledStopPointRefStructure()
                     .withVersion("1")
                     .withRef("AVI:StopPoint:0061101001");
-            JAXBElement<ScheduledStopPointRefStructure> scheduledStopPointRef = new ObjectFactory().createScheduledStopPointRef(scheduledStopPointReference);
+            JAXBElement<ScheduledStopPointRefStructure> scheduledStopPointRef = getObjectFactory().createScheduledStopPointRef(scheduledStopPointReference);
             ArrivalStructure arrivalStructure = new ArrivalStructure();
             if (stopover.getArrivalTime() != null) {
                 arrivalStructure.setTime(stopover.getArrivalTime());
@@ -303,7 +297,7 @@ public class ScheduledFlightToNetexConverter {
                     .withId("AVI:PointProjection:0061101A0A0061101001");
                     //.withProjectedPointRef();  // @todo: make dynamic
             Projections_RelStructure projections = new Projections_RelStructure()
-                    .withProjectionRefOrProjection(new ObjectFactory().createPointProjection(pointProjection));
+                    .withProjectionRefOrProjection(getObjectFactory().createPointProjection(pointProjection));
             RoutePoint routePoint = new RoutePoint()
                     .withVersion("1")
                     .withId("AVI:RoutePoint:0061101A0A0061101001") // @todo: make dynamic
@@ -325,7 +319,7 @@ public class ScheduledFlightToNetexConverter {
                     .withVersion("any")
                     .withId("AVI:PointOnRoute:0061101001-0")
                     //.withOrder(BigInteger.valueOf(stopover.getOrder())); // @todo: fix support for order values or implement counter
-                    .withPointRef(new ObjectFactory().createRoutePointRef(routePointReference));
+                    .withPointRef(getObjectFactory().createRoutePointRef(routePointReference));
             pointsOnRoute.getPointOnRoute().add(pointOnRoute);
         });
         Route route = new Route()
@@ -334,7 +328,7 @@ public class ScheduledFlightToNetexConverter {
                 .withName(createMultilingualString("WF149"))
                 .withPointsInSequence(pointsOnRoute); // @todo: make dynamic
                 //.withDirectionRef();
-        routesInFrame.getRoute_().add(new ObjectFactory().createRoute(route));
+        routesInFrame.getRoute_().add(getObjectFactory().createRoute(route));
         return routesInFrame;
     }
 
@@ -352,7 +346,7 @@ public class ScheduledFlightToNetexConverter {
                 .withTransportMode(AllVehicleModesOfTransportEnumeration.AIR)
                 .withPublicCode("WF149") // @todo: make dynamic
                 .withRoutes(routeRefs);
-        linesInFrame.getLine_().add(new ObjectFactory().createLine(line));
+        linesInFrame.getLine_().add(getObjectFactory().createLine(line));
         return null;
     }
 
@@ -376,7 +370,7 @@ public class ScheduledFlightToNetexConverter {
                     .withVersion("1")
                     .withId("AVI:StopPointInJourneyPattern:0061101001")
                     .withOrder(BigInteger.ONE) // @todo: fix a counter
-                    .withScheduledStopPointRef(new ObjectFactory().createScheduledStopPointRef(new ScheduledStopPointRefStructure().withVersion("1").withRef("AVI:StopPoint:0061101001")));
+                    .withScheduledStopPointRef(getObjectFactory().createScheduledStopPointRef(new ScheduledStopPointRefStructure().withVersion("1").withRef("AVI:StopPoint:0061101001")));
             stopPointsInJourneyPattern.getStopPointInJourneyPattern().add(stopPointInJourneyPattern);
         });
         ServicePattern servicePattern = new ServicePattern()
@@ -398,7 +392,7 @@ public class ScheduledFlightToNetexConverter {
                     .withId("AVI:PassengerStopAssignment:0061101001")
                     .withScheduledStopPointRef(new ScheduledStopPointRefStructure().withVersion("1").withRef("AVI:StopPoint:0061101001"))
                     .withStopPlaceRef(new StopPlaceRefStructure().withVersion("1").withRef("NHR:StopArea:03011521"));
-            stopAssignmentsInFrame.getStopAssignment().add(new ObjectFactory().createStopAssignment(passengerStopAssignment));
+            stopAssignmentsInFrame.getStopAssignment().add(getObjectFactory().createStopAssignment(passengerStopAssignment));
         });
         return stopAssignmentsInFrame;
     }
@@ -418,4 +412,15 @@ public class ScheduledFlightToNetexConverter {
         return null;
     }
 
+    public Codespace getAvinorCodespace() {
+        return avinorCodespace;
+    }
+
+    public Codespace getNhrCodespace() {
+        return nhrCodespace;
+    }
+
+    public ObjectFactory getObjectFactory() {
+        return objectFactory;
+    }
 }
