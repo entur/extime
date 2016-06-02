@@ -43,8 +43,8 @@ public class ScheduledFlightToNetexConverter {
                 //.withPublicationRequest(publicationRequestStructure)
                 //.withPublicationRefreshInterval(createDuration("P24H"))
                 .withPublicationRefreshInterval(createDuration(""))
-                .withDescription(createMultilingualString(String.format("Rute flight %s: %s", flightId, routePath)));
-                //.withDataObjects(dataObjects);
+                .withDescription(createMultilingualString(String.format("Rute flight %s: %s", flightId, routePath)))
+                .withDataObjects(dataObjects);
     }
 
     public JAXBElement<CompositeFrame> createCompositeFrame() {
@@ -98,7 +98,8 @@ public class ScheduledFlightToNetexConverter {
                 //.withDefaultLocationSystem("EPSG:4326");
 
         OrganisationsInFrame_RelStructure organisationsInFrame = new OrganisationsInFrame_RelStructure();
-        // @todo: create Authority and Operator here...
+        organisationsInFrame.getOrganisation_().add(createAuthority());
+        organisationsInFrame.getOrganisation_().add(createOperator());
 
         ResourceFrame resourceFrame = new ResourceFrame()
                 .withVersion("any")
@@ -186,6 +187,54 @@ public class ScheduledFlightToNetexConverter {
                 .withVehicleModes(VehicleModeEnumeration.AIR)
                 .withVehicleJourneys(journeysInFrameRelStructure);
         return new ObjectFactory().createTimetableFrame(timetableFrame);
+    }
+
+    /**
+     * @todo: Rework and make more generic..
+     */
+    public JAXBElement<Authority> createAuthority() {
+        Authority authority = new Authority()
+                .withVersion("1")
+                .withId("RUT:Company:1");
+
+        JAXBElement<String> companyNumber = new ObjectFactory().createOrganisation_VersionStructureCompanyNumber("991609407");
+        JAXBElement<MultilingualString> name = new ObjectFactory().createOrganisation_VersionStructureName(createMultilingualString("Avinor"));
+        JAXBElement<MultilingualString> legalName = new ObjectFactory().createOrganisation_VersionStructureLegalName(createMultilingualString("AVINOR AS"));
+        JAXBElement<List<OrganisationTypeEnumeration>> organisationTypes = new ObjectFactory().createOrganisation_VersionStructureOrganisationType(Arrays.asList(OrganisationTypeEnumeration.AUTHORITY));
+
+        ContactStructure contactStructure = new ContactStructure()
+                .withPhone("0047 815 30 550")
+                .withUrl("http://avinor.no/")
+                .withFurtherDetails(createMultilingualString("Kontaktskjema på websider"));
+
+        JAXBElement<ContactStructure> contactDetails = new ObjectFactory().createOrganisation_VersionStructureContactDetails(contactStructure);
+        List<JAXBElement<?>> jaxbElements = Arrays.asList(companyNumber, name, legalName, organisationTypes, contactDetails);
+        authority.withRest(jaxbElements);
+        return new ObjectFactory().createAuthority(authority);
+    }
+
+    /**
+     * @todo: Rework and make more generic..
+     */
+    public JAXBElement<Operator> createOperator() {
+        Operator operator = new Operator()
+                .withVersion("1")
+                .withId("RUT:Company:1");
+
+        JAXBElement<String> companyNumber = new ObjectFactory().createOrganisation_VersionStructureCompanyNumber("985615616");
+        JAXBElement<MultilingualString> name = new ObjectFactory().createOrganisation_VersionStructureName(createMultilingualString("Unibuss"));
+        JAXBElement<MultilingualString> legalName = new ObjectFactory().createOrganisation_VersionStructureLegalName(createMultilingualString("UNIBUSS AS"));
+        JAXBElement<List<OrganisationTypeEnumeration>> organisationTypes = new ObjectFactory().createOrganisation_VersionStructureOrganisationType(Arrays.asList(OrganisationTypeEnumeration.OPERATOR));
+
+        ContactStructure contactStructure = new ContactStructure()
+                .withPhone("0047 177")
+                .withUrl("http://www.ruter.no")
+                .withFurtherDetails(createMultilingualString("Kontaktskjema på websider"));
+
+        JAXBElement<ContactStructure> contactDetails = new ObjectFactory().createOrganisation_VersionStructureContactDetails(contactStructure);
+        List<JAXBElement<?>> jaxbElements = Arrays.asList(companyNumber, name, legalName, organisationTypes, contactDetails);
+        operator.withRest(jaxbElements);
+        return new ObjectFactory().createOperator(operator);
     }
 
     /**
@@ -356,7 +405,7 @@ public class ScheduledFlightToNetexConverter {
 
     public MultilingualString createMultilingualString(String value) {
         return new MultilingualString()
-                .withLang("no")
+                //.withLang("no")
                 .withValue(value);
     }
 
