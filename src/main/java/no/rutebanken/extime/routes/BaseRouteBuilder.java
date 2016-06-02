@@ -1,8 +1,8 @@
 package no.rutebanken.extime.routes;
 
-import java.net.ConnectException;
-
 import org.apache.camel.builder.RouteBuilder;
+
+import java.net.ConnectException;
 
 
 /**

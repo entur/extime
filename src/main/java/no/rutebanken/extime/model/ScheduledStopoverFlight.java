@@ -1,12 +1,12 @@
 package no.rutebanken.extime.model;
 
 import com.google.common.base.Joiner;
-import no.avinor.flydata.xjc.model.scheduled.Flight;
 
 import java.math.BigInteger;
 import java.time.LocalDate;
-import java.util.*;
-import java.util.function.Supplier;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.toList;

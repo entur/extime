@@ -1,10 +1,9 @@
 package no.rutebanken.extime.jaxb;
 
+import javax.xml.bind.DatatypeConverter;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
-
-import javax.xml.bind.DatatypeConverter;
 
 public class DateAdapter {
 

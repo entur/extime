@@ -1,9 +1,8 @@
 package no.rutebanken.extime.routes.avinor;
 
-import no.avinor.flydata.xjc.model.airport.AirportNames;
 import no.avinor.flydata.xjc.model.scheduled.Flight;
-import no.rutebanken.extime.model.StopVisitType;
-import no.rutebanken.extime.model.FlightType;
+import no.rutebanken.extime.model.ScheduledDirectFlight;
+import no.rutebanken.netex.model.PublicationDeliveryStructure;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.AdviceWithRouteBuilder;
@@ -18,22 +17,52 @@ import org.assertj.core.api.Assertions;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.net.ConnectException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.function.Predicate;
+import java.math.BigInteger;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.*;
 
-import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.*;
+import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEADER_TIMETABLE_AIRPORT_IATA;
+import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEADER_TIMETABLE_PERIOD_FROM;
 
 public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
 
     @Test
+    public void testScheduledDirectFlightConvertedToNetex() throws Exception {
+        context.getRouteDefinition("DirectFlightsNetexConverter").adviceWith(context, new AdviceWithRouteBuilder() {
+            @Override
+            public void configure() throws Exception {
+            }
+        });
+        context.start();
+
+        ScheduledDirectFlight scheduledDirectFlight = new ScheduledDirectFlight();
+        scheduledDirectFlight.setFlightId(BigInteger.ONE);
+        scheduledDirectFlight.setAirlineIATA("DY");
+        scheduledDirectFlight.setAirlineFlightId("DY6677");
+        scheduledDirectFlight.setDateOfOperation(LocalDate.now());
+        scheduledDirectFlight.setDepartureAirportIATA("TRD");
+        scheduledDirectFlight.setTimeOfDeparture(LocalTime.NOON);
+        scheduledDirectFlight.setArrivalAirportIATA("EVE");
+        scheduledDirectFlight.setTimeOfArrival(LocalTime.MIDNIGHT);
+        List<ScheduledDirectFlight> scheduledDirectFlights = Collections.singletonList(scheduledDirectFlight);
+        template.sendBody("direct:convertDirectFlightsToNetex", scheduledDirectFlights);
+
+        assertMockEndpointsSatisfied();
+
+        MockEndpoint mockOutput = getMockEndpoint("mock:jms:queue");
+        mockOutput.expectedMessageCount(1);
+    }
+
+    @Test
     @Ignore
-        public void testAirportFlightsFeedRoute() throws Exception {
+    public void testAirportFlightsFeedRoute() throws Exception {
         context.getRouteDefinition("FetchTimetableForAirport").adviceWith(context, new AdviceWithRouteBuilder() {
             @Override
             public void configure() throws Exception {
@@ -217,5 +246,19 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
     protected void debugAfter(Exchange exchange, Processor processor,
                               ProcessorDefinition<?> definition, String id, String label, long timeTaken) {
         log.info("After " + definition + " with body " + exchange.getIn().getBody());
+    }
+
+    public String toXml(PublicationDeliveryStructure publicationDeliveryStructure) {
+        ByteArrayOutputStream baos = null;
+        try {
+            JAXBContext jc = JAXBContext.newInstance(publicationDeliveryStructure.getClass());
+            Marshaller marshaller = jc.createMarshaller();
+            marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+            baos = new ByteArrayOutputStream();
+            marshaller.marshal(publicationDeliveryStructure, baos);
+            return baos.toString();
+        } catch (JAXBException e) {
+        }
+        return baos.toString();
     }
 }

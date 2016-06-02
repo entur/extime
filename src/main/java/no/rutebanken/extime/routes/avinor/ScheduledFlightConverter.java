@@ -2,7 +2,10 @@ package no.rutebanken.extime.routes.avinor;
 
 import com.google.common.collect.Lists;
 import no.avinor.flydata.xjc.model.scheduled.Flight;
-import no.rutebanken.extime.model.*;
+import no.rutebanken.extime.model.ScheduledDirectFlight;
+import no.rutebanken.extime.model.ScheduledStopover;
+import no.rutebanken.extime.model.ScheduledStopoverFlight;
+import no.rutebanken.extime.model.StopVisitType;
 import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.apache.commons.lang3.tuple.Triple;
 
