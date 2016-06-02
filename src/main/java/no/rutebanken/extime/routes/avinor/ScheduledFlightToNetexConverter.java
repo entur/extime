@@ -8,7 +8,7 @@ import no.rutebanken.netex.model.*;
 import no.rutebanken.netex.model.PublicationDeliveryStructure.DataObjects;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import javax.xml.bind.JAXBElement;
 import javax.xml.datatype.DatatypeConfigurationException;
@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-@Service
+@Component
 public class ScheduledFlightToNetexConverter {
 
     private static final String AVINOR_ID = "AVI";
@@ -32,52 +32,52 @@ public class ScheduledFlightToNetexConverter {
 
     public PublicationDeliveryStructure convertToNetex(ScheduledDirectFlight directFlight) {
         String routePath = String.format("%s-%s", directFlight.getDepartureAirportIATA(), directFlight.getArrivalAirportIATA());
-        return createPublicationDeliveryStructure(directFlight.getAirlineFlightId(), routePath);
+
+        JAXBElement<ResourceFrame> resourceFrame = createResourceFrame(directFlight.getAirlineIATA());
+
+        Frames_RelStructure frames = new Frames_RelStructure();
+        frames.getCommonFrame().add(resourceFrame);
+        //framesRelStructure.getCommonFrame().add(createSiteFrame());
+        //framesRelStructure.getCommonFrame().add(createSiteFrame());
+        //framesRelStructure.getCommonFrame().add(createServiceCalendarFrame());
+        //framesRelStructure.getCommonFrame().add(createTimetableFrame());
+
+        JAXBElement<CompositeFrame> compositeFrame = createCompositeFrame(directFlight.getAirlineFlightId(), frames);
+        return createPublicationDeliveryStructure(compositeFrame, directFlight.getAirlineFlightId(), routePath);
     }
 
     public PublicationDeliveryStructure convertToNetex(ScheduledStopoverFlight stopoverFlight) {
         return null;
     }
 
-    public PublicationDeliveryStructure createPublicationDeliveryStructure(String flightId, String routePath) {
+    public PublicationDeliveryStructure createPublicationDeliveryStructure(
+            JAXBElement<CompositeFrame> compositeFrame, String flightId, String routePath) {
         DataObjects dataObjects = new DataObjects();
-        dataObjects.getCompositeFrameOrCommonFrame().add(createCompositeFrame(flightId));
+        dataObjects.getCompositeFrameOrCommonFrame().add(compositeFrame);
 
         return new PublicationDeliveryStructure()
                 .withVersion("1.0")
                 .withPublicationTimestamp(ZonedDateTime.now())
                 .withParticipantRef(AVINOR_ID) // should this be Avinor or the actual flight airline?
-                .withPublicationRefreshInterval(createDuration(""))
                 .withDescription(createMultilingualString(String.format("Flight %s: %s", flightId, routePath)))
                 .withDataObjects(dataObjects);
     }
 
-    public JAXBElement<CompositeFrame> createCompositeFrame(String flightId) {
+    public JAXBElement<CompositeFrame> createCompositeFrame(String flightId, Frames_RelStructure frames) {
+        Codespaces_RelStructure codespaces = new Codespaces_RelStructure()
+                .withCodespaceRefOrCodespace(
+                        Arrays.asList(getAvinorCodespace(), getNhrCodespace()));
+
         CompositeFrame compositeFrame = new CompositeFrame()
                 .withVersion("1")
                 .withCreated(ZonedDateTime.now())
                 .withId(String.format("%s:Norway:CompositeFrame:%s", AVINOR_ID, flightId))
-                .withCodespaces(createCodespaces())
-                .withFrames(createFrames());
+                .withCodespaces(codespaces)
+                .withFrames(frames);
         return getObjectFactory().createCompositeFrame(compositeFrame);
     }
 
-    public Codespaces_RelStructure createCodespaces() {
-        return new Codespaces_RelStructure()
-                .withCodespaceRefOrCodespace(Arrays.asList(getAvinorCodespace(), getNhrCodespace()));
-    }
-
-    public Frames_RelStructure createFrames() {
-        Frames_RelStructure framesRelStructure = new Frames_RelStructure();
-        framesRelStructure.getCommonFrame().add(createResourceFrame());
-        //framesRelStructure.getCommonFrame().add(createSiteFrame());
-        //framesRelStructure.getCommonFrame().add(createSiteFrame());
-        //framesRelStructure.getCommonFrame().add(createServiceCalendarFrame());
-        //framesRelStructure.getCommonFrame().add(createTimetableFrame());
-        return framesRelStructure;
-    }
-
-    public JAXBElement<ResourceFrame> createResourceFrame() {
+    public JAXBElement<ResourceFrame> createResourceFrame(String airlineIATA) {
         CodespaceRefStructure codespaceRefStructure = new CodespaceRefStructure()
                 .withRef(getAvinorCodespace().getId());
 
@@ -89,16 +89,17 @@ public class ScheduledFlightToNetexConverter {
         VersionFrameDefaultsStructure versionFrameDefaultsStructure = new VersionFrameDefaultsStructure()
                 .withDefaultCodespaceRef(codespaceRefStructure)
                 .withDefaultLocale(localeStructure);
-                //.withDefaultLocationSystem("EPSG:4326");
 
         OrganisationsInFrame_RelStructure organisationsInFrame = new OrganisationsInFrame_RelStructure();
         organisationsInFrame.getOrganisation_().add(createAuthority());
-        organisationsInFrame.getOrganisation_().add(createOperator("SAS"));
+
+        Operator operator = context.getBean(airlineIATA, Operator.class);
+        organisationsInFrame.getOrganisation_().add(getObjectFactory().createOperator(operator));
 
         ResourceFrame resourceFrame = new ResourceFrame()
                 .withVersion("any")
-                .withId("AVI:ResourceFrame:RF1")
-                .withFrameDefaults(versionFrameDefaultsStructure) // @todo: make dynamic
+                .withId(String.format("%s:ResourceFrame:RF1", AVINOR_ID))
+                .withFrameDefaults(versionFrameDefaultsStructure)
                 .withOrganisations(organisationsInFrame);
         return getObjectFactory().createResourceFrame(resourceFrame);
     }
