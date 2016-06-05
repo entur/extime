@@ -1,11 +1,10 @@
-package no.rutebanken.extime.routes.avinor;
+package no.rutebanken.extime.converter;
 
 import no.avinor.flydata.xjc.model.airport.AirportName;
 import no.rutebanken.extime.model.FlightRouteDataSet;
 import no.rutebanken.netex.model.*;
 import org.apache.camel.Body;
 import org.apache.camel.Header;
-import org.springframework.stereotype.Component;
 
 import javax.xml.bind.JAXBElement;
 import javax.xml.datatype.DatatypeConfigurationException;
@@ -19,13 +18,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEADER_AIRLINE_IATA_MAP;
-
-@Component(value = "flightRouteToNetexConverter")
+//@Component(value = "flightRouteToNetexConverter")
 public class FlightRouteToNeTExConverter {
 
     public List<PublicationDeliveryStructure> convertRoutesToNetexFormat(
-            @Header(HEADER_AIRLINE_IATA_MAP) Map<String, String> airlineIATAMap,
+            @Header("") Map<String, String> airlineIATAMap,
             @Body List<FlightRouteDataSet> flightRouteList) {
         List<PublicationDeliveryStructure> netexStructures = new ArrayList<>();
         Map<String, List<FlightRouteDataSet>> flightRouteMap =

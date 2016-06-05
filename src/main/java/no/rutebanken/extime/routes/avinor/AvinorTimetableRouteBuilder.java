@@ -2,6 +2,8 @@ package no.rutebanken.extime.routes.avinor;
 
 import com.google.common.base.Strings;
 import no.avinor.flydata.xjc.model.scheduled.Flight;
+import no.rutebanken.extime.converter.ScheduledFlightConverter;
+import no.rutebanken.extime.converter.ScheduledFlightToNetexConverter;
 import no.rutebanken.extime.model.AirportIATA;
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
@@ -22,11 +24,6 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
 
     static final String HEADER_TIMETABLE_AIRPORT_IATA = "TimetableAirportIATA";
     static final String HEADER_TIMETABLE_PERIOD_FROM = "TimetablePeriodFrom";
-
-    static final String HEADER_AIRLINE_IATA_MAP = "AirlineIATAMap";
-    static final String HEADER_FLIGHTS_DIRECTION = "FlightsDirection";
-    static final String HEADER_FLIGHTS_TIMEFROM = "FlightsTimeFrom";
-    static final String HEADER_FLIGHTS_TIMETO = "FlightsTimeTo";
 
     @Override
     public void configure() throws Exception {
@@ -66,7 +63,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .routeId("TimetableConverter")
                 .multicast()
                     .to("direct:convertToDirectFlights").id("ConvertDirectFlightsProcessor")
-                    .to("direct:convertToStopoverFlights").id("ConvertStopoverFlightsProcessor")
+                    .to("mock:direct:convertToStopoverFlights").id("ConvertStopoverFlightsProcessor")
                 .end()
         ;
 
@@ -90,6 +87,8 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .split(body()).parallelProcessing()
                     .log(LoggingLevel.DEBUG, this.getClass().getName(), "Converting scheduled direct flight with id: ${body.flightId}")
                     .bean(ScheduledFlightToNetexConverter.class, "convertToNetex")
+                    .convertBodyTo(String.class)
+                    .log(LoggingLevel.DEBUG, this.getClass().getName(), "${body}")
                     .to("mock:jms:queue")
                 .end()
         ;

@@ -2,6 +2,7 @@ package no.rutebanken.extime.routes.avinor;
 
 import no.avinor.flydata.xjc.model.airport.AirportNames;
 import no.avinor.flydata.xjc.model.feed.Flight;
+import no.rutebanken.extime.converter.FlightRouteToNeTExConverter;
 import no.rutebanken.extime.model.*;
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;

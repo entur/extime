@@ -1,4 +1,4 @@
-package no.rutebanken.extime.routes.avinor;
+package no.rutebanken.extime.converter;
 
 import com.google.common.collect.Lists;
 import no.avinor.flydata.xjc.model.scheduled.Flight;

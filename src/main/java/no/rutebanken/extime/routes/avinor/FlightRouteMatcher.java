@@ -5,14 +5,13 @@ import no.avinor.flydata.xjc.model.feed.Flight;
 import no.rutebanken.extime.model.AirportFlightDataSet;
 import no.rutebanken.extime.model.FlightRouteDataSet;
 import org.apache.camel.Body;
-import org.springframework.stereotype.Component;
 
 import java.math.BigInteger;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-@Component(value = "flightRouteMatcher")
+//@Component(value = "flightRouteMatcher")
 public class FlightRouteMatcher {
 
     public List<FlightRouteDataSet> findMatchingFlightRoutes(@Body HashMap<String, AirportFlightDataSet> airportFlightsMap) {

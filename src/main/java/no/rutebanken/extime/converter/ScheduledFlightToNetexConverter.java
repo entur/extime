@@ -1,12 +1,14 @@
-package no.rutebanken.extime.routes.avinor;
+package no.rutebanken.extime.converter;
 
 import com.google.common.collect.Lists;
+import no.rutebanken.extime.config.*;
 import no.rutebanken.extime.model.AirlineIATA;
 import no.rutebanken.extime.model.ScheduledDirectFlight;
 import no.rutebanken.extime.model.ScheduledStopover;
 import no.rutebanken.extime.model.ScheduledStopoverFlight;
 import no.rutebanken.netex.model.*;
 import no.rutebanken.netex.model.PublicationDeliveryStructure.DataObjects;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
@@ -24,11 +26,13 @@ import java.util.List;
 @Component(value = "scheduledFlightToNetexConverter")
 public class ScheduledFlightToNetexConverter {
 
-    private static final String AVINOR_ID = "AVI";
-    private static final String AVINOR_NAME = "Avinor";
-    private static final String NHR_ID = "NHR";
+    private AvinorAuthorityConfig avinorConfig;
+    private NhrAuthorityConfig nhrConfig;
+    private SasOperatorConfig sasConfig;
+    private WideroeOperatorConfig wideroeConfig;
+    private NorwegianOperatorConfig norwegianConfig;
 
-    public PublicationDeliveryStructure convertToNetex(ScheduledDirectFlight directFlight) {
+    public JAXBElement<PublicationDeliveryStructure> convertToNetex(ScheduledDirectFlight directFlight) {
         String routePath = String.format("%s-%s", directFlight.getDepartureAirportIATA(), directFlight.getArrivalAirportIATA());
         String flightId = directFlight.getAirlineFlightId();
 
@@ -46,7 +50,8 @@ public class ScheduledFlightToNetexConverter {
         //framesRelStructure.getCommonFrame().add(createTimetableFrame());
 
         JAXBElement<CompositeFrame> compositeFrame = createCompositeFrame(flightId, frames);
-        return createPublicationDeliveryStructure(compositeFrame, flightId, routePath);
+        PublicationDeliveryStructure publicationDeliveryStructure = createPublicationDeliveryStructure(compositeFrame, flightId, routePath);
+        return objectFactory().createPublicationDelivery(publicationDeliveryStructure);
     }
 
     public PublicationDeliveryStructure convertToNetex(ScheduledStopoverFlight stopoverFlight) {
@@ -61,7 +66,7 @@ public class ScheduledFlightToNetexConverter {
         return new PublicationDeliveryStructure()
                 .withVersion("1.0")
                 .withPublicationTimestamp(ZonedDateTime.now())
-                .withParticipantRef(AVINOR_ID) // should this be Avinor or the actual flight airline?
+                .withParticipantRef(getAvinorConfig().getId()) // should this be Avinor or the actual flight airline?
                 .withDescription(createMultilingualString(String.format("Flight %s: %s", flightId, routePath)))
                 .withDataObjects(dataObjects);
     }
@@ -74,7 +79,7 @@ public class ScheduledFlightToNetexConverter {
         CompositeFrame compositeFrame = new CompositeFrame()
                 .withVersion("1")
                 .withCreated(ZonedDateTime.now())
-                .withId(String.format("%s:Norway:CompositeFrame:%s", AVINOR_ID, flightId))
+                .withId(String.format("%s:Norway:CompositeFrame:%s", getAvinorConfig().getId(), flightId))
                 .withCodespaces(codespaces)
                 .withFrames(frames);
         return objectFactory().createCompositeFrame(compositeFrame);
@@ -94,14 +99,14 @@ public class ScheduledFlightToNetexConverter {
                 .withDefaultLocale(localeStructure);
 
         OrganisationsInFrame_RelStructure organisationsInFrame = new OrganisationsInFrame_RelStructure();
-        organisationsInFrame.getOrganisation_().add(createAuthority());
+        organisationsInFrame.getOrganisation_().add(objectFactory().createAuthority(createAuthority()));
 
         Operator operator = resolveOperatorFromIATA(airlineIATA);
         organisationsInFrame.getOrganisation_().add(objectFactory().createOperator(operator));
 
         ResourceFrame resourceFrame = new ResourceFrame()
                 .withVersion("any")
-                .withId(String.format("%s:ResourceFrame:RF1", AVINOR_ID))
+                .withId(String.format("%s:ResourceFrame:RF1", getAvinorConfig().getId()))
                 .withFrameDefaults(versionFrameDefaultsStructure)
                 .withOrganisations(organisationsInFrame);
         return objectFactory().createResourceFrame(resourceFrame);
@@ -135,7 +140,7 @@ public class ScheduledFlightToNetexConverter {
 
         SiteFrame siteFrame = new SiteFrame()
                 .withVersion("any")
-                .withId(String.format("%s:SiteFrame:SF01", AVINOR_ID))
+                .withId(String.format("%s:SiteFrame:SF01", getAvinorConfig().getId()))
                 .withStopPlaces(stopPlacesInFrameRelStructure);
         return objectFactory().createSiteFrame(siteFrame);
     }
@@ -170,8 +175,8 @@ public class ScheduledFlightToNetexConverter {
         Network network = new Network()
                 .withVersion("1")
                 .withChanged(ZonedDateTime.now())
-                .withId(String.format("%s:GroupOfLine:%s", AVINOR_ID, AVINOR_NAME))
-                .withName(createMultilingualString(AVINOR_NAME));
+                .withId(String.format("%s:GroupOfLine:%s", getAvinorConfig().getId(), getAvinorConfig().getName()))
+                .withName(createMultilingualString(getAvinorConfig().getName()));
 
         DirectionsInFrame_RelStructure directionsInFrame = new DirectionsInFrame_RelStructure()
                 .withDirection(direction);
@@ -225,30 +230,6 @@ public class ScheduledFlightToNetexConverter {
                 .withVehicleModes(VehicleModeEnumeration.AIR)
                 .withVehicleJourneys(journeysInFrameRelStructure);
         return objectFactory().createTimetableFrame(timetableFrame);
-    }
-
-    /**
-     * @todo: Rework and make more generic..
-     */
-    public JAXBElement<Authority> createAuthority() {
-        Authority authority = new Authority()
-                .withVersion("1")
-                .withId(String.format("%s:Company:1", AVINOR_ID));
-
-        JAXBElement<String> companyNumber = objectFactory().createOrganisation_VersionStructureCompanyNumber("985198292");
-        JAXBElement<MultilingualString> name = objectFactory().createOrganisation_VersionStructureName(createMultilingualString("Avinor"));
-        JAXBElement<MultilingualString> legalName = objectFactory().createOrganisation_VersionStructureLegalName(createMultilingualString("AVINOR AS"));
-        JAXBElement<List<OrganisationTypeEnumeration>> organisationTypes = objectFactory().createOrganisation_VersionStructureOrganisationType(Arrays.asList(OrganisationTypeEnumeration.AUTHORITY));
-
-        ContactStructure contactStructure = new ContactStructure()
-                .withPhone("0047 815 30 550")
-                .withUrl("http://avinor.no/")
-                .withFurtherDetails(createMultilingualString("Kontaktskjema på websider"));
-
-        JAXBElement<ContactStructure> contactDetails = objectFactory().createOrganisation_VersionStructureContactDetails(contactStructure);
-        List<JAXBElement<?>> jaxbElements = Arrays.asList(companyNumber, name, legalName, organisationTypes, contactDetails);
-        authority.withRest(jaxbElements);
-        return objectFactory().createAuthority(authority);
     }
 
     /**
@@ -337,13 +318,13 @@ public class ScheduledFlightToNetexConverter {
                     .withRef(stopPoint.getId());
             PointProjection pointProjection = new PointProjection()
                     .withVersion("any")
-                    .withId(String.format("%s:PointProjection:%s101A0A0061101001", AVINOR_ID, flightId)) // @todo: generate postfix id in a serie
+                    .withId(String.format("%s:PointProjection:%s101A0A0061101001", getAvinorConfig().getId(), flightId)) // @todo: generate postfix id in a serie
                     .withProjectedPointRef(pointRefStructure);
             Projections_RelStructure projections = new Projections_RelStructure()
                     .withProjectionRefOrProjection(objectFactory().createPointProjection(pointProjection));
             RoutePoint routePoint = new RoutePoint()
                     .withVersion("1")
-                    .withId(String.format("%s:RoutePoint:%s101A0A0061101001", AVINOR_ID, flightId)) // @todo: generate postfix id in a serie
+                    .withId(String.format("%s:RoutePoint:%s101A0A0061101001", getAvinorConfig().getId(), flightId)) // @todo: generate postfix id in a serie
                     .withProjections(projections);
             routePoints.add(routePoint);
         });
@@ -380,7 +361,7 @@ public class ScheduledFlightToNetexConverter {
                     .withRef(routePoint.getId());
             PointOnRoute pointOnRoute = new PointOnRoute()
                     .withVersion("any")
-                    .withId(String.format("%s:PointOnRoute:%s101001-0", AVINOR_ID, flightId)) // @todo: fix generation of serial numbers
+                    .withId(String.format("%s:PointOnRoute:%s101001-0", getAvinorConfig().getId(), flightId)) // @todo: fix generation of serial numbers
                     //.withOrder(BigInteger.valueOf(stopover.getOrder())); // @todo: fix support for order values or implement counter
                     .withPointRef(objectFactory().createRoutePointRef(routePointReference));
             pointsOnRoute.getPointOnRoute().add(pointOnRoute);
@@ -389,7 +370,7 @@ public class ScheduledFlightToNetexConverter {
                 .withRef(direction.getId());
         return new Route()
                 .withVersion("1")
-                .withId(String.format("%s:Route:%s101", AVINOR_ID, flightId))
+                .withId(String.format("%s:Route:%s101", getAvinorConfig().getId(), flightId))
                 .withName(createMultilingualString(String.format("%s: %s", flightId, routePath)))
                 .withPointsInSequence(pointsOnRoute)
                 .withDirectionRef(directionRefStructure);
@@ -428,7 +409,7 @@ public class ScheduledFlightToNetexConverter {
                 .withRouteRef(routeRefStructure);
         return new Line()
                 .withVersion("any")
-                .withId(String.format("%s:Line:%s", AVINOR_ID, flightId))
+                .withId(String.format("%s:Line:%s", getAvinorConfig().getId(), flightId))
                 .withName(createMultilingualString(routePath))
                 .withTransportMode(AllVehicleModesOfTransportEnumeration.AIR)
                 .withPublicCode(flightId)
@@ -456,11 +437,11 @@ public class ScheduledFlightToNetexConverter {
     private List<ScheduledStopPoint> createScheduledStopPoints(ScheduledDirectFlight directFlight) {
         ScheduledStopPoint scheduledDepartureStopPoint = new ScheduledStopPoint()
                 .withVersion("1")
-                .withId(String.format("%s:StopPoint:%s101001", AVINOR_ID, directFlight.getAirlineFlightId()))
+                .withId(String.format("%s:StopPoint:%s101001", getAvinorConfig().getId(), directFlight.getAirlineFlightId()))
                 .withName(createMultilingualString(directFlight.getDepartureAirportIATA())); // @todo: change to airport name when available
         ScheduledStopPoint scheduledArrivalStopPoint = new ScheduledStopPoint()
                 .withVersion("1")
-                .withId(String.format("%s:StopPoint:%s101002", AVINOR_ID, directFlight.getAirlineFlightId()))
+                .withId(String.format("%s:StopPoint:%s101002", getAvinorConfig().getId(), directFlight.getAirlineFlightId()))
                 .withName(createMultilingualString(directFlight.getArrivalAirportIATA())); // @todo: change to airport name when available
         return Lists.newArrayList(scheduledDepartureStopPoint, scheduledArrivalStopPoint);
     }
@@ -514,7 +495,7 @@ public class ScheduledFlightToNetexConverter {
 
     public Direction createDirection(String flightId) {
         return new Direction()
-                .withId(String.format("%s:Route:%s101:Direction", AVINOR_ID, flightId))
+                .withId(String.format("%s:Route:%s101:Direction", getAvinorConfig().getId(), flightId))
                 .withName(createMultilingualString("Outbound"))
                 .withDirectionType(DirectionTypeEnumeration.OUTBOUND);
     }
@@ -534,36 +515,15 @@ public class ScheduledFlightToNetexConverter {
         return null;
     }
 
-    public JAXBElement<ContactStructure> createContactStructure(String phone, String url, String furtherDetails) {
-        ContactStructure contactStructure = new ContactStructure()
-                .withPhone(phone)
-                .withUrl(url)
-                .withFurtherDetails(new MultilingualString().withValue(furtherDetails));
-        return objectFactory().createOrganisation_VersionStructureContactDetails(contactStructure);
-    }
-
-    public List<JAXBElement<?>> createOperatorRest(String companyNumber, String name, String legalName, String phone, String url, String details) {
-        JAXBElement<String> companyNumberStructure = objectFactory()
-                .createOrganisation_VersionStructureCompanyNumber(companyNumber);
-        JAXBElement<MultilingualString> nameStructure = objectFactory()
-                .createOrganisation_VersionStructureName(new MultilingualString().withValue(name));
-        JAXBElement<MultilingualString> legalNameStructure = objectFactory()
-                .createOrganisation_VersionStructureLegalName(new MultilingualString().withValue(legalName));
-        JAXBElement<List<OrganisationTypeEnumeration>> organisationTypes = objectFactory()
-                .createOrganisation_VersionStructureOrganisationType(Collections.singletonList(OrganisationTypeEnumeration.OPERATOR));
-        JAXBElement<ContactStructure> contactStructure = createContactStructure(phone, url, details);
-        return Arrays.asList(companyNumberStructure, nameStructure, legalNameStructure, organisationTypes, contactStructure);
-    }
-
     public Operator resolveOperatorFromIATA(String airlineIATA) {
         if (airlineIATA.equalsIgnoreCase(AirlineIATA.SK.name())) {
-            return sasOperator();
+            return createSASOperator();
         }
         if (airlineIATA.equalsIgnoreCase(AirlineIATA.DY.name())) {
-            return norwegianOperator();
+            return createNorwegianOperator();
         }
         if (airlineIATA.equalsIgnoreCase(AirlineIATA.WF.name())) {
-            return wideroeOperator();
+            return createWideroeOperator();
         }
         return null;
     }
@@ -573,50 +533,129 @@ public class ScheduledFlightToNetexConverter {
         return new ObjectFactory();
     }
 
-    @Bean
     public Codespace avinorCodespace() {
         return new Codespace()
-                .withId(AVINOR_NAME.toLowerCase())
-                .withXmlns(AVINOR_ID)
-                .withXmlnsUrl("http://avinor.no/");
+                .withId(getAvinorConfig().getName().toLowerCase())
+                .withXmlns(getAvinorConfig().getId())
+                .withXmlnsUrl(getAvinorConfig().getUrl());
     }
 
-    @Bean
     public Codespace nhrCodespace() {
         return new Codespace()
-                .withId(NHR_ID.toLowerCase())
-                .withXmlns(NHR_ID)
-                .withXmlnsUrl("http://www.rutebanken.no/nasjonaltholdeplassregister");
+                .withId(getNhrConfig().getId().toLowerCase())
+                .withXmlns(getNhrConfig().getId())
+                .withXmlnsUrl(getNhrConfig().getUrl());
     }
 
-    @Bean
-    public Operator sasOperator() {
-        List<JAXBElement<?>> operatorRest = createOperatorRest(
-                "811176702", "SAS", "SAS NORGE AS", "0047 648 16 050", "http://www.sas.no/", "Kontaktskjema på websider");
+    public Authority createAuthority() {
+        List<JAXBElement<?>> organisationRest = createOrganisationRest(
+                getAvinorConfig().getCompanyNumber(), getAvinorConfig().getName(),
+                getAvinorConfig().getLegalName(), getAvinorConfig().getPhone(),
+                getAvinorConfig().getUrl(), getAvinorConfig().getDetails(), OrganisationTypeEnumeration.AUTHORITY);
+        return new Authority()
+                .withVersion("1")
+                .withId(String.format("%s:Company:1", getAvinorConfig().getId()))
+                .withRest(organisationRest);
+    }
+
+    public Operator createSASOperator() {
+        List<JAXBElement<?>> operatorRest = createOrganisationRest(
+                getSasConfig().getCompanyNumber(), getSasConfig().getName(),
+                getSasConfig().getLegalName(), getSasConfig().getPhone(),
+                getSasConfig().getUrl(), getSasConfig().getDetails(), OrganisationTypeEnumeration.OPERATOR);
         return new Operator()
                 .withVersion("1")
-                .withId("SAS:Company:1")
+                .withId(String.format("%s:Company:2", getSasConfig().getName()))
                 .withRest(operatorRest);
     }
 
-    @Bean
-    public Operator wideroeOperator() {
-        List<JAXBElement<?>> operatorRest = createOperatorRest(
-                "811176702", "SAS", "SAS NORGE AS", "0047 648 16 050", "http://www.sas.no/", "Kontaktskjema på websider");
+    public Operator createWideroeOperator() {
+        List<JAXBElement<?>> operatorRest = createOrganisationRest(
+                getWideroeConfig().getCompanyNumber(), getWideroeConfig().getName(),
+                getWideroeConfig().getLegalName(), getWideroeConfig().getPhone(),
+                getWideroeConfig().getUrl(), getWideroeConfig().getDetails(), OrganisationTypeEnumeration.OPERATOR);
         return new Operator()
                 .withVersion("1")
-                .withId("Wideroe:Company:2")
+                .withId(String.format("%s:Company:2", getWideroeConfig().getName()))
                 .withRest(operatorRest);
     }
 
-    @Bean
-    public Operator norwegianOperator() {
-        List<JAXBElement<?>> operatorRest = createOperatorRest(
-                "811176702", "SAS", "SAS NORGE AS", "0047 648 16 050", "http://www.sas.no/", "Kontaktskjema på websider");
+    public Operator createNorwegianOperator() {
+        List<JAXBElement<?>> operatorRest = createOrganisationRest(
+                getNorwegianConfig().getCompanyNumber(), getNorwegianConfig().getName(),
+                getNorwegianConfig().getLegalName(), getNorwegianConfig().getPhone(),
+                getNorwegianConfig().getUrl(), getNorwegianConfig().getDetails(), OrganisationTypeEnumeration.OPERATOR);
         return new Operator()
                 .withVersion("1")
-                .withId("Norwegian:Company:3")
+                .withId(String.format("%s:Company:2", getNorwegianConfig().getName()))
                 .withRest(operatorRest);
+    }
+
+    public List<JAXBElement<?>> createOrganisationRest(String companyNumber, String name, String legalName,
+                                                       String phone, String url, String details, OrganisationTypeEnumeration organisationType) {
+        JAXBElement<String> companyNumberStructure = objectFactory()
+                .createOrganisation_VersionStructureCompanyNumber(companyNumber);
+        JAXBElement<MultilingualString> nameStructure = objectFactory()
+                .createOrganisation_VersionStructureName(new MultilingualString().withValue(name));
+        JAXBElement<MultilingualString> legalNameStructure = objectFactory()
+                .createOrganisation_VersionStructureLegalName(new MultilingualString().withValue(legalName));
+        JAXBElement<List<OrganisationTypeEnumeration>> organisationTypes = objectFactory()
+                .createOrganisation_VersionStructureOrganisationType(Collections.singletonList(organisationType));
+        JAXBElement<ContactStructure> contactStructure = createContactStructure(phone, url, details);
+        return Arrays.asList(companyNumberStructure, nameStructure, legalNameStructure, organisationTypes, contactStructure);
+    }
+
+    public JAXBElement<ContactStructure> createContactStructure(String phone, String url, String furtherDetails) {
+        ContactStructure contactStructure = new ContactStructure()
+                .withPhone(phone)
+                .withUrl(url)
+                .withFurtherDetails(new MultilingualString().withValue(furtherDetails));
+        return objectFactory().createOrganisation_VersionStructureContactDetails(contactStructure);
+    }
+
+    public NhrAuthorityConfig getNhrConfig() {
+        return nhrConfig;
+    }
+
+    @Autowired
+    public void setNhrConfig(NhrAuthorityConfig nhrConfig) {
+        this.nhrConfig = nhrConfig;
+    }
+
+    public AvinorAuthorityConfig getAvinorConfig() {
+        return avinorConfig;
+    }
+
+    @Autowired
+    public void setAvinorConfig(AvinorAuthorityConfig avinorConfig) {
+        this.avinorConfig = avinorConfig;
+    }
+
+    public SasOperatorConfig getSasConfig() {
+        return sasConfig;
+    }
+
+    @Autowired
+    public void setSasConfig(SasOperatorConfig sasConfig) {
+        this.sasConfig = sasConfig;
+    }
+
+    public WideroeOperatorConfig getWideroeConfig() {
+        return wideroeConfig;
+    }
+
+    @Autowired
+    public void setWideroeConfig(WideroeOperatorConfig wideroeConfig) {
+        this.wideroeConfig = wideroeConfig;
+    }
+
+    public NorwegianOperatorConfig getNorwegianConfig() {
+        return norwegianConfig;
+    }
+
+    @Autowired
+    public void setNorwegianConfig(NorwegianOperatorConfig norwegianConfig) {
+        this.norwegianConfig = norwegianConfig;
     }
 
 }

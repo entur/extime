@@ -34,6 +34,7 @@ import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEA
 public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
 
     @Test
+    @Ignore
     public void testScheduledDirectFlightConvertedToNetex() throws Exception {
         context.getRouteDefinition("DirectFlightsNetexConverter").adviceWith(context, new AdviceWithRouteBuilder() {
             @Override
@@ -44,8 +45,8 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
 
         ScheduledDirectFlight scheduledDirectFlight = new ScheduledDirectFlight();
         scheduledDirectFlight.setFlightId(BigInteger.ONE);
-        scheduledDirectFlight.setAirlineIATA("DY");
-        scheduledDirectFlight.setAirlineFlightId("DY6677");
+        scheduledDirectFlight.setAirlineIATA("SK");
+        scheduledDirectFlight.setAirlineFlightId("SK8899");
         scheduledDirectFlight.setDateOfOperation(LocalDate.now());
         scheduledDirectFlight.setDepartureAirportIATA("TRD");
         scheduledDirectFlight.setTimeOfDeparture(LocalTime.NOON);
@@ -248,17 +249,4 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         log.info("After " + definition + " with body " + exchange.getIn().getBody());
     }
 
-    public String toXml(PublicationDeliveryStructure publicationDeliveryStructure) {
-        ByteArrayOutputStream baos = null;
-        try {
-            JAXBContext jc = JAXBContext.newInstance(publicationDeliveryStructure.getClass());
-            Marshaller marshaller = jc.createMarshaller();
-            marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-            baos = new ByteArrayOutputStream();
-            marshaller.marshal(publicationDeliveryStructure, baos);
-            return baos.toString();
-        } catch (JAXBException e) {
-        }
-        return baos.toString();
-    }
 }

@@ -1,8 +1,6 @@
 package no.rutebanken.extime.routes.avinor;
 
-import org.springframework.stereotype.Component;
-
-@Component(value = "avinorTimetableParser")
+//@Component(value = "avinorTimetableParser")
 public class AvinorTimetableParser {
 
 /*

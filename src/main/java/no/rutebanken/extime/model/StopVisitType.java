@@ -1,8 +1,5 @@
 package no.rutebanken.extime.model;
 
-/**
- * @todo: change type name to StopVisitType
- */
 public enum StopVisitType {
     DEPARTURE("D"), ARRIVAL("A");
 

@@ -1,8 +1,6 @@
 package no.rutebanken.extime.routes.avinor;
 
-import org.springframework.stereotype.Component;
-
-@Component(value = "avinor2GTFSConverter")
+//@Component(value = "avinor2GTFSConverter")
 public class Avinor2GTFSConverter {
 
 /*
