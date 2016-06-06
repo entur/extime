@@ -23,6 +23,9 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.*;
 
+/**
+ * @todo: fix encoding issues, set to UTF-8
+ */
 @Component(value = "scheduledFlightToNetexConverter")
 public class ScheduledFlightToNetexConverter {
 
@@ -32,7 +35,7 @@ public class ScheduledFlightToNetexConverter {
     private WideroeOperatorConfig wideroeConfig;
     private NorwegianOperatorConfig norwegianConfig;
 
-    public JAXBElement<PublicationDeliveryStructure> convertToNetex(ScheduledDirectFlight directFlight) {
+    public PublicationDeliveryStructure convertToNetex(ScheduledDirectFlight directFlight) {
         LocalDate dateOfOperation = directFlight.getDateOfOperation();
         String routePath = String.format("%s-%s", directFlight.getDepartureAirportIATA(), directFlight.getArrivalAirportIATA());
         String flightId = directFlight.getAirlineFlightId();
@@ -58,7 +61,8 @@ public class ScheduledFlightToNetexConverter {
 
         JAXBElement<CompositeFrame> compositeFrame = createCompositeFrame(flightId, frames);
         PublicationDeliveryStructure publicationDeliveryStructure = createPublicationDeliveryStructure(compositeFrame, flightId, routePath);
-        return objectFactory().createPublicationDelivery(publicationDeliveryStructure);
+        return publicationDeliveryStructure;
+        //return objectFactory().createPublicationDelivery(publicationDeliveryStructure);
     }
 
     public PublicationDeliveryStructure convertToNetex(ScheduledStopoverFlight stopoverFlight) {

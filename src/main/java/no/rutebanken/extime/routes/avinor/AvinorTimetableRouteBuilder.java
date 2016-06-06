@@ -7,12 +7,14 @@ import no.rutebanken.extime.converter.ScheduledFlightToNetexConverter;
 import no.rutebanken.extime.model.AirportIATA;
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
+import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.http4.HttpMethods;
 import org.apache.camel.processor.aggregate.AggregationStrategy;
 import org.apache.commons.lang3.EnumUtils;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -24,6 +26,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
 
     static final String HEADER_TIMETABLE_AIRPORT_IATA = "TimetableAirportIATA";
     static final String HEADER_TIMETABLE_PERIOD_FROM = "TimetablePeriodFrom";
+    static final String HEADER_TIMETABLE_PERIOD_TO = "TimetablePeriodTo";
 
     @Override
     public void configure() throws Exception {
@@ -36,6 +39,11 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                     exchange.getIn().setBody(AirportIATA.values());
                 }).id("TimetableAirportIATAProcessor")
                 .setHeader(HEADER_TIMETABLE_PERIOD_FROM, simple("${date:now:yyyy-MM-dd}Z"))
+                .process(exchange -> {
+                    Long daysAhead = simple("{{avinor.timetable.periodto.daysahead}}").evaluate(exchange, Long.class);
+                    String periodTo = LocalDate.now().plusDays(daysAhead).toString().concat("Z");
+                    exchange.getIn().setHeader(HEADER_TIMETABLE_PERIOD_TO, periodTo);
+                }).id("TimetablePeriodToProcessor")
                 .split(body(), new ScheduledFlightListAggregationStrategy()).parallelProcessing()
                     .log(LoggingLevel.DEBUG, this.getClass().getName(),
                             "Processing scheduled flights for airport with IATA code: ${body}")
@@ -49,8 +57,8 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .routeId("FetchTimetableForAirport")
                 .log(LoggingLevel.DEBUG, this.getClass().getName(), "Fetching flights for airport IATA: ${body}")
                 .setHeader(Exchange.HTTP_METHOD, constant(HttpMethods.GET))
-                .setHeader(Exchange.HTTP_QUERY, simpleF("airport=${header.%s}&direction=D&PeriodFrom=${header.%s}&PeriodTo={{avinor.timetable.periodto}}",
-                        HEADER_TIMETABLE_AIRPORT_IATA, HEADER_TIMETABLE_PERIOD_FROM))
+                .setHeader(Exchange.HTTP_QUERY, simpleF("airport=${header.%s}&direction=D&PeriodFrom=${header.%s}&PeriodTo=${header.%s}",
+                        HEADER_TIMETABLE_AIRPORT_IATA, HEADER_TIMETABLE_PERIOD_FROM, HEADER_TIMETABLE_PERIOD_TO))
                 .setBody(constant(null))
                 .to("{{avinor.timetable.feed.endpoint}}").id("FetchTimetableFeedProcessor")
                 .split(stax(Flight.class, false), new ScheduledAirportFlightsAggregationStrategy()).streaming()
@@ -88,8 +96,14 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                     .log(LoggingLevel.DEBUG, this.getClass().getName(), "Converting scheduled direct flight with id: ${body.flightId}")
                     .bean(ScheduledFlightToNetexConverter.class, "convertToNetex")
                     .convertBodyTo(String.class)
-                    .log(LoggingLevel.DEBUG, this.getClass().getName(), "${body}")
-                    .to("mock:jms:queue")
+                    //.log(LoggingLevel.DEBUG, this.getClass().getName(), "${body}")
+                    //.to("mock:jms:queue")
+                    .process(exchange -> {
+                        String uuid = getContext().getUuidGenerator().generateUuid();
+                        exchange.getIn().setHeader("FileNameGenerated", uuid);
+                    })
+                    .setHeader(Exchange.FILE_NAME, simple("${header.FileNameGenerated}.xml"))
+                    .to("file:target/netex")
                 .end()
         ;
 
