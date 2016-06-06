@@ -31,4 +31,7 @@ lib/
 gradle/
 gradlew
 gradlew.bat
+
+#OS X specific files
+.DS_Store
     
