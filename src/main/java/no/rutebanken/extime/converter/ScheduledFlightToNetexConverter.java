@@ -37,7 +37,7 @@ public class ScheduledFlightToNetexConverter {
 
     public PublicationDeliveryStructure convertToNetex(ScheduledDirectFlight directFlight) {
         LocalDate dateOfOperation = directFlight.getDateOfOperation();
-        String routePath = String.format("%s-%s", directFlight.getDepartureAirportIATA(), directFlight.getArrivalAirportIATA());
+        String routePath = String.format("%s-%s", directFlight.getDepartureAirportName(), directFlight.getArrivalAirportName());
         String flightId = directFlight.getAirlineFlightId();
 
         List<StopPlace> stopPlaces = createStopPlaces(directFlight);
@@ -96,6 +96,9 @@ public class ScheduledFlightToNetexConverter {
         return objectFactory().createCompositeFrame(compositeFrame);
     }
 
+    /**
+     * @todo: Consider adding a paramter for default codespace (avinor), and not use the avinor name from config
+     */
     public JAXBElement<ResourceFrame> createResourceFrame(String airlineIATA) {
         CodespaceRefStructure codespaceRefStructure = new CodespaceRefStructure()
                 .withRef(avinorCodespace().getId());
@@ -206,7 +209,7 @@ public class ScheduledFlightToNetexConverter {
         StopPlace departureStopPlace = new StopPlace()
                 .withVersion("1")
                 .withId("NHR:StopArea:03011537") // @todo: retrieve the actual stopplace id from NHR
-                .withName(createMultilingualString(directFlight.getDepartureAirportIATA())) // @todo: change to airportname when available
+                .withName(createMultilingualString(directFlight.getDepartureAirportName()))
                 .withShortName(createMultilingualString(directFlight.getDepartureAirportIATA()))
                 // .withQuays() // @todo: consider adding quays to stopplace, refering to gates in aviation, if available
                 .withTransportMode(VehicleModeEnumeration.AIR)
@@ -214,7 +217,7 @@ public class ScheduledFlightToNetexConverter {
         StopPlace arrivalStopPlace = new StopPlace()
                 .withVersion("1")
                 .withId("NHR:StopArea:03011521")  // @todo: retrieve the actual stopplace id from NHR
-                .withName(createMultilingualString(directFlight.getArrivalAirportIATA())) // @todo: change to airportname when available
+                .withName(createMultilingualString(directFlight.getArrivalAirportName()))
                 .withShortName(createMultilingualString(directFlight.getArrivalAirportIATA()))
                 // .withQuays() // @todo: consider adding quays to stopplace, refering to gates in aviation, if available
                 .withTransportMode(VehicleModeEnumeration.AIR)
@@ -360,7 +363,6 @@ public class ScheduledFlightToNetexConverter {
             PointOnRoute pointOnRoute = new PointOnRoute()
                     .withVersion("any")
                     .withId(String.format("%s:PointOnRoute:%s101001-0", getAvinorConfig().getId(), flightId)) // @todo: fix generation of serial numbers
-                    //.withOrder(BigInteger.valueOf(stopover.getOrder())); // @todo: fix support for order values or implement counter
                     .withPointRef(objectFactory().createRoutePointRef(routePointReference));
             pointsOnRoute.getPointOnRoute().add(pointOnRoute);
         });
@@ -385,7 +387,6 @@ public class ScheduledFlightToNetexConverter {
             PointOnRoute pointOnRoute = new PointOnRoute()
                     .withVersion("any")
                     .withId("AVI:PointOnRoute:0061101001-0")
-                    //.withOrder(BigInteger.valueOf(stopover.getOrder())); // @todo: fix support for order values or implement counter
                     .withPointRef(objectFactory().createRoutePointRef(routePointReference));
             pointsOnRoute.getPointOnRoute().add(pointOnRoute);
         });
@@ -418,11 +419,11 @@ public class ScheduledFlightToNetexConverter {
         ScheduledStopPoint scheduledDepartureStopPoint = new ScheduledStopPoint()
                 .withVersion("1")
                 .withId(String.format("%s:StopPoint:%s101001", getAvinorConfig().getId(), directFlight.getAirlineFlightId()))
-                .withName(createMultilingualString(directFlight.getDepartureAirportIATA())); // @todo: change to airport name when available
+                .withName(createMultilingualString(directFlight.getDepartureAirportName()));
         ScheduledStopPoint scheduledArrivalStopPoint = new ScheduledStopPoint()
                 .withVersion("1")
                 .withId(String.format("%s:StopPoint:%s101002", getAvinorConfig().getId(), directFlight.getAirlineFlightId()))
-                .withName(createMultilingualString(directFlight.getArrivalAirportIATA())); // @todo: change to airport name when available
+                .withName(createMultilingualString(directFlight.getArrivalAirportName()));
         return Lists.newArrayList(scheduledDepartureStopPoint, scheduledArrivalStopPoint);
     }
 

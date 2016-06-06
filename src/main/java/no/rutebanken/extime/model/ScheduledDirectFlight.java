@@ -12,6 +12,8 @@ public class ScheduledDirectFlight {
     private LocalDate dateOfOperation;
     private String departureAirportIATA;
     private String arrivalAirportIATA;
+    private String departureAirportName;
+    private String arrivalAirportName;
     private LocalTime timeOfDeparture;
     private LocalTime timeOfArrival;
 
@@ -63,6 +65,22 @@ public class ScheduledDirectFlight {
         this.arrivalAirportIATA = arrivalAirportIATA;
     }
 
+    public String getDepartureAirportName() {
+        return departureAirportName;
+    }
+
+    public void setDepartureAirportName(String departureAirportName) {
+        this.departureAirportName = departureAirportName;
+    }
+
+    public String getArrivalAirportName() {
+        return arrivalAirportName;
+    }
+
+    public void setArrivalAirportName(String arrivalAirportName) {
+        this.arrivalAirportName = arrivalAirportName;
+    }
+
     public LocalTime getTimeOfDeparture() {
         return timeOfDeparture;
     }
@@ -92,6 +110,8 @@ public class ScheduledDirectFlight {
         if (!dateOfOperation.equals(that.dateOfOperation)) return false;
         if (!departureAirportIATA.equals(that.departureAirportIATA)) return false;
         if (!arrivalAirportIATA.equals(that.arrivalAirportIATA)) return false;
+        if (!departureAirportName.equals(that.departureAirportName)) return false;
+        if (!arrivalAirportName.equals(that.arrivalAirportName)) return false;
         if (!timeOfDeparture.equals(that.timeOfDeparture)) return false;
         return timeOfArrival.equals(that.timeOfArrival);
 
@@ -105,6 +125,8 @@ public class ScheduledDirectFlight {
         result = 31 * result + dateOfOperation.hashCode();
         result = 31 * result + departureAirportIATA.hashCode();
         result = 31 * result + arrivalAirportIATA.hashCode();
+        result = 31 * result + departureAirportName.hashCode();
+        result = 31 * result + arrivalAirportName.hashCode();
         result = 31 * result + timeOfDeparture.hashCode();
         result = 31 * result + timeOfArrival.hashCode();
         return result;
@@ -119,6 +141,8 @@ public class ScheduledDirectFlight {
         sb.append(", dateOfOperation=").append(dateOfOperation);
         sb.append(", departureAirportIATA='").append(departureAirportIATA).append('\'');
         sb.append(", arrivalAirportIATA='").append(arrivalAirportIATA).append('\'');
+        sb.append(", departureAirportName='").append(departureAirportName).append('\'');
+        sb.append(", arrivalAirportName='").append(arrivalAirportName).append('\'');
         sb.append(", timeOfDeparture=").append(timeOfDeparture);
         sb.append(", timeOfArrival=").append(timeOfArrival);
         sb.append('}');
