@@ -217,7 +217,6 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
         ;
     }
 
-    @SuppressWarnings("Duplicates")
     class ScheduledFlightListAggregationStrategy implements AggregationStrategy {
         @Override
         public Exchange aggregate(Exchange oldExchange, Exchange newExchange) {
@@ -238,7 +237,6 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
         }
     }
 
-    @SuppressWarnings("Duplicates")
     class ScheduledAirportFlightsAggregationStrategy implements AggregationStrategy {
         @Override
         public Exchange aggregate(Exchange oldExchange, Exchange newExchange) {
@@ -283,7 +281,6 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
         }
     }
 
-    @SuppressWarnings("Duplicates")
     class StopoverListAggregationStrategy implements AggregationStrategy {
         @Override
         public Exchange aggregate(Exchange oldExchange, Exchange newExchange) {

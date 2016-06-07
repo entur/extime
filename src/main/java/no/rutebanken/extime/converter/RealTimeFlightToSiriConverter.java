@@ -1,5 +1,7 @@
-package no.rutebanken.extime.routes.avinor;
+package no.rutebanken.extime.converter;
 
+import no.avinor.flydata.xjc.model.feed.Flight;
+import org.springframework.stereotype.Component;
 import uk.org.siri.siri20.*;
 
 import javax.xml.datatype.DatatypeConfigurationException;
@@ -7,16 +9,17 @@ import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.Duration;
 import java.time.ZonedDateTime;
 
-public class FlightRouteToSiriConverter {
+@Component(value = "realTimeFlightToSiriConverter")
+public class RealTimeFlightToSiriConverter {
 
-    //public List<Siri> convertRoutesToSiriFormat() {
-    public Siri convertRoutesToSiriFormat() {
-        Siri siri = convertToSiri();
+    //public List<Siri> convertToSiri() {
+    public Siri convertToSiri() {
+        Siri siri = new Siri();
         return siri;
         //return Arrays.asList(siri);
     }
 
-    private Siri convertToSiri() {
+    private Siri convertToSiri(Flight flight) {
         ObjectFactory factory = new ObjectFactory();
         Siri siri = factory.createSiri();
         ServiceDelivery serviceDelivery = factory.createServiceDelivery();

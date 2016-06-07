@@ -8,6 +8,7 @@ import no.rutebanken.extime.model.ScheduledStopoverFlight;
 import no.rutebanken.extime.model.StopVisitType;
 import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.apache.commons.lang3.tuple.Triple;
+import org.springframework.stereotype.Component;
 
 import java.math.BigInteger;
 import java.time.LocalTime;
@@ -15,6 +16,7 @@ import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+@Component(value = "scheduledFlightConverter")
 public class ScheduledFlightConverter {
 
     public List<ScheduledDirectFlight> convertToScheduledDirectFlights(List<Flight> scheduledFlights) {

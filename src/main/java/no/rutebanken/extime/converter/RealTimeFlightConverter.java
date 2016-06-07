@@ -1,18 +1,19 @@
-package no.rutebanken.extime.routes.avinor;
+package no.rutebanken.extime.converter;
 
 import no.avinor.flydata.xjc.model.airport.AirportName;
 import no.avinor.flydata.xjc.model.feed.Flight;
 import no.rutebanken.extime.model.AirportFlightDataSet;
 import no.rutebanken.extime.model.FlightRouteDataSet;
 import org.apache.camel.Body;
+import org.springframework.stereotype.Component;
 
 import java.math.BigInteger;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-//@Component(value = "flightRouteMatcher")
-public class FlightRouteMatcher {
+@Component(value = "realTimeFlightConverter")
+public class RealTimeFlightConverter {
 
     public List<FlightRouteDataSet> findMatchingFlightRoutes(@Body HashMap<String, AirportFlightDataSet> airportFlightsMap) {
         Map<String, AirportName> airportNameCache = airportFlightsMap.entrySet().stream()
@@ -31,8 +32,8 @@ public class FlightRouteMatcher {
                     .filter(flight -> flight.getViaAirport() == null || flight.getViaAirport().isEmpty())
                     .filter(flight ->
                             flight.getAirport().equalsIgnoreCase("OSL") ||
-                            flight.getAirport().equalsIgnoreCase("BGO") ||
-                            flight.getAirport().equalsIgnoreCase("TRD"))
+                                    flight.getAirport().equalsIgnoreCase("BGO") ||
+                                    flight.getAirport().equalsIgnoreCase("TRD"))
                     .collect(Collectors.toList());
 
             directFlights.forEach(departureFlight -> {
