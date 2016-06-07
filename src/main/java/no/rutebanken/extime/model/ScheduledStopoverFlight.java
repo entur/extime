@@ -14,6 +14,7 @@ import static java.util.stream.Collectors.toList;
 public class ScheduledStopoverFlight {
 
     private BigInteger id; // or serie of ids
+    private String airlineIATA;
     private String flightId;
     private LocalDate dateOfOperation; // or a date range, if flight goes over multiple dates
     private String routeString; // could also be implemented in separate getter or toString, like "OSL-HOV-SOG-BGO"
@@ -26,6 +27,14 @@ public class ScheduledStopoverFlight {
 
     public void setId(BigInteger id) {
         this.id = id;
+    }
+
+    public String getAirlineIATA() {
+        return airlineIATA;
+    }
+
+    public void setAirlineIATA(String airlineIATA) {
+        this.airlineIATA = airlineIATA;
     }
 
     public String getFlightId() {
@@ -61,7 +70,7 @@ public class ScheduledStopoverFlight {
 
     public String getRoutePath() {
         List<String> airportIATAs = scheduledStopovers.stream()
-                .map(ScheduledStopover::getAirportIATA)
+                .map(ScheduledStopover::getAirportName)
                 .collect(collectingAndThen(toList(), Collections::unmodifiableList));
         return Joiner.on("-").join(airportIATAs);
     }
@@ -74,15 +83,18 @@ public class ScheduledStopoverFlight {
         ScheduledStopoverFlight that = (ScheduledStopoverFlight) o;
 
         if (!id.equals(that.id)) return false;
+        if (!airlineIATA.equals(that.airlineIATA)) return false;
         if (!flightId.equals(that.flightId)) return false;
         if (!dateOfOperation.equals(that.dateOfOperation)) return false;
         if (!routeString.equals(that.routeString)) return false;
         return scheduledStopovers.equals(that.scheduledStopovers);
+
     }
 
     @Override
     public int hashCode() {
         int result = id.hashCode();
+        result = 31 * result + airlineIATA.hashCode();
         result = 31 * result + flightId.hashCode();
         result = 31 * result + dateOfOperation.hashCode();
         result = 31 * result + routeString.hashCode();
@@ -94,6 +106,7 @@ public class ScheduledStopoverFlight {
     public String toString() {
         final StringBuilder sb = new StringBuilder("ScheduledStopoverFlight{");
         sb.append("id=").append(id);
+        sb.append(", airlineIATA='").append(airlineIATA).append('\'');
         sb.append(", flightId='").append(flightId).append('\'');
         sb.append(", dateOfOperation=").append(dateOfOperation);
         sb.append(", routeString='").append(routeString).append('\'');

@@ -35,6 +35,7 @@ public class ScheduledFlightConverter {
                 ScheduledStopoverFlight scheduledStopoverFlight = new ScheduledStopoverFlight();
                 scheduledStopoverFlight.setFlightId(String.format("%s%s",
                         scheduledFlight.getAirlineDesignator(), scheduledFlight.getFlightNumber()));
+                scheduledStopoverFlight.setAirlineIATA(scheduledFlight.getAirlineDesignator());
                 scheduledStopoverFlight.setDateOfOperation(scheduledFlight.getDateOfOperation());
                 scheduledStopoverFlight.getScheduledStopovers().addAll(scheduledStopovers);
                 scheduledStopoverFlights.add(scheduledStopoverFlight);

@@ -7,12 +7,16 @@ import no.rutebanken.extime.converter.ScheduledFlightConverter;
 import no.rutebanken.extime.converter.ScheduledFlightToNetexConverter;
 import no.rutebanken.extime.model.AirportIATA;
 import no.rutebanken.extime.model.ScheduledDirectFlight;
+import no.rutebanken.extime.model.ScheduledStopover;
+import no.rutebanken.extime.model.ScheduledStopoverFlight;
+import no.rutebanken.netex.model.PublicationDeliveryStructure;
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.cache.CacheConstants;
 import org.apache.camel.component.http4.HttpMethods;
+import org.apache.camel.converter.jaxb.JaxbDataFormat;
 import org.apache.camel.processor.aggregate.AggregationStrategy;
 import org.apache.commons.lang3.EnumUtils;
 import org.springframework.stereotype.Component;
@@ -28,16 +32,25 @@ import static org.apache.camel.component.stax.StAXBuilder.stax;
 public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRouteBuilder {
 
     static final String HEADER_TIMETABLE_AIRPORT_IATA = "TimetableAirportIATA";
-    static final String HEADER_STOPVISIT_AIRPORT_IATA = "StopVisitAirportIATA";
     static final String HEADER_TIMETABLE_PERIOD_FROM = "TimetablePeriodFrom";
     static final String HEADER_TIMETABLE_PERIOD_TO = "TimetablePeriodTo";
 
-    static final String PROPERTY_AIRPORT_NAME_ORIGINAL_BODY = "AirportNameOriginalBody";
+    static final String PROPERTY_DIRECT_FLIGHT_ORIGINAL_BODY = "DirectFlightOriginalBody";
+    static final String PROPERTY_STOPOVER_FLIGHT_ORIGINAL_BODY = "StopoverFlightOriginalBody";
+    static final String PROPERTY_STOPOVER_ORIGINAL_BODY = "StopoverOriginalBody";
 
     @Override
     public void configure() throws Exception {
         //super.configure();
         //getContext().setTracing(true);
+
+        JaxbDataFormat jaxbDataFormat = new JaxbDataFormat();
+        //JaxbDataFormat jaxbDataFormat = new JaxbDataFormat("no.rutebanken.netex.model"); // same as below
+        jaxbDataFormat.setContextPath(PublicationDeliveryStructure.class.getPackage().getName());
+        //jaxbDataFormat.setSchema("classpath:person.xsd,classpath:address.xsd"); // multiple xsds
+        //jaxbDataFormat.setSchema("classpath:person.xsd"); // single xsd
+        jaxbDataFormat.setPrettyPrint(true);
+        jaxbDataFormat.setEncoding("UTF-8");
 
         from("{{avinor.timetable.scheduler.cron}}")
                 .routeId("AvinorTimetableSchedulerStarter")
@@ -103,7 +116,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .routeId("TimetableConverter")
                 .multicast()
                     .to("direct:convertToDirectFlights").id("ConvertDirectFlightsProcessor")
-                    .to("mock:direct:convertToStopoverFlights").id("ConvertStopoverFlightsProcessor")
+                    .to("direct:convertToStopoverFlights").id("ConvertStopoverFlightsProcessor")
                 .end()
         ;
 
@@ -129,11 +142,11 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                     .enrich("direct:retrieveAirportNameResource", new DepartureIataEnricherAggregationStrategy())
                     .process(new ArrivalIataInitProcessor())
                     .enrich("direct:retrieveAirportNameResource", new ArrivalIataEnricherAggregationStrategy())
-                    .log(LoggingLevel.DEBUG, this.getClass().getName(), "Converting scheduled direct flight with id: ${body.flightId}")
+                    .log(LoggingLevel.DEBUG, this.getClass().getName(), "Converting scheduled direct flight with id: ${body.airlineFlightId}")
                     .bean(ScheduledFlightToNetexConverter.class, "convertToNetex")
-                    .convertBodyTo(String.class)
+                    //.setHeader(Exchange.CHARSET_NAME, constant("UTF-8"))
+                    .marshal(jaxbDataFormat)
                     //.log(LoggingLevel.DEBUG, this.getClass().getName(), "${body}")
-                    //.to("mock:jms:queue")
                     .process(exchange -> {
                         String uuid = getContext().getUuidGenerator().generateUuid();
                         exchange.getIn().setHeader("FileNameGenerated", uuid);
@@ -147,14 +160,22 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .routeId("StopoverFlightsNetexConverter")
                 .log(LoggingLevel.DEBUG, this.getClass().getName(), "Converting scheduled stopover flights to NeTEx")
                 .split(body()).parallelProcessing()
+                    .process(new StopverIataInitProcessor())
+                    .enrich("direct:retrieveAirportNamesForStopovers", new StopoverIataEnricherAggregationStrategy())
                     .log(LoggingLevel.DEBUG, this.getClass().getName(), "Converting scheduled stopover flight with id: ${body.flightId}")
                     .bean(ScheduledFlightToNetexConverter.class, "convertToNetex")
-                    .to("mock:jms:queue")
+                    .marshal(jaxbDataFormat)
+                    .process(exchange -> {
+                        String uuid = getContext().getUuidGenerator().generateUuid();
+                        exchange.getIn().setHeader("StopoverFileName", uuid);
+                    })
+                    .setHeader(Exchange.FILE_NAME, simple("${header.StopoverFileName}.xml"))
+                    .to("file:target/netex/stopover")
                 .end()
         ;
 
         from("direct:retrieveAirportNameResource")
-                .routeId("TimetableAirportNameEnricher")
+                .routeId("DirectFlightAirportNameEnricher")
                 .setHeader(CacheConstants.CACHE_OPERATION, constant(CacheConstants.CACHE_OPERATION_GET))
                 .setHeader(CacheConstants.CACHE_KEY, simple("${body}"))
                 .to("cache://avinorTimetableCache")
@@ -167,11 +188,14 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
 */
         ;
 
-        from("direct:getAirportNameFromCache")
-                .routeId("AirportNameGetFromCache")
-                .setHeader(CacheConstants.CACHE_OPERATION, constant(CacheConstants.CACHE_OPERATION_GET))
-                .setHeader(CacheConstants.CACHE_KEY, simpleF("${header.%s}", HEADER_STOPVISIT_AIRPORT_IATA))
-                .to("cache://avinorTimetableCache")
+        from("direct:retrieveAirportNamesForStopovers")
+                .routeId("StopoverFlightAirportNameEnricher")
+                .split(body(), new StopoverListAggregationStrategy())
+                    .setProperty(PROPERTY_STOPOVER_ORIGINAL_BODY, simple("${body}"))
+                    .setHeader(CacheConstants.CACHE_OPERATION, constant(CacheConstants.CACHE_OPERATION_GET))
+                    .setHeader(CacheConstants.CACHE_KEY, simple("${body.airportIATA}"))
+                    .to("cache://avinorTimetableCache")
+                .end()
         ;
 
         from("direct:addAirportNameToCache")
@@ -259,11 +283,38 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
         }
     }
 
+    @SuppressWarnings("Duplicates")
+    class StopoverListAggregationStrategy implements AggregationStrategy {
+        @Override
+        public Exchange aggregate(Exchange oldExchange, Exchange newExchange) {
+            @SuppressWarnings("unchecked")
+            String newExchangeBody = newExchange.getIn().getBody(String.class);
+            if (oldExchange == null) {
+                List<ScheduledStopover> scheduledStopovers = new ArrayList<>();
+                ScheduledStopover originalBody = newExchange.getProperty(
+                        PROPERTY_STOPOVER_ORIGINAL_BODY, ScheduledStopover.class);
+                originalBody.setAirportName(newExchangeBody);
+                scheduledStopovers.add(originalBody);
+                newExchange.getIn().setBody(scheduledStopovers);
+                return newExchange;
+            } else {
+                @SuppressWarnings("unchecked")
+                List<ScheduledStopover> scheduledStopovers = Collections.checkedList(
+                        oldExchange.getIn().getBody(List.class), ScheduledStopover.class);
+                ScheduledStopover originalBody = newExchange.getProperty(
+                        PROPERTY_STOPOVER_ORIGINAL_BODY, ScheduledStopover.class);
+                originalBody.setAirportName(newExchangeBody);
+                scheduledStopovers.add(originalBody);
+                return oldExchange;
+            }
+        }
+    }
+
     class DepartureIataInitProcessor implements Processor {
         @Override
         public void process(Exchange exchange) throws Exception {
             ScheduledDirectFlight originalBody = exchange.getIn().getBody(ScheduledDirectFlight.class);
-            exchange.setProperty(PROPERTY_AIRPORT_NAME_ORIGINAL_BODY, originalBody);
+            exchange.setProperty(PROPERTY_DIRECT_FLIGHT_ORIGINAL_BODY, originalBody);
             String enrichParameter = originalBody.getDepartureAirportIATA();
             exchange.getIn().setBody(enrichParameter);
         }
@@ -273,8 +324,18 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
         @Override
         public void process(Exchange exchange) throws Exception {
             ScheduledDirectFlight originalBody = exchange.getIn().getBody(ScheduledDirectFlight.class);
-            exchange.setProperty(PROPERTY_AIRPORT_NAME_ORIGINAL_BODY, originalBody);
+            exchange.setProperty(PROPERTY_DIRECT_FLIGHT_ORIGINAL_BODY, originalBody);
             String enrichParameter = originalBody.getArrivalAirportIATA();
+            exchange.getIn().setBody(enrichParameter);
+        }
+    }
+
+    class StopverIataInitProcessor implements Processor {
+        @Override
+        public void process(Exchange exchange) throws Exception {
+            ScheduledStopoverFlight originalBody = exchange.getIn().getBody(ScheduledStopoverFlight.class);
+            exchange.setProperty(PROPERTY_STOPOVER_FLIGHT_ORIGINAL_BODY, originalBody);
+            List<ScheduledStopover> enrichParameter = originalBody.getScheduledStopovers();
             exchange.getIn().setBody(enrichParameter);
         }
     }
@@ -282,7 +343,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
     class DepartureIataEnricherAggregationStrategy implements AggregationStrategy {
         public Exchange aggregate(Exchange original, Exchange resource) {
             ScheduledDirectFlight originalBody = original.getProperty(
-                    PROPERTY_AIRPORT_NAME_ORIGINAL_BODY, ScheduledDirectFlight.class);
+                    PROPERTY_DIRECT_FLIGHT_ORIGINAL_BODY, ScheduledDirectFlight.class);
             String resourceResponse = resource.getIn().getBody(String.class);
             originalBody.setDepartureAirportName(resourceResponse);
             original.getIn().setBody(originalBody);
@@ -293,9 +354,21 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
     class ArrivalIataEnricherAggregationStrategy implements AggregationStrategy {
         public Exchange aggregate(Exchange original, Exchange resource) {
             ScheduledDirectFlight originalBody = original.getProperty(
-                    PROPERTY_AIRPORT_NAME_ORIGINAL_BODY, ScheduledDirectFlight.class);
+                    PROPERTY_DIRECT_FLIGHT_ORIGINAL_BODY, ScheduledDirectFlight.class);
             String resourceResponse = resource.getIn().getBody(String.class);
             originalBody.setArrivalAirportName(resourceResponse);
+            original.getIn().setBody(originalBody);
+            return original;
+        }
+    }
+
+    class StopoverIataEnricherAggregationStrategy implements AggregationStrategy {
+        public Exchange aggregate(Exchange original, Exchange resource) {
+            ScheduledStopoverFlight originalBody = original.getProperty(
+                    PROPERTY_STOPOVER_FLIGHT_ORIGINAL_BODY, ScheduledStopoverFlight.class);
+            List<ScheduledStopover> resourceResponse = resource.getIn().getBody(List.class);
+            originalBody.getScheduledStopovers().clear();
+            originalBody.getScheduledStopovers().addAll(resourceResponse);
             original.getIn().setBody(originalBody);
             return original;
         }

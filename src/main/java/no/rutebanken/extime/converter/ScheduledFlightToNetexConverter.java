@@ -23,9 +23,6 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.*;
 
-/**
- * @todo: fix encoding issues, set to UTF-8
- */
 @Component(value = "scheduledFlightToNetexConverter")
 public class ScheduledFlightToNetexConverter {
 
@@ -66,7 +63,33 @@ public class ScheduledFlightToNetexConverter {
     }
 
     public PublicationDeliveryStructure convertToNetex(ScheduledStopoverFlight stopoverFlight) {
-        return null;
+        LocalDate dateOfOperation = stopoverFlight.getDateOfOperation();
+        String routePath = stopoverFlight.getRoutePath();
+        String flightId = stopoverFlight.getFlightId();
+
+        List<StopPlace> stopPlaces = createStopPlaces(stopoverFlight.getScheduledStopovers());
+        List<ScheduledStopPoint> scheduledStopPoints = createScheduledStopPoints(stopoverFlight.getScheduledStopovers(), flightId);
+        List<RoutePoint> routePoints = createRoutePoints(scheduledStopPoints, flightId);
+        List<PassengerStopAssignment> stopAssignments = createStopAssignments(scheduledStopPoints, stopPlaces, flightId);
+
+        Direction direction = createDirection(flightId);
+        Route route = createRoute(routePoints, flightId, routePath, direction);
+        Line line = createLine(route, flightId, routePath);
+        ServicePattern servicePattern = createServicePattern(flightId, routePath, route, scheduledStopPoints);
+        List<DatedServiceJourney> serviceJourneys = createServiceJourneyList(stopoverFlight, servicePattern, line, scheduledStopPoints);
+
+        Frames_RelStructure frames = new Frames_RelStructure();
+        frames.getCommonFrame().add(createResourceFrame(stopoverFlight.getAirlineIATA()));
+        frames.getCommonFrame().add(createSiteFrame(stopPlaces));
+        frames.getCommonFrame().add(createServiceFrame(direction, flightId, routePoints, route,
+                line, scheduledStopPoints, servicePattern, stopAssignments));
+        //framesRelStructure.getCommonFrame().add(createServiceCalendarFrame());
+        frames.getCommonFrame().add(createTimetableFrame(dateOfOperation, serviceJourneys));
+
+        JAXBElement<CompositeFrame> compositeFrame = createCompositeFrame(flightId, frames);
+        PublicationDeliveryStructure publicationDeliveryStructure = createPublicationDeliveryStructure(compositeFrame, flightId, routePath);
+        return publicationDeliveryStructure;
+        //return objectFactory().createPublicationDelivery(publicationDeliveryStructure);
     }
 
     public PublicationDeliveryStructure createPublicationDeliveryStructure(
@@ -78,7 +101,7 @@ public class ScheduledFlightToNetexConverter {
                 .withVersion("1.0")
                 .withPublicationTimestamp(ZonedDateTime.now())
                 .withParticipantRef(getAvinorConfig().getId()) // should this be Avinor or the actual flight airline?
-                .withDescription(createMultilingualString(String.format("Flight %s - %s", flightId, routePath)))
+                .withDescription(createMultilingualString(String.format("Flight %s : %s", flightId, routePath)))
                 .withDataObjects(dataObjects);
     }
 
@@ -225,6 +248,22 @@ public class ScheduledFlightToNetexConverter {
         return Lists.newArrayList(departureStopPlace, arrivalStopPlace);
     }
 
+    public List<StopPlace> createStopPlaces(List<ScheduledStopover> scheduledStopovers) {
+        List<StopPlace> stopPlaces = new ArrayList<>(scheduledStopovers.size());
+        scheduledStopovers.forEach(scheduledStopover -> {
+            StopPlace stopPlace = new StopPlace()
+                    .withVersion("1")
+                    .withId("NHR:StopArea:03011521")  // @todo: retrieve the actual stopplace id from NHR
+                    .withName(createMultilingualString(scheduledStopover.getAirportName()))
+                    .withShortName(createMultilingualString(scheduledStopover.getAirportIATA()))
+                    // .withQuays() // @todo: consider adding quays to stopplace, refering to gates in aviation, if available
+                    .withTransportMode(VehicleModeEnumeration.AIR)
+                    .withStopPlaceType(StopTypeEnumeration.AIRPORT);
+            stopPlaces.add(stopPlace);
+        });
+        return stopPlaces;
+    }
+
     public AvailabilityCondition createAvailabilityCondition(LocalDate dateOfOperation) {
         return new AvailabilityCondition()
                 .withVersion("any")
@@ -270,42 +309,45 @@ public class ScheduledFlightToNetexConverter {
         return serviceJourneyList;
     }
 
-    public List<DatedServiceJourney> createServiceJourneyList(ScheduledStopoverFlight stopoverFlight) {
+    public List<DatedServiceJourney> createServiceJourneyList(ScheduledStopoverFlight stopoverFlight, ServicePattern servicePattern,
+                                                              Line line, List<ScheduledStopPoint> scheduledStopPoints) {
         List<DatedServiceJourney> serviceJourneyList = new ArrayList<>();
-        List<ScheduledStopover> scheduledStopovers = stopoverFlight.getScheduledStopovers();
         Calls_RelStructure callsRelStructure = new Calls_RelStructure();
-        scheduledStopovers.forEach(stopover -> {
-            // @todo: make dynamic
-            ScheduledStopPointRefStructure scheduledStopPointReference = new ScheduledStopPointRefStructure()
+
+        Iterator<ScheduledStopover> stopoversiterator = stopoverFlight.getScheduledStopovers().iterator();
+        Iterator<ScheduledStopPoint> stopPointsIterator = scheduledStopPoints.iterator();
+        while (stopoversiterator.hasNext() && stopPointsIterator.hasNext()) {
+            ScheduledStopover scheduledStopover = stopoversiterator.next();
+            ScheduledStopPoint scheduledStopPoint = stopPointsIterator.next();
+            ScheduledStopPointRefStructure stopPointRef = new ScheduledStopPointRefStructure()
                     .withVersion("1")
-                    .withRef("AVI:StopPoint:0061101001");
-            JAXBElement<ScheduledStopPointRefStructure> scheduledStopPointRef = objectFactory().createScheduledStopPointRef(scheduledStopPointReference);
+                    .withRef(scheduledStopPoint.getId());
             ArrivalStructure arrivalStructure = new ArrivalStructure();
-            if (stopover.getArrivalTime() != null) {
-                arrivalStructure.setTime(stopover.getArrivalTime());
+            if (scheduledStopover.getArrivalTime() != null) {
+                arrivalStructure.setTime(scheduledStopover.getArrivalTime());
             } else {
                 arrivalStructure.setForAlighting(Boolean.FALSE); // boarding only, this is the first call
             }
             DepartureStructure departureStructure = new DepartureStructure();
-            if (stopover.getDepartureTime() != null) {
-                departureStructure.setTime(stopover.getDepartureTime());
+            if (scheduledStopover.getDepartureTime() != null) {
+                departureStructure.setTime(scheduledStopover.getDepartureTime());
             } else {
                 departureStructure.setForBoarding(Boolean.FALSE); // alighting only, this is the last call
             }
             Call call = new Call()
-                    .withScheduledStopPointRef(scheduledStopPointRef)
+                    .withScheduledStopPointRef(objectFactory().createScheduledStopPointRef(stopPointRef))
                     .withArrival(arrivalStructure)
                     .withDeparture(departureStructure);
             callsRelStructure.withCallOrDatedCall(call);
-        });
+        }
+        // @todo: check out ServicePatternRef, is it needed, or should we use a template instead?
         DatedServiceJourney datedServiceJourney = new DatedServiceJourney()
                 .withVersion("any")
-                .withId("AVI:DatedServiceJourney:WF149") // @todo: make dynamic
-                //.withDepartureTime(LocalTime.now()) // @todo: add departure time of first journey to flight
+                .withId(String.format("%s:DatedServiceJourney:%s", getAvinorConfig().getId(), stopoverFlight.getFlightId()))
+                .withDepartureTime(stopoverFlight.getScheduledStopovers().get(0).getDepartureTime())
                 //.withDayTypes()
-                //.withLineRef();
-                //.withJourneyPatternRef()
-                //.withLineRef() // @todo: IMPORTANT!!
+                .withLineRef(objectFactory().createLineRef(new LineRefStructure().withRef(line.getId())))
+                //.withJourneyPatternRef() // is this needed?
                 .withCalls(callsRelStructure);
         serviceJourneyList.add(datedServiceJourney);
         return serviceJourneyList;
@@ -326,28 +368,6 @@ public class ScheduledFlightToNetexConverter {
             RoutePoint routePoint = new RoutePoint()
                     .withVersion("1")
                     .withId(String.format("%s:RoutePoint:%s101A0A0061101001", getAvinorConfig().getId(), flightId)) // @todo: generate postfix id in a serie
-                    .withProjections(projections);
-            routePoints.add(routePoint);
-        });
-        return routePoints;
-    }
-
-    public List<RoutePoint> createRoutePoints(ScheduledStopoverFlight stopoverFlight) {
-        List<RoutePoint> routePoints = new ArrayList<>();
-        List<ScheduledStopover> scheduledStopovers = stopoverFlight.getScheduledStopovers();
-        scheduledStopovers.forEach(stopover -> {
-            PointRefStructure pointRefStructure = new PointRefStructure()
-                    .withVersion("1")
-                    .withRef("AVI:StopPoint:0061101001"); // @todo: refer to an existing StopPoint here
-            PointProjection pointProjection = new PointProjection()
-                    .withVersion("any")
-                    .withId("AVI:PointProjection:0061101A0A0061101001");
-                    //.withProjectedPointRef();  // @todo: make dynamic
-            Projections_RelStructure projections = new Projections_RelStructure()
-                    .withProjectionRefOrProjection(objectFactory().createPointProjection(pointProjection));
-            RoutePoint routePoint = new RoutePoint()
-                    .withVersion("1")
-                    .withId("AVI:RoutePoint:0061101A0A0061101001") // @todo: make dynamic
                     .withProjections(projections);
             routePoints.add(routePoint);
         });
@@ -427,17 +447,16 @@ public class ScheduledFlightToNetexConverter {
         return Lists.newArrayList(scheduledDepartureStopPoint, scheduledArrivalStopPoint);
     }
 
-    private ScheduledStopPointsInFrame_RelStructure createScheduledStopPoints(ScheduledStopoverFlight stopoverFlight) {
-        ScheduledStopPointsInFrame_RelStructure scheduledStopPointsInFrame = new ScheduledStopPointsInFrame_RelStructure();
-        List<ScheduledStopover> scheduledStopovers = stopoverFlight.getScheduledStopovers();
+    private List<ScheduledStopPoint> createScheduledStopPoints(List<ScheduledStopover> scheduledStopovers, String flightId) {
+        List<ScheduledStopPoint> scheduledStopPoints = new ArrayList<>(scheduledStopovers.size());
         scheduledStopovers.forEach(stopover -> {
             ScheduledStopPoint scheduledStopPoint = new ScheduledStopPoint()
                     .withVersion("1")
-                    .withId("AVI:StopPoint:0061101001")
-                    .withName(createMultilingualString(stopover.getAirportIATA())); // @todo: change to airport name when available
-            scheduledStopPointsInFrame.getScheduledStopPoint().add(scheduledStopPoint);
+                    .withId(String.format("%s:StopPoint:%s101001", getAvinorConfig().getId(), flightId))
+                    .withName(createMultilingualString(stopover.getAirportName()));
+            scheduledStopPoints.add(scheduledStopPoint);
         });
-        return scheduledStopPointsInFrame;
+        return scheduledStopPoints;
     }
 
     public ServicePattern createServicePattern(String flightId, String routePath, Route route, List<ScheduledStopPoint> scheduledStopPoints) {
@@ -459,26 +478,6 @@ public class ScheduledFlightToNetexConverter {
                 .withName(createMultilingualString(routePath))
                 .withRouteRef(new RouteRefStructure().withVersion("1").withRef(route.getId()))
                 .withPointsInSequence(stopPointsInJourneyPattern);
-    }
-
-    public ServicePatternsInFrame_RelStructure createServicePattern(List<ScheduledStopPoint> scheduledStopPoints) {
-        StopPointsInJourneyPattern_RelStructure stopPointsInJourneyPattern = new StopPointsInJourneyPattern_RelStructure();
-        scheduledStopPoints.forEach(stopPoint -> {
-            StopPointInJourneyPattern stopPointInJourneyPattern = new StopPointInJourneyPattern()
-                    .withVersion("1")
-                    .withId("AVI:StopPointInJourneyPattern:0061101001")
-                    .withOrder(BigInteger.ONE) // @todo: fix a counter
-                    .withScheduledStopPointRef(objectFactory().createScheduledStopPointRef(new ScheduledStopPointRefStructure().withVersion("1").withRef("AVI:StopPoint:0061101001")));
-            stopPointsInJourneyPattern.getStopPointInJourneyPattern().add(stopPointInJourneyPattern);
-        });
-        ServicePattern servicePattern = new ServicePattern()
-                .withVersion("1")
-                .withId("AVI:ServicePattern:0061101")
-                .withName(createMultilingualString("WF149"))
-                .withRouteRef(new RouteRefStructure().withVersion("1").withRef("AVI:Route:0061101"))
-                .withPointsInSequence(stopPointsInJourneyPattern);
-        return new ServicePatternsInFrame_RelStructure()
-                .withServicePatternOrJourneyPatternView(servicePattern);
     }
 
     public List<PassengerStopAssignment> createStopAssignments(List<ScheduledStopPoint> scheduledStopPoints, List<StopPlace> stopPlaces, String flightId) {
