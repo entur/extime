@@ -44,3 +44,11 @@ logging.level.no.rutebanken=DEBUG
 * For more docker plugin goals, see: http://ro14nd.de/docker-maven-plugin/goals.html
 
 ## Readiness and liveness
+
+For now, use the following health endpoint:
+
+```
+
+http://127.0.0.1:9001/health
+
+```
