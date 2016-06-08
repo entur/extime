@@ -49,10 +49,11 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
         jaxbDataFormat.setContextPath(PublicationDeliveryStructure.class.getPackage().getName());
         //jaxbDataFormat.setSchema("classpath:person.xsd,classpath:address.xsd"); // multiple xsds
         //jaxbDataFormat.setSchema("classpath:person.xsd"); // single xsd
+        //jaxbDataFormat.setSchema("https://raw.githubusercontent.com/rutebanken/NeTEx-XML/master/schema/1.03/xsd/NeTEx_publication.xsd"); // single xsd
         jaxbDataFormat.setPrettyPrint(true);
-        jaxbDataFormat.setEncoding("UTF-8");
+        jaxbDataFormat.setEncoding("iso-8859-1");
 
-        from("{{avinor.timetable.scheduler.cron}}")
+        from("quartz2://avinorTimetableScheduler?{{avinor.timetable.scheduler.options}}")
                 .routeId("AvinorTimetableSchedulerStarter")
                 .process(exchange -> {exchange.getIn().setBody(AirportIATA.values());}).id("TimetableAirportIATAProcessor")
                 .setHeader(HEADER_TIMETABLE_PERIOD_FROM, simple("${date:now:yyyy-MM-dd}Z"))
@@ -89,7 +90,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .setHeader(Exchange.HTTP_METHOD, constant(HttpMethods.GET))
                 .setHeader(Exchange.HTTP_QUERY, simpleF("airport=${header.%s}&shortname=Y&ukname=Y", HEADER_TIMETABLE_AIRPORT_IATA))
                 .setBody(constant(null))
-                .to("{{avinor.airport.feed.endpoint}}").id("FetchAirportNameFeedProcessor")
+                .to("http4://{{avinor.airport.feed.endpoint}}").id("FetchAirportNameFeedProcessor")
                 .convertBodyTo(AirportNames.class)
                 .process(exchange -> {
                     AirportNames airportNames = exchange.getIn().getBody(AirportNames.class);
@@ -105,7 +106,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .setHeader(Exchange.HTTP_QUERY, simpleF("airport=${header.%s}&direction=D&PeriodFrom=${header.%s}&PeriodTo=${header.%s}",
                         HEADER_TIMETABLE_AIRPORT_IATA, HEADER_TIMETABLE_PERIOD_FROM, HEADER_TIMETABLE_PERIOD_TO))
                 .setBody(constant(null))
-                .to("{{avinor.timetable.feed.endpoint}}").id("FetchTimetableFeedProcessor")
+                .to("http4://{{avinor.timetable.feed.endpoint}}").id("FetchTimetableFeedProcessor")
                 .split(stax(Flight.class, false), new ScheduledAirportFlightsAggregationStrategy()).streaming()
                     .log(LoggingLevel.DEBUG, this.getClass().getName(),
                             "Fetched flight with id: ${body.airlineDesignator}${body.flightNumber}")
@@ -116,7 +117,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .routeId("TimetableConverter")
                 .multicast()
                     .to("direct:convertToDirectFlights").id("ConvertDirectFlightsProcessor")
-                    .to("direct:convertToStopoverFlights").id("ConvertStopoverFlightsProcessor")
+                    .to("mock:direct:convertToStopoverFlights").id("ConvertStopoverFlightsProcessor")
                 .end()
         ;
 
@@ -144,7 +145,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                     .enrich("direct:retrieveAirportNameResource", new ArrivalIataEnricherAggregationStrategy())
                     .log(LoggingLevel.DEBUG, this.getClass().getName(), "Converting scheduled direct flight with id: ${body.airlineFlightId}")
                     .bean(ScheduledFlightToNetexConverter.class, "convertToNetex")
-                    //.setHeader(Exchange.CHARSET_NAME, constant("UTF-8"))
+                    //.setHeader(Exchange.CHARSET_NAME, constant("iso-8859-1"))
                     .marshal(jaxbDataFormat)
                     //.log(LoggingLevel.DEBUG, this.getClass().getName(), "${body}")
                     .process(exchange -> {
@@ -152,7 +153,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                         exchange.getIn().setHeader("FileNameGenerated", uuid);
                     })
                     .setHeader(Exchange.FILE_NAME, simple("${header.FileNameGenerated}.xml"))
-                    .to("file:target/netex")
+                    .to("mock:file:target/netex")
                 .end()
         ;
 

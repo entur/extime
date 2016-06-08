@@ -505,7 +505,7 @@ public class ScheduledFlightToNetexConverter {
 
     public Direction createDirection(String flightId) {
         return new Direction()
-                .withId(String.format("%s:Route:%s101:Direction", getAvinorConfig().getId(), flightId))
+                .withId(String.format("%s:Route:%s101:Direction", getAvinorConfig().getId(), flightId)) // @todo: change id to 3-part pattern AVI:Direction:id
                 .withName(createMultilingualString("Outbound"))
                 .withDirectionType(DirectionTypeEnumeration.OUTBOUND);
     }

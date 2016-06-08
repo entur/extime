@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 @Component(value = "realTimeFlightConverter")
 public class RealTimeFlightConverter {
 
-    public List<FlightRouteDataSet> findMatchingFlightRoutes(@Body HashMap<String, AirportFlightDataSet> airportFlightsMap) {
+    public List<FlightRouteDataSet> convertToRealTimeFlights(@Body HashMap<String, AirportFlightDataSet> airportFlightsMap) {
         Map<String, AirportName> airportNameCache = airportFlightsMap.entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().getAirportName()));
 
@@ -28,12 +28,9 @@ public class RealTimeFlightConverter {
         List<FlightRouteDataSet> flightRouteDataSetList = new ArrayList<>();
 
         departureFlightsMap.forEach((airportIATA, departureFlights) -> {
+
             List<Flight> directFlights = departureFlights.stream()
                     .filter(flight -> flight.getViaAirport() == null || flight.getViaAirport().isEmpty())
-                    .filter(flight ->
-                            flight.getAirport().equalsIgnoreCase("OSL") ||
-                                    flight.getAirport().equalsIgnoreCase("BGO") ||
-                                    flight.getAirport().equalsIgnoreCase("TRD"))
                     .collect(Collectors.toList());
 
             directFlights.forEach(departureFlight -> {

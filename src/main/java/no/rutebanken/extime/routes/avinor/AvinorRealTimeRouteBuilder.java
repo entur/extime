@@ -10,6 +10,7 @@ import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.http4.HttpMethods;
 import org.apache.camel.processor.aggregate.AggregationStrategy;
+import org.springframework.stereotype.Component;
 
 import java.util.*;
 
@@ -30,20 +31,23 @@ public class AvinorRealTimeRouteBuilder extends RouteBuilder {//extends BaseRout
         //super.configure();
         //getContext().setTracing(true);
 
-        from("{{avinor.realtime.scheduler.cron}}")
+        from("quartz2://avinorRealtimeScheduler?{{avinor.realtime.scheduler.options}}")
                 .routeId("AvinorRealTimeSchedulerStarter")
                 .process(exchange -> {exchange.getIn().setBody(AirportIATA.values());}).id("RealTimeAirportIATAProcessor")
                 .split(body(), new AirportFlightAggregationStrategy()).parallelProcessing()
                     .log(LoggingLevel.DEBUG, this.getClass().getName(), "Processing airport: ${body}")
                     .setHeader(HEADER_REALTIME_AIRPORT_IATA, simple("${body}"))
-                    .to("direct:fetchRealTimeFlightsForAirport").id("FetchRealTimeDataProcessor")
+                    .to("mock:direct:fetchRealTimeFlightsForAirport").id("FetchRealTimeDataProcessor")
                 .end()
+                .bean(RealTimeFlightConverter.class, "convertToRealTimeFlights")
+/*
                 .bean(RealTimeFlightConverter.class, "findMatchingFlightRoutes")
                 .split(body())
                     .convertBodyTo(String.class)
                     .log(LoggingLevel.DEBUG, this.getClass().getName(), "Generated NeTEx XML: ${body}")
                     .to("mock:jmsQueue")
                 .end()
+*/
         ;
 
         from("direct:fetchRealTimeFlightsForAirport")
@@ -81,7 +85,7 @@ public class AvinorRealTimeRouteBuilder extends RouteBuilder {//extends BaseRout
                 .setHeader(Exchange.HTTP_QUERY, simpleF("airport=${header.%s}&timeFrom=${header.%s}&timeTo=${header.%s}&direction=${header.%s}",
                         HEADER_REALTIME_AIRPORT_IATA, HEADER_FLIGHTS_TIMEFROM, HEADER_FLIGHTS_TIMETO, HEADER_FLIGHTS_DIRECTION))
                 .setBody(constant(null))
-                .to("{{avinor.realtime.feed.endpoint}}").id("FetchTimetableFeedProcessor")
+                .to("http4://{{avinor.realtime.feed.endpoint}}").id("FetchRealtimeFeedProcessor")
                 .split(stax(Flight.class, false), new FlightAggregationStrategy()).streaming()
                     .log(LoggingLevel.DEBUG, this.getClass().getName(), "Fetched flight with id: ${body.flightId}")
                 .end()
