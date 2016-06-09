@@ -1,6 +1,7 @@
 package no.rutebanken.extime.routes.avinor;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 import no.avinor.flydata.xjc.model.airport.AirportNames;
 import no.avinor.flydata.xjc.model.scheduled.Flight;
 import no.rutebanken.extime.converter.ScheduledFlightConverter;
@@ -9,6 +10,7 @@ import no.rutebanken.extime.model.AirportIATA;
 import no.rutebanken.extime.model.ScheduledDirectFlight;
 import no.rutebanken.extime.model.ScheduledStopover;
 import no.rutebanken.extime.model.ScheduledStopoverFlight;
+import no.rutebanken.extime.util.DateUtils;
 import no.rutebanken.netex.model.PublicationDeliveryStructure;
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
@@ -21,7 +23,6 @@ import org.apache.camel.processor.aggregate.AggregationStrategy;
 import org.apache.commons.lang3.EnumUtils;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -31,9 +32,12 @@ import static org.apache.camel.component.stax.StAXBuilder.stax;
 @Component
 public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRouteBuilder {
 
-    static final String HEADER_TIMETABLE_AIRPORT_IATA = "TimetableAirportIATA";
-    static final String HEADER_TIMETABLE_PERIOD_FROM = "TimetablePeriodFrom";
-    static final String HEADER_TIMETABLE_PERIOD_TO = "TimetablePeriodTo";
+    public static final String HEADER_TIMETABLE_AIRPORT_IATA = "TimetableAirportIATA";
+    public static final String HEADER_TIMETABLE_PERIOD_FROM = "TimetablePeriodFrom";
+    public static final String HEADER_TIMETABLE_PERIOD_TO = "TimetablePeriodTo";
+    public static final String HEADER_TIMETABLE_SMALL_AIRPORT_RANGE = "TimetableSmallAirportRange";
+    public static final String HEADER_TIMETABLE_MEDIUM_AIRPORT_RANGE = "TimetableMediumAirportRange";
+    public static final String HEADER_TIMETABLE_LARGE_AIRPORT_RANGE = "TimetableLargeAirportRange";
 
     static final String PROPERTY_DIRECT_FLIGHT_ORIGINAL_BODY = "DirectFlightOriginalBody";
     static final String PROPERTY_STOPOVER_FLIGHT_ORIGINAL_BODY = "StopoverFlightOriginalBody";
@@ -56,16 +60,21 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
         from("quartz2://avinorTimetableScheduler?{{avinor.timetable.scheduler.options}}")
                 .routeId("AvinorTimetableSchedulerStarter")
                 .process(exchange -> {exchange.getIn().setBody(AirportIATA.values());}).id("TimetableAirportIATAProcessor")
-                .setHeader(HEADER_TIMETABLE_PERIOD_FROM, simple("${date:now:yyyy-MM-dd}Z"))
-                .process(exchange -> {
-                    Long daysAhead = simple("{{avinor.timetable.periodto.daysahead}}").evaluate(exchange, Long.class);
-                    String periodTo = LocalDate.now().plusDays(daysAhead).toString().concat("Z");
-                    exchange.getIn().setHeader(HEADER_TIMETABLE_PERIOD_TO, periodTo);
-                }).id("TimetablePeriodToProcessor")
+                .bean(DateUtils.class, "generateDateRanges")
                 .split(body(), new ScheduledFlightListAggregationStrategy()).parallelProcessing()
-                    .log(LoggingLevel.DEBUG, this.getClass().getName(),
-                            "Processing scheduled flights for airport with IATA code: ${body}")
+                    .log(LoggingLevel.DEBUG, this.getClass().getName(), "Processing airport with IATA code: ${body}")
                     .setHeader(HEADER_TIMETABLE_AIRPORT_IATA, simple("${body}"))
+                    .choice()
+                        .when(simpleF("${header.%s} in ${properties:avinor.airports.large}", HEADER_TIMETABLE_AIRPORT_IATA))
+                            .log(LoggingLevel.DEBUG, this.getClass().getName(), "Configuring date ranges for ${body} as a large size airport")
+                            .setBody(simpleF("${header.%s}", HEADER_TIMETABLE_LARGE_AIRPORT_RANGE))
+                        .when(simpleF("${header.%s} in ${properties:avinor.airports.medium}", HEADER_TIMETABLE_AIRPORT_IATA))
+                            .log(LoggingLevel.DEBUG, this.getClass().getName(), "Configuring date ranges for ${body} as a medium size airport")
+                            .setBody(simpleF("${header.%s}", HEADER_TIMETABLE_MEDIUM_AIRPORT_RANGE))
+                        .otherwise()
+                            .log(LoggingLevel.DEBUG, this.getClass().getName(), "Configuring date ranges for ${body} as a small size airport")
+                            .setBody(simpleF("${header.%s}", HEADER_TIMETABLE_SMALL_AIRPORT_RANGE))
+                    .end()
                     .to("direct:fetchAirportNameByIATA").id("FetchAirportNameProcessor")
                     .to("direct:fetchTimetableForAirport").id("FetchTimetableProcessor")
                 .end()
@@ -92,11 +101,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .setBody(constant(null))
                 .to("http4://{{avinor.airport.feed.endpoint}}").id("FetchAirportNameFeedProcessor")
                 .convertBodyTo(AirportNames.class)
-                .process(exchange -> {
-                    AirportNames airportNames = exchange.getIn().getBody(AirportNames.class);
-                    String name = airportNames.getAirportName().get(0).getName();
-                    exchange.getIn().setBody(name, String.class);
-                })
+                .process(new ExtractAirportNameProcessor())
         ;
 
         from("direct:fetchTimetableForAirport")
@@ -113,10 +118,33 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .end()
         ;
 
+        from("direct:fetchTimetableForAirportByRanges")
+                .routeId("FetchTimetableForAirportByDateRanges")
+                .split(body(), new ScheduledFlightListAggregationStrategy())
+                    .setHeader(Exchange.HTTP_METHOD, constant(HttpMethods.GET))
+                    .setHeader(Exchange.HTTP_QUERY,
+                            simpleF("airport=${header.%s}&direction=D&PeriodFrom=${body.lowerEndpoint()}&PeriodTo=${body.upperEndpoint()}",
+                                    HEADER_TIMETABLE_AIRPORT_IATA))
+                    .setBody(constant(null))
+                    .log(LoggingLevel.DEBUG, this.getClass().getName(),
+                            "Fetching flights for ${header.TimetableAirportIATA} by date range: ${body.lowerEndpoint()} - ${body.upperEndpoint()}")
+                    .to("http4://{{avinor.timetable.feed.endpoint}}").id("FetchTimetableFeedProcessor")
+                    .to("direct:splitJoinIncomingFlightMessages")
+                .end()
+        ;
+
+        from("direct:splitJoinIncomingFlightMessages")
+                .routeId("FlightSplitterJoiner")
+                .split(stax(Flight.class, false), new ScheduledAirportFlightsAggregationStrategy()).streaming()
+                .log(LoggingLevel.DEBUG, this.getClass().getName(),
+                        "Fetched flight with id: ${body.airlineDesignator}${body.flightNumber}")
+                .end()
+        ;
+
         from("direct:convertTimetableForAirports")
                 .routeId("TimetableConverter")
                 .multicast()
-                    .to("direct:convertToDirectFlights").id("ConvertDirectFlightsProcessor")
+                    .to("mock:direct:convertToDirectFlights").id("ConvertDirectFlightsProcessor")
                     .to("mock:direct:convertToStopoverFlights").id("ConvertStopoverFlightsProcessor")
                 .end()
         ;
@@ -175,6 +203,9 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .end()
         ;
 
+        /**
+         * @todo: add support for fetching and caching airport names when not found in cache (remove block comment!)
+         */
         from("direct:retrieveAirportNameResource")
                 .routeId("DirectFlightAirportNameEnricher")
                 .setHeader(CacheConstants.CACHE_OPERATION, constant(CacheConstants.CACHE_OPERATION_GET))
@@ -218,13 +249,22 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
         ;
     }
 
+    class ExtractAirportNameProcessor implements Processor {
+        @Override
+        public void process(Exchange exchange) throws Exception {
+            AirportNames airportNames = exchange.getIn().getBody(AirportNames.class);
+            String name = airportNames.getAirportName().get(0).getName();
+            exchange.getIn().setBody(name, String.class);
+        }
+    }
+
     class ScheduledFlightListAggregationStrategy implements AggregationStrategy {
         @Override
         public Exchange aggregate(Exchange oldExchange, Exchange newExchange) {
             @SuppressWarnings("unchecked")
             List<Flight> newExchangeBody = newExchange.getIn().getBody(List.class);
             if (oldExchange == null) {
-                List<Flight> scheduledFlights = new ArrayList<>();
+                List<Flight> scheduledFlights = Lists.newArrayList();
                 scheduledFlights.addAll(newExchangeBody);
                 newExchange.getIn().setBody(scheduledFlights);
                 return newExchange;

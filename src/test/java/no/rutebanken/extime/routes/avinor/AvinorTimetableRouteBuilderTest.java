@@ -2,7 +2,6 @@ package no.rutebanken.extime.routes.avinor;
 
 import no.avinor.flydata.xjc.model.scheduled.Flight;
 import no.rutebanken.extime.model.ScheduledDirectFlight;
-import no.rutebanken.netex.model.PublicationDeliveryStructure;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.AdviceWithRouteBuilder;
@@ -17,10 +16,6 @@ import org.assertj.core.api.Assertions;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.math.BigInteger;
@@ -96,9 +91,11 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         mockOutput.expectedMessageCount(1);
         Object body = mockOutput.getReceivedExchanges().get(0).getIn().getBody();
 
+/*
         Assertions.assertThat(body).asList()
                 .isNotNull()
                 .isInstanceOf(List.class);
+*/
 
         Assertions.assertThat((List<Flight>) body)
                 .isNotEmpty()
