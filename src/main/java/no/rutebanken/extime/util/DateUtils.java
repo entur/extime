@@ -14,25 +14,19 @@ import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.*;
 @Component
 public class DateUtils {
 
-    @Value("${avinor.timetable.period.months}") private int periodMonths;
-    @Value("${avinor.timetable.max.range}") private int maxRangeDays;
-    @Value("${avinor.timetable.med.range}") private int medRangeDays;
-    @Value("${avinor.timetable.min.range}") private int minRangeDays;
+    @Value("${avinor.timetable.period.months}") int numberOfMonthsInPeriod;
+    @Value("${avinor.timetable.max.range}") int maxRangeDays;
+    @Value("${avinor.timetable.med.range}") int medRangeDays;
+    @Value("${avinor.timetable.min.range}") int minRangeDays;
 
     public void generateDateRanges(Exchange exchange) {
-        LocalDate rangeStartDate = LocalDate.now();
-
-        exchange.getIn().setHeader(HEADER_TIMETABLE_SMALL_AIRPORT_RANGE,
-                generateDateRanges(getPeriodMonths(), getMaxRangeDays(), rangeStartDate));
-
-        exchange.getIn().setHeader(HEADER_TIMETABLE_MEDIUM_AIRPORT_RANGE,
-                generateDateRanges(getPeriodMonths(), getMedRangeDays(), rangeStartDate));
-
-        exchange.getIn().setHeader(HEADER_TIMETABLE_LARGE_AIRPORT_RANGE,
-                generateDateRanges(getPeriodMonths(), getMinRangeDays(), rangeStartDate));
+        exchange.getIn().setHeader(HEADER_TIMETABLE_SMALL_AIRPORT_RANGE, generateDateRanges(maxRangeDays));
+        exchange.getIn().setHeader(HEADER_TIMETABLE_MEDIUM_AIRPORT_RANGE, generateDateRanges(medRangeDays));
+        exchange.getIn().setHeader(HEADER_TIMETABLE_LARGE_AIRPORT_RANGE, generateDateRanges(minRangeDays));
     }
 
-    public List<Range<LocalDate>> generateDateRanges(int numberOfMonthsInPeriod, int numberOfDaysInRange, LocalDate rangeStartDate) {
+    public List<Range<LocalDate>> generateDateRanges(int numberOfDaysInRange) {
+        LocalDate rangeStartDate = LocalDate.now();
         List<Range<LocalDate>> dateRanges = Lists.newArrayList();
         LocalDate periodEndDate = rangeStartDate.plusMonths(numberOfMonthsInPeriod);
         while (!rangeStartDate.isAfter(periodEndDate)) {
@@ -44,19 +38,4 @@ public class DateUtils {
         return dateRanges;
     }
 
-    public int getPeriodMonths() {
-        return periodMonths;
-    }
-
-    public int getMaxRangeDays() {
-        return maxRangeDays;
-    }
-
-    public int getMedRangeDays() {
-        return medRangeDays;
-    }
-
-    public int getMinRangeDays() {
-        return minRangeDays;
-    }
 }
