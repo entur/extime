@@ -23,6 +23,7 @@ import org.apache.commons.lang3.EnumUtils;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -57,8 +58,10 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
         from("{{avinor.timetable.scheduler.consumer}}")
                 .routeId("AvinorTimetableSchedulerStarter")
                 .process(exchange -> {exchange.getIn().setBody(AirportIATA.values());}).id("TimetableAirportIATAProcessor")
+                //.process(exchange -> {exchange.getIn().setBody(new AirportIATA[]{AirportIATA.OSL});}).id("TimetableAirportIATAProcessor")
                 .bean(DateUtils.class, "generateDateRanges").id("TimetableDateRangeProcessor")
-                .split(body(), new ScheduledFlightListAggregationStrategy()).parallelProcessing()
+                .split(body(), new ScheduledFlightListAggregationStrategy())//.parallelProcessing()
+                    .log(LoggingLevel.DEBUG, this.getClass().getName(), "==========================================")
                     .log(LoggingLevel.DEBUG, this.getClass().getName(), "Processing airport with IATA code: ${body}")
                     .setHeader(HEADER_TIMETABLE_AIRPORT_IATA, simple("${body}"))
                     .to("direct:fetchAirportNameByIATA").id("FetchAirportNameProcessor")
@@ -77,6 +80,8 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                             .setBody(simpleF("${header.%s}", HEADER_TIMETABLE_SMALL_AIRPORT_RANGE))
                     .end()
                     .to("direct:fetchTimetableForAirportByRanges").id("FetchTimetableProcessor")
+                    .log(LoggingLevel.DEBUG, this.getClass().getName(),
+                            "All flights for ${header.TimetableAirportIATA} fetched and unmarshalled")
                 .end()
                 .to("direct:convertTimetableForAirports")
         ;
@@ -109,10 +114,10 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .split(body(), new ScheduledFlightListAggregationStrategy())
                     .setHeader(Exchange.HTTP_METHOD, constant(HttpMethods.GET))
                     .setHeader(Exchange.HTTP_QUERY,
-                            simpleF("airport=${header.%s}&direction=D&PeriodFrom=${body.lowerEndpoint()}Z&PeriodTo=${body.upperEndpoint()}Z",
+                            simpleF("airport=${header.%s}&direction=D&PeriodFrom=${bean:dateUtils.format(body.lowerEndpoint())}Z&PeriodTo=${bean:dateUtils.format(body.upperEndpoint())}Z",
                                     HEADER_TIMETABLE_AIRPORT_IATA))
                     .log(LoggingLevel.DEBUG, this.getClass().getName(),
-                            "Fetching flights for ${header.TimetableAirportIATA} by date range: ${body.lowerEndpoint()} - ${body.upperEndpoint()}")
+                            "Fetching flights for ${header.TimetableAirportIATA} by date range: ${bean:dateUtils.format(body.lowerEndpoint())} - ${bean:dateUtils.format(body.upperEndpoint())}")
                     .setBody(constant(null))
                     .to("{{avinor.timetable.feed.endpoint}}").id("FetchTimetableFeedByRangesProcessor")
                     .to("direct:splitJoinIncomingFlightMessages").id("SplitJoinIncomingFlightsProcessor")
@@ -122,7 +127,8 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
         from("direct:splitJoinIncomingFlightMessages")
                 .routeId("FlightSplitterJoiner")
                 .split(stax(Flight.class, false), new ScheduledAirportFlightsAggregationStrategy()).streaming()
-                    .log(LoggingLevel.DEBUG, this.getClass().getName(), "Fetched flight with id: ${body.airlineDesignator}${body.flightNumber}")
+                    .log(LoggingLevel.DEBUG, this.getClass().getName(),
+                            "Fetched flight with id: ${body.airlineDesignator}${body.flightNumber}")
                         .id("FlightSplitLogProcessor")
                 .end()
         ;
@@ -139,14 +145,14 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .routeId("DirectFlightsConverter")
                 .log(LoggingLevel.DEBUG, this.getClass().getName(), "Converting to scheduled direct flights")
                 .bean(ScheduledFlightConverter.class, "convertToScheduledDirectFlights")
-                .to("direct:convertDirectFlightsToNetex")
+                //.to("direct:convertDirectFlightsToNetex")
         ;
 
         from("direct:convertToStopoverFlights")
                 .routeId("StopoverFlightsConverter")
                 .log(LoggingLevel.DEBUG, this.getClass().getName(), "Converting to scheduled stopover flights")
                 .bean(ScheduledFlightConverter.class, "convertToScheduledStopoverFlights")
-                .to("direct:convertStopoverFlightsToNetex")
+                //.to("direct:convertStopoverFlightsToNetex")
         ;
 
         from("direct:convertDirectFlightsToNetex")
@@ -246,21 +252,28 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
 
     class ScheduledFlightListAggregationStrategy implements AggregationStrategy {
         @Override
+        @SuppressWarnings("unchecked")
         public Exchange aggregate(Exchange oldExchange, Exchange newExchange) {
-            @SuppressWarnings("unchecked")
-            List<Flight> newExchangeBody = newExchange.getIn().getBody(List.class);
+            Object body = newExchange.getIn().getBody();
             if (oldExchange == null) {
                 List<Flight> scheduledFlights = Lists.newArrayList();
-                scheduledFlights.addAll(newExchangeBody);
+                if (isCollection(body)) {
+                    scheduledFlights.addAll((List<Flight>) body);
+                }
                 newExchange.getIn().setBody(scheduledFlights);
                 return newExchange;
             } else {
-                @SuppressWarnings("unchecked")
                 List<Flight> scheduledFlights = Collections.checkedList(
                         oldExchange.getIn().getBody(List.class), Flight.class);
-                scheduledFlights.addAll(newExchangeBody);
+                if (isCollection(body)) {
+                    scheduledFlights.addAll((List<Flight>) body);
+                }
                 return oldExchange;
             }
+        }
+
+        private boolean isCollection(Object body) {
+            return Collection.class.isInstance(body);
         }
     }
 

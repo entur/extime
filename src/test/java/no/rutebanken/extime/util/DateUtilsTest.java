@@ -6,6 +6,7 @@ import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.impl.DefaultExchange;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.time.LocalDate;
@@ -80,6 +81,15 @@ public class DateUtilsTest {
                 .isNotNull()
                 .isNotEmpty()
                 .hasSize(12);
+    }
+
+    @Test
+    public void testFormatLocalDate() {
+        String localDateFormat = clazzUnderTest.format(LocalDate.parse("2017-01-01"));
+        Assertions.assertThat(localDateFormat)
+                .isNotNull()
+                .isNotEmpty()
+                .isEqualTo("2017-01-01");
     }
 
 }

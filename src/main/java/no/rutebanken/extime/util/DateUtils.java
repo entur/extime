@@ -7,11 +7,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.*;
 
-@Component
+@Component(value = "dateUtils")
 public class DateUtils {
 
     @Value("${avinor.timetable.period.months}") int numberOfMonthsInPeriod;
@@ -26,7 +28,7 @@ public class DateUtils {
     }
 
     public List<Range<LocalDate>> generateDateRanges(int numberOfDaysInRange) {
-        LocalDate rangeStartDate = LocalDate.now();
+        LocalDate rangeStartDate = LocalDate.now(ZoneId.of("Europe/Oslo"));
         List<Range<LocalDate>> dateRanges = Lists.newArrayList();
         LocalDate periodEndDate = rangeStartDate.plusMonths(numberOfMonthsInPeriod);
         while (!rangeStartDate.isAfter(periodEndDate)) {
@@ -38,4 +40,7 @@ public class DateUtils {
         return dateRanges;
     }
 
+    public String format(LocalDate localDate) {
+        return localDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+    }
 }

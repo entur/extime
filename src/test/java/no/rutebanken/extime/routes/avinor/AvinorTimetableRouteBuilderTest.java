@@ -6,6 +6,7 @@ import no.avinor.flydata.xjc.model.scheduled.Flight;
 import no.rutebanken.extime.model.AirportIATA;
 import no.rutebanken.extime.model.ScheduledStopover;
 import no.rutebanken.extime.model.ScheduledStopoverFlight;
+import no.rutebanken.extime.util.DateUtils;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.Produce;
@@ -16,8 +17,10 @@ import org.apache.camel.component.cache.CacheConstants;
 import org.apache.camel.component.http4.HttpMethods;
 import org.apache.camel.component.properties.DefaultPropertiesParser;
 import org.apache.camel.component.properties.PropertiesComponent;
+import org.apache.camel.impl.JndiRegistry;
 import org.apache.camel.model.ProcessorDefinition;
 import org.apache.camel.test.junit4.CamelTestSupport;
+import org.apache.camel.util.jndi.JndiContext;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 
@@ -48,6 +51,8 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
 
     @Produce(uri = "direct:retrieveAirportNamesForStopovers")
     private ProducerTemplate enrichStopoversTemplate;
+
+    DateUtils dateUtils = new DateUtils();
 
     @Test
     public void testTimetableScheduler() throws Exception {
@@ -344,6 +349,13 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
             setId(BigInteger.valueOf(dummyId));
             setAirportIATA(dummyAirportIata);
         }};
+    }
+
+    @Override
+    public JndiRegistry createRegistry() throws Exception {
+        JndiRegistry jndiRegistry = new JndiRegistry(new JndiContext());
+        jndiRegistry.bind("dateUtils", dateUtils);
+        return jndiRegistry;
     }
 
     @Override
