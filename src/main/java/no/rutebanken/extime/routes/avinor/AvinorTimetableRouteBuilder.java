@@ -5,10 +5,7 @@ import no.avinor.flydata.xjc.model.airport.AirportNames;
 import no.avinor.flydata.xjc.model.scheduled.Flight;
 import no.rutebanken.extime.converter.ScheduledFlightConverter;
 import no.rutebanken.extime.converter.ScheduledFlightToNetexConverter;
-import no.rutebanken.extime.model.AirportIATA;
-import no.rutebanken.extime.model.ScheduledDirectFlight;
-import no.rutebanken.extime.model.ScheduledStopover;
-import no.rutebanken.extime.model.ScheduledStopoverFlight;
+import no.rutebanken.extime.model.*;
 import no.rutebanken.extime.util.DateUtils;
 import no.rutebanken.netex.model.PublicationDeliveryStructure;
 import org.apache.camel.Exchange;
@@ -33,6 +30,7 @@ import static org.apache.camel.component.stax.StAXBuilder.stax;
 public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRouteBuilder {
 
     public static final String HEADER_TIMETABLE_AIRPORT_IATA = "TimetableAirportIATA";
+    public static final String HEADER_TIMETABLE_AIRLINE_IATA = "TimetableAirlineIATA";
     public static final String HEADER_TIMETABLE_SMALL_AIRPORT_RANGE = "TimetableSmallAirportRange";
     public static final String HEADER_TIMETABLE_MEDIUM_AIRPORT_RANGE = "TimetableMediumAirportRange";
     public static final String HEADER_TIMETABLE_LARGE_AIRPORT_RANGE = "TimetableLargeAirportRange";
@@ -55,6 +53,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
         jaxbDataFormat.setPrettyPrint(true);
         jaxbDataFormat.setEncoding("iso-8859-1");
 
+        // @todo: enable parallell processing when going into test/beta/prod
         from("{{avinor.timetable.scheduler.consumer}}")
                 .routeId("AvinorTimetableSchedulerStarter")
                 .process(exchange -> {exchange.getIn().setBody(AirportIATA.values());}).id("TimetableAirportIATAProcessor")
@@ -65,23 +64,8 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                     .log(LoggingLevel.DEBUG, this.getClass().getName(), "Processing airport with IATA code: ${body}")
                     .setHeader(HEADER_TIMETABLE_AIRPORT_IATA, simple("${body}"))
                     .to("direct:fetchAirportNameByIATA").id("FetchAirportNameProcessor")
-                    .choice()
-                        .when(simpleF("${header.%s} in ${properties:avinor.airports.large}", HEADER_TIMETABLE_AIRPORT_IATA))
-                            .log(LoggingLevel.DEBUG, this.getClass().getName(),
-                                    "Configuring date ranges for large size airport: ${body}").id("LargeAirportLogProcessor")
-                            .setBody(simpleF("${header.%s}", HEADER_TIMETABLE_LARGE_AIRPORT_RANGE))
-                        .when(simpleF("${header.%s} in ${properties:avinor.airports.medium}", HEADER_TIMETABLE_AIRPORT_IATA))
-                            .log(LoggingLevel.DEBUG, this.getClass().getName(),
-                                    "Configuring date ranges for medium size airport: ${body}").id("MediumAirportLogProcessor")
-                            .setBody(simpleF("${header.%s}", HEADER_TIMETABLE_MEDIUM_AIRPORT_RANGE))
-                        .otherwise()
-                            .log(LoggingLevel.DEBUG, this.getClass().getName(),
-                                    "Configuring date ranges for small size airport: ${body}").id("SmallAirportLogProcessor")
-                            .setBody(simpleF("${header.%s}", HEADER_TIMETABLE_SMALL_AIRPORT_RANGE))
-                    .end()
-                    .to("direct:fetchTimetableForAirportByRanges").id("FetchTimetableProcessor")
-                    .log(LoggingLevel.DEBUG, this.getClass().getName(),
-                            "All flights for ${header.TimetableAirportIATA} fetched and unmarshalled")
+                    .to("direct:fetchTimetableForAirport").id("FetchTimetableProcessor")
+                    .log(LoggingLevel.DEBUG, this.getClass().getName(), "Flights fetched for ${header.TimetableAirportIATA}")
                 .end()
                 .to("direct:convertTimetableForAirports")
         ;
@@ -98,6 +82,24 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .end()
         ;
 
+        from("direct:fetchTimetableForAirport")
+                .routeId("FetchTimetableForAirport")
+                .choice()
+                    .when(simpleF("${header.%s} in ${properties:avinor.airports.large}", HEADER_TIMETABLE_AIRPORT_IATA))
+                        .to("direct:fetchTimetableForLargeAirport")
+                    .when(simpleF("${header.%s} in ${properties:avinor.airports.medium}", HEADER_TIMETABLE_AIRPORT_IATA))
+                        .log(LoggingLevel.DEBUG, this.getClass().getName(), "Configuring date ranges for medium size airport: ${body}")
+                            .id("MediumAirportLogProcessor")
+                        .setBody(simpleF("${header.%s}", HEADER_TIMETABLE_MEDIUM_AIRPORT_RANGE))
+                        .to("direct:fetchTimetableForAirportByRanges")
+                    .otherwise()
+                        .log(LoggingLevel.DEBUG, this.getClass().getName(), "Configuring date ranges for small size airport: ${body}")
+                            .id("SmallAirportLogProcessor")
+                        .setBody(simpleF("${header.%s}", HEADER_TIMETABLE_SMALL_AIRPORT_RANGE))
+                        .to("direct:fetchTimetableForAirportByRanges")
+                .end()
+        ;
+
         from("direct:fetchAirportNameFromFeed")
                 .routeId("FetchAirportNameFromFeed")
                 .log(LoggingLevel.DEBUG, this.getClass().getName(), "Fetching airport name from feed by IATA: ${header.TimetableAirportIATA}")
@@ -109,10 +111,22 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .process(new ExtractAirportNameProcessor())
         ;
 
+        from("direct:fetchTimetableForLargeAirport")
+                .routeId("FetchTimetableForLargeAirport")
+                .process(exchange -> {exchange.getIn().setBody(AirlineIATA.values());}).id("AirlineIATAProcessor")
+                .split(body(), new ScheduledFlightListAggregationStrategy())
+                    .log(LoggingLevel.DEBUG, this.getClass().getName(), "Processing airline with IATA code: ${body}")
+                    .setHeader(HEADER_TIMETABLE_AIRLINE_IATA, simple("${body}"))
+                    .setBody(simpleF("${header.%s}", HEADER_TIMETABLE_LARGE_AIRPORT_RANGE))
+                    .to("direct:fetchTimetableForAirportByRanges").id("FetchAirportNameProcessorByIATA")
+                .end()
+        ;
+
         from("direct:fetchTimetableForAirportByRanges")
                 .routeId("FetchTimetableForAirportByDateRanges")
                 .split(body(), new ScheduledFlightListAggregationStrategy())
                     .setHeader(Exchange.HTTP_METHOD, constant(HttpMethods.GET))
+                    // @todo: make the 2 following statements more readable and shorter
                     .setHeader(Exchange.HTTP_QUERY,
                             simpleF("airport=${header.%s}&direction=D&PeriodFrom=${bean:dateUtils.format(body.lowerEndpoint())}Z&PeriodTo=${bean:dateUtils.format(body.upperEndpoint())}Z",
                                     HEADER_TIMETABLE_AIRPORT_IATA))

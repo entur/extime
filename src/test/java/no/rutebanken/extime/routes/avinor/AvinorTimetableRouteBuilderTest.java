@@ -1,6 +1,7 @@
 package no.rutebanken.extime.routes.avinor;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Range;
 import no.avinor.flydata.xjc.model.scheduled.Flight;
 import no.rutebanken.extime.model.AirportIATA;
@@ -44,7 +45,7 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
     private ProducerTemplate fetchAirportNameTemplate;
 
     @Produce(uri = "direct:fetchTimetableForAirportByRanges")
-    private ProducerTemplate fetchTimetableTemplate;
+    private ProducerTemplate fetchTimetableTemplateByRanges;
 
     @Produce(uri = "direct:splitJoinIncomingFlightMessages")
     private ProducerTemplate splitJoinFlightsTemplate;
@@ -64,24 +65,7 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
                     exchange.getIn().setBody(new AirportIATA[]{AirportIATA.OSL, AirportIATA.BGO, AirportIATA.EVE});
                 });
                 weaveById("TimetableDateRangeProcessor").replace().to("mock:setupDateRanges");
-                interceptSendToEndpoint("mock:setupDateRanges").process(exchange -> {
-                    exchange.getIn().setHeader(HEADER_TIMETABLE_LARGE_AIRPORT_RANGE, Lists.newArrayList(
-                            createRange("2017-01-01", "2017-01-08"),
-                            createRange("2017-01-09", "2017-01-16"),
-                            createRange("2017-01-17", "2017-01-24")
-                    ));
-                    exchange.getIn().setHeader(HEADER_TIMETABLE_MEDIUM_AIRPORT_RANGE, Lists.newArrayList(
-                            createRange("2017-01-01", "2017-01-14"),
-                            createRange("2017-01-15", "2017-01-29")
-                    ));
-                    exchange.getIn().setHeader(HEADER_TIMETABLE_SMALL_AIRPORT_RANGE, Lists.newArrayList(
-                            createRange("2017-01-01", "2017-01-31")
-                    ));
-                });
                 mockEndpointsAndSkip("direct:fetchAirportNameByIATA");
-                weaveById("LargeAirportLogProcessor").replace().to("mock:largeAirportLogger");
-                weaveById("MediumAirportLogProcessor").replace().to("mock:mediumAirportLogger");
-                weaveById("SmallAirportLogProcessor").replace().to("mock:smallAirportLogger");
                 weaveById("FetchTimetableProcessor").replace().to("mock:fetchTimetable");
                 interceptSendToEndpoint("mock:fetchTimetable").process(exchange -> {
                     exchange.getIn().setBody(createDummyFlights());
@@ -92,10 +76,8 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         context.start();
 
         getMockEndpoint("mock:direct:fetchAirportNameByIATA").expectedMessageCount(3);
-        getMockEndpoint("mock:direct:fetchAirportNameByIATA").expectedHeaderValuesReceivedInAnyOrder(HEADER_TIMETABLE_AIRPORT_IATA, "OSL", "BGO", "EVE");
-        getMockEndpoint("mock:largeAirportLogger").expectedMessageCount(1);
-        getMockEndpoint("mock:mediumAirportLogger").expectedMessageCount(1);
-        getMockEndpoint("mock:smallAirportLogger").expectedMessageCount(1);
+        getMockEndpoint("mock:direct:fetchAirportNameByIATA").expectedHeaderValuesReceivedInAnyOrder(
+                HEADER_TIMETABLE_AIRPORT_IATA, "OSL", "BGO", "EVE");
         getMockEndpoint("mock:fetchTimetable").expectedMessageCount(3);
         getMockEndpoint("mock:direct:convertTimetableForAirports").expectedMessageCount(1);
 
@@ -161,6 +143,85 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
     }
 
     @Test
+    public void testFetchTimetableForLargeAirport() throws Exception {
+        context.getRouteDefinition("FetchTimetableForAirport").adviceWith(context, new AdviceWithRouteBuilder() {
+            @Override
+            public void configure() throws Exception {
+                mockEndpointsAndSkip(
+                        "direct:fetchTimetableForLargeAirport",
+                        "direct:fetchTimetableForAirportByRanges"
+                );
+            }
+        });
+        context.start();
+
+        getMockEndpoint("mock:direct:fetchTimetableForLargeAirport").expectedMessageCount(1);
+        getMockEndpoint("mock:direct:fetchTimetableForAirportByRanges").expectedMessageCount(0);
+
+        template.sendBodyAndHeader("direct:fetchTimetableForAirport", null, HEADER_TIMETABLE_AIRPORT_IATA, "OSL");
+
+        assertMockEndpointsSatisfied();
+    }
+
+    @Test
+    public void testFetchTimetableForMediumAirport() throws Exception {
+        context.getRouteDefinition("FetchTimetableForAirport").adviceWith(context, new AdviceWithRouteBuilder() {
+            @Override
+            public void configure() throws Exception {
+                weaveById("MediumAirportLogProcessor").replace().to("mock:mediumAirportLogger");
+                mockEndpointsAndSkip(
+                        "direct:fetchTimetableForLargeAirport",
+                        "direct:fetchTimetableForAirportByRanges"
+                );
+            }
+        });
+        context.start();
+
+        getMockEndpoint("mock:direct:fetchTimetableForLargeAirport").expectedMessageCount(0);
+        getMockEndpoint("mock:mediumAirportLogger").expectedMessageCount(1);
+        getMockEndpoint("mock:direct:fetchTimetableForAirportByRanges").expectedMessageCount(1);
+
+        List<Range<LocalDate>> ranges = Lists.newArrayList(
+                createRange("2017-01-01", "2017-01-14"),
+                createRange("2017-01-15", "2017-01-29")
+        );
+
+        Map<String,Object> headers = Maps.newHashMap();
+        headers.put(HEADER_TIMETABLE_AIRPORT_IATA, "BGO");
+        headers.put(HEADER_TIMETABLE_MEDIUM_AIRPORT_RANGE, ranges);
+        template.sendBodyAndHeaders("direct:fetchTimetableForAirport", null, headers);
+
+        assertMockEndpointsSatisfied();
+    }
+
+    @Test
+    public void testFetchTimetableForSmallAirport() throws Exception {
+        context.getRouteDefinition("FetchTimetableForAirport").adviceWith(context, new AdviceWithRouteBuilder() {
+            @Override
+            public void configure() throws Exception {
+                weaveById("SmallAirportLogProcessor").replace().to("mock:smallAirportLogger");
+                mockEndpointsAndSkip(
+                        "direct:fetchTimetableForLargeAirport",
+                        "direct:fetchTimetableForAirportByRanges"
+                );
+            }
+        });
+        context.start();
+
+        getMockEndpoint("mock:direct:fetchTimetableForLargeAirport").expectedMessageCount(0);
+        getMockEndpoint("mock:smallAirportLogger").expectedMessageCount(1);
+        getMockEndpoint("mock:direct:fetchTimetableForAirportByRanges").expectedMessageCount(1);
+
+        Map<String,Object> headers = Maps.newHashMap();
+        headers.put(HEADER_TIMETABLE_AIRPORT_IATA, "EVE");
+        headers.put(HEADER_TIMETABLE_SMALL_AIRPORT_RANGE, Lists.newArrayList(createRange("2017-01-01", "2017-01-31")));
+
+        template.sendBodyAndHeaders("direct:fetchTimetableForAirport", null, headers);
+
+        assertMockEndpointsSatisfied();
+    }
+
+    @Test
     public void testFetchAirportNameFromFeed() throws Exception {
         context.getRouteDefinition("FetchAirportNameFromFeed").adviceWith(context, new AdviceWithRouteBuilder() {
             @Override
@@ -213,7 +274,7 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
                 createRange("2017-01-17", "2017-01-24")
         );
 
-        List<Flight> resultBody = (List<Flight>) fetchTimetableTemplate.requestBodyAndHeader(
+        List<Flight> resultBody = (List<Flight>) fetchTimetableTemplateByRanges.requestBodyAndHeader(
                 ranges, HEADER_TIMETABLE_AIRPORT_IATA, "BGO");
 
         assertMockEndpointsSatisfied();
