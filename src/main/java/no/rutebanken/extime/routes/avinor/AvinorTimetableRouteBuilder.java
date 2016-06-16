@@ -111,9 +111,9 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                     .setHeader(Exchange.HTTP_QUERY,
                             simpleF("airport=${header.%s}&direction=D&PeriodFrom=${body.lowerEndpoint()}Z&PeriodTo=${body.upperEndpoint()}Z",
                                     HEADER_TIMETABLE_AIRPORT_IATA))
-                    .setBody(constant(null))
                     .log(LoggingLevel.DEBUG, this.getClass().getName(),
                             "Fetching flights for ${header.TimetableAirportIATA} by date range: ${body.lowerEndpoint()} - ${body.upperEndpoint()}")
+                    .setBody(constant(null))
                     .to("{{avinor.timetable.feed.endpoint}}").id("FetchTimetableFeedByRangesProcessor")
                     .to("direct:splitJoinIncomingFlightMessages").id("SplitJoinIncomingFlightsProcessor")
                 .end()
