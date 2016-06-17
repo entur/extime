@@ -69,7 +69,10 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                     .to("direct:fetchTimetableForAirport").id("FetchTimetableProcessor")
                     .log(LoggingLevel.DEBUG, this.getClass().getName(), "Flights fetched for ${header.TimetableAirportIATA}")
                 .end()
-                .to("direct:convertTimetableForAirports")
+                .multicast()
+                    .to("mock:direct:convertToDirectFlights").id("ConvertDirectFlightsProcessor")
+                    .to("mock:direct:convertToStopoverFlights").id("ConvertStopoverFlightsProcessor")
+                .end()
         ;
 
         from("direct:fetchAirportNameByIATA")
@@ -88,7 +91,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .routeId("FetchTimetableForAirport")
                 .choice()
                     .when(simpleF("${header.%s} in ${properties:avinor.airports.large}", HEADER_TIMETABLE_AIRPORT_IATA))
-                        .to("direct:fetchTimetableForLargeAirport")
+                        .to("mock:direct:fetchTimetableForLargeAirport")
                     .when(simpleF("${header.%s} in ${properties:avinor.airports.medium}", HEADER_TIMETABLE_AIRPORT_IATA))
                         .log(LoggingLevel.DEBUG, this.getClass().getName(), "Configuring date ranges for medium size airport: ${body}")
                             .id("MediumAirportLogProcessor")
@@ -146,14 +149,6 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                     .log(LoggingLevel.DEBUG, this.getClass().getName(),
                             "Fetched flight with id: ${body.airlineDesignator}${body.flightNumber}")
                         .id("FlightSplitLogProcessor")
-                .end()
-        ;
-
-        from("direct:convertTimetableForAirports")
-                .routeId("TimetableConverter")
-                .multicast()
-                    .to("mock:direct:convertToDirectFlights").id("ConvertDirectFlightsProcessor")
-                    .to("mock:direct:convertToStopoverFlights").id("ConvertStopoverFlightsProcessor")
                 .end()
         ;
 

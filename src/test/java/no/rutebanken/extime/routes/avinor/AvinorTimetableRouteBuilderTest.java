@@ -70,7 +70,6 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
                 interceptSendToEndpoint("mock:fetchTimetable").process(exchange -> {
                     exchange.getIn().setBody(createDummyFlights());
                 });
-                mockEndpointsAndSkip("direct:convertTimetableForAirports");
             }
         });
         context.start();
@@ -79,7 +78,8 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         getMockEndpoint("mock:direct:fetchAirportNameByIATA").expectedHeaderValuesReceivedInAnyOrder(
                 HEADER_TIMETABLE_AIRPORT_IATA, "OSL", "BGO", "EVE");
         getMockEndpoint("mock:fetchTimetable").expectedMessageCount(3);
-        getMockEndpoint("mock:direct:convertTimetableForAirports").expectedMessageCount(1);
+        getMockEndpoint("mock:direct:convertToDirectFlights").expectedMessageCount(1);
+        getMockEndpoint("mock:direct:convertToStopoverFlights").expectedMessageCount(1);
 
         template.sendBody("direct:start", null);
 
