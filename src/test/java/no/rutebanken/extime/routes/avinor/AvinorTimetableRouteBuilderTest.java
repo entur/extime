@@ -30,10 +30,7 @@ import java.io.InputStream;
 import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 import java.util.function.Predicate;
 
 import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.*;
@@ -43,6 +40,9 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
 
     @Produce(uri = "direct:fetchAirportNameFromFeed")
     private ProducerTemplate fetchAirportNameTemplate;
+
+    @Produce(uri = "direct:fetchTimetableForLargeAirport")
+    private ProducerTemplate fetchTimetableForLargeAirportTemplate;
 
     @Produce(uri = "direct:fetchTimetableForAirportByRanges")
     private ProducerTemplate fetchTimetableTemplateByRanges;
@@ -219,6 +219,38 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         template.sendBodyAndHeaders("direct:fetchTimetableForAirport", null, headers);
 
         assertMockEndpointsSatisfied();
+    }
+
+    @Test
+    public void testFetchFlightsForLargeAirport() throws Exception {
+        context.getRouteDefinition("FetchTimetableForLargeAirport").adviceWith(context, new AdviceWithRouteBuilder() {
+            @Override
+            public void configure() throws Exception {
+                weaveById("FetchTimetableByAirlineAndRangeProcessor").replace().to("mock:fetchFlightsByAirlineAndRange");
+                interceptSendToEndpoint("mock:fetchFlightsByAirlineAndRange").process(exchange -> {
+                    exchange.getIn().setBody(createDummyFlights());
+                });
+            }
+        });
+        context.start();
+
+        List<Range<LocalDate>> ranges = Lists.newArrayList(createRange("2017-01-01", "2017-01-31"));
+
+        getMockEndpoint("mock:fetchFlightsByAirlineAndRange").expectedMessageCount(3);
+        getMockEndpoint("mock:fetchFlightsByAirlineAndRange").expectedHeaderValuesReceivedInAnyOrder(
+                HEADER_TIMETABLE_AIRLINE_IATA, "DY", "SK", "WF"
+        );
+
+        List<Flight> resultBody = (List<Flight>) fetchTimetableForLargeAirportTemplate.requestBodyAndHeader(
+                null, HEADER_TIMETABLE_LARGE_AIRPORT_RANGE, ranges);
+
+        assertMockEndpointsSatisfied();
+
+        Assertions.assertThat(resultBody)
+                .isNotNull()
+                .isNotEmpty()
+                .hasSize(9)
+                .hasOnlyElementsOfType(Flight.class);
     }
 
     @Test

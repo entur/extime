@@ -91,7 +91,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .routeId("FetchTimetableForAirport")
                 .choice()
                     .when(simpleF("${header.%s} in ${properties:avinor.airports.large}", HEADER_TIMETABLE_AIRPORT_IATA))
-                        .to("mock:direct:fetchTimetableForLargeAirport")
+                        .to("direct:fetchTimetableForLargeAirport")
                     .when(simpleF("${header.%s} in ${properties:avinor.airports.medium}", HEADER_TIMETABLE_AIRPORT_IATA))
                         .log(LoggingLevel.DEBUG, this.getClass().getName(), "Configuring date ranges for medium size airport: ${body}")
                             .id("MediumAirportLogProcessor")
@@ -123,7 +123,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                     .log(LoggingLevel.DEBUG, this.getClass().getName(), "Processing airline with IATA code: ${body}")
                     .setHeader(HEADER_TIMETABLE_AIRLINE_IATA, simple("${body}"))
                     .setBody(simpleF("${header.%s}", HEADER_TIMETABLE_LARGE_AIRPORT_RANGE))
-                    .to("direct:fetchTimetableForAirportByRanges").id("FetchAirportNameProcessorByIATA")
+                    .to("direct:fetchTimetableForAirportByRanges").id("FetchTimetableByAirlineAndRangeProcessor")
                 .end()
         ;
 
