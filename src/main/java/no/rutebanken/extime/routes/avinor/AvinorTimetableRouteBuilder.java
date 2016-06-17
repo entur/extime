@@ -34,6 +34,8 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
     public static final String HEADER_TIMETABLE_SMALL_AIRPORT_RANGE = "TimetableSmallAirportRange";
     public static final String HEADER_TIMETABLE_MEDIUM_AIRPORT_RANGE = "TimetableMediumAirportRange";
     public static final String HEADER_TIMETABLE_LARGE_AIRPORT_RANGE = "TimetableLargeAirportRange";
+    public static final String HEADER_LOWER_RANGE_ENDPOINT = "LowerRangeEndpoint";
+    public static final String HEADER_UPPER_RANGE_ENDPOINT = "UpperRangeEndpoint";
 
     static final String PROPERTY_DIRECT_FLIGHT_ORIGINAL_BODY = "DirectFlightOriginalBody";
     static final String PROPERTY_STOPOVER_FLIGHT_ORIGINAL_BODY = "StopoverFlightOriginalBody";
@@ -125,13 +127,13 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
         from("direct:fetchTimetableForAirportByRanges")
                 .routeId("FetchTimetableForAirportByDateRanges")
                 .split(body(), new ScheduledFlightListAggregationStrategy())
+                    .setHeader(HEADER_LOWER_RANGE_ENDPOINT, simple("${bean:dateUtils.format(body.lowerEndpoint())}Z"))
+                    .setHeader(HEADER_UPPER_RANGE_ENDPOINT, simple("${bean:dateUtils.format(body.upperEndpoint())}Z"))
                     .setHeader(Exchange.HTTP_METHOD, constant(HttpMethods.GET))
-                    // @todo: make the 2 following statements more readable and shorter
-                    .setHeader(Exchange.HTTP_QUERY,
-                            simpleF("airport=${header.%s}&direction=D&PeriodFrom=${bean:dateUtils.format(body.lowerEndpoint())}Z&PeriodTo=${bean:dateUtils.format(body.upperEndpoint())}Z",
-                                    HEADER_TIMETABLE_AIRPORT_IATA))
+                    .setHeader(Exchange.HTTP_QUERY, simpleF("airport=${header.%s}&direction=D&PeriodFrom=${header.%s}&PeriodTo=${header.%s}",
+                            HEADER_TIMETABLE_AIRPORT_IATA, HEADER_LOWER_RANGE_ENDPOINT, HEADER_UPPER_RANGE_ENDPOINT))
                     .log(LoggingLevel.DEBUG, this.getClass().getName(),
-                            "Fetching flights for ${header.TimetableAirportIATA} by date range: ${bean:dateUtils.format(body.lowerEndpoint())} - ${bean:dateUtils.format(body.upperEndpoint())}")
+                            "Fetching flights for ${header.TimetableAirportIATA} by date range: ${header.LowerRangeEndpoint} - ${header.UpperRangeEndpoint}")
                     .setBody(constant(null))
                     .to("{{avinor.timetable.feed.endpoint}}").id("FetchTimetableFeedByRangesProcessor")
                     .to("direct:splitJoinIncomingFlightMessages").id("SplitJoinIncomingFlightsProcessor")
