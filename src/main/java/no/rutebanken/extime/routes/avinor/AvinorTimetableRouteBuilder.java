@@ -107,6 +107,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
 
         from("direct:fetchAirportNameFromFeed")
                 .routeId("FetchAirportNameFromFeed")
+                .streamCaching()
                 .log(LoggingLevel.DEBUG, this.getClass().getName(), "Fetching airport name from feed by IATA: ${header.TimetableAirportIATA}")
                 .setHeader(Exchange.HTTP_METHOD, constant(HttpMethods.GET))
                 .setHeader(Exchange.HTTP_QUERY, simpleF("airport=${header.%s}&shortname=Y&ukname=Y", HEADER_TIMETABLE_AIRPORT_IATA))
@@ -129,6 +130,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
 
         from("direct:fetchTimetableForAirportByRanges")
                 .routeId("FetchTimetableForAirportByDateRanges")
+                .streamCaching()
                 .split(body(), new ScheduledFlightListAggregationStrategy())
                     .setHeader(HEADER_LOWER_RANGE_ENDPOINT, simple("${bean:dateUtils.format(body.lowerEndpoint())}Z"))
                     .setHeader(HEADER_UPPER_RANGE_ENDPOINT, simple("${bean:dateUtils.format(body.upperEndpoint())}Z"))
@@ -145,6 +147,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
 
         from("direct:splitJoinIncomingFlightMessages")
                 .routeId("FlightSplitterJoiner")
+                .streamCaching()
                 .split(stax(Flight.class, false), new ScheduledAirportFlightsAggregationStrategy()).streaming()
                     .log(LoggingLevel.DEBUG, this.getClass().getName(),
                             "Fetched flight with id: ${body.airlineDesignator}${body.flightNumber}")
