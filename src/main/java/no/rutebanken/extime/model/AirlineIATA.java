@@ -1,7 +1,7 @@
 package no.rutebanken.extime.model;
 
 public enum AirlineIATA {
-    DY("Norwegian"), SK("SAS"), WF("Widerøe");
+    DY("Norwegian"), M3("Air Norway"), SK("SAS"), WF("Widerøe");
 
     private String airportName;
 
