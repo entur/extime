@@ -236,9 +236,9 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
 
         List<Range<LocalDate>> ranges = Lists.newArrayList(createRange("2017-01-01", "2017-01-31"));
 
-        getMockEndpoint("mock:fetchFlightsByAirlineAndRange").expectedMessageCount(3);
+        getMockEndpoint("mock:fetchFlightsByAirlineAndRange").expectedMessageCount(4);
         getMockEndpoint("mock:fetchFlightsByAirlineAndRange").expectedHeaderValuesReceivedInAnyOrder(
-                HEADER_TIMETABLE_AIRLINE_IATA, "DY", "SK", "WF"
+                HEADER_TIMETABLE_AIRLINE_IATA, "FI", "M3", "SK", "WF"
         );
 
         List<Flight> resultBody = (List<Flight>) fetchTimetableForLargeAirportTemplate.requestBodyAndHeader(
@@ -249,7 +249,7 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         Assertions.assertThat(resultBody)
                 .isNotNull()
                 .isNotEmpty()
-                .hasSize(9)
+                .hasSize(12)
                 .hasOnlyElementsOfType(Flight.class);
     }
 
@@ -323,12 +323,12 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         context.getRouteDefinition("FlightSplitterJoiner").adviceWith(context, new AdviceWithRouteBuilder() {
             @Override
             public void configure() throws Exception {
-                weaveById("FlightSplitLogProcessor").replace().to("mock:flightSplitLogger");
+                weaveById("FlightSplitWireTap").replace().to("mock:flightSplitWireTap");
             }
         });
         context.start();
 
-        getMockEndpoint("mock:flightSplitLogger").expectedMessageCount(12);
+        getMockEndpoint("mock:flightSplitWireTap").expectedMessageCount(12);
 
         InputStream inputStream = new FileInputStream("target/classes/xml/scheduled-flights.xml");
         List<Flight> flights  = splitJoinFlightsTemplate.requestBody(inputStream, List.class);

@@ -529,9 +529,11 @@ public class ScheduledFlightToNetexConverter {
         if (airlineIATA.equalsIgnoreCase(AirlineIATA.SK.name())) {
             return createSASOperator();
         }
+/*
         if (airlineIATA.equalsIgnoreCase(AirlineIATA.DY.name())) {
             return createNorwegianOperator();
         }
+*/
         if (airlineIATA.equalsIgnoreCase(AirlineIATA.WF.name())) {
             return createWideroeOperator();
         }

@@ -2,7 +2,11 @@ package no.rutebanken.extime.util;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Range;
+import no.avinor.flydata.xjc.model.scheduled.Flight;
+import no.rutebanken.extime.model.AirlineIATA;
+import no.rutebanken.extime.model.AirportIATA;
 import org.apache.camel.Exchange;
+import org.apache.commons.lang3.EnumUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -42,5 +46,14 @@ public class DateUtils {
 
     public String format(LocalDate localDate) {
         return localDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+    }
+
+    public void findUniqueAirlines(List<Flight> flights) {
+        System.out.printf("%nUnique airline designators:%n");
+        flights.stream()
+                .map(Flight::getAirlineDesignator)
+                .distinct()
+                .sorted()
+                .forEach(System.out::println);
     }
 }

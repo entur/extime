@@ -69,6 +69,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                     .to("direct:fetchTimetableForAirport").id("FetchTimetableProcessor")
                     .log(LoggingLevel.DEBUG, this.getClass().getName(), "Flights fetched for ${header.TimetableAirportIATA}")
                 .end()
+                //.bean(DateUtils.class, "findUniqueAirlines")
                 .multicast()
                     .to("mock:direct:convertToDirectFlights").id("ConvertDirectFlightsProcessor")
                     .to("mock:direct:convertToStopoverFlights").id("ConvertStopoverFlightsProcessor")
@@ -107,7 +108,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
 
         from("direct:fetchAirportNameFromFeed")
                 .routeId("FetchAirportNameFromFeed")
-                .streamCaching()
+                //.streamCaching()
                 .log(LoggingLevel.DEBUG, this.getClass().getName(), "Fetching airport name from feed by IATA: ${header.TimetableAirportIATA}")
                 .setHeader(Exchange.HTTP_METHOD, constant(HttpMethods.GET))
                 .setHeader(Exchange.HTTP_QUERY, simpleF("airport=${header.%s}&shortname=Y&ukname=Y", HEADER_TIMETABLE_AIRPORT_IATA))
@@ -123,8 +124,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .split(body(), new ScheduledFlightListAggregationStrategy())
                     .log(LoggingLevel.DEBUG, this.getClass().getName(), "Processing airline with IATA code: ${body}")
                     .setHeader(HEADER_TIMETABLE_AIRLINE_IATA, simple("${body}"))
-                    .setBody(simpleF("${header.%s}", HEADER_TIMETABLE_LARGE_AIRPORT_RANGE))
-                    .to("direct:fetchTimetableForAirportByRanges").id("FetchTimetableByAirlineAndRangeProcessor")
+                    .to("direct:fetchTimetableForLargeAirportByRanges").id("FetchTimetableByAirlineAndRangeProcessor")
                 .end()
         ;
 
@@ -145,14 +145,36 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .end()
         ;
 
+        from("direct:fetchTimetableForLargeAirportByRanges")
+                .routeId("FetchTimetableForLargeAirportByDateRanges")
+                .streamCaching()
+                .setBody(simpleF("${header.%s}", HEADER_TIMETABLE_LARGE_AIRPORT_RANGE))
+                .split(body(), new ScheduledFlightListAggregationStrategy())
+                    .setHeader(HEADER_LOWER_RANGE_ENDPOINT, simple("${bean:dateUtils.format(body.lowerEndpoint())}Z"))
+                    .setHeader(HEADER_UPPER_RANGE_ENDPOINT, simple("${bean:dateUtils.format(body.upperEndpoint())}Z"))
+                    .setHeader(Exchange.HTTP_METHOD, constant(HttpMethods.GET))
+                    .setHeader(Exchange.HTTP_QUERY, simpleF("airport=${header.%s}&direction=D&designator=${header.%s}&PeriodFrom=${header.%s}&PeriodTo=${header.%s}",
+                            HEADER_TIMETABLE_AIRPORT_IATA, HEADER_TIMETABLE_AIRLINE_IATA, HEADER_LOWER_RANGE_ENDPOINT, HEADER_UPPER_RANGE_ENDPOINT))
+                    .log(LoggingLevel.DEBUG, this.getClass().getName(),
+                            "Fetching flights for airport: ${header.TimetableAirportIATA}, and airline: ${header.TimetableAirlineIATA} by date range: ${header.LowerRangeEndpoint} - ${header.UpperRangeEndpoint}")
+                    .setBody(constant(null))
+                    .to("{{avinor.timetable.feed.endpoint}}")
+                    .to("direct:splitJoinIncomingFlightMessages")
+                .end()
+        ;
+
         from("direct:splitJoinIncomingFlightMessages")
                 .routeId("FlightSplitterJoiner")
                 .streamCaching()
                 .split(stax(Flight.class, false), new ScheduledAirportFlightsAggregationStrategy()).streaming()
+                    .wireTap("mock:wireTapEndpoint").id("FlightSplitWireTap")
+/*
                     .log(LoggingLevel.DEBUG, this.getClass().getName(),
-                            "Fetched flight with id: ${body.airlineDesignator}${body.flightNumber}")
-                        .id("FlightSplitLogProcessor")
+                            "Processing flight with id: ${body.airlineDesignator}${body.flightNumber}")
+                    .id("FlightSplitLogProcessor")
+*/
                 .end()
+                //.bean(DateUtils.class, "findUniqueAirlines")
         ;
 
         from("direct:convertToDirectFlights")
