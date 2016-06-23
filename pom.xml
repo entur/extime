@@ -24,7 +24,7 @@
         <!-- versions for use in mvn plugins as we cannot inherit them from a BOM -->
         <docker.maven.plugin.version>0.13.8</docker.maven.plugin.version>
         <spring-boot-plugin.version>1.3.5.RELEASE</spring-boot-plugin.version>
-        <spring-boot.version>1.3.3.RELEASE</spring-boot.version>
+        <spring-boot.version>1.3.5.RELEASE</spring-boot.version>
         <camel.version>2.17.0</camel.version>
 
         <!-- Docker & Fabric8 Configs -->
@@ -89,6 +89,12 @@
             <groupId>org.apache.camel</groupId>
             <artifactId>camel-http4</artifactId>
             <version>${camel.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.geronimo.specs</groupId>
+                    <artifactId>geronimo-servlet_3.0_spec</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.apache.camel</groupId>
