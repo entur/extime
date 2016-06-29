@@ -13,23 +13,21 @@ The following properties need to be provided for the application to run:
 ```
 # Avinor timetable scheduler settings
 avinor.timetable.scheduler.consumer=quartz2://avinorTimetableScheduler?cron=0+0+0+*+*+?&trigger.timeZone=Europe/Oslo
-avinor.timetable.period.months=6
+avinor.timetable.period.months=4
 avinor.timetable.max.range=180
-avinor.timetable.med.range=60
-avinor.timetable.min.range=7
-avinor.timetable.periodto.daysahead=30
-avinor.timetable.feed.endpoint=http4://195.69.13.136/XmlFeedScheduled.asp
+avinor.timetable.min.range=60
+avinor.timetable.feed.endpoint=http://195.69.13.136/XmlFeedScheduled.asp
 
 # Avinor realtime scheduler settings
 avinor.realtime.scheduler.options=cron=0+0+3+*+*+?&trigger.timeZone=Europe/Oslo
-avinor.realtime.feed.endpoint=flydata.avinor.no/XmlFeed.asp
+avinor.realtime.feed.endpoint=http://flydata.avinor.no/XmlFeed.asp
 avinor.realtime.departures.timefrom=0
 avinor.realtime.departures.timeto=72
 avinor.realtime.arrivals.timefrom=0
 avinor.realtime.arrivals.timeto=96
 
 # Avinor airport service settings
-avinor.airport.feed.endpoint=http4://flydata.avinor.no/airportNames.asp
+avinor.airport.feed.endpoint=http://flydata.avinor.no/airportNames.asp
 
 # Logging settings
 logging.level.no.rutebanken=DEBUG

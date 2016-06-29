@@ -3,14 +3,16 @@ package no.rutebanken.extime.routes.avinor;
 import no.avinor.flydata.xjc.model.airport.AirportNames;
 import no.avinor.flydata.xjc.model.feed.Flight;
 import no.rutebanken.extime.converter.RealTimeFlightConverter;
-import no.rutebanken.extime.model.*;
+import no.rutebanken.extime.model.AirportFlightDataSet;
+import no.rutebanken.extime.model.AirportIATA;
+import no.rutebanken.extime.model.FlightType;
+import no.rutebanken.extime.model.StopVisitType;
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.http4.HttpMethods;
 import org.apache.camel.processor.aggregate.AggregationStrategy;
-import org.springframework.stereotype.Component;
 
 import java.util.*;
 

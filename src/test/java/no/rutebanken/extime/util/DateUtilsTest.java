@@ -6,13 +6,13 @@ import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.impl.DefaultExchange;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.time.LocalDate;
 import java.util.List;
 
-import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.*;
+import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEADER_TIMETABLE_LARGE_AIRPORT_RANGE;
+import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEADER_TIMETABLE_SMALL_AIRPORT_RANGE;
 
 public class DateUtilsTest {
 
@@ -25,8 +25,7 @@ public class DateUtilsTest {
         exchange = new DefaultExchange(new DefaultCamelContext());
         clazzUnderTest.numberOfMonthsInPeriod = 3;
         clazzUnderTest.maxRangeDays = 180;
-        clazzUnderTest.medRangeDays = 60;
-        clazzUnderTest.minRangeDays = 7;
+        clazzUnderTest.minRangeDays = 60;
     }
 
     @Test
@@ -39,17 +38,11 @@ public class DateUtilsTest {
                 .isNotEmpty()
                 .hasSize(1);
 
-        List mediumAirportRanges = exchange.getIn().getHeader(HEADER_TIMETABLE_MEDIUM_AIRPORT_RANGE, List.class);
-        Assertions.assertThat(mediumAirportRanges)
-                .isNotNull()
-                .isNotEmpty()
-                .hasSize(2);
-
         List largeAirportRanges = exchange.getIn().getHeader(HEADER_TIMETABLE_LARGE_AIRPORT_RANGE, List.class);
         Assertions.assertThat(largeAirportRanges)
                 .isNotNull()
                 .isNotEmpty()
-                .hasSize(12);
+                .hasSize(2);
     }
 
     @Test

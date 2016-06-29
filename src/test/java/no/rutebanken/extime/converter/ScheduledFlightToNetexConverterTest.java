@@ -3,9 +3,6 @@ package no.rutebanken.extime.converter;
 import no.rutebanken.extime.AppTest;
 import no.rutebanken.extime.config.*;
 import no.rutebanken.extime.model.ScheduledDirectFlight;
-import no.rutebanken.extime.util.XmlUtil;
-import no.rutebanken.netex.model.PublicationDeliveryStructure;
-import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -14,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import javax.xml.bind.JAXBElement;
 import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.LocalTime;

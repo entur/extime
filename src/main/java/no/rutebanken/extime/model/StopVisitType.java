@@ -1,7 +1,7 @@
 package no.rutebanken.extime.model;
 
 public enum StopVisitType {
-    DEPARTURE("D"), ARRIVAL("A");
+    ARRIVAL("A"), DEPARTURE("D");
 
     private String code;
 
