@@ -371,16 +371,18 @@ public class ScheduledFlightToNetexConverter {
         Iterator<StopPointInJourneyPattern> journeyPatternStopPointsIterator = journeyPatternStopPoints.iterator();
         while (stopoversiterator.hasNext() && journeyPatternStopPointsIterator.hasNext()) {
             ScheduledStopover scheduledStopover = stopoversiterator.next();
-            ScheduledStopPoint scheduledStopPoint = stopPointsIterator.next();
             StopPointInJourneyPattern stopPointInJourneyPattern = journeyPatternStopPointsIterator.next();
             StopPointInJourneyPatternRefStructure stopPointInJourneyPatternRef = new StopPointInJourneyPatternRefStructure()
                     .withVersion("any")
                     .withRef(stopPointInJourneyPattern.getId());
-            // @todo: null check on arrival and departure time before setting
             TimetabledPassingTime passingTime = new TimetabledPassingTime()
-                    .withPointInJourneyPatternRef(objectFactory().createStopPointInJourneyPatternRef(stopPointInJourneyPatternRef))
-                    .withDepartureTime(scheduledStopover.getDepartureTime())
-                    .withArrivalTime(scheduledStopover.getArrivalTime());
+                    .withPointInJourneyPatternRef(objectFactory().createStopPointInJourneyPatternRef(stopPointInJourneyPatternRef));
+            if (scheduledStopover.getArrivalTime() != null) {
+                passingTime.setArrivalTime(scheduledStopover.getArrivalTime());
+            }
+            if (scheduledStopover.getDepartureTime() != null) {
+                passingTime.setDepartureTime(scheduledStopover.getDepartureTime());
+            }
             passingTimesRelStructure.withTimetabledPassingTime(passingTime);
         }
 
