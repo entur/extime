@@ -3,7 +3,6 @@ package no.rutebanken.extime.model;
 import com.google.common.base.Joiner;
 
 import java.math.BigInteger;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -11,12 +10,9 @@ import java.util.List;
 import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.toList;
 
-public class ScheduledStopoverFlight {
+public class ScheduledStopoverFlight extends ScheduledFlight {
 
     private BigInteger id; // or serie of ids
-    private String airlineIATA;
-    private String flightId;
-    private LocalDate dateOfOperation; // or a date range, if flight goes over multiple dates
     private String routeString; // could also be implemented in separate getter or toString, like "OSL-HOV-SOG-BGO"
 
     private List<ScheduledStopover> scheduledStopovers;
@@ -27,30 +23,6 @@ public class ScheduledStopoverFlight {
 
     public void setId(BigInteger id) {
         this.id = id;
-    }
-
-    public String getAirlineIATA() {
-        return airlineIATA;
-    }
-
-    public void setAirlineIATA(String airlineIATA) {
-        this.airlineIATA = airlineIATA;
-    }
-
-    public String getFlightId() {
-        return flightId;
-    }
-
-    public void setFlightId(String flightId) {
-        this.flightId = flightId;
-    }
-
-    public LocalDate getDateOfOperation() {
-        return dateOfOperation;
-    }
-
-    public void setDateOfOperation(LocalDate dateOfOperation) {
-        this.dateOfOperation = dateOfOperation;
     }
 
     public String getRouteString() {
@@ -79,26 +51,22 @@ public class ScheduledStopoverFlight {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
 
         ScheduledStopoverFlight that = (ScheduledStopoverFlight) o;
 
-        if (!id.equals(that.id)) return false;
-        if (!airlineIATA.equals(that.airlineIATA)) return false;
-        if (!flightId.equals(that.flightId)) return false;
-        if (!dateOfOperation.equals(that.dateOfOperation)) return false;
-        if (!routeString.equals(that.routeString)) return false;
-        return scheduledStopovers.equals(that.scheduledStopovers);
+        if (id != null ? !id.equals(that.id) : that.id != null) return false;
+        if (routeString != null ? !routeString.equals(that.routeString) : that.routeString != null) return false;
+        return scheduledStopovers != null ? scheduledStopovers.equals(that.scheduledStopovers) : that.scheduledStopovers == null;
 
     }
 
     @Override
     public int hashCode() {
-        int result = id.hashCode();
-        result = 31 * result + airlineIATA.hashCode();
-        result = 31 * result + flightId.hashCode();
-        result = 31 * result + dateOfOperation.hashCode();
-        result = 31 * result + routeString.hashCode();
-        result = 31 * result + scheduledStopovers.hashCode();
+        int result = super.hashCode();
+        result = 31 * result + (id != null ? id.hashCode() : 0);
+        result = 31 * result + (routeString != null ? routeString.hashCode() : 0);
+        result = 31 * result + (scheduledStopovers != null ? scheduledStopovers.hashCode() : 0);
         return result;
     }
 
@@ -106,9 +74,6 @@ public class ScheduledStopoverFlight {
     public String toString() {
         final StringBuilder sb = new StringBuilder("ScheduledStopoverFlight{");
         sb.append("id=").append(id);
-        sb.append(", airlineIATA='").append(airlineIATA).append('\'');
-        sb.append(", flightId='").append(flightId).append('\'');
-        sb.append(", dateOfOperation=").append(dateOfOperation);
         sb.append(", routeString='").append(routeString).append('\'');
         sb.append(", scheduledStopovers=").append(scheduledStopovers);
         sb.append('}');

@@ -1,15 +1,11 @@
 package no.rutebanken.extime.model;
 
 import java.math.BigInteger;
-import java.time.LocalDate;
 import java.time.LocalTime;
 
-public class ScheduledDirectFlight {
+public class ScheduledDirectFlight extends ScheduledFlight {
 
     private BigInteger flightId;
-    private String airlineIATA;
-    private String airlineFlightId;
-    private LocalDate dateOfOperation;
     private String departureAirportIATA;
     private String arrivalAirportIATA;
     private String departureAirportName;
@@ -23,30 +19,6 @@ public class ScheduledDirectFlight {
 
     public void setFlightId(BigInteger flightId) {
         this.flightId = flightId;
-    }
-
-    public String getAirlineIATA() {
-        return airlineIATA;
-    }
-
-    public void setAirlineIATA(String airlineIATA) {
-        this.airlineIATA = airlineIATA;
-    }
-
-    public String getAirlineFlightId() {
-        return airlineFlightId;
-    }
-
-    public void setAirlineFlightId(String airlineFlightId) {
-        this.airlineFlightId = airlineFlightId;
-    }
-
-    public LocalDate getDateOfOperation() {
-        return dateOfOperation;
-    }
-
-    public void setDateOfOperation(LocalDate dateOfOperation) {
-        this.dateOfOperation = dateOfOperation;
     }
 
     public String getDepartureAirportIATA() {
@@ -101,13 +73,11 @@ public class ScheduledDirectFlight {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
 
         ScheduledDirectFlight that = (ScheduledDirectFlight) o;
 
-        if (!flightId.equals(that.flightId)) return false;
-        if (!airlineIATA.equals(that.airlineIATA)) return false;
-        if (!airlineFlightId.equals(that.airlineFlightId)) return false;
-        if (!dateOfOperation.equals(that.dateOfOperation)) return false;
+        if (flightId != null ? !flightId.equals(that.flightId) : that.flightId != null) return false;
         if (!departureAirportIATA.equals(that.departureAirportIATA)) return false;
         if (!arrivalAirportIATA.equals(that.arrivalAirportIATA)) return false;
         if (!departureAirportName.equals(that.departureAirportName)) return false;
@@ -119,10 +89,8 @@ public class ScheduledDirectFlight {
 
     @Override
     public int hashCode() {
-        int result = flightId.hashCode();
-        result = 31 * result + airlineIATA.hashCode();
-        result = 31 * result + airlineFlightId.hashCode();
-        result = 31 * result + dateOfOperation.hashCode();
+        int result = super.hashCode();
+        result = 31 * result + (flightId != null ? flightId.hashCode() : 0);
         result = 31 * result + departureAirportIATA.hashCode();
         result = 31 * result + arrivalAirportIATA.hashCode();
         result = 31 * result + departureAirportName.hashCode();
@@ -136,9 +104,6 @@ public class ScheduledDirectFlight {
     public String toString() {
         final StringBuilder sb = new StringBuilder("ScheduledDirectFlight{");
         sb.append("flightId=").append(flightId);
-        sb.append(", airlineIATA='").append(airlineIATA).append('\'');
-        sb.append(", airlineFlightId='").append(airlineFlightId).append('\'');
-        sb.append(", dateOfOperation=").append(dateOfOperation);
         sb.append(", departureAirportIATA='").append(departureAirportIATA).append('\'');
         sb.append(", arrivalAirportIATA='").append(arrivalAirportIATA).append('\'');
         sb.append(", departureAirportName='").append(departureAirportName).append('\'');

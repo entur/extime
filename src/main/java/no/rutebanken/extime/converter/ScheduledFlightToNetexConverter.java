@@ -16,7 +16,6 @@ import javax.xml.bind.JAXBElement;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.Duration;
-import javax.xml.namespace.QName;
 import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -24,6 +23,12 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.*;
 
+/**
+ * @todo: how should we present flight routes with stopovers in the ServiceFrame -> routePoints section?
+ * @todo: should it only contain a RoutePoint element for the start and stop points? or for every stopover?
+ * @todo: and how should the Route -> Name be presented for such routes (with stopvers)?
+ * @todo: like: Oslo - Bergen or like: Oslo - Sogndal - Kristiansand - Bergen?
+ */
 @Component(value = "scheduledFlightToNetexConverter")
 public class ScheduledFlightToNetexConverter {
 
@@ -66,7 +71,7 @@ public class ScheduledFlightToNetexConverter {
     public JAXBElement<PublicationDeliveryStructure> convertToNetex(ScheduledStopoverFlight stopoverFlight) {
         LocalDate dateOfOperation = stopoverFlight.getDateOfOperation();
         String routePath = stopoverFlight.getRoutePath();
-        String flightId = stopoverFlight.getFlightId();
+        String flightId = stopoverFlight.getAirlineFlightId();
 
         List<StopPlace> stopPlaces = createStopPlaces(stopoverFlight.getScheduledStopovers());
         List<ScheduledStopPoint> scheduledStopPoints = createScheduledStopPoints(stopoverFlight.getScheduledStopovers(), flightId);
@@ -419,7 +424,7 @@ public class ScheduledFlightToNetexConverter {
 
         ServiceJourney datedServiceJourney = objectFactory().createServiceJourney()
                 .withVersion("any")
-                .withId(String.format("%s:ServiceJourney:%s", getAvinorConfig().getId(), stopoverFlight.getFlightId()))
+                .withId(String.format("%s:ServiceJourney:%s", getAvinorConfig().getId(), stopoverFlight.getAirlineFlightId()))
                 .withDepartureTime(stopoverFlight.getScheduledStopovers().get(0).getDepartureTime())
                 //.withDayTypes() @todo: implement!
                 //.withJourneyPatternRef() @todo: implement!

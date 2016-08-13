@@ -2,15 +2,14 @@ package no.rutebanken.extime.converter;
 
 import com.google.common.collect.Lists;
 import no.avinor.flydata.xjc.model.scheduled.Flight;
-import no.rutebanken.extime.model.ScheduledDirectFlight;
-import no.rutebanken.extime.model.ScheduledStopover;
-import no.rutebanken.extime.model.ScheduledStopoverFlight;
-import no.rutebanken.extime.model.StopVisitType;
+import no.rutebanken.extime.model.*;
 import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.apache.commons.lang3.tuple.Triple;
 import org.springframework.stereotype.Component;
 
 import java.math.BigInteger;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.*;
 import java.util.function.Predicate;
@@ -18,6 +17,57 @@ import java.util.stream.Collectors;
 
 @Component(value = "scheduledFlightConverter")
 public class ScheduledFlightConverter {
+
+    private static Set<BigInteger> UNIQUE_FLIGHT_IDS = new HashSet<>();
+
+    public List<ScheduledFlight> convertToScheduledFlights(List<Flight> scheduledFlights) {
+        Map<String, List<Flight>> flightsByDepartureAirport = scheduledFlights.stream()
+                .collect(Collectors.groupingBy(Flight::getDepartureStation));
+
+        List<ScheduledStopoverFlight> scheduledStopoverFlights = new ArrayList<>();
+
+        scheduledFlights.forEach(scheduledFlight -> {
+            List<ScheduledStopover> scheduledStopovers = findPossibleStopoversForFlight(scheduledFlight, flightsByDepartureAirport);
+            if (!scheduledStopovers.isEmpty()) {
+                ScheduledStopoverFlight scheduledStopoverFlight = new ScheduledStopoverFlight();
+                scheduledStopoverFlight.setAirlineFlightId(String.format("%s%s",
+                        scheduledFlight.getAirlineDesignator(), scheduledFlight.getFlightNumber()));
+                scheduledStopoverFlight.setAirlineIATA(scheduledFlight.getAirlineDesignator());
+                scheduledStopoverFlight.setDateOfOperation(scheduledFlight.getDateOfOperation());
+                scheduledStopoverFlight.getScheduledStopovers().addAll(scheduledStopovers);
+                scheduledStopoverFlights.add(scheduledStopoverFlight);
+            }
+        });
+
+        List<Flight> directFlights = scheduledFlights.stream()
+                .filter(scheduledFlight -> !UNIQUE_FLIGHT_IDS.contains(scheduledFlight.getId()))
+                .collect(Collectors.toList());
+        List<ScheduledDirectFlight> scheduledDirectFlights = new ArrayList<>();
+        directFlights.forEach(scheduledFlight -> scheduledDirectFlights.add(convertToScheduledDirectFlight(scheduledFlight)));
+
+        Map<String, List<ScheduledStopoverFlight>> stopoverFlightsByFlightId = scheduledStopoverFlights.stream()
+                .sorted(Comparator.comparing(ScheduledStopoverFlight::getDateOfOperation))
+                .collect(Collectors.groupingBy(ScheduledStopoverFlight::getAirlineFlightId));
+        removeSubRoutes(stopoverFlightsByFlightId);
+
+        Map<String, List<ScheduledDirectFlight>> directFlightsByFlightId = scheduledDirectFlights.stream()
+                .sorted(Comparator.comparing(ScheduledDirectFlight::getDateOfOperation))
+                .collect(Collectors.groupingBy(ScheduledDirectFlight::getAirlineFlightId));
+
+        Map<String, List<? extends ScheduledFlight>> scheduledFlightsById = new HashMap<>();
+        scheduledFlightsById.putAll(stopoverFlightsByFlightId);
+        scheduledFlightsById.putAll(directFlightsByFlightId);
+
+        List<ScheduledFlight> distinctFlights = new ArrayList<>();
+
+        scheduledFlightsById.forEach((flightId, flights) -> {
+            Set<DayOfWeek> daysOfWeek = findJourneyPatterns(flightId, flights);
+            ScheduledFlight scheduledFlight = flights.get(0);
+            scheduledFlight.setWeekDaysPattern(daysOfWeek);
+            distinctFlights.add(scheduledFlight);
+        });
+        return distinctFlights;
+    }
 
     public List<ScheduledDirectFlight> convertToScheduledDirectFlights(List<Flight> scheduledFlights) {
         List<ScheduledDirectFlight> scheduledDirectFlights = new ArrayList<>();
@@ -35,7 +85,7 @@ public class ScheduledFlightConverter {
             List<ScheduledStopover> scheduledStopovers = findPossibleStopoversForFlight(scheduledFlight, flightsByDepartureAirport);
             if (!scheduledStopovers.isEmpty()) {
                 ScheduledStopoverFlight scheduledStopoverFlight = new ScheduledStopoverFlight();
-                scheduledStopoverFlight.setFlightId(String.format("%s%s",
+                scheduledStopoverFlight.setAirlineFlightId(String.format("%s%s",
                         scheduledFlight.getAirlineDesignator(), scheduledFlight.getFlightNumber()));
                 scheduledStopoverFlight.setAirlineIATA(scheduledFlight.getAirlineDesignator());
                 scheduledStopoverFlight.setDateOfOperation(scheduledFlight.getDateOfOperation());
@@ -46,11 +96,67 @@ public class ScheduledFlightConverter {
         return scheduledStopoverFlights;
     }
 
+    private void removeSubRoutes(Map<String, List<ScheduledStopoverFlight>> stopoverFlightsByFlightId) {
+        stopoverFlightsByFlightId.forEach((flightId, flights) -> {
+            int maxStopovers = findMaxStopovers(flights);
+            if (maxStopovers > 0) {
+                List<ScheduledStopoverFlight> filteredFlights = flights.stream()
+                        .filter(flight -> flight.getScheduledStopovers().size() == maxStopovers)
+                        .collect(Collectors.toList());
+                stopoverFlightsByFlightId.replace(flightId, filteredFlights);
+            }
+        });
+    }
+
+    private int findMaxStopovers(List<ScheduledStopoverFlight> flights) {
+        Optional<ScheduledStopoverFlight> firstFlightWithMostStopvers = flights.stream()
+                .collect(Collectors.maxBy((flight1, flight2) -> {
+                    final int flight1Stopvers = flight1.getScheduledStopovers().size();
+                    final int flight2Stopvers = flight2.getScheduledStopovers().size();
+                    return flight1Stopvers - flight2Stopvers;
+                }));
+        if (firstFlightWithMostStopvers.isPresent()) {
+            return firstFlightWithMostStopvers.get().getScheduledStopovers().size();
+        }
+        return 0;
+    }
+
+    /**
+     * @todo: handle different departure times, i.e. on weekends (will be used as separate ServiceJourneys in netex)
+     *
+     * For example, flight WF149 between Oslo and Bergen, operates every work day (man-fri) with departure time 14:05
+     * but also one day at the weekend, sunday, with departure time at 14:00
+     */
+    private Set<DayOfWeek> findJourneyPatterns(String flightId, List<? extends ScheduledFlight> flights) {
+        SortedSet<DayOfWeek> daysOfWeek = new TreeSet<>();
+        LocalDate periodStartDate = flights.get(0).getDateOfOperation();
+        LocalDate periodEndDate = periodStartDate.plusWeeks(1L);
+        for (ScheduledFlight flight : flights) {
+            if (flight.getDateOfOperation().isAfter(periodEndDate)) {
+                break;
+            } else {
+                LocalDate dateOfOperation = flight.getDateOfOperation();
+                DayOfWeek dayOfWeek = dateOfOperation.getDayOfWeek();
+                daysOfWeek.add(dayOfWeek);
+            }
+        }
+        return daysOfWeek;
+    }
+
+    // @todo: instead of creating a flight-route for each subroute, and add it to the result,
+    // @todo: find a way to prevent subroutes to be created at all,
+    // @todo: i.e. keep track of flights added to a route and check against this collection for each new flight
     public List<ScheduledStopover> findPossibleStopoversForFlight(Flight currentFlight, Map<String, List<Flight>> flightsByDepartureAirport) {
         List<ScheduledStopover> scheduledStopovers = new ArrayList<>();
         LinkedList<Flight> stopoverFlights = findPossibleStopoversForFlight(currentFlight, flightsByDepartureAirport, Lists.newLinkedList());
         if (!stopoverFlights.isEmpty()) {
             stopoverFlights.addFirst(currentFlight);
+
+            Set<BigInteger> uniqueFlightIds = stopoverFlights.stream()
+                    .map(Flight::getId)
+                    .collect(Collectors.toSet());
+            uniqueFlightIds.forEach(uniqueId -> UNIQUE_FLIGHT_IDS.add(uniqueId));
+
             List<Triple<StopVisitType, String, LocalTime>> stopovers = extractStopoversFromFlights(stopoverFlights);
             Triple<StopVisitType, String, LocalTime> tempArrivalStopover = null;
             for (ListIterator<Triple<StopVisitType, String, LocalTime>> it = stopovers.listIterator(); it.hasNext(); ) {
@@ -82,8 +188,8 @@ public class ScheduledFlightConverter {
         }
     }
 
-    public LinkedList<Flight> findPossibleStopoversForFlight(Flight currentFlight,
-                                                       Map<String, List<Flight>> flightsByDepartureAirport, LinkedList<Flight> stopoverFlights) {
+    public LinkedList<Flight> findPossibleStopoversForFlight(Flight currentFlight, Map<String, List<Flight>> flightsByDepartureAirport,
+                                                             LinkedList<Flight> stopoverFlights) {
         List<Flight> destinationFlights = flightsByDepartureAirport.get(currentFlight.getArrivalStation());
         Flight foundStopoverFlight = findPresentStopoverFlight(currentFlight, destinationFlights);
         if (foundStopoverFlight != null) {

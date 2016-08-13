@@ -9,6 +9,8 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoField;
+import java.time.temporal.TemporalAccessor;
 import java.util.List;
 
 import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEADER_TIMETABLE_LARGE_AIRPORT_RANGE;
@@ -43,4 +45,17 @@ public class DateUtils {
         return localDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
     }
 
+    static class WorkDays {
+        static boolean isWorkDay(TemporalAccessor date) {
+            int day = date.get(ChronoField.DAY_OF_WEEK);
+            return day >= 1 && day <= 5;
+        }
+    }
+
+    static class WeekendDays {
+        static boolean isWeekendkDay(TemporalAccessor date) {
+            int day = date.get(ChronoField.DAY_OF_WEEK);
+            return day >= 6 && day <= 7;
+        }
+    }
 }

@@ -466,7 +466,7 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         return new ScheduledStopoverFlight() {{
             setId(BigInteger.valueOf(dummyId));
             setAirlineIATA(dummyAirlineIata);
-            setFlightId(dummyFlightId);
+            setAirlineFlightId(dummyFlightId);
             setDateOfOperation(dummyDateOfOperation);
             getScheduledStopovers().addAll(stopovers);
         }};
