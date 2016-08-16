@@ -21,6 +21,7 @@ public class ScheduledDirectFlight extends ScheduledFlight {
         this.flightId = flightId;
     }
 
+    @Override
     public String getDepartureAirportIATA() {
         return departureAirportIATA;
     }
@@ -29,6 +30,7 @@ public class ScheduledDirectFlight extends ScheduledFlight {
         this.departureAirportIATA = departureAirportIATA;
     }
 
+    @Override
     public String getArrivalAirportIATA() {
         return arrivalAirportIATA;
     }
@@ -37,6 +39,7 @@ public class ScheduledDirectFlight extends ScheduledFlight {
         this.arrivalAirportIATA = arrivalAirportIATA;
     }
 
+    @Override
     public String getDepartureAirportName() {
         return departureAirportName;
     }
@@ -45,6 +48,7 @@ public class ScheduledDirectFlight extends ScheduledFlight {
         this.departureAirportName = departureAirportName;
     }
 
+    @Override
     public String getArrivalAirportName() {
         return arrivalAirportName;
     }
@@ -53,6 +57,7 @@ public class ScheduledDirectFlight extends ScheduledFlight {
         this.arrivalAirportName = arrivalAirportName;
     }
 
+    @Override
     public LocalTime getTimeOfDeparture() {
         return timeOfDeparture;
     }
@@ -61,6 +66,7 @@ public class ScheduledDirectFlight extends ScheduledFlight {
         this.timeOfDeparture = timeOfDeparture;
     }
 
+    @Override
     public LocalTime getTimeOfArrival() {
         return timeOfArrival;
     }

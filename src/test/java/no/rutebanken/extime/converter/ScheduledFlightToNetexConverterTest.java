@@ -14,6 +14,8 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = {AppTest.class})
@@ -44,7 +46,7 @@ public class ScheduledFlightToNetexConverterTest {
 
     @Test
     @Ignore
-    public void testNetexConversion() {
+    public void testSimpNetexConversion() {
 /*
         ScheduledDirectFlight directFlight = createScheduledDirectFlight("DY", "DY4455");
         JAXBElement<PublicationDeliveryStructure> publicationDeliveryStructure = clazzUnderTest.convertToNetex(directFlight);
@@ -54,6 +56,14 @@ public class ScheduledFlightToNetexConverterTest {
         System.out.println(xml);
 */
     }
+
+    @Test
+    @Ignore
+    public void convertDirectFlightToNetex() {}
+
+    @Test
+    @Ignore
+    public void convertStopoverFlightToNetex() {}
 
     public ScheduledDirectFlight createScheduledDirectFlight(String airlineIATA, String flightId) {
         ScheduledDirectFlight directFlight = new ScheduledDirectFlight();

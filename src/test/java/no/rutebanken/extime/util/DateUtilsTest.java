@@ -29,6 +29,7 @@ public class DateUtilsTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void testGenerateDateRangesInHeaders() {
         clazzUnderTest.generateDateRanges(exchange);
 

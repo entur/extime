@@ -2,9 +2,10 @@ package no.rutebanken.extime.model;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.Set;
 
-public class ScheduledFlight {
+public abstract class ScheduledFlight {
 
     protected String airlineIATA;
     protected String airlineFlightId;
@@ -42,6 +43,18 @@ public class ScheduledFlight {
     public void setWeekDaysPattern(Set<DayOfWeek> weekDaysPattern) {
         this.weekDaysPattern = weekDaysPattern;
     }
+
+    public abstract String getDepartureAirportIATA();
+
+    public abstract String getArrivalAirportIATA();
+
+    public abstract String getDepartureAirportName();
+
+    public abstract String getArrivalAirportName();
+
+    public abstract LocalTime getTimeOfDeparture();
+
+    public abstract LocalTime getTimeOfArrival();
 
     @Override
     public boolean equals(Object o) {

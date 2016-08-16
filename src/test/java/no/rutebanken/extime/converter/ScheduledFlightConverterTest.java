@@ -284,6 +284,7 @@ public class ScheduledFlightConverterTest {
     }
 
     @Test
+    @Ignore
     public void convertFlightToScheduledDirectFlight() throws Exception {
         Flight dummyFlight = createDummyFlight(
                 1L,

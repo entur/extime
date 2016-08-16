@@ -3,6 +3,7 @@ package no.rutebanken.extime.model;
 import com.google.common.base.Joiner;
 
 import java.math.BigInteger;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -45,6 +46,36 @@ public class ScheduledStopoverFlight extends ScheduledFlight {
                 .map(ScheduledStopover::getAirportName)
                 .collect(collectingAndThen(toList(), Collections::unmodifiableList));
         return Joiner.on("-").join(airportIATAs);
+    }
+
+    @Override
+    public String getDepartureAirportIATA() {
+        return scheduledStopovers.get(0).getAirportIATA();
+    }
+
+    @Override
+    public String getArrivalAirportIATA() {
+        return scheduledStopovers.get(scheduledStopovers.size() - 1).getAirportIATA();
+    }
+
+    @Override
+    public String getDepartureAirportName() {
+        return scheduledStopovers.get(0).getAirportName();
+    }
+
+    @Override
+    public String getArrivalAirportName() {
+        return scheduledStopovers.get(scheduledStopovers.size() - 1).getAirportName();
+    }
+
+    @Override
+    public LocalTime getTimeOfDeparture() {
+        return scheduledStopovers.get(0).getDepartureTime();
+    }
+
+    @Override
+    public LocalTime getTimeOfArrival() {
+        return scheduledStopovers.get(scheduledStopovers.size() - 1).getArrivalTime();
     }
 
     @Override

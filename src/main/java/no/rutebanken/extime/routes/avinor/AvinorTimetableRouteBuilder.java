@@ -47,11 +47,8 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
         //getContext().setTracing(true);
 
         JaxbDataFormat jaxbDataFormat = new JaxbDataFormat();
-        //JaxbDataFormat jaxbDataFormat = new JaxbDataFormat("no.rutebanken.netex.model"); // same as below
         jaxbDataFormat.setContextPath(PublicationDeliveryStructure.class.getPackage().getName());
-        //jaxbDataFormat.setSchema("classpath:person.xsd,classpath:address.xsd"); // multiple xsds
-        //jaxbDataFormat.setSchema("classpath:person.xsd"); // single xsd
-        //jaxbDataFormat.setSchema("https://raw.githubusercontent.com/rutebanken/NeTEx-XML/master/schema/1.03/xsd/NeTEx_publication.xsd"); // single xsd
+        // jaxbDataFormat.setSchema("/xsd/NeTEx_publication.xsd"); // @todo: uncomment to perform validation against schema
         jaxbDataFormat.setPrettyPrint(true);
         jaxbDataFormat.setEncoding("iso-8859-1");
 
@@ -68,6 +65,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                     .to("direct:fetchTimetableForAirport").id("FetchTimetableProcessor")
                     .log(LoggingLevel.DEBUG, this.getClass().getName(), "Flights fetched for ${header.TimetableAirportIATA}")
                 .end()
+                //.to("direct:convertToScheduledFlights").id("ConvertToScheduledFlightsProcessor")
                 .multicast()
                     .to("mock:direct:convertToDirectFlights").id("ConvertDirectFlightsProcessor")
                     .to("mock:direct:convertToStopoverFlights").id("ConvertStopoverFlightsProcessor")
@@ -160,6 +158,13 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .end()
         ;
 
+        from("direct:convertToScheduledFlights")
+                .routeId("ScheduledFlightsConverter")
+                .log(LoggingLevel.DEBUG, this.getClass().getName(), "Converting to scheduled flights")
+                .bean(ScheduledFlightConverter.class, "convertToScheduledFlights")
+                .to("direct:convertScheduledFlightsToNetex")
+        ;
+
         from("direct:convertToDirectFlights")
                 .routeId("DirectFlightsConverter")
                 .log(LoggingLevel.DEBUG, this.getClass().getName(), "Converting to scheduled direct flights")
@@ -172,6 +177,24 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .log(LoggingLevel.DEBUG, this.getClass().getName(), "Converting to scheduled stopover flights")
                 .bean(ScheduledFlightConverter.class, "convertToScheduledStopoverFlights")
                 //.to("direct:convertStopoverFlightsToNetex")
+        ;
+
+        from("direct:convertScheduledFlightsToNetex")
+                .routeId("ScheduledFlightsToNetexConverter")
+                .log(LoggingLevel.DEBUG, this.getClass().getName(), "Converting scheduled flights to NeTEx")
+                .split(body()).parallelProcessing()
+                    .log(LoggingLevel.DEBUG, this.getClass().getName(), "Converting scheduled direct flight with id: ${body.airlineFlightId}")
+                    .bean(ScheduledFlightToNetexConverter.class, "convertToNetex")
+                    //.setHeader(Exchange.CHARSET_NAME, constant("iso-8859-1"))
+                    .marshal(jaxbDataFormat)
+                    //.log(LoggingLevel.DEBUG, this.getClass().getName(), "${body}")
+                    .process(exchange -> {
+                        String uuid = getContext().getUuidGenerator().generateUuid();
+                        exchange.getIn().setHeader("FileNameGenerated", uuid);
+                    })
+                    .setHeader(Exchange.FILE_NAME, simple("${header.FileNameGenerated}.xml"))
+                    .to("file:target/netex")
+                .end()
         ;
 
         from("direct:convertDirectFlightsToNetex")
