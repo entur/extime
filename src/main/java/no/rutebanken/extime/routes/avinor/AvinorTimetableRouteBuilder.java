@@ -37,6 +37,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
     public static final String HEADER_LOWER_RANGE_ENDPOINT = "LowerRangeEndpoint";
     public static final String HEADER_UPPER_RANGE_ENDPOINT = "UpperRangeEndpoint";
 
+    static final String PROPERTY_SCHEDULED_FLIGHT_ORIGINAL_BODY = "ScheduledFlightOriginalBody";
     static final String PROPERTY_DIRECT_FLIGHT_ORIGINAL_BODY = "DirectFlightOriginalBody";
     static final String PROPERTY_STOPOVER_FLIGHT_ORIGINAL_BODY = "StopoverFlightOriginalBody";
     static final String PROPERTY_STOPOVER_ORIGINAL_BODY = "StopoverOriginalBody";
@@ -48,7 +49,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
 
         JaxbDataFormat jaxbDataFormat = new JaxbDataFormat();
         jaxbDataFormat.setContextPath(PublicationDeliveryStructure.class.getPackage().getName());
-        // jaxbDataFormat.setSchema("/xsd/NeTEx_publication.xsd"); // @todo: uncomment to perform validation against schema
+        jaxbDataFormat.setSchema("classpath:/xsd/NeTEx-XML-1.04beta/schema/xsd/NeTEx_publication.xsd");
         jaxbDataFormat.setPrettyPrint(true);
         jaxbDataFormat.setEncoding("iso-8859-1");
 
@@ -65,7 +66,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                     .to("direct:fetchTimetableForAirport").id("FetchTimetableProcessor")
                     .log(LoggingLevel.DEBUG, this.getClass().getName(), "Flights fetched for ${header.TimetableAirportIATA}")
                 .end()
-                //.to("direct:convertToScheduledFlights").id("ConvertToScheduledFlightsProcessor")
+                .to("direct:convertToScheduledFlights").id("ConvertToScheduledFlightsProcessor")
                 .multicast()
                     .to("mock:direct:convertToDirectFlights").id("ConvertDirectFlightsProcessor")
                     .to("mock:direct:convertToStopoverFlights").id("ConvertStopoverFlightsProcessor")
@@ -183,6 +184,10 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .routeId("ScheduledFlightsToNetexConverter")
                 .log(LoggingLevel.DEBUG, this.getClass().getName(), "Converting scheduled flights to NeTEx")
                 .split(body()).parallelProcessing()
+                    //.process(new DepartureIataInitProcessor())
+                    //.enrich("direct:retrieveAirportNameResource", new DepartureIataEnricherAggregationStrategy())
+                    //.process(new ArrivalIataInitProcessor())
+                    //.enrich("direct:retrieveAirportNameResource", new ArrivalIataEnricherAggregationStrategy())
                     .log(LoggingLevel.DEBUG, this.getClass().getName(), "Converting scheduled direct flight with id: ${body.airlineFlightId}")
                     .bean(ScheduledFlightToNetexConverter.class, "convertToNetex")
                     //.setHeader(Exchange.CHARSET_NAME, constant("iso-8859-1"))
@@ -402,6 +407,28 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
     class DepartureIataInitProcessor implements Processor {
         @Override
         public void process(Exchange exchange) throws Exception {
+            ScheduledFlight originalBody = exchange.getIn().getBody(ScheduledFlight.class);
+            exchange.setProperty(PROPERTY_SCHEDULED_FLIGHT_ORIGINAL_BODY, originalBody);
+            String enrichParameter = originalBody.getDepartureAirportIATA();
+            exchange.getIn().setBody(enrichParameter);
+        }
+    }
+
+    class ArrivalIataInitProcessor implements Processor {
+        @Override
+        public void process(Exchange exchange) throws Exception {
+            ScheduledFlight originalBody = exchange.getIn().getBody(ScheduledFlight.class);
+            exchange.setProperty(PROPERTY_SCHEDULED_FLIGHT_ORIGINAL_BODY, originalBody);
+            String enrichParameter = originalBody.getArrivalAirportIATA();
+            exchange.getIn().setBody(enrichParameter);
+        }
+    }
+
+    // Old processors, commented
+/*
+    class DepartureIataInitProcessor implements Processor {
+        @Override
+        public void process(Exchange exchange) throws Exception {
             ScheduledDirectFlight originalBody = exchange.getIn().getBody(ScheduledDirectFlight.class);
             exchange.setProperty(PROPERTY_DIRECT_FLIGHT_ORIGINAL_BODY, originalBody);
             String enrichParameter = originalBody.getDepartureAirportIATA();
@@ -418,6 +445,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
             exchange.getIn().setBody(enrichParameter);
         }
     }
+*/
 
     class StopverIataInitProcessor implements Processor {
         @Override
@@ -429,6 +457,30 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
         }
     }
 
+    class DepartureIataEnricherAggregationStrategy implements AggregationStrategy {
+        public Exchange aggregate(Exchange original, Exchange resource) {
+            ScheduledFlight originalBody = original.getProperty(
+                    PROPERTY_SCHEDULED_FLIGHT_ORIGINAL_BODY, ScheduledFlight.class);
+            String resourceResponse = resource.getIn().getBody(String.class);
+            //originalBody.setDepartureAirportName(resourceResponse);
+            original.getIn().setBody(originalBody);
+            return original;
+        }
+    }
+
+    class ArrivalIataEnricherAggregationStrategy implements AggregationStrategy {
+        public Exchange aggregate(Exchange original, Exchange resource) {
+            ScheduledDirectFlight originalBody = original.getProperty(
+                    PROPERTY_DIRECT_FLIGHT_ORIGINAL_BODY, ScheduledDirectFlight.class);
+            String resourceResponse = resource.getIn().getBody(String.class);
+            originalBody.setArrivalAirportName(resourceResponse);
+            original.getIn().setBody(originalBody);
+            return original;
+        }
+    }
+
+    // Old aggregation strategies
+/*
     class DepartureIataEnricherAggregationStrategy implements AggregationStrategy {
         public Exchange aggregate(Exchange original, Exchange resource) {
             ScheduledDirectFlight originalBody = original.getProperty(
@@ -450,6 +502,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
             return original;
         }
     }
+*/
 
     class StopoverIataEnricherAggregationStrategy implements AggregationStrategy {
         public Exchange aggregate(Exchange original, Exchange resource) {
