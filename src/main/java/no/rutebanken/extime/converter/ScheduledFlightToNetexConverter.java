@@ -13,6 +13,7 @@ import javax.xml.bind.JAXBElement;
 import java.math.BigInteger;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
@@ -64,7 +65,8 @@ public class ScheduledFlightToNetexConverter {
         return objectFactory().createPublicationDeliveryStructure()
                 .withVersion("1.0")
                 //.withPublicationTimestamp(ZonedDateTime.now())
-                .withPublicationTimestamp(DateTimeFormatter.ISO_INSTANT.parse("2016-08-16T08:24:21Z", Instant::from))
+                //.withPublicationTimestamp(DateTimeFormatter.ISO_INSTANT.parse("2016-08-16T08:24:21Z", Instant::from))
+                .withPublicationTimestamp(DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse("2016-08-16T08:24:21Z", OffsetDateTime::from))
                 .withParticipantRef(getAvinorConfig().getId()) // should this be Avinor or the actual flight airline?
                 .withDescription(createMultilingualString(String.format("Flight %s : %s", flightId, routePath)))
                 .withDataObjects(dataObjects);
@@ -76,7 +78,8 @@ public class ScheduledFlightToNetexConverter {
         CompositeFrame compositeFrame = objectFactory().createCompositeFrame()
                 .withVersion("1")
                 //.withCreated(ZonedDateTime.now())
-                .withCreated(DateTimeFormatter.ISO_INSTANT.parse("2016-08-16T08:24:21Z", Instant::from))
+                //.withCreated(DateTimeFormatter.ISO_INSTANT.parse("2016-08-16T08:24:21Z", Instant::from))
+                .withCreated(DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse("2016-08-16T08:24:21Z", OffsetDateTime::from))
                 .withId(String.format("%s:Norway:CompositeFrame:%s", getAvinorConfig().getId(), flightId))
                 .withCodespaces(codespaces)
                 .withFrames(frames);
@@ -130,7 +133,8 @@ public class ScheduledFlightToNetexConverter {
         Network network = objectFactory().createNetwork()
                 .withVersion("1")
                 //.withChanged(ZonedDateTime.now())
-                .withChanged(DateTimeFormatter.ISO_INSTANT.parse("2016-08-16T08:24:21Z", Instant::from))
+                //.withChanged(DateTimeFormatter.ISO_INSTANT.parse("2016-08-16T08:24:21Z", Instant::from))
+                .withChanged(DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse("2016-08-16T08:24:21Z", OffsetDateTime::from))
                 .withId(String.format("%s:GroupOfLine:%s", getAvinorConfig().getId(), getAvinorConfig().getName()))
                 .withName(createMultilingualString(getAvinorConfig().getName()));
 
@@ -262,9 +266,11 @@ public class ScheduledFlightToNetexConverter {
                 .withVersion("any")
                 .withId(String.format("%s:AvailabilityCondition:1", getAvinorConfig().getId()))
                 //.withFromDate(ZonedDateTime.of(dateOfOperation, LocalTime.MIN, ZoneId.of("Z")))
-                .withFromDate(DateTimeFormatter.ISO_INSTANT.parse("2016-08-16T08:24:21Z", Instant::from))
+                //.withFromDate(DateTimeFormatter.ISO_INSTANT.parse("2016-08-16T08:24:21Z", Instant::from))
+                .withFromDate(DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse("2016-08-16T08:24:21Z", OffsetDateTime::from))
                 //.withToDate(ZonedDateTime.of(dateOfOperation, LocalTime.MIN, ZoneId.of("Z")))
-                .withToDate(DateTimeFormatter.ISO_INSTANT.parse("2016-08-16T08:24:21Z", Instant::from))
+                //.withToDate(DateTimeFormatter.ISO_INSTANT.parse("2016-08-16T08:24:21Z", Instant::from))
+                .withToDate(DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse("2016-08-16T08:24:21Z", OffsetDateTime::from))
                 .withIsAvailable(isAvailable);
         return objectFactory().createAvailabilityCondition(availabilityCondition);
     }
