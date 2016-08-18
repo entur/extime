@@ -38,13 +38,14 @@ public class ScheduledFlightToNetexConverter {
 
         Direction direction = createDirection(flightId);
         Route route = createRoute(routePoints, flightId, routePath, direction);
-        Line line = createLine(route, flightId, routePath);
+        Operator operator = resolveOperatorFromIATA(scheduledFlight.getAirlineIATA());
+        Line line = createLine(route, flightId, routePath, operator);
         ServicePattern servicePattern = createServicePattern(flightId, routePath, route, scheduledStopPoints);
         List<DayType> dayTypes = Collections.singletonList(createDayType(flightId));
         List<ServiceJourney> serviceJourneys = createServiceJourneyList(scheduledFlight, dayTypes, servicePattern, line, scheduledStopPoints);
 
         Frames_RelStructure frames = objectFactory().createFrames_RelStructure();
-        frames.getCommonFrame().add(createResourceFrame(scheduledFlight.getAirlineIATA()));
+        frames.getCommonFrame().add(createResourceFrame(scheduledFlight.getAirlineIATA(), operator));
         frames.getCommonFrame().add(createSiteFrame(stopPlaces));
         frames.getCommonFrame().add(createServiceFrame(direction, flightId, routePoints, route,
                 line, scheduledStopPoints, servicePattern, stopAssignments));
@@ -87,9 +88,9 @@ public class ScheduledFlightToNetexConverter {
     }
 
     /**
-     * @todo: Consider adding a paramter for default codespace (avinor), and not use the avinor name from config
+     * @todo: Consider adding a parameter for default codespace (avinor), and not use the avinor name from config
      */
-    public JAXBElement<ResourceFrame> createResourceFrame(String airlineIATA) {
+    public JAXBElement<ResourceFrame> createResourceFrame(String airlineIATA, Operator operator) {
         CodespaceRefStructure codespaceRefStructure = objectFactory().createCodespaceRefStructure()
                 .withRef(avinorCodespace().getId());
 
@@ -104,8 +105,6 @@ public class ScheduledFlightToNetexConverter {
 
         OrganisationsInFrame_RelStructure organisationsInFrame = objectFactory().createOrganisationsInFrame_RelStructure();
         organisationsInFrame.getOrganisation_().add(objectFactory().createAuthority(createAuthority()));
-
-        Operator operator = resolveOperatorFromIATA(airlineIATA);
         organisationsInFrame.getOrganisation_().add(objectFactory().createOperator(operator));
 
         ResourceFrame resourceFrame = objectFactory().createResourceFrame()
@@ -402,18 +401,21 @@ public class ScheduledFlightToNetexConverter {
                 .withDirectionRef(directionRefStructure);
     }
 
-    private Line createLine(Route route, String flightId, String routePath) {
+    private Line createLine(Route route, String flightId, String routePath, Operator operator) {
         RouteRefStructure routeRefStructure = objectFactory().createRouteRefStructure()
                 .withVersion("1")
                 .withRef(route.getId());
         RouteRefs_RelStructure routeRefs = objectFactory().createRouteRefs_RelStructure()
                 .withRouteRef(routeRefStructure);
+        OperatorRefStructure operatorRefStructure = objectFactory().createOperatorRefStructure()
+                .withRef(operator.getId());
         return objectFactory().createLine()
                 .withVersion("any")
                 .withId(String.format("%s:Line:%s", getAvinorConfig().getId(), flightId))
                 .withName(createMultilingualString(routePath))
                 .withTransportMode(AllVehicleModesOfTransportEnumeration.AIR)
                 .withPublicCode(flightId)
+                .withOperatorRef(operatorRefStructure)
                 .withRoutes(routeRefs);
     }
 
