@@ -45,15 +45,15 @@ public class DateUtils {
         return localDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
     }
 
-    static class WorkDays {
-        static boolean isWorkDay(TemporalAccessor date) {
+    public static class WorkDays {
+        public static boolean isWorkDay(TemporalAccessor date) {
             int day = date.get(ChronoField.DAY_OF_WEEK);
             return day >= 1 && day <= 5;
         }
     }
 
-    static class WeekendDays {
-        static boolean isWeekendkDay(TemporalAccessor date) {
+    public static class WeekendDays {
+        public static boolean isWeekendkDay(TemporalAccessor date) {
             int day = date.get(ChronoField.DAY_OF_WEEK);
             return day >= 6 && day <= 7;
         }

@@ -8,8 +8,12 @@ import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.function.Predicate;
 
 import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEADER_TIMETABLE_LARGE_AIRPORT_RANGE;
 import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEADER_TIMETABLE_SMALL_AIRPORT_RANGE;
@@ -84,6 +88,92 @@ public class DateUtilsTest {
                 .isNotNull()
                 .isNotEmpty()
                 .isEqualTo("2017-01-01");
+    }
+
+    @Test
+    public void testIsWorkDays() {
+        List<DayOfWeek> workDays = Arrays.asList(
+                DayOfWeek.MONDAY,
+                DayOfWeek.TUESDAY,
+                DayOfWeek.WEDNESDAY,
+                DayOfWeek.THURSDAY,
+                DayOfWeek.FRIDAY
+        );
+        List<Boolean> results = new ArrayList<>();
+
+        workDays.forEach(workDay -> {
+            Boolean isWorkDay = workDay.query(DateUtils.WorkDays::isWorkDay);
+            results.add(isWorkDay);
+        });
+
+        Assertions.assertThat(results)
+                .isNotNull()
+                .isNotEmpty()
+                .hasSameSizeAs(workDays)
+                .allMatch((Predicate<Boolean>) isWorkDay -> isWorkDay.equals(Boolean.TRUE));
+    }
+
+    @Test
+    public void testIsNotWorkDays() {
+        List<DayOfWeek> weekendDays = Arrays.asList(
+                DayOfWeek.SATURDAY,
+                DayOfWeek.SUNDAY
+        );
+        List<Boolean> results = new ArrayList<>();
+
+        weekendDays.forEach(workDay -> {
+            Boolean isWorkDay = workDay.query(DateUtils.WorkDays::isWorkDay);
+            results.add(isWorkDay);
+        });
+
+        Assertions.assertThat(results)
+                .isNotNull()
+                .isNotEmpty()
+                .hasSameSizeAs(weekendDays)
+                .allMatch((Predicate<Boolean>) isWorkDay -> isWorkDay.equals(Boolean.FALSE));
+    }
+
+    @Test
+    public void testIsNotWeekendDays() {
+        List<DayOfWeek> workDays = Arrays.asList(
+                DayOfWeek.MONDAY,
+                DayOfWeek.TUESDAY,
+                DayOfWeek.WEDNESDAY,
+                DayOfWeek.THURSDAY,
+                DayOfWeek.FRIDAY
+        );
+        List<Boolean> results = new ArrayList<>();
+
+        workDays.forEach(workDay -> {
+            Boolean isWeekendDay = workDay.query(DateUtils.WeekendDays::isWeekendkDay);
+            results.add(isWeekendDay);
+        });
+
+        Assertions.assertThat(results)
+                .isNotNull()
+                .isNotEmpty()
+                .hasSameSizeAs(workDays)
+                .allMatch((Predicate<Boolean>) isWeekendDay -> isWeekendDay.equals(Boolean.FALSE));
+    }
+
+    @Test
+    public void testIsWeekendDays() {
+        List<DayOfWeek> weekendDays = Arrays.asList(
+                DayOfWeek.SATURDAY,
+                DayOfWeek.SUNDAY
+        );
+        List<Boolean> results = new ArrayList<>();
+
+        weekendDays.forEach(weekendDay -> {
+            Boolean isWeekendDay = weekendDay.query(DateUtils.WeekendDays::isWeekendkDay);
+            results.add(isWeekendDay);
+        });
+
+        Assertions.assertThat(results)
+                .isNotNull()
+                .isNotEmpty()
+                .hasSameSizeAs(weekendDays)
+                .allMatch((Predicate<Boolean>) isWeekendDay -> isWeekendDay.equals(Boolean.TRUE));
     }
 
 }

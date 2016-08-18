@@ -3,6 +3,7 @@ package no.rutebanken.extime.converter;
 import com.google.common.collect.Lists;
 import no.rutebanken.extime.config.*;
 import no.rutebanken.extime.model.*;
+import no.rutebanken.extime.util.DateUtils;
 import no.rutebanken.netex.model.*;
 import no.rutebanken.netex.model.PublicationDeliveryStructure.DataObjects;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,14 +12,29 @@ import org.springframework.stereotype.Component;
 
 import javax.xml.bind.JAXBElement;
 import java.math.BigInteger;
-import java.time.Instant;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Component(value = "scheduledFlightToNetexConverter")
 public class ScheduledFlightToNetexConverter {
+
+    private static final HashMap<DayOfWeek, DayOfWeekEnumeration> DAY_OF_WEEK_MAP = new HashMap<>();
+    private static final String WORK_DAYS_DISPLAY_NAME = "Ukedager (mandag til fredag)";
+    private static final String WEEKEND_DAYS_DISPLAY_NAME = "Helgdager (lørdag og søndag)";
+
+    static {
+        DAY_OF_WEEK_MAP.put(DayOfWeek.MONDAY, DayOfWeekEnumeration.MONDAY);
+        DAY_OF_WEEK_MAP.put(DayOfWeek.TUESDAY, DayOfWeekEnumeration.TUESDAY);
+        DAY_OF_WEEK_MAP.put(DayOfWeek.WEDNESDAY, DayOfWeekEnumeration.WEDNESDAY);
+        DAY_OF_WEEK_MAP.put(DayOfWeek.THURSDAY, DayOfWeekEnumeration.THURSDAY);
+        DAY_OF_WEEK_MAP.put(DayOfWeek.FRIDAY, DayOfWeekEnumeration.FRIDAY);
+        DAY_OF_WEEK_MAP.put(DayOfWeek.SATURDAY, DayOfWeekEnumeration.SATURDAY);
+        DAY_OF_WEEK_MAP.put(DayOfWeek.SUNDAY, DayOfWeekEnumeration.SUNDAY);
+    }
 
     private AvinorAuthorityConfig avinorConfig;
     private NhrAuthorityConfig nhrConfig;
@@ -41,7 +57,7 @@ public class ScheduledFlightToNetexConverter {
         Operator operator = resolveOperatorFromIATA(scheduledFlight.getAirlineIATA());
         Line line = createLine(route, flightId, routePath, operator);
         ServicePattern servicePattern = createServicePattern(flightId, routePath, route, scheduledStopPoints);
-        List<DayType> dayTypes = Collections.singletonList(createDayType(flightId));
+        List<DayType> dayTypes = createDayTypes(scheduledFlight.getWeekDaysPattern(), flightId);
         List<ServiceJourney> serviceJourneys = createServiceJourneyList(scheduledFlight, dayTypes, servicePattern, line, scheduledStopPoints);
 
         Frames_RelStructure frames = objectFactory().createFrames_RelStructure();
@@ -184,14 +200,25 @@ public class ScheduledFlightToNetexConverter {
         return objectFactory().createServiceCalendarFrame(serviceCalendarFrame);
     }
 
-    public DayType createDayType(String flightId) {
-        List<DayOfWeekEnumeration> daysOfWeek = Arrays.asList(
-                DayOfWeekEnumeration.MONDAY,
-                DayOfWeekEnumeration.TUESDAY,
-                DayOfWeekEnumeration.WEDNESDAY,
-                DayOfWeekEnumeration.THURSDAY,
-                DayOfWeekEnumeration.FRIDAY
-        );
+    private List<DayType> createDayTypes(Set<DayOfWeek> weekDaysPattern, String flightId) {
+        Map<Boolean, List<DayOfWeek>> dayOfWeeksByDayType = weekDaysPattern.stream()
+                .collect(Collectors.partitioningBy(dayOfWeek -> dayOfWeek.query(DateUtils.WorkDays::isWorkDay)));
+        List<DayOfWeek> workDays = dayOfWeeksByDayType.get(Boolean.TRUE);
+        List<DayOfWeek> weekendDays = dayOfWeeksByDayType.get(Boolean.FALSE);
+        List<DayType> dayTypes = Lists.newArrayList();
+
+        if (!workDays.isEmpty()) {
+            dayTypes.add(createDayType(workDays, flightId, true));
+        }
+        if (!weekendDays.isEmpty()) {
+            dayTypes.add(createDayType(weekendDays, flightId, false));
+        }
+        return dayTypes;
+    }
+
+    public DayType createDayType(List<DayOfWeek> daysOfWeekPattern, String flightId, boolean isWorkDays) {
+        List<DayOfWeekEnumeration> daysOfWeek = Lists.newArrayList();
+        daysOfWeekPattern.forEach(dayOfWeek -> daysOfWeek.add(DAY_OF_WEEK_MAP.get(dayOfWeek)));
 
         PropertyOfDay propertyOfDayWeekDays = objectFactory().createPropertyOfDay();
         propertyOfDayWeekDays.getDaysOfWeek().addAll(daysOfWeek);
@@ -200,8 +227,8 @@ public class ScheduledFlightToNetexConverter {
 
         return objectFactory().createDayType()
                 .withVersion("any")
-                .withId(String.format("%s:dt:weekday", flightId))
-                .withName(createMultilingualString("Ukedager (mandag til fredag)"))
+                .withId(String.format("%s:dt:%s", flightId, isWorkDays ? "weekday" : "weekend"))
+                .withName(createMultilingualString(isWorkDays ? WORK_DAYS_DISPLAY_NAME : WEEKEND_DAYS_DISPLAY_NAME))
                 .withProperties(propertiesOfDay);
     }
 
@@ -275,6 +302,7 @@ public class ScheduledFlightToNetexConverter {
     }
 
     // @todo: add the journey pattern reference to ServiceJourney?
+    // @todo: refactor and move reusable objects one level up
     public List<ServiceJourney> createServiceJourneyList(ScheduledFlight scheduledFlight, List<DayType> dayTypes,
                                                          ServicePattern servicePattern, Line line, List<ScheduledStopPoint> scheduledStopPoints) throws IllegalArgumentException {
         List<ServiceJourney> serviceJourneyList = new ArrayList<>();
@@ -315,6 +343,12 @@ public class ScheduledFlightToNetexConverter {
             serviceJourneyList.add(datedServiceJourney);
             return serviceJourneyList;
         } else if (scheduledFlight instanceof ScheduledStopoverFlight) {
+            DayTypeRefs_RelStructure dayTypeStructure = objectFactory().createDayTypeRefs_RelStructure();
+            dayTypes.forEach(dayType -> {
+                DayTypeRefStructure dayTypeRef = objectFactory().createDayTypeRefStructure().withRef(dayType.getId());
+                dayTypeStructure.getDayTypeRef().add(objectFactory().createDayTypeRef(dayTypeRef));
+            });
+
             TimetabledPassingTimes_RelStructure passingTimesRelStructure = objectFactory().createTimetabledPassingTimes_RelStructure();
             List<StopPointInJourneyPattern> journeyPatternStopPoints = servicePattern.getPointsInSequence().getStopPointInJourneyPattern();
 
@@ -342,7 +376,7 @@ public class ScheduledFlightToNetexConverter {
                     .withVersion("any")
                     .withId(String.format("%s:ServiceJourney:%s", getAvinorConfig().getId(), scheduledFlight.getAirlineFlightId()))
                     .withDepartureTime(scheduledStopovers.get(0).getDepartureTime())
-                    //.withDayTypes() @todo: implement!
+                    .withDayTypes(dayTypeStructure)
                     //.withJourneyPatternRef() @todo: implement!
                     .withLineRef(objectFactory().createLineRef(objectFactory().createLineRefStructure().withRef(line.getId())))
                     .withPassingTimes(passingTimesRelStructure);
