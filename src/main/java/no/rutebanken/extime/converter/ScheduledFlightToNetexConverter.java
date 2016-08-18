@@ -27,9 +27,7 @@ public class ScheduledFlightToNetexConverter {
 
     public JAXBElement<PublicationDeliveryStructure> convertToNetex(ScheduledFlight scheduledFlight) {
         LocalDate dateOfOperation = scheduledFlight.getDateOfOperation();
-        String routePath = String.format("%s-%s",
-                scheduledFlight.getDepartureAirportName() != null ? scheduledFlight.getDepartureAirportName() : "TEST-IATA",
-                scheduledFlight.getArrivalAirportName() != null ? scheduledFlight.getArrivalAirportName() : "TEST-IATA");
+        String routePath = String.format("%s-%s", scheduledFlight.getDepartureAirportName(), scheduledFlight.getArrivalAirportName());
         String flightId = scheduledFlight.getAirlineFlightId();
 
         List<StopPlace> stopPlaces = createStopPlaces(scheduledFlight);
@@ -225,17 +223,15 @@ public class ScheduledFlightToNetexConverter {
             StopPlace departureStopPlace = objectFactory().createStopPlace()
                     .withVersion("1")
                     .withId("NHR:StopArea:03011537") // @todo: retrieve the actual stopplace id from NHR
-                    .withName(createMultilingualString(scheduledFlight.getDepartureAirportName() != null ? scheduledFlight.getDepartureAirportName() : "TEST-IATA"))
+                    .withName(createMultilingualString(scheduledFlight.getDepartureAirportName()))
                     .withShortName(createMultilingualString(scheduledFlight.getDepartureAirportIATA()))
-                    // .withQuays() // @todo: consider adding quays to stopplace, refering to gates in aviation, if available
                     .withTransportMode(VehicleModeEnumeration.AIR)
                     .withStopPlaceType(StopTypeEnumeration.AIRPORT);
             StopPlace arrivalStopPlace = objectFactory().createStopPlace()
                     .withVersion("1")
                     .withId("NHR:StopArea:03011521")  // @todo: retrieve the actual stopplace id from NHR
-                    .withName(createMultilingualString(scheduledFlight.getArrivalAirportName() != null ? scheduledFlight.getArrivalAirportName() : "TEST-IATA"))
+                    .withName(createMultilingualString(scheduledFlight.getArrivalAirportName()))
                     .withShortName(createMultilingualString(scheduledFlight.getArrivalAirportIATA()))
-                    // .withQuays() // @todo: consider adding quays to stopplace, refering to gates in aviation, if available
                     .withTransportMode(VehicleModeEnumeration.AIR)
                     .withStopPlaceType(StopTypeEnumeration.AIRPORT);
             return Lists.newArrayList(departureStopPlace, arrivalStopPlace);
@@ -247,7 +243,7 @@ public class ScheduledFlightToNetexConverter {
                 StopPlace stopPlace = objectFactory().createStopPlace()
                         .withVersion("1")
                         .withId(String.format("NHR:StopArea:0301152%d", idx[0]))  // @todo: retrieve the actual stopplace id from NHR
-                        .withName(createMultilingualString(scheduledStopover.getAirportName() != null ? scheduledStopover.getAirportName() : "TEST-IATA"))
+                        .withName(createMultilingualString(scheduledStopover.getAirportName()))
                         .withShortName(createMultilingualString(scheduledStopover.getAirportIATA()))
                         .withTransportMode(VehicleModeEnumeration.AIR)
                         .withStopPlaceType(StopTypeEnumeration.AIRPORT);
@@ -420,11 +416,11 @@ public class ScheduledFlightToNetexConverter {
             ScheduledStopPoint scheduledDepartureStopPoint = objectFactory().createScheduledStopPoint()
                     .withVersion("1")
                     .withId(String.format("%s:StopPoint:%s101001", getAvinorConfig().getId(), scheduledFlight.getAirlineFlightId()))
-                    .withName(createMultilingualString(scheduledFlight.getDepartureAirportName() != null ? scheduledFlight.getDepartureAirportName() : "TEST-IATA"));
+                    .withName(createMultilingualString(scheduledFlight.getDepartureAirportName()));
             ScheduledStopPoint scheduledArrivalStopPoint = objectFactory().createScheduledStopPoint()
                     .withVersion("1")
                     .withId(String.format("%s:StopPoint:%s101002", getAvinorConfig().getId(), scheduledFlight.getAirlineFlightId()))
-                    .withName(createMultilingualString(scheduledFlight.getArrivalAirportName() != null ? scheduledFlight.getArrivalAirportName() : "TEST-IATA"));
+                    .withName(createMultilingualString(scheduledFlight.getArrivalAirportName()));
             return Lists.newArrayList(scheduledDepartureStopPoint, scheduledArrivalStopPoint);
         } else if (scheduledFlight instanceof ScheduledStopoverFlight) {
             List<ScheduledStopover> scheduledStopovers = ((ScheduledStopoverFlight) scheduledFlight).getScheduledStopovers();
@@ -434,7 +430,7 @@ public class ScheduledFlightToNetexConverter {
                 ScheduledStopPoint scheduledStopPoint = objectFactory().createScheduledStopPoint()
                         .withVersion("1")
                         .withId(String.format("%s:StopPoint:%s10100%d", getAvinorConfig().getId(), scheduledFlight.getAirlineFlightId(), idx[0]))
-                        .withName(createMultilingualString(stopover.getAirportName() != null ? stopover.getAirportName() : "TEST-IATA"));
+                        .withName(createMultilingualString(stopover.getAirportName()));
                 scheduledStopPoints.add(scheduledStopPoint);
                 idx[0]++;
             });
@@ -543,7 +539,7 @@ public class ScheduledFlightToNetexConverter {
         List<JAXBElement<?>> organisationRest = createOrganisationRest(
                 getAvinorConfig().getCompanyNumber(), getAvinorConfig().getName(),
                 getAvinorConfig().getLegalName(), getAvinorConfig().getPhone(),
-                getAvinorConfig().getUrl(), getAvinorConfig().getDetails(), OrganisationTypeEnumeration.AUTHORITY);
+                getAvinorConfig().getUrl(), OrganisationTypeEnumeration.AUTHORITY);
         return objectFactory().createAuthority()
                 .withVersion("1")
                 .withId(String.format("%s:Company:1", getAvinorConfig().getId()))
@@ -554,7 +550,7 @@ public class ScheduledFlightToNetexConverter {
         List<JAXBElement<?>> operatorRest = createOrganisationRest(
                 getSasConfig().getCompanyNumber(), getSasConfig().getName(),
                 getSasConfig().getLegalName(), getSasConfig().getPhone(),
-                getSasConfig().getUrl(), getSasConfig().getDetails(), OrganisationTypeEnumeration.OPERATOR);
+                getSasConfig().getUrl(), OrganisationTypeEnumeration.OPERATOR);
         return objectFactory().createOperator()
                 .withVersion("1")
                 .withId(String.format("%s:Company:2", getSasConfig().getName()))
@@ -565,7 +561,7 @@ public class ScheduledFlightToNetexConverter {
         List<JAXBElement<?>> operatorRest = createOrganisationRest(
                 getWideroeConfig().getCompanyNumber(), getWideroeConfig().getName(),
                 getWideroeConfig().getLegalName(), getWideroeConfig().getPhone(),
-                getWideroeConfig().getUrl(), getWideroeConfig().getDetails(), OrganisationTypeEnumeration.OPERATOR);
+                getWideroeConfig().getUrl(), OrganisationTypeEnumeration.OPERATOR);
         return objectFactory().createOperator()
                 .withVersion("1")
                 .withId(String.format("%s:Company:2", getWideroeConfig().getName()))
@@ -576,7 +572,7 @@ public class ScheduledFlightToNetexConverter {
         List<JAXBElement<?>> operatorRest = createOrganisationRest(
                 getNorwegianConfig().getCompanyNumber(), getNorwegianConfig().getName(),
                 getNorwegianConfig().getLegalName(), getNorwegianConfig().getPhone(),
-                getNorwegianConfig().getUrl(), getNorwegianConfig().getDetails(), OrganisationTypeEnumeration.OPERATOR);
+                getNorwegianConfig().getUrl(), OrganisationTypeEnumeration.OPERATOR);
         return objectFactory().createOperator()
                 .withVersion("1")
                 .withId(String.format("%s:Company:2", getNorwegianConfig().getName()))
@@ -584,31 +580,39 @@ public class ScheduledFlightToNetexConverter {
     }
 
     private Operator createUnknowOperator(String airlineIATA) {
+        List<JAXBElement<?>> dummyOperatorRest = createOrganisationRest(
+                "999999999",
+                airlineIATA,
+                airlineIATA,
+                "0047 999 99 999",
+                String.format("http://%s.no/", airlineIATA),
+                OrganisationTypeEnumeration.OPERATOR
+        );
         return objectFactory().createOperator()
                 .withVersion("1")
-                .withId(String.format("UNKNOWN-%s:Company:2", airlineIATA));
-                //.withRest(operatorRest);
+                .withId(String.format("UNKNOWN-%s:Company:2", airlineIATA))
+                .withRest(dummyOperatorRest);
     }
 
     public List<JAXBElement<?>> createOrganisationRest(String companyNumber, String name, String legalName,
-                                                       String phone, String url, String details, OrganisationTypeEnumeration organisationType) {
+                                                       String phone, String url, OrganisationTypeEnumeration organisationType) {
         JAXBElement<String> companyNumberStructure = objectFactory()
                 .createOrganisation_VersionStructureCompanyNumber(companyNumber);
         JAXBElement<MultilingualString> nameStructure = objectFactory()
                 .createOrganisation_VersionStructureName(createMultilingualString(name));
         JAXBElement<MultilingualString> legalNameStructure = objectFactory()
                 .createOrganisation_VersionStructureLegalName(createMultilingualString(legalName));
-        JAXBElement<ContactStructure> contactStructure = createContactStructure(phone, url, details);
+        JAXBElement<ContactStructure> contactStructure = createContactStructure(phone, url);
         JAXBElement<List<OrganisationTypeEnumeration>> organisationTypes = objectFactory()
                 .createOrganisation_VersionStructureOrganisationType(Collections.singletonList(organisationType));
         return Lists.newArrayList(companyNumberStructure, nameStructure, legalNameStructure, contactStructure, organisationTypes);
     }
 
-    public JAXBElement<ContactStructure> createContactStructure(String phone, String url, String furtherDetails) {
+    public JAXBElement<ContactStructure> createContactStructure(String phone, String url) {
         ContactStructure contactStructure = objectFactory().createContactStructure()
                 .withPhone(phone)
-                .withUrl(url)
-                .withFurtherDetails(createMultilingualString(furtherDetails));
+                .withUrl(url);
+                //.withFurtherDetails(createMultilingualString(furtherDetails));
         return objectFactory().createOrganisation_VersionStructureContactDetails(contactStructure);
     }
 
