@@ -70,13 +70,8 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
         from("direct:fetchAirportNameByIATA")
                 .routeId("FetchAirportNameByIata")
                 .log(LoggingLevel.DEBUG, this.getClass().getName(), "Fetching airport name by IATA: ${header.TimetableAirportIATA}")
-                .setHeader(CacheConstants.CACHE_OPERATION, constant(CacheConstants.CACHE_OPERATION_CHECK))
-                .setHeader(CacheConstants.CACHE_KEY, simpleF("${header.%s}", HEADER_TIMETABLE_AIRPORT_IATA))
-                .to("cache://avinorTimetableCache").id("TimetableCacheCheckProcessor")
-                .choice().when(header(CacheConstants.CACHE_ELEMENT_WAS_FOUND).isNull())
-                    .to("direct:fetchAirportNameFromFeed")
-                    .to("direct:addAirportNameToCache")
-                .end()
+                .to("direct:fetchAirportNameFromFeed")
+                .to("direct:addAirportNameToCache")
         ;
 
         from("direct:fetchTimetableForAirport")
@@ -99,9 +94,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .routeId("FetchAirportNameFromFeed")
                 .log(LoggingLevel.DEBUG, this.getClass().getName(), "Fetching airport name from feed by IATA: ${header.TimetableAirportIATA}")
                 .setHeader(HEADER_EXTIME_HTTP_URI, simple("{{avinor.airport.feed.endpoint}}"))
-                .log(LoggingLevel.DEBUG, this.getClass().getName(), "EXTIME HTTP URL SET TO: ${header.ExtimeHttpUri}")
                 .setHeader(HEADER_EXTIME_URI_PARAMETERS, simpleF("airport=${header.%s}&shortname=Y&ukname=Y", HEADER_TIMETABLE_AIRPORT_IATA))
-                .log(LoggingLevel.DEBUG, this.getClass().getName(), "URI PARAMETERS SET TO: ${header.ExtimeUriParameters}")
                 .to("direct:fetchFromHttpResource").id("FetchAirportNameFromHttpResourceProcessor")
                 .convertBodyTo(AirportNames.class)
                 .process(new ExtractAirportNameProcessor())
@@ -160,6 +153,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .to("direct:convertScheduledFlightsToNetex")
         ;
 
+        // @todo: write unit test for this route
         from("direct:convertScheduledFlightsToNetex")
                 .routeId("ScheduledFlightsToNetexConverter")
                 .log(LoggingLevel.DEBUG, this.getClass().getName(), "Converting scheduled flights to NeTEx")
@@ -179,6 +173,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .end()
         ;
 
+        // @todo: write unit test for this route
         from("direct:enrichScheduledFlightWithAirportNames")
                 .routeId("ScheduledFlightAirportNameEnricher")
                 .choice()
@@ -194,6 +189,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .end()
         ;
 
+        // @todo: write unit test for this route
         from("direct:enrichScheduledStopoverFlightWithAirportNames")
                 .routeId("ScheduledStopoverFlightAirportNameEnricher")
                 .setHeader(HEADER_STOPOVER_FLIGHT_ORIGINAL_BODY, body())
@@ -203,21 +199,27 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .end()
         ;
 
-        /**
-         * @todo: add support for fetching and caching airport names when not found in cache (remove block comment!)
-         */
         from("direct:retrieveAirportNameResource")
                 .routeId("AirportNameResourceRetriever")
+                .setHeader(CacheConstants.CACHE_OPERATION, constant(CacheConstants.CACHE_OPERATION_CHECK))
+                .setHeader(CacheConstants.CACHE_KEY, simple("${body}"))
+                .to("cache://avinorTimetableCache").id("AirportNameCacheCheckProcessor")
+                .choice()
+                    .when(header(CacheConstants.CACHE_ELEMENT_WAS_FOUND).isNull())
+                        .setHeader(HEADER_TIMETABLE_AIRPORT_IATA, simple("${body}"))
+                        .to("direct:fetchAirportNameByIATA")
+                        .to("direct:getAirportNameFromCache")
+                    .otherwise()
+                        .to("direct:getAirportNameFromCache")
+                .end()
+        ;
+
+        from("direct:getAirportNameFromCache")
+                .routeId("AirportNameGetFromCache")
                 .setHeader(CacheConstants.CACHE_OPERATION, constant(CacheConstants.CACHE_OPERATION_GET))
                 .setHeader(CacheConstants.CACHE_KEY, simple("${body}"))
+                .log(LoggingLevel.DEBUG, this.getClass().getName(), String.format("Getting from cache by key: ${header.%s}", CacheConstants.CACHE_KEY))
                 .to("cache://avinorTimetableCache").id("CacheGetAirportNameProcessor")
-/*
-                .choice().when(header(CacheConstants.CACHE_ELEMENT_WAS_FOUND).isNull())
-                    .setHeader(HEADER_TIMETABLE_AIRPORT_IATA, simple("${body.departureAirportIATA}"))
-                    .to("direct:fetchAirportNameFromFeed")
-                    .to("direct:addAirportNameToCache")
-                .end()
-*/
         ;
 
         from("direct:addAirportNameToCache")
@@ -225,7 +227,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .setHeader(CacheConstants.CACHE_OPERATION, constant(CacheConstants.CACHE_OPERATION_ADD))
                 .setHeader(CacheConstants.CACHE_KEY, simpleF("${header.%s}", HEADER_TIMETABLE_AIRPORT_IATA))
                 .log(LoggingLevel.DEBUG, this.getClass().getName(), String.format("Adding to cache: ${header.%s}:${body}", CacheConstants.CACHE_KEY))
-                .to("cache://avinorTimetableCache").id("TimetableCacheAddProcessor")
+                .to("cache://avinorTimetableCache").id("CacheAddAirportNameProcessor")
         ;
 
         from("cache://avinorTimetableCache" +

@@ -88,14 +88,10 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
     }
 
     @Test
-    public void testFetchAirportNameByIataWhenInCache() throws Exception {
+    public void testFetchAirportNameByIata() throws Exception {
         context.getRouteDefinition("FetchAirportNameByIata").adviceWith(context, new AdviceWithRouteBuilder() {
             @Override
             public void configure() throws Exception {
-                weaveById("TimetableCacheCheckProcessor").replace().to("mock:cacheCheck");
-                interceptSendToEndpoint("mock:cacheCheck").process(exchange -> {
-                    exchange.getIn().setHeader(CacheConstants.CACHE_ELEMENT_WAS_FOUND, 1);
-                });
                 mockEndpointsAndSkip(
                         "direct:fetchAirportNameFromFeed",
                         "direct:addAirportNameToCache"
@@ -104,38 +100,8 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         });
         context.start();
 
-        getMockEndpoint("mock:cacheCheck").expectedMessageCount(1);
-        getMockEndpoint("mock:cacheCheck").expectedHeaderReceived(CacheConstants.CACHE_OPERATION, CacheConstants.CACHE_OPERATION_CHECK);
-        getMockEndpoint("mock:cacheCheck").expectedHeaderReceived(CacheConstants.CACHE_KEY, "OSL");
-        getMockEndpoint("mock:direct:fetchAirportNameFromFeed").expectedMessageCount(0);
-        getMockEndpoint("mock:direct:addAirportNameToCache").expectedMessageCount(0);
-
-        template.sendBodyAndHeader("direct:fetchAirportNameByIATA", null, HEADER_TIMETABLE_AIRPORT_IATA, "OSL");
-
-        assertMockEndpointsSatisfied();
-    }
-
-    @Test
-    public void testFetchAirportNameByIataWhenNotInCache() throws Exception {
-        context.getRouteDefinition("FetchAirportNameByIata").adviceWith(context, new AdviceWithRouteBuilder() {
-            @Override
-            public void configure() throws Exception {
-                weaveById("TimetableCacheCheckProcessor").replace().to("mock:cacheCheck");
-                interceptSendToEndpoint("mock:cacheCheck").process(exchange -> {
-                    exchange.getIn().setHeader(CacheConstants.CACHE_ELEMENT_WAS_FOUND, null);
-                });
-                mockEndpointsAndSkip(
-                        "direct:fetchAirportNameFromFeed",
-                        "direct:addAirportNameToCache"
-                );
-            }
-        });
-        context.start();
-
-        getMockEndpoint("mock:cacheCheck").expectedMessageCount(1);
-        getMockEndpoint("mock:cacheCheck").expectedHeaderReceived(CacheConstants.CACHE_OPERATION, CacheConstants.CACHE_OPERATION_CHECK);
-        getMockEndpoint("mock:cacheCheck").expectedHeaderReceived(CacheConstants.CACHE_KEY, "OSL");
         getMockEndpoint("mock:direct:fetchAirportNameFromFeed").expectedMessageCount(1);
+        getMockEndpoint("mock:direct:fetchAirportNameFromFeed").expectedHeaderReceived(HEADER_TIMETABLE_AIRPORT_IATA, "OSL");
         getMockEndpoint("mock:direct:addAirportNameToCache").expectedMessageCount(1);
 
         template.sendBodyAndHeader("direct:fetchAirportNameByIATA", null, HEADER_TIMETABLE_AIRPORT_IATA, "OSL");
@@ -379,7 +345,7 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         context.getRouteDefinition("AirportNameAddToCache").adviceWith(context, new AdviceWithRouteBuilder() {
             @Override
             public void configure() throws Exception {
-                weaveById("TimetableCacheAddProcessor").replace().to("mock:cacheAdd");
+                weaveById("CacheAddAirportNameProcessor").replace().to("mock:cacheAdd");
             }
         });
         context.start();
@@ -391,6 +357,26 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         getMockEndpoint("mock:cacheAdd").expectedBodiesReceived("Oslo");
 
         template.sendBodyAndHeader("direct:addAirportNameToCache", "Oslo", HEADER_TIMETABLE_AIRPORT_IATA, "OSL");
+
+        assertMockEndpointsSatisfied();
+    }
+
+    @Test
+    public void testGetAirportNameFromCache() throws Exception {
+        context.getRouteDefinition("AirportNameGetFromCache").adviceWith(context, new AdviceWithRouteBuilder() {
+            @Override
+            public void configure() throws Exception {
+                weaveById("CacheGetAirportNameProcessor").replace().to("mock:cacheGet");
+            }
+        });
+        context.start();
+
+        getMockEndpoint("mock:cacheGet").expectedMessageCount(1);
+        getMockEndpoint("mock:cacheGet").expectedHeaderReceived(CacheConstants.CACHE_OPERATION, CacheConstants.CACHE_OPERATION_GET);
+        getMockEndpoint("mock:cacheGet").expectedHeaderReceived(CacheConstants.CACHE_KEY, "OSL");
+        getMockEndpoint("mock:cacheGet").expectedBodiesReceived("OSL");
+
+        template.sendBody("direct:getAirportNameFromCache", "OSL");
 
         assertMockEndpointsSatisfied();
     }
@@ -416,33 +402,62 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
     }
 
     @Test
-    public void testEnrichScheduledFlightWithAirportNames() throws Exception {
-        context.getRouteDefinition("ScheduledFlightAirportNameEnricher").adviceWith(context, new AdviceWithRouteBuilder() {
-            @Override
-            public void configure() throws Exception {
-            }
-        });
-        context.start();
-    }
-
-    @Test
-    public void testEnrichScheduledStopoverFlightWithAirportNames() throws Exception {
-        context.getRouteDefinition("ScheduledStopoverFlightAirportNameEnricher").adviceWith(context, new AdviceWithRouteBuilder() {
-            @Override
-            public void configure() throws Exception {
-            }
-        });
-        context.start();
-    }
-
-    @Test
-    public void testRetrieveAirportNameResource() throws Exception {
+    public void testRetrieveAirportNameResourceWhenNotInCache() throws Exception {
         context.getRouteDefinition("AirportNameResourceRetriever").adviceWith(context, new AdviceWithRouteBuilder() {
             @Override
             public void configure() throws Exception {
+                weaveById("AirportNameCacheCheckProcessor").replace().to("mock:cacheCheck");
+                interceptSendToEndpoint("mock:cacheCheck").process(exchange -> {
+                    exchange.getIn().setHeader(CacheConstants.CACHE_ELEMENT_WAS_FOUND, null);
+                });
+                mockEndpointsAndSkip(
+                        "direct:fetchAirportNameByIATA",
+                        "direct:getAirportNameFromCache"
+                );
             }
         });
         context.start();
+
+        getMockEndpoint("mock:cacheCheck").expectedMessageCount(1);
+        getMockEndpoint("mock:cacheCheck").expectedHeaderReceived(CacheConstants.CACHE_OPERATION, CacheConstants.CACHE_OPERATION_CHECK);
+        getMockEndpoint("mock:cacheCheck").expectedHeaderReceived(CacheConstants.CACHE_KEY, "OSL");
+        getMockEndpoint("mock:direct:fetchAirportNameByIATA").expectedMessageCount(1);
+        getMockEndpoint("mock:direct:fetchAirportNameByIATA").expectedHeaderReceived(HEADER_TIMETABLE_AIRPORT_IATA, "OSL");
+        getMockEndpoint("mock:direct:getAirportNameFromCache").expectedMessageCount(1);
+        getMockEndpoint("mock:direct:getAirportNameFromCache").expectedBodiesReceived("OSL");
+
+        template.sendBody("direct:retrieveAirportNameResource", "OSL");
+
+        assertMockEndpointsSatisfied();
+    }
+
+    @Test
+    public void testRetrieveAirportNameResourceWhenInCache() throws Exception {
+        context.getRouteDefinition("AirportNameResourceRetriever").adviceWith(context, new AdviceWithRouteBuilder() {
+            @Override
+            public void configure() throws Exception {
+                weaveById("AirportNameCacheCheckProcessor").replace().to("mock:cacheCheck");
+                interceptSendToEndpoint("mock:cacheCheck").process(exchange -> {
+                    exchange.getIn().setHeader(CacheConstants.CACHE_ELEMENT_WAS_FOUND, 1);
+                });
+                mockEndpointsAndSkip(
+                        "direct:fetchAirportNameByIATA",
+                        "direct:getAirportNameFromCache"
+                );
+            }
+        });
+        context.start();
+
+        getMockEndpoint("mock:cacheCheck").expectedMessageCount(1);
+        getMockEndpoint("mock:cacheCheck").expectedHeaderReceived(CacheConstants.CACHE_OPERATION, CacheConstants.CACHE_OPERATION_CHECK);
+        getMockEndpoint("mock:cacheCheck").expectedHeaderReceived(CacheConstants.CACHE_KEY, "OSL");
+        getMockEndpoint("mock:direct:fetchAirportNameByIATA").expectedMessageCount(0);
+        getMockEndpoint("mock:direct:getAirportNameFromCache").expectedMessageCount(1);
+        getMockEndpoint("mock:direct:getAirportNameFromCache").expectedBodiesReceived("OSL");
+
+        template.sendBody("direct:retrieveAirportNameResource", "OSL");
+
+        assertMockEndpointsSatisfied();
     }
 
     private Range<LocalDate> createRange(String lower, String upper) {
