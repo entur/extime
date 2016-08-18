@@ -328,7 +328,7 @@ public class ScheduledFlightToNetexConverter {
                     .withRef(pointsInLinkSequence.get(1).getId());
             TimetabledPassingTime arrivalPassingTime = objectFactory().createTimetabledPassingTime()
                     .withPointInJourneyPatternRef(objectFactory().createStopPointInJourneyPatternRef(arrivalStopPointInJourneyPattern))
-                    .withDepartureTime(scheduledFlight.getTimeOfArrival());
+                    .withArrivalTime(scheduledFlight.getTimeOfArrival());
             passingTimesRelStructure.withTimetabledPassingTime(arrivalPassingTime);
 
             ServiceJourney datedServiceJourney = objectFactory().createServiceJourney()
