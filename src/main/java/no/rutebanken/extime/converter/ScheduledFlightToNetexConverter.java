@@ -485,6 +485,12 @@ public class ScheduledFlightToNetexConverter {
                     .withId(String.format("%s:StopPointInJourneyPattern:%s10100%d", getAvinorConfig().getId(), flightId, idx[0])) // @todo: fix some id generator-counter here...
                     .withOrder(new BigInteger(Integer.toString(idx[0])))
                     .withScheduledStopPointRef(objectFactory().createScheduledStopPointRef(scheduledStopPointRefStructure));
+            if (idx[0] == 1) {
+                stopPointInJourneyPattern.setForAlighting(false);
+            }
+            if (idx[0] == scheduledStopPoints.size()) {
+                stopPointInJourneyPattern.setForBoarding(false);
+            }
             pointsInJourneyPattern.getPointInJourneyPatternOrStopPointInJourneyPatternOrTimingPointInJourneyPattern().add(stopPointInJourneyPattern);
             idx[0]++;
         });

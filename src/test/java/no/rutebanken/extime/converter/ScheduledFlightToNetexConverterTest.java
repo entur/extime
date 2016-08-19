@@ -1,12 +1,10 @@
 package no.rutebanken.extime.converter;
 
+import com.google.common.collect.Lists;
 import no.rutebanken.extime.AppTest;
 import no.rutebanken.extime.config.*;
 import no.rutebanken.extime.model.ScheduledDirectFlight;
-import no.rutebanken.netex.model.ContactStructure;
-import no.rutebanken.netex.model.Direction;
-import no.rutebanken.netex.model.MultilingualString;
-import no.rutebanken.netex.model.OrganisationTypeEnumeration;
+import no.rutebanken.netex.model.*;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -24,6 +22,7 @@ import java.util.List;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = {AppTest.class})
+@Ignore
 public class ScheduledFlightToNetexConverterTest {
 
     @Autowired
@@ -60,6 +59,19 @@ public class ScheduledFlightToNetexConverterTest {
                 publicationDeliveryStructure, publicationDeliveryStructure.getValue().getClass());
         System.out.println(xml);
 */
+    }
+
+    @Test
+    public void testCreateServiceJourneyPattern() {
+        String flightId = "WF305";
+        String routePath = "Trondheim - Sandefjord";
+        Route route = createDummyRoute(flightId, routePath);
+        List<ScheduledStopPoint> scheduledStopPoints = createDummyScheduledStopPoints(flightId, "Trondheim", "Sandefjord");
+
+        ServiceJourneyPattern serviceJourneyPattern = clazzUnderTest.createServiceJourneyPattern(flightId, routePath, route, scheduledStopPoints);
+
+        Assertions.assertThat(serviceJourneyPattern)
+                .isNotNull();
     }
 
     @Test
@@ -168,4 +180,51 @@ public class ScheduledFlightToNetexConverterTest {
         directFlight.setTimeOfArrival(LocalTime.MIDNIGHT);
         return directFlight;
     }
+
+    public Direction createDummyDirection(String flightId) {
+        ObjectFactory objectFactory = new ObjectFactory();
+        return objectFactory.createDirection()
+                .withVersion("any")
+                .withId(String.format("avinor:dir:%s10001", flightId))
+                .withName(createDummyMultilingualString("Outbound"))
+                .withDirectionType(DirectionTypeEnumeration.OUTBOUND);
+    }
+
+    public Route createDummyRoute(String flightId, String routePath) {
+        ObjectFactory objectFactory = new ObjectFactory();
+        PointsOnRoute_RelStructure pointsOnRoute = objectFactory.createPointsOnRoute_RelStructure();
+        RoutePointRefStructure routePointReference = objectFactory.createRoutePointRefStructure().withRef("routepoint:dummyid");
+        PointOnRoute pointOnRoute = objectFactory.createPointOnRoute()
+                .withVersion("any")
+                .withId(String.format("avinor:por:%s10001", flightId))
+                .withPointRef(objectFactory.createRoutePointRef(routePointReference));
+        pointsOnRoute.getPointOnRoute().add(pointOnRoute);
+        DirectionRefStructure directionRefStructure = objectFactory.createDirectionRefStructure()
+                .withRef(createDummyDirection(flightId).getId());
+        return objectFactory.createRoute()
+                .withVersion("1")
+                .withId(String.format("avinor:route:%s10001", flightId))
+                .withName(createDummyMultilingualString(String.format("%s: %s", flightId, routePath)))
+                .withPointsInSequence(pointsOnRoute)
+                .withDirectionRef(directionRefStructure);
+    }
+
+    private List<ScheduledStopPoint> createDummyScheduledStopPoints(String flightId, String departureAirport, String arrivalAirport) {
+        ObjectFactory objectFactory = new ObjectFactory();
+        ScheduledStopPoint scheduledDepartureStopPoint = objectFactory.createScheduledStopPoint()
+                .withVersion("1")
+                .withId(String.format("avinor:sp:%s10001", flightId))
+                .withName(createDummyMultilingualString(departureAirport));
+        ScheduledStopPoint scheduledArrivalStopPoint = objectFactory.createScheduledStopPoint()
+                .withVersion("1")
+                .withId(String.format("avinor:sp:%s10002", flightId))
+                .withName(createDummyMultilingualString(arrivalAirport));
+        return Lists.newArrayList(scheduledDepartureStopPoint, scheduledArrivalStopPoint);
+    }
+
+    public MultilingualString createDummyMultilingualString(String value) {
+        ObjectFactory objectFactory = new ObjectFactory();
+        return objectFactory.createMultilingualString().withValue(value);
+    }
+
 }
