@@ -35,6 +35,7 @@ public class AvinorRealTimeRouteBuilder extends RouteBuilder {//extends BaseRout
 
         from("quartz2://avinorRealtimeScheduler?{{avinor.realtime.scheduler.options}}")
                 .routeId("AvinorRealTimeSchedulerStarter")
+                .autoStartup(false)
                 .process(exchange -> {exchange.getIn().setBody(AirportIATA.values());}).id("RealTimeAirportIATAProcessor")
                 .split(body(), new AirportFlightAggregationStrategy()).parallelProcessing()
                     .log(LoggingLevel.DEBUG, this.getClass().getName(), "Processing airport: ${body}")

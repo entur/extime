@@ -69,33 +69,6 @@ public class ScheduledFlightConverter {
         return distinctFlights;
     }
 
-    public List<ScheduledDirectFlight> convertToScheduledDirectFlights(List<Flight> scheduledFlights) {
-        List<ScheduledDirectFlight> scheduledDirectFlights = new ArrayList<>();
-        scheduledFlights.forEach(scheduledFlight -> scheduledDirectFlights.add(convertToScheduledDirectFlight(scheduledFlight)));
-        return scheduledDirectFlights;
-    }
-
-    public List<ScheduledStopoverFlight> convertToScheduledStopoverFlights(List<Flight> scheduledFlights) {
-        Map<String, List<Flight>> flightsByDepartureAirport = scheduledFlights.stream()
-                .collect(Collectors.groupingBy(Flight::getDepartureStation));
-
-        List<ScheduledStopoverFlight> scheduledStopoverFlights = new ArrayList<>();
-
-        scheduledFlights.forEach(scheduledFlight -> {
-            List<ScheduledStopover> scheduledStopovers = findPossibleStopoversForFlight(scheduledFlight, flightsByDepartureAirport);
-            if (!scheduledStopovers.isEmpty()) {
-                ScheduledStopoverFlight scheduledStopoverFlight = new ScheduledStopoverFlight();
-                scheduledStopoverFlight.setAirlineFlightId(String.format("%s%s",
-                        scheduledFlight.getAirlineDesignator(), scheduledFlight.getFlightNumber()));
-                scheduledStopoverFlight.setAirlineIATA(scheduledFlight.getAirlineDesignator());
-                scheduledStopoverFlight.setDateOfOperation(scheduledFlight.getDateOfOperation());
-                scheduledStopoverFlight.getScheduledStopovers().addAll(scheduledStopovers);
-                scheduledStopoverFlights.add(scheduledStopoverFlight);
-            }
-        });
-        return scheduledStopoverFlights;
-    }
-
     private void removeSubRoutes(Map<String, List<ScheduledStopoverFlight>> stopoverFlightsByFlightId) {
         stopoverFlightsByFlightId.forEach((flightId, flights) -> {
             int maxStopovers = findMaxStopovers(flights);

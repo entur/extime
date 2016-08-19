@@ -74,18 +74,14 @@ public class ScheduledFlightToNetexConverter {
         return objectFactory().createPublicationDelivery(publicationDeliveryStructure);
     }
 
-    // @todo: how to remove the zone id, when the timestamp is represented by a ZonedDateTime object, change jaxb model?
-    // @todo: maybe it is better to show dates and times in the current (Europe/Oslo) timezone?
     public PublicationDeliveryStructure createPublicationDeliveryStructure(
             JAXBElement<CompositeFrame> compositeFrame, String flightId, String routePath) {
         DataObjects dataObjects = objectFactory().createPublicationDeliveryStructureDataObjects();
         dataObjects.getCompositeFrameOrCommonFrame().add(compositeFrame);
         return objectFactory().createPublicationDeliveryStructure()
                 .withVersion("1.0")
-                //.withPublicationTimestamp(ZonedDateTime.now())
-                //.withPublicationTimestamp(DateTimeFormatter.ISO_INSTANT.parse("2016-08-16T08:24:21Z", Instant::from))
                 .withPublicationTimestamp(DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse("2016-08-16T08:24:21Z", OffsetDateTime::from))
-                .withParticipantRef(getAvinorConfig().getId()) // should this be Avinor or the actual flight airline?
+                .withParticipantRef(getAvinorConfig().getId()) // should this be Avinor, NHR, or the actual flight airline?
                 .withDescription(createMultilingualString(String.format("Flight %s : %s", flightId, routePath)))
                 .withDataObjects(dataObjects);
     }
@@ -95,8 +91,6 @@ public class ScheduledFlightToNetexConverter {
                 .withCodespaceRefOrCodespace(Arrays.asList(avinorCodespace(), nhrCodespace()));
         CompositeFrame compositeFrame = objectFactory().createCompositeFrame()
                 .withVersion("1")
-                //.withCreated(ZonedDateTime.now())
-                //.withCreated(DateTimeFormatter.ISO_INSTANT.parse("2016-08-16T08:24:21Z", Instant::from))
                 .withCreated(DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse("2016-08-16T08:24:21Z", OffsetDateTime::from))
                 .withId(String.format("%s:Norway:CompositeFrame:%s", getAvinorConfig().getId(), flightId))
                 .withCodespaces(codespaces)
@@ -107,20 +101,16 @@ public class ScheduledFlightToNetexConverter {
     public JAXBElement<ResourceFrame> createResourceFrame(Operator operator) {
         CodespaceRefStructure codespaceRefStructure = objectFactory().createCodespaceRefStructure()
                 .withRef(avinorCodespace().getId());
-
         LocaleStructure localeStructure = objectFactory().createLocaleStructure()
                 .withTimeZone("CET")
                 .withSummerTimeZone("CEST")
                 .withDefaultLanguage("no");
-
         VersionFrameDefaultsStructure versionFrameDefaultsStructure = objectFactory().createVersionFrameDefaultsStructure()
                 .withDefaultCodespaceRef(codespaceRefStructure)
                 .withDefaultLocale(localeStructure);
-
         OrganisationsInFrame_RelStructure organisationsInFrame = objectFactory().createOrganisationsInFrame_RelStructure();
         organisationsInFrame.getOrganisation_().add(objectFactory().createAuthority(createAuthority()));
         organisationsInFrame.getOrganisation_().add(objectFactory().createOperator(operator));
-
         ResourceFrame resourceFrame = objectFactory().createResourceFrame()
                 .withVersion("any")
                 .withId(String.format("%s:ResourceFrame:RF1", getAvinorConfig().getId()))
@@ -142,38 +132,25 @@ public class ScheduledFlightToNetexConverter {
     public JAXBElement<ServiceFrame> createServiceFrame(Direction direction, String flightId, List<RoutePoint> routePoints,
                                                         Route route, Line line, List<ScheduledStopPoint> scheduledStopPoints,
                                                         ServiceJourneyPattern serviceJourneyPattern, List<PassengerStopAssignment> stopAssignments) {
-        // @todo: fix the zoned date time?
         Network network = objectFactory().createNetwork()
                 .withVersion("1")
-                //.withChanged(ZonedDateTime.now())
-                //.withChanged(DateTimeFormatter.ISO_INSTANT.parse("2016-08-16T08:24:21Z", Instant::from))
                 .withChanged(DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse("2016-08-16T08:24:21Z", OffsetDateTime::from))
                 .withId(String.format("%s:GroupOfLine:%s", getAvinorConfig().getId(), getAvinorConfig().getName()))
                 .withName(createMultilingualString(getAvinorConfig().getName()));
-
         DirectionsInFrame_RelStructure directionsInFrame = objectFactory().createDirectionsInFrame_RelStructure()
                 .withDirection(direction);
-
         RoutePointsInFrame_RelStructure routePointsInFrame = objectFactory().createRoutePointsInFrame_RelStructure()
                 .withRoutePoint(routePoints);
-
         RoutesInFrame_RelStructure routesInFrame = objectFactory().createRoutesInFrame_RelStructure();
         routesInFrame.getRoute_().add(objectFactory().createRoute(route));
-
         LinesInFrame_RelStructure linesInFrame = objectFactory().createLinesInFrame_RelStructure();
         linesInFrame.getLine_().add(objectFactory().createLine(line));
-
         ScheduledStopPointsInFrame_RelStructure scheduledStopPointsInFrame = objectFactory().createScheduledStopPointsInFrame_RelStructure()
                 .withScheduledStopPoint(scheduledStopPoints);
-
         JourneyPatternsInFrame_RelStructure journeyPatternsInFrame = objectFactory().createJourneyPatternsInFrame_RelStructure()
                 .withJourneyPattern_OrJourneyPatternView(objectFactory().createServiceJourneyPattern(serviceJourneyPattern));
-
         StopAssignmentsInFrame_RelStructure stopAssignmentsInFrame = objectFactory().createStopAssignmentsInFrame_RelStructure();
-        stopAssignments.forEach(stopAssignment ->
-                stopAssignmentsInFrame.getStopAssignment().add(objectFactory().createPassengerStopAssignment(stopAssignment))
-        );
-
+        stopAssignments.forEach(stopAssignment -> stopAssignmentsInFrame.getStopAssignment().add(objectFactory().createPassengerStopAssignment(stopAssignment)));
         ServiceFrame serviceFrame = objectFactory().createServiceFrame()
                 .withVersion("any")
                 .withId(String.format("%s:ServiceFrame:%s", getAvinorConfig().getId(), flightId))
@@ -204,7 +181,6 @@ public class ScheduledFlightToNetexConverter {
         List<DayOfWeek> workDays = dayOfWeeksByDayType.get(Boolean.TRUE);
         List<DayOfWeek> weekendDays = dayOfWeeksByDayType.get(Boolean.FALSE);
         List<DayType> dayTypes = Lists.newArrayList();
-
         if (!workDays.isEmpty()) {
             dayTypes.add(createDayType(workDays, flightId, true));
         }
@@ -217,12 +193,10 @@ public class ScheduledFlightToNetexConverter {
     public DayType createDayType(List<DayOfWeek> daysOfWeekPattern, String flightId, boolean isWorkDays) {
         List<DayOfWeekEnumeration> daysOfWeek = Lists.newArrayList();
         daysOfWeekPattern.forEach(dayOfWeek -> daysOfWeek.add(DAY_OF_WEEK_MAP.get(dayOfWeek)));
-
         PropertyOfDay propertyOfDayWeekDays = objectFactory().createPropertyOfDay();
         propertyOfDayWeekDays.getDaysOfWeek().addAll(daysOfWeek);
         PropertiesOfDay_RelStructure propertiesOfDay = objectFactory().createPropertiesOfDay_RelStructure()
                 .withPropertyOfDay(propertyOfDayWeekDays);
-
         return objectFactory().createDayType()
                 .withVersion("any")
                 .withId(String.format("%s:dt:%s", flightId, isWorkDays ? "weekday" : "weekend"))
@@ -235,7 +209,6 @@ public class ScheduledFlightToNetexConverter {
                 .withValidityConditionRefOrValidBetweenOrValidityCondition_(createAvailabilityCondition(dateOfOperation, Boolean.TRUE));
         JourneysInFrame_RelStructure journeysInFrameRelStructure = objectFactory().createJourneysInFrame_RelStructure();
         journeysInFrameRelStructure.getDatedServiceJourneyOrDeadRunOrServiceJourney().addAll(serviceJourneys);
-
         TimetableFrame timetableFrame = objectFactory().createTimetableFrame()
                 .withVersion("any")
                 .withId(String.format("%s:TimetableFrame:TF01", getAvinorConfig().getId()))
@@ -288,11 +261,7 @@ public class ScheduledFlightToNetexConverter {
         AvailabilityCondition availabilityCondition = objectFactory().createAvailabilityCondition()
                 .withVersion("any")
                 .withId(String.format("%s:AvailabilityCondition:1", getAvinorConfig().getId()))
-                //.withFromDate(ZonedDateTime.of(dateOfOperation, LocalTime.MIN, ZoneId.of("Z")))
-                //.withFromDate(DateTimeFormatter.ISO_INSTANT.parse("2016-08-16T08:24:21Z", Instant::from))
                 .withFromDate(DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse("2016-08-16T08:24:21Z", OffsetDateTime::from))
-                //.withToDate(ZonedDateTime.of(dateOfOperation, LocalTime.MIN, ZoneId.of("Z")))
-                //.withToDate(DateTimeFormatter.ISO_INSTANT.parse("2016-08-16T08:24:21Z", Instant::from))
                 .withToDate(DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse("2016-08-16T08:24:21Z", OffsetDateTime::from))
                 .withIsAvailable(isAvailable);
         return objectFactory().createAvailabilityCondition(availabilityCondition);
@@ -308,12 +277,10 @@ public class ScheduledFlightToNetexConverter {
                 .withRef(serviceJourneyPattern.getId());
         JAXBElement<JourneyPatternRefStructure> journeyPatternRefStructureElement = objectFactory().createJourneyPatternRef(journeyPatternRefStructure);
         DayTypeRefs_RelStructure dayTypeStructure = objectFactory().createDayTypeRefs_RelStructure();
-
         dayTypes.forEach(dayType -> {
             DayTypeRefStructure dayTypeRef = objectFactory().createDayTypeRefStructure().withRef(dayType.getId());
             dayTypeStructure.getDayTypeRef().add(objectFactory().createDayTypeRef(dayTypeRef));
         });
-
         if (scheduledFlight instanceof ScheduledDirectFlight) {
             StopPointInJourneyPatternRefStructure departureStopPointInJourneyPattern = objectFactory().createStopPointInJourneyPatternRefStructure()
                     .withVersion("any")
@@ -322,7 +289,6 @@ public class ScheduledFlightToNetexConverter {
                     .withPointInJourneyPatternRef(objectFactory().createStopPointInJourneyPatternRef(departureStopPointInJourneyPattern))
                     .withDepartureTime(scheduledFlight.getTimeOfDeparture());
             passingTimesRelStructure.withTimetabledPassingTime(departurePassingTime);
-
             StopPointInJourneyPatternRefStructure arrivalStopPointInJourneyPattern = objectFactory().createStopPointInJourneyPatternRefStructure()
                     .withVersion("any")
                     .withRef(pointsInLinkSequence.get(1).getId());
@@ -330,7 +296,6 @@ public class ScheduledFlightToNetexConverter {
                     .withPointInJourneyPatternRef(objectFactory().createStopPointInJourneyPatternRef(arrivalStopPointInJourneyPattern))
                     .withArrivalTime(scheduledFlight.getTimeOfArrival());
             passingTimesRelStructure.withTimetabledPassingTime(arrivalPassingTime);
-
             ServiceJourney datedServiceJourney = objectFactory().createServiceJourney()
                     .withVersion("any")
                     .withId(String.format("%s:ServiceJourney:%s", getAvinorConfig().getId(), scheduledFlight.getAirlineFlightId()))
@@ -345,7 +310,6 @@ public class ScheduledFlightToNetexConverter {
             List<ScheduledStopover> scheduledStopovers = ((ScheduledStopoverFlight) scheduledFlight).getScheduledStopovers();
             Iterator<ScheduledStopover> stopoversiterator = scheduledStopovers.iterator();
             Iterator<PointInLinkSequence_VersionedChildStructure> pointInLinkSequenceIterator = pointsInLinkSequence.iterator();
-
             while (stopoversiterator.hasNext() && pointInLinkSequenceIterator.hasNext()) {
                 ScheduledStopover scheduledStopover = stopoversiterator.next();
                 PointInLinkSequence_VersionedChildStructure pointInLinkSequence = pointInLinkSequenceIterator.next();
@@ -362,7 +326,6 @@ public class ScheduledFlightToNetexConverter {
                 }
                 passingTimesRelStructure.withTimetabledPassingTime(passingTime);
             }
-
             ServiceJourney datedServiceJourney = objectFactory().createServiceJourney()
                     .withVersion("any")
                     .withId(String.format("%s:ServiceJourney:%s", getAvinorConfig().getId(), scheduledFlight.getAirlineFlightId()))
@@ -538,9 +501,7 @@ public class ScheduledFlightToNetexConverter {
     }
 
     public MultilingualString createMultilingualString(String value) {
-        return objectFactory().createMultilingualString()
-                //.withLang("no")
-                .withValue(value);
+        return objectFactory().createMultilingualString().withValue(value);
     }
 
     public Operator resolveOperatorFromIATA(String airlineIATA) {
