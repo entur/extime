@@ -479,7 +479,7 @@ public class ScheduledFlightToNetexConverter {
         scheduledStopPoints.forEach(stopPoint -> {
             ScheduledStopPointRefStructure scheduledStopPointRefStructure = objectFactory().createScheduledStopPointRefStructure()
                     .withVersion("1")
-                    .withRef(String.format("%s:StopPoint:%s101001", getAvinorConfig().getId(), flightId)); // @todo: fix id generator
+                    .withRef(String.format("%s:StopPoint:%s10100%d", getAvinorConfig().getId(), flightId, idx[0])); // @todo: fix id generator
             StopPointInJourneyPattern stopPointInJourneyPattern = objectFactory().createStopPointInJourneyPattern()
                     .withVersion("1")
                     .withId(String.format("%s:StopPointInJourneyPattern:%s10100%d", getAvinorConfig().getId(), flightId, idx[0])) // @todo: fix some id generator-counter here...
