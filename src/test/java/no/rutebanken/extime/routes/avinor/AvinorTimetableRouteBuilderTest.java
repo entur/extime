@@ -4,8 +4,13 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Range;
 import no.avinor.flydata.xjc.model.scheduled.Flight;
-import no.rutebanken.extime.model.*;
+import no.rutebanken.extime.model.AirportIATA;
+import no.rutebanken.extime.model.ScheduledDirectFlight;
+import no.rutebanken.extime.model.ScheduledFlight;
+import no.rutebanken.extime.model.StopVisitType;
 import no.rutebanken.extime.util.DateUtils;
+import no.rutebanken.netex.model.ObjectFactory;
+import no.rutebanken.netex.model.PublicationDeliveryStructure;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.Produce;
@@ -23,11 +28,14 @@ import org.apache.camel.util.jndi.JndiContext;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 
+import javax.xml.bind.JAXBElement;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -341,6 +349,41 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
     }
 
     @Test
+    public void testConvertScheduledFlightsToNetex() throws Exception {
+        context.getRouteDefinition("ScheduledFlightsToNetexConverter").adviceWith(context, new AdviceWithRouteBuilder() {
+            @Override
+            public void configure() throws Exception {
+                weaveById("ConvertFlightsToNetexProcessor").replace().to("mock:convertToNetex");
+                interceptSendToEndpoint("mock:convertToNetex").process(exchange -> exchange.getIn().setBody(createPublicationDeliveryElement()));
+                weaveById("GenerateFileNameProcessor").replace().to("mock:generateFileName");
+                interceptSendToEndpoint("mock:generateFileName").process(
+                        exchange -> exchange.getIn().setHeader("FileNameGenerated", "067e6162-3b6f-4ae2-a171-2470b63dff00"));
+                mockEndpointsAndSkip("direct:enrichScheduledFlightWithAirportNames", "file:target/netex");
+            }
+        });
+        context.start();
+
+        getMockEndpoint("mock:direct:enrichScheduledFlightWithAirportNames").expectedMessageCount(2);
+        getMockEndpoint("mock:convertToNetex").expectedMessageCount(2);
+        getMockEndpoint("mock:generateFileName").expectedMessageCount(2);
+
+        getMockEndpoint("mock:file:target/netex").expectedMessageCount(2);
+        getMockEndpoint("mock:file:target/netex").expectedHeaderReceived(Exchange.FILE_NAME, "067e6162-3b6f-4ae2-a171-2470b63dff00.xml");
+        getMockEndpoint("mock:file:target/netex").expectedHeaderReceived(Exchange.CONTENT_TYPE, "text/xml;charset=utf-8");
+        getMockEndpoint("mock:file:target/netex").expectedHeaderReceived(Exchange.CHARSET_NAME, "utf-8");
+        getMockEndpoint("mock:file:target/netex").expectedBodiesReceived(createPublicationDelivery(), createPublicationDelivery());
+
+        List<ScheduledFlight> scheduledFlights = Lists.newArrayList(
+                createScheduledFlight("WF", "WF739", LocalDate.now()),
+                createScheduledFlight("SK", "SK1038", LocalDate.now())
+        );
+
+        template.sendBody("direct:convertScheduledFlightsToNetex", scheduledFlights);
+
+        assertMockEndpointsSatisfied();
+    }
+
+    @Test
     public void testAddAirportNameToCache() throws Exception {
         context.getRouteDefinition("AirportNameAddToCache").adviceWith(context, new AdviceWithRouteBuilder() {
             @Override
@@ -500,11 +543,21 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         }};
     }
 
-    private ScheduledStopover createDummyScheduledStopover(long dummyId, String dummyAirportIata) {
-        return new ScheduledStopover() {{
-            setId(BigInteger.valueOf(dummyId));
-            setAirportIATA(dummyAirportIata);
-        }};
+    private JAXBElement<PublicationDeliveryStructure> createPublicationDeliveryElement() {
+        ObjectFactory objectFactory = new ObjectFactory();
+        PublicationDeliveryStructure publicationDeliveryStructure1 = objectFactory.createPublicationDeliveryStructure()
+                .withVersion("1.0")
+                .withPublicationTimestamp(DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse("2016-08-16T08:24:21Z", OffsetDateTime::from))
+                .withParticipantRef("AVI");
+        return objectFactory.createPublicationDelivery(publicationDeliveryStructure1);
+    }
+
+    private PublicationDeliveryStructure createPublicationDelivery() {
+        ObjectFactory objectFactory = new ObjectFactory();
+        return objectFactory.createPublicationDeliveryStructure()
+                .withVersion("1.0")
+                .withPublicationTimestamp(DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse("2016-08-16T08:24:21Z", OffsetDateTime::from))
+                .withParticipantRef("AVI");
     }
 
     @Override

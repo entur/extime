@@ -20,6 +20,7 @@ import org.apache.camel.processor.aggregate.AggregationStrategy;
 import org.apache.commons.lang3.EnumUtils;
 import org.springframework.stereotype.Component;
 
+import javax.xml.transform.stream.StreamSource;
 import java.util.*;
 
 import static org.apache.camel.component.stax.StAXBuilder.stax;
@@ -49,7 +50,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
         jaxbDataFormat.setContextPath(PublicationDeliveryStructure.class.getPackage().getName());
         jaxbDataFormat.setSchema("classpath:/xsd/NeTEx-XML-1.04beta/schema/xsd/NeTEx_publication.xsd"); // @todo: to config
         jaxbDataFormat.setPrettyPrint(true);
-        jaxbDataFormat.setEncoding("iso-8859-1");
+        jaxbDataFormat.setEncoding("UTF-8");
 
         // @todo: enable parallell processing when going into test/beta/prod
         from("{{avinor.timetable.scheduler.consumer}}")
@@ -133,6 +134,9 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .log(LoggingLevel.DEBUG, this.getClass().getName(), "HTTP QUERY HEADER: ${header.CamelHttpQuery}")
                 .setBody(constant(null))
                 .toD("${header.ExtimeHttpUri}").id("FetchFromHttpResourceProcessor")
+                .convertBodyTo(StreamSource.class, "iso-8859-1") // @todo: consider switching to one of below converters (compare performance!)
+                //.convertBodyTo(String.class, "iso-8859-1")
+                //.convertBodyTo(Document.class, "iso-8859-1")
         ;
 
         from("direct:splitJoinIncomingFlightMessages")
@@ -160,16 +164,18 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .split(body()).parallelProcessing()
                     .to("direct:enrichScheduledFlightWithAirportNames")
                     .log(LoggingLevel.DEBUG, this.getClass().getName(), "Converting scheduled direct flight with id: ${body.airlineFlightId}")
-                    .bean(ScheduledFlightToNetexConverter.class, "convertToNetex")
+                    .bean(ScheduledFlightToNetexConverter.class, "convertToNetex").id("ConvertFlightsToNetexProcessor")
                     .marshal(jaxbDataFormat)
                     //.log(LoggingLevel.DEBUG, this.getClass().getName(), "${body}")
                     .process(exchange -> {
                         String uuid = getContext().getUuidGenerator().generateUuid();
                         exchange.getIn().setHeader("FileNameGenerated", uuid);
-                    })
-                    //.setHeader(Exchange.CONTENT_TYPE, constant(ContentType.create("text/xml", Charset.forName("UTF-8")))) // @todo: uncomment to enable UTF-8
+                    }).id("GenerateFileNameProcessor")
                     .setHeader(Exchange.FILE_NAME, simple("${header.FileNameGenerated}.xml"))
+                    .setHeader(Exchange.CONTENT_TYPE, constant("text/xml;charset=utf-8"))
+                    .setHeader(Exchange.CHARSET_NAME, constant("utf-8"))
                     .to("file:target/netex")
+                    //.to("file:target/netex?charset=utf-8")
                 .end()
         ;
 
