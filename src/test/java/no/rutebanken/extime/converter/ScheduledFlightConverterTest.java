@@ -4,10 +4,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import no.avinor.flydata.xjc.model.scheduled.Flight;
 import no.avinor.flydata.xjc.model.scheduled.Flights;
-import no.rutebanken.extime.model.ScheduledDirectFlight;
-import no.rutebanken.extime.model.ScheduledFlight;
-import no.rutebanken.extime.model.ScheduledStopoverFlight;
-import no.rutebanken.extime.model.StopVisitType;
+import no.rutebanken.extime.model.*;
+import org.apache.commons.lang3.EnumUtils;
 import org.apache.commons.lang3.tuple.Triple;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
@@ -30,6 +28,33 @@ public class ScheduledFlightConverterTest {
     @Before
     public void setUp() throws Exception {
         clazzUnderTest = new ScheduledFlightConverter();
+    }
+
+    @Test
+    @Ignore
+    public void convertFlights() throws Exception {
+        AirportIATA[] airportIATAs = Arrays.stream(AirportIATA.values())
+                .filter(iata -> !iata.equals(AirportIATA.OSL))
+                .toArray(AirportIATA[]::new);
+        ArrayList<Flight> masterFlights = Lists.newArrayList();
+        for (int i = 1; i <= 2; i++) {
+            for (AirportIATA airportIATA : airportIATAs) {
+                String resourceName = String.format("%s-%d.xml", airportIATA, i);
+                Flights flightStructure = generateObjectsFromXml(String.format("/xml/testdata/%s", resourceName), Flights.class);
+                List<Flight> flights = flightStructure.getFlight();
+                masterFlights.addAll(flights);
+            }
+        }
+        ArrayList<Flight> finalList = Lists.newArrayList();
+        for (Flight flight : masterFlights) {
+            for (StopVisitType stopVisitType : StopVisitType.values()) {
+                if (isValidFlight(stopVisitType, flight)) {
+                    finalList.add(flight);
+                }
+            }
+        }
+        List<ScheduledFlight> scheduledFlights = clazzUnderTest.convertToScheduledFlights(finalList);
+        Assertions.assertThat(scheduledFlights).isNotNull();
     }
 
     @Test
@@ -347,6 +372,25 @@ public class ScheduledFlightConverterTest {
             setArrivalStation(dummyArrivalStation);
             setSta(dummyArrivalTime);
         }};
+    }
+
+    private boolean isValidFlight(StopVisitType stopVisitType, Flight newFlight) {
+        switch (stopVisitType) {
+            case ARRIVAL:
+                return AirportIATA.OSL.name().equalsIgnoreCase(newFlight.getDepartureStation());
+            case DEPARTURE:
+                return isDomesticFlight(newFlight);
+        }
+        return false;
+    }
+
+    private boolean isDomesticFlight(Flight flight) {
+        return isValidDepartureAndArrival(flight.getDepartureStation(), flight.getArrivalStation());
+    }
+
+    private boolean isValidDepartureAndArrival(String departureIATA, String arrivalIATA) {
+        return EnumUtils.isValidEnum(AirportIATA.class, departureIATA)
+                && EnumUtils.isValidEnum(AirportIATA.class, arrivalIATA);
     }
 
     private <T> T generateObjectsFromXml(String resourceName, Class<T> clazz) throws JAXBException {

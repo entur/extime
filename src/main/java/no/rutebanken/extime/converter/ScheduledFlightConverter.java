@@ -23,10 +23,9 @@ public class ScheduledFlightConverter {
     public List<ScheduledFlight> convertToScheduledFlights(List<Flight> scheduledFlights) {
         Map<String, List<Flight>> flightsByDepartureAirport = scheduledFlights.stream()
                 .collect(Collectors.groupingBy(Flight::getDepartureStation));
-
         List<ScheduledStopoverFlight> scheduledStopoverFlights = new ArrayList<>();
 
-        scheduledFlights.forEach(scheduledFlight -> {
+        for (Flight scheduledFlight : scheduledFlights) {
             List<ScheduledStopover> scheduledStopovers = findPossibleStopoversForFlight(scheduledFlight, flightsByDepartureAirport);
             if (!scheduledStopovers.isEmpty()) {
                 ScheduledStopoverFlight scheduledStopoverFlight = new ScheduledStopoverFlight();
@@ -37,35 +36,39 @@ public class ScheduledFlightConverter {
                 scheduledStopoverFlight.getScheduledStopovers().addAll(scheduledStopovers);
                 scheduledStopoverFlights.add(scheduledStopoverFlight);
             }
-        });
+        }
 
         List<Flight> directFlights = scheduledFlights.stream()
                 .filter(scheduledFlight -> !UNIQUE_FLIGHT_IDS.contains(scheduledFlight.getId()))
                 .collect(Collectors.toList());
         List<ScheduledDirectFlight> scheduledDirectFlights = new ArrayList<>();
         directFlights.forEach(scheduledFlight -> scheduledDirectFlights.add(convertToScheduledDirectFlight(scheduledFlight)));
-
         Map<String, List<ScheduledStopoverFlight>> stopoverFlightsByFlightId = scheduledStopoverFlights.stream()
                 .sorted(Comparator.comparing(ScheduledStopoverFlight::getDateOfOperation))
                 .collect(Collectors.groupingBy(ScheduledStopoverFlight::getAirlineFlightId));
         removeSubRoutes(stopoverFlightsByFlightId);
-
         Map<String, List<ScheduledDirectFlight>> directFlightsByFlightId = scheduledDirectFlights.stream()
                 .sorted(Comparator.comparing(ScheduledDirectFlight::getDateOfOperation))
                 .collect(Collectors.groupingBy(ScheduledDirectFlight::getAirlineFlightId));
 
-        Map<String, List<? extends ScheduledFlight>> scheduledFlightsById = new HashMap<>();
-        scheduledFlightsById.putAll(stopoverFlightsByFlightId);
-        scheduledFlightsById.putAll(directFlightsByFlightId);
-
         List<ScheduledFlight> distinctFlights = new ArrayList<>();
 
-        scheduledFlightsById.forEach((flightId, flights) -> {
+        for (Map.Entry<String, List<ScheduledStopoverFlight>> entry : stopoverFlightsByFlightId.entrySet()) {
+            String flightId = entry.getKey();
+            List<ScheduledStopoverFlight> flights = entry.getValue();
             Set<DayOfWeek> daysOfWeek = findJourneyPatterns(flightId, flights);
             ScheduledFlight scheduledFlight = flights.get(0);
             scheduledFlight.setWeekDaysPattern(daysOfWeek);
             distinctFlights.add(scheduledFlight);
-        });
+        }
+        for (Map.Entry<String, List<ScheduledDirectFlight>> entry : directFlightsByFlightId.entrySet()) {
+            String flightId = entry.getKey();
+            List<ScheduledDirectFlight> flights = entry.getValue();
+            Set<DayOfWeek> daysOfWeek = findJourneyPatterns(flightId, flights);
+            ScheduledFlight scheduledFlight = flights.get(0);
+            scheduledFlight.setWeekDaysPattern(daysOfWeek);
+            distinctFlights.add(scheduledFlight);
+        }
         return distinctFlights;
     }
 
