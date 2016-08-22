@@ -1,10 +1,10 @@
 nhr:
-  id: NHR
+  id: NSR
   company-number:
-  name: Nasjonalt Holdeplassregister
-  legal-name: NASJONALT HOLDEPLASSREGISTER
+  name: Nasjonalt Stoppestedregister
+  legal-name: NASJONALT STOPPESTEDREGISTER
   phone:
-  url: http://www.rutebanken.no/nasjonltholdeplassregister
+  url: http://www.nasjonaltstoppestedregister.rutebanken.no
   details:
 
 avinor:
@@ -14,7 +14,7 @@ avinor:
   legal-name: AVINOR AS
   phone: 0047 815 30 550
   url: http://avinor.no/
-  details: Kontaktskjema på websider
+  details:
 
 sas:
   id: SK
@@ -23,7 +23,7 @@ sas:
   legal-name: SAS NORGE AS
   phone: 0047 648 16 050
   url: http://www.sas.no/
-  details: Kontaktskjema på websider
+  details:
 
 wideroe:
   id: WF
@@ -32,7 +32,7 @@ wideroe:
   legal-name: WIDERØE'S FLYVESELSKAP AS
   phone: 0047 755 13 500
   url: http://www.wideroe.no/
-  details: Kontaktskjema på websider
+  details:
 
 norwegian:
   id: DY
@@ -41,4 +41,4 @@ norwegian:
   legal-name: NORWEGIAN AIR NORWAY AS
   phone: 0047 815 21 815
   url: http://www.norwegian.no/
-  details: Kontaktskjema på websider
+  details:

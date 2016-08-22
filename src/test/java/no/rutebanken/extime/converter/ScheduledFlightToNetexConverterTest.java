@@ -62,28 +62,16 @@ public class ScheduledFlightToNetexConverterTest {
     }
 
     @Test
-    public void testCreateServiceJourneyPattern() {
+    public void testCreateJourneyPattern() {
         String flightId = "WF305";
         String routePath = "Trondheim - Sandefjord";
         Route route = createDummyRoute(flightId, routePath);
         List<ScheduledStopPoint> scheduledStopPoints = createDummyScheduledStopPoints(flightId, "Trondheim", "Sandefjord");
 
-        ServiceJourneyPattern serviceJourneyPattern = clazzUnderTest.createServiceJourneyPattern(flightId, routePath, route, scheduledStopPoints);
+        JourneyPattern journeyPattern = clazzUnderTest.createJourneyPattern(flightId, route, scheduledStopPoints);
 
-        Assertions.assertThat(serviceJourneyPattern)
+        Assertions.assertThat(journeyPattern)
                 .isNotNull();
-    }
-
-    @Test
-    public void testCreateDirection() {
-        Direction direction = clazzUnderTest.createDirection("WF739");
-
-        Assertions.assertThat(direction)
-                .isNotNull();
-        Assertions.assertThat(direction.getId())
-                .isNotNull()
-                .isNotEmpty()
-                .isEqualTo("AVI:Route:WF739101:Direction");
     }
 
     @Test
