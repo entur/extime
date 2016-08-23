@@ -4,10 +4,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Range;
 import no.avinor.flydata.xjc.model.scheduled.Flight;
-import no.rutebanken.extime.model.AirportIATA;
-import no.rutebanken.extime.model.ScheduledDirectFlight;
-import no.rutebanken.extime.model.ScheduledFlight;
-import no.rutebanken.extime.model.StopVisitType;
+import no.rutebanken.extime.model.*;
 import no.rutebanken.extime.util.DateUtils;
 import no.rutebanken.netex.model.ObjectFactory;
 import no.rutebanken.netex.model.PublicationDeliveryStructure;
@@ -26,6 +23,7 @@ import org.apache.camel.model.ProcessorDefinition;
 import org.apache.camel.test.junit4.CamelTestSupport;
 import org.apache.camel.util.jndi.JndiContext;
 import org.assertj.core.api.Assertions;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import javax.xml.bind.JAXBElement;
@@ -59,12 +57,16 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
     @Produce(uri = "direct:splitJoinIncomingFlightMessages")
     private ProducerTemplate splitJoinFlightsTemplate;
 
+    @Produce(uri = "direct:enrichScheduledStopoverFlightWithAirportNames")
+    private ProducerTemplate enrichStopoverFlightTemplate;
+
     @Produce(uri = "direct:retrieveAirportNamesForStopovers")
     private ProducerTemplate enrichStopoversTemplate;
 
     DateUtils dateUtils = new DateUtils();
 
     @Test
+    //@Ignore
     public void testTimetableScheduler() throws Exception {
         context.getRouteDefinition("AvinorTimetableSchedulerStarter").adviceWith(context, new AdviceWithRouteBuilder() {
             @Override
@@ -79,7 +81,8 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
                 interceptSendToEndpoint("mock:fetchTimetable").process(exchange -> {
                     exchange.getIn().setBody(createDummyFlights());
                 });
-                mockEndpointsAndSkip("direct:convertToScheduledFlights");
+                weaveById("ConvertToScheduledFlightsBeanProcessor").replace().to("mock:convertToScheduledFlights");
+                mockEndpointsAndSkip("direct:convertScheduledFlightsToNetex");
             }
         });
         context.start();
@@ -88,7 +91,8 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         getMockEndpoint("mock:direct:fetchAirportNameByIATA").expectedHeaderValuesReceivedInAnyOrder(
                 HEADER_TIMETABLE_AIRPORT_IATA, "OSL", "BGO", "EVE");
         getMockEndpoint("mock:fetchTimetable").expectedMessageCount(3);
-        getMockEndpoint("mock:direct:convertToScheduledFlights").expectedMessageCount(1);
+        getMockEndpoint("mock:convertToScheduledFlights").expectedMessageCount(1);
+        getMockEndpoint("mock:direct:convertScheduledFlightsToNetex").expectedMessageCount(1);
 
         template.sendBody("direct:start", null);
 
@@ -425,34 +429,13 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
     }
 
     @Test
-    public void testConvertToScheduledFlights() throws Exception {
-        context.getRouteDefinition("ScheduledFlightsConverter").adviceWith(context, new AdviceWithRouteBuilder() {
-            @Override
-            public void configure() throws Exception {
-                weaveById("ConvertToScheduledFlightsBeanProcessor").replace().to("mock:convertToScheduledFlights");
-                mockEndpointsAndSkip("direct:convertScheduledFlightsToNetex");
-            }
-        });
-        context.start();
-
-        getMockEndpoint("mock:convertToScheduledFlights").expectedMessageCount(1);
-        getMockEndpoint("mock:direct:convertScheduledFlightsToNetex").expectedMessageCount(1);
-
-        List<Flight> scheduledFlights = createDummyFlights();
-        template.sendBody("direct:convertToScheduledFlights", scheduledFlights);
-
-        assertMockEndpointsSatisfied();
-    }
-
-    @Test
     public void testRetrieveAirportNameResourceWhenNotInCache() throws Exception {
         context.getRouteDefinition("AirportNameResourceRetriever").adviceWith(context, new AdviceWithRouteBuilder() {
             @Override
             public void configure() throws Exception {
                 weaveById("AirportNameCacheCheckProcessor").replace().to("mock:cacheCheck");
-                interceptSendToEndpoint("mock:cacheCheck").process(exchange -> {
-                    exchange.getIn().setHeader(CacheConstants.CACHE_ELEMENT_WAS_FOUND, null);
-                });
+                interceptSendToEndpoint("mock:cacheCheck").process(exchange ->
+                        exchange.getIn().setHeader(CacheConstants.CACHE_ELEMENT_WAS_FOUND, null));
                 mockEndpointsAndSkip(
                         "direct:fetchAirportNameByIATA",
                         "direct:getAirportNameFromCache"
@@ -475,14 +458,51 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
     }
 
     @Test
+    public void testEnrichScheduledStopoverFlightWithAirportNames() throws Exception {
+        context.getRouteDefinition("ScheduledStopoverFlightAirportNameEnricher").adviceWith(context, new AdviceWithRouteBuilder() {
+            @Override
+            public void configure() throws Exception {
+                weaveById("SetEnrichParameterForStopoverProcessor").replace().to("mock:setEnrichParameter");
+                interceptSendToEndpoint("mock:setEnrichParameter").process(exchange ->
+                        exchange.setProperty(PROPERTY_STOPOVER_ORIGINAL_BODY, new ScheduledStopover()));
+                mockEndpointsAndSkip("direct:retrieveAirportNameResource");
+                interceptSendToEndpoint("mock:direct:retrieveAirportNameResource").process(exchange ->
+                        exchange.getIn().setBody("TEST-NAME"));
+            }
+        });
+        context.start();
+
+        ScheduledStopoverFlight scheduledStopoverFlight = createScheduledStopoverFlight(
+                "WF", "WF149", LocalDate.parse("2016-12-24"), createScheduledStopovers());
+
+        getMockEndpoint("mock:setEnrichParameter").expectedMessageCount(4);
+        getMockEndpoint("mock:setEnrichParameter").expectedHeaderReceived(
+                HEADER_STOPOVER_FLIGHT_ORIGINAL_BODY, scheduledStopoverFlight);
+
+        getMockEndpoint("mock:direct:retrieveAirportNameResource").expectedMessageCount(4);
+        getMockEndpoint("mock:setEnrichParameter").expectedHeaderReceived(
+                HEADER_STOPOVER_FLIGHT_ORIGINAL_BODY, scheduledStopoverFlight);
+
+        ScheduledStopoverFlight resultBody = (ScheduledStopoverFlight)
+                enrichStopoverFlightTemplate.requestBody(scheduledStopoverFlight);
+
+        assertMockEndpointsSatisfied();
+
+        Assertions.assertThat(resultBody)
+                .isNotNull();
+        Assertions.assertThat(resultBody.getScheduledStopovers())
+                .isNotNull()
+                .isNotEmpty()
+                .hasSize(4);
+    }
+
+    @Test
     public void testRetrieveAirportNameResourceWhenInCache() throws Exception {
         context.getRouteDefinition("AirportNameResourceRetriever").adviceWith(context, new AdviceWithRouteBuilder() {
             @Override
             public void configure() throws Exception {
                 weaveById("AirportNameCacheCheckProcessor").replace().to("mock:cacheCheck");
-                interceptSendToEndpoint("mock:cacheCheck").process(exchange -> {
-                    exchange.getIn().setHeader(CacheConstants.CACHE_ELEMENT_WAS_FOUND, 1);
-                });
+                interceptSendToEndpoint("mock:cacheCheck").process(exchange -> exchange.getIn().setHeader(CacheConstants.CACHE_ELEMENT_WAS_FOUND, 1));
                 mockEndpointsAndSkip(
                         "direct:fetchAirportNameByIATA",
                         "direct:getAirportNameFromCache"
@@ -515,6 +535,27 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         );
     }
 
+    private List<ScheduledStopover> createScheduledStopovers() {
+        return Lists.newArrayList(
+                createScheduledStopover("OSL", null, LocalTime.parse("12:15:00")),
+                createScheduledStopover("HOV", LocalTime.parse("12:45:00"), LocalTime.parse("13:00:00")),
+                createScheduledStopover("SOG", LocalTime.parse("13:30:00"), LocalTime.parse("13:45:00")),
+                createScheduledStopover("BGO", LocalTime.parse("14:15:00"), null)
+        );
+    }
+
+    private ScheduledStopover createScheduledStopover(String airportIata, LocalTime arrivalTime, LocalTime departureTime) {
+        ScheduledStopover scheduledStopover = new ScheduledStopover();
+        scheduledStopover.setAirportIATA(airportIata);
+        if (arrivalTime != null) {
+            scheduledStopover.setArrivalTime(arrivalTime);
+        }
+        if (departureTime != null) {
+            scheduledStopover.setDepartureTime(departureTime);
+        }
+        return scheduledStopover;
+    }
+
     private ScheduledFlight createScheduledFlight(String airlineIATA, String airlineFlightId, LocalDate dateOfOperation) {
         ScheduledDirectFlight scheduledFlight = new ScheduledDirectFlight();
         scheduledFlight.setAirlineIATA(airlineIATA);
@@ -527,6 +568,16 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         scheduledFlight.setTimeOfDeparture(LocalTime.NOON);
         scheduledFlight.setTimeOfArrival(LocalTime.MIDNIGHT);
         return scheduledFlight;
+    }
+
+    private ScheduledStopoverFlight createScheduledStopoverFlight(String airlineIATA, String airlineFlightId,
+                                                                  LocalDate dateOfOperation, List<ScheduledStopover> stopovers) {
+        ScheduledStopoverFlight stopoverFlight = new ScheduledStopoverFlight();
+        stopoverFlight.setAirlineIATA(airlineIATA);
+        stopoverFlight.setAirlineFlightId(airlineFlightId);
+        stopoverFlight.setDateOfOperation(dateOfOperation);
+        stopoverFlight.getScheduledStopovers().addAll(stopovers);
+        return stopoverFlight;
     }
 
     private Flight createDummyFlight(long dummyId, String dummyDesignator, String dummyFlightNumber, LocalDate dummyDateOfOperation,

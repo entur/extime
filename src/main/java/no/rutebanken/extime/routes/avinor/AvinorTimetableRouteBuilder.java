@@ -43,6 +43,8 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
 
     @Override
     public void configure() throws Exception {
+        // @todo: look over need for a superclass, and general error handling.
+        // @todo: consider moving all preprocessors inside routes instead, to make it clearer
         //super.configure();
         //getContext().setTracing(true);
 
@@ -65,7 +67,13 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                     .to("direct:fetchTimetableForAirport").id("FetchTimetableProcessor")
                     .log(LoggingLevel.DEBUG, this.getClass().getName(), "Flights fetched for ${header.TimetableAirportIATA}")
                 .end()
-                .to("direct:convertToScheduledFlights").id("ConvertToScheduledFlightsProcessor")
+
+                // alternative run, with static test data from file
+                //.bean(AvinorTimetableUtils.class, "generateStaticFlights")
+
+                .log(LoggingLevel.DEBUG, this.getClass().getName(), "Converting to scheduled flights")
+                .bean(ScheduledFlightConverter.class, "convertToScheduledFlights").id("ConvertToScheduledFlightsBeanProcessor")
+                .to("direct:convertScheduledFlightsToNetex")
         ;
 
         from("direct:fetchAirportNameByIATA")
@@ -139,6 +147,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 //.convertBodyTo(Document.class, "iso-8859-1")
         ;
 
+        // @todo: fixe some useful wiretapping feature in split
         from("direct:splitJoinIncomingFlightMessages")
                 .routeId("FlightSplitterJoiner")
                 .streamCaching()
@@ -150,17 +159,12 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .end()
         ;
 
-        from("direct:convertToScheduledFlights")
-                .routeId("ScheduledFlightsConverter")
-                .log(LoggingLevel.DEBUG, this.getClass().getName(), "Converting to scheduled flights")
-                .bean(ScheduledFlightConverter.class, "convertToScheduledFlights").id("ConvertToScheduledFlightsBeanProcessor")
-                .to("direct:convertScheduledFlightsToNetex")
-        ;
-
         from("direct:convertScheduledFlightsToNetex")
                 .routeId("ScheduledFlightsToNetexConverter")
                 .log(LoggingLevel.DEBUG, this.getClass().getName(), "Converting scheduled flights to NeTEx")
-                .split(body()).parallelProcessing()
+                // @todo: is it the parallel processing that gives the random errors in netex data?
+                // @todo: probably not, because we get the error even without parallel processing
+                .split(body())//.parallelProcessing()
                     .to("direct:enrichScheduledFlightWithAirportNames")
                     .log(LoggingLevel.DEBUG, this.getClass().getName(), "Converting scheduled direct flight with id: ${body.airlineFlightId}")
                     .bean(ScheduledFlightToNetexConverter.class, "convertToNetex").id("ConvertFlightsToNetexProcessor")
@@ -194,12 +198,17 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .end()
         ;
 
-        // @todo: write unit test for this route
         from("direct:enrichScheduledStopoverFlightWithAirportNames")
                 .routeId("ScheduledStopoverFlightAirportNameEnricher")
                 .setHeader(HEADER_STOPOVER_FLIGHT_ORIGINAL_BODY, body())
-                .split(simple("${body.scheduledStopovers}"), new StopoverListAggregationStrategy())
-                    .process(new StopverIataInitProcessor())
+                .split(simple("${body.scheduledStopovers}"), new StopoverFlightAggregationStrategy())
+                    .log("Processing fragment [${property[CamelSplitIndex]}]:${body}")
+                    .process(exchange -> {
+                        ScheduledStopover originalBody = exchange.getIn().getBody(ScheduledStopover.class);
+                        exchange.setProperty(PROPERTY_STOPOVER_ORIGINAL_BODY, originalBody);
+                        String enrichParameter = originalBody.getAirportIATA();
+                        exchange.getIn().setBody(enrichParameter);
+                    }).id("SetEnrichParameterForStopoverProcessor")
                     .enrich("direct:retrieveAirportNameResource", new StopoverIataEnricherAggregationStrategy())
                 .end()
         ;
@@ -223,7 +232,6 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .routeId("AirportNameGetFromCache")
                 .setHeader(CacheConstants.CACHE_OPERATION, constant(CacheConstants.CACHE_OPERATION_GET))
                 .setHeader(CacheConstants.CACHE_KEY, simple("${body}"))
-                .log(LoggingLevel.DEBUG, this.getClass().getName(), String.format("Getting from cache by key: ${header.%s}", CacheConstants.CACHE_KEY))
                 .to("cache://avinorTimetableCache").id("CacheGetAirportNameProcessor")
         ;
 
@@ -336,19 +344,21 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
         }
     }
 
-    class StopoverListAggregationStrategy implements AggregationStrategy {
+    class StopoverFlightAggregationStrategy implements AggregationStrategy {
         @Override
         public Exchange aggregate(Exchange oldExchange, Exchange newExchange) {
             ScheduledStopover newExchangeBody = newExchange.getIn().getBody(ScheduledStopover.class);
             if (oldExchange == null) {
                 ScheduledStopoverFlight originalBody = newExchange.getIn().getHeader(
                         HEADER_STOPOVER_FLIGHT_ORIGINAL_BODY, ScheduledStopoverFlight.class);
-                originalBody.getScheduledStopovers().add(newExchangeBody);
+                Integer splitIndex = newExchange.getProperty("CamelSplitIndex", Integer.class);
+                originalBody.getScheduledStopovers().set(splitIndex, newExchangeBody);
                 newExchange.getIn().setBody(originalBody);
                 return newExchange;
             } else {
                 ScheduledStopoverFlight oldExchangeBody = oldExchange.getIn().getBody(ScheduledStopoverFlight.class);
-                oldExchangeBody.getScheduledStopovers().add(newExchangeBody);
+                Integer splitIndex = newExchange.getProperty("CamelSplitIndex", Integer.class);
+                oldExchangeBody.getScheduledStopovers().set(splitIndex, newExchangeBody);
                 return oldExchange;
             }
         }
@@ -370,16 +380,6 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
             ScheduledDirectFlight originalBody = exchange.getIn().getBody(ScheduledDirectFlight.class);
             exchange.setProperty(PROPERTY_DIRECT_FLIGHT_ORIGINAL_BODY, originalBody);
             String enrichParameter = originalBody.getArrivalAirportIATA();
-            exchange.getIn().setBody(enrichParameter);
-        }
-    }
-
-    class StopverIataInitProcessor implements Processor {
-        @Override
-        public void process(Exchange exchange) throws Exception {
-            ScheduledStopover originalBody = exchange.getIn().getBody(ScheduledStopover.class);
-            exchange.setProperty(PROPERTY_STOPOVER_ORIGINAL_BODY, originalBody);
-            String enrichParameter = originalBody.getAirportIATA();
             exchange.getIn().setBody(enrichParameter);
         }
     }
