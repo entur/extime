@@ -343,7 +343,6 @@
                             </plugins>
                         </configuration>
                     </execution>
-<!--
                     <execution>
                         <id>xjc-airlines</id>
                         <phase>generate-sources</phase>
@@ -375,7 +374,6 @@
                             </plugins>
                         </configuration>
                     </execution>
--->
                 </executions>
             </plugin>
             <plugin>

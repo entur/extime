@@ -63,7 +63,8 @@ public class ScheduledFlightToNetexConverter {
         Frames_RelStructure frames = objectFactory().createFrames_RelStructure();
         frames.getCommonFrame().add(createResourceFrame(operator));
         frames.getCommonFrame().add(createSiteFrame(stopPlaces));
-        frames.getCommonFrame().add(createServiceFrame(flightId, routePoints, route, line, scheduledStopPoints, journeyPattern, stopAssignments));
+        frames.getCommonFrame().add(createServiceFrame(scheduledFlight.getAirlineName(), flightId, routePoints,
+                route, line, scheduledStopPoints, journeyPattern, stopAssignments));
         frames.getCommonFrame().add(createTimetableFrame(dateOfOperation, serviceJourneys));
         frames.getCommonFrame().add(createServiceCalendarFrame(dayTypes));
 
@@ -129,14 +130,14 @@ public class ScheduledFlightToNetexConverter {
         return objectFactory().createSiteFrame(siteFrame);
     }
 
-    public JAXBElement<ServiceFrame> createServiceFrame(String flightId, List<RoutePoint> routePoints,
+    public JAXBElement<ServiceFrame> createServiceFrame(String airlineName, String flightId, List<RoutePoint> routePoints,
                                                         Route route, Line line, List<ScheduledStopPoint> scheduledStopPoints,
                                                         JourneyPattern journeyPattern, List<PassengerStopAssignment> stopAssignments) {
         Network network = objectFactory().createNetwork()
                 .withVersion("1")
                 .withChanged(DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse("2016-08-16T08:24:21Z", OffsetDateTime::from))
                 .withId(String.format("%s:GroupOfLine:%s", getAvinorConfig().getId(), getAvinorConfig().getName()))
-                .withName(createMultilingualString(getAvinorConfig().getName()));
+                .withName(createMultilingualString(airlineName));
         RoutePointsInFrame_RelStructure routePointsInFrame = objectFactory().createRoutePointsInFrame_RelStructure()
                 .withRoutePoint(routePoints);
         RoutesInFrame_RelStructure routesInFrame = objectFactory().createRoutesInFrame_RelStructure();

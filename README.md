@@ -29,6 +29,9 @@ avinor.realtime.arrivals.timeto=96
 # Avinor airport service settings
 avinor.airport.feed.endpoint=http://flydata.avinor.no/airportNames.asp
 
+# Avinor airline service settings
+avinor.airline.feed.endpoint=http://flydata.avinor.no/airlineNames.asp
+
 # Logging settings
 logging.level.no.rutebanken=DEBUG
 

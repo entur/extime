@@ -7,9 +7,10 @@ import java.util.Set;
 
 public abstract class ScheduledFlight {
 
-    protected String airlineIATA;
-    protected String airlineFlightId;
-    protected LocalDate dateOfOperation;
+    private String airlineIATA;
+    private String airlineName;
+    private String airlineFlightId;
+    private LocalDate dateOfOperation;
     private Set<DayOfWeek> weekDaysPattern;
 
     public String getAirlineIATA() {
@@ -18,6 +19,14 @@ public abstract class ScheduledFlight {
 
     public void setAirlineIATA(String airlineIATA) {
         this.airlineIATA = airlineIATA;
+    }
+
+    public String getAirlineName() {
+        return airlineName;
+    }
+
+    public void setAirlineName(String airlineName) {
+        this.airlineName = airlineName;
     }
 
     public String getAirlineFlightId() {
@@ -64,6 +73,7 @@ public abstract class ScheduledFlight {
         ScheduledFlight that = (ScheduledFlight) o;
 
         if (airlineIATA != null ? !airlineIATA.equals(that.airlineIATA) : that.airlineIATA != null) return false;
+        if (airlineName != null ? !airlineName.equals(that.airlineName) : that.airlineName != null) return false;
         if (airlineFlightId != null ? !airlineFlightId.equals(that.airlineFlightId) : that.airlineFlightId != null)
             return false;
         if (dateOfOperation != null ? !dateOfOperation.equals(that.dateOfOperation) : that.dateOfOperation != null)
@@ -75,6 +85,7 @@ public abstract class ScheduledFlight {
     @Override
     public int hashCode() {
         int result = airlineIATA != null ? airlineIATA.hashCode() : 0;
+        result = 31 * result + (airlineName != null ? airlineName.hashCode() : 0);
         result = 31 * result + (airlineFlightId != null ? airlineFlightId.hashCode() : 0);
         result = 31 * result + (dateOfOperation != null ? dateOfOperation.hashCode() : 0);
         result = 31 * result + (weekDaysPattern != null ? weekDaysPattern.hashCode() : 0);
@@ -85,11 +96,11 @@ public abstract class ScheduledFlight {
     public String toString() {
         final StringBuilder sb = new StringBuilder("ScheduledFlight{");
         sb.append("airlineIATA='").append(airlineIATA).append('\'');
+        sb.append(", airlineName='").append(airlineName).append('\'');
         sb.append(", airlineFlightId='").append(airlineFlightId).append('\'');
         sb.append(", dateOfOperation=").append(dateOfOperation);
         sb.append(", weekDaysPattern=").append(weekDaysPattern);
         sb.append('}');
         return sb.toString();
     }
-
 }

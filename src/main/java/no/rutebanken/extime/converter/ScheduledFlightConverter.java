@@ -26,6 +26,10 @@ public class ScheduledFlightConverter {
         List<ScheduledStopoverFlight> scheduledStopoverFlights = new ArrayList<>();
 
         for (Flight scheduledFlight : scheduledFlights) {
+            // @todo: we probably need this here instead, and then send the result to next findPossibleStopoversForFlight method
+            // @todo: we need this to be able to store ids of flights belonging to a flight with stopovers
+            // LinkedList<Flight> stopoverFlights = findPossibleStopoversForFlight(currentFlight, flightsByDepartureAirport, Lists.newLinkedList());
+
             List<ScheduledStopover> scheduledStopovers = findPossibleStopoversForFlight(scheduledFlight, flightsByDepartureAirport);
             if (!scheduledStopovers.isEmpty()) {
                 ScheduledStopoverFlight scheduledStopoverFlight = new ScheduledStopoverFlight();
@@ -102,6 +106,8 @@ public class ScheduledFlightConverter {
      *
      * For example, flight WF149 between Oslo and Bergen, operates every work day (man-fri) with departure time 14:05
      * but also one day at the weekend, sunday, with departure time at 14:00
+     *
+     * Also, one flight can operate with one route (i.e. OSL-HOV-SOG-BGO) some days, and another route (i.e. OSL-HOV-BGO) some other day, support!
      */
     private Set<DayOfWeek> findJourneyPatterns(String flightId, List<? extends ScheduledFlight> flights) {
         SortedSet<DayOfWeek> daysOfWeek = new TreeSet<>();
@@ -124,10 +130,14 @@ public class ScheduledFlightConverter {
     // @todo: i.e. keep track of flights added to a route and check against this collection for each new flight
     public List<ScheduledStopover> findPossibleStopoversForFlight(Flight currentFlight, Map<String, List<Flight>> flightsByDepartureAirport) {
         List<ScheduledStopover> scheduledStopovers = new ArrayList<>();
+
+        // @todo: consider extracting this statement to outside of this method, so we can get a hold of all flight unique ids before more processing.
         LinkedList<Flight> stopoverFlights = findPossibleStopoversForFlight(currentFlight, flightsByDepartureAirport, Lists.newLinkedList());
         if (!stopoverFlights.isEmpty()) {
             stopoverFlights.addFirst(currentFlight);
 
+            // @todo: fix this bug, it is not correct to do this here, we need to capture subflights also
+            // @todo: as part of a main flight, even when the subflight does not have any stopovers
             Set<BigInteger> uniqueFlightIds = stopoverFlights.stream()
                     .map(Flight::getId)
                     .collect(Collectors.toSet());

@@ -48,6 +48,9 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
     @Produce(uri = "direct:fetchAirportNameFromFeed")
     private ProducerTemplate fetchAirportNameTemplate;
 
+    @Produce(uri = "direct:fetchAirlineNameFromFeed")
+    private ProducerTemplate fetchAirlineNameTemplate;
+
     @Produce(uri = "direct:fetchTimetableForLargeAirport")
     private ProducerTemplate fetchTimetableForLargeAirportTemplate;
 
@@ -202,6 +205,32 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
     }
 
     @Test
+    public void testFetchAirlineNameFromFeed() throws Exception {
+        context.getRouteDefinition("FetchAirlineNameFromFeed").adviceWith(context, new AdviceWithRouteBuilder() {
+            @Override
+            public void configure() throws Exception {
+                interceptSendToEndpoint("mock:airlineFeedEndpoint").process(exchange -> {
+                    InputStream inputStream = new FileInputStream("target/classes/xml/airlinename-dy.xml");
+                    exchange.getIn().setBody(inputStream);
+                });
+            }
+        });
+        context.start();
+
+        getMockEndpoint("mock:airlineFeedEndpoint").expectedMessageCount(1);
+        getMockEndpoint("mock:airlineFeedEndpoint").expectedHeaderReceived(Exchange.HTTP_METHOD, HttpMethods.GET);
+        getMockEndpoint("mock:airlineFeedEndpoint").expectedHeaderReceived(Exchange.HTTP_QUERY, "airline=DY");
+
+        String airlineName = (String) fetchAirlineNameTemplate.requestBodyAndHeader("DY", HEADER_TIMETABLE_AIRLINE_IATA, "DY");
+
+        assertMockEndpointsSatisfied();
+        Assertions.assertThat(airlineName)
+                .isNotNull()
+                .isNotEmpty()
+                .isEqualTo("Norwegian");
+    }
+
+    @Test
     public void testFetchTimetableForAirportByRanges() throws Exception {
         context.getRouteDefinition("FetchTimetableForAirportByDateRanges").adviceWith(context, new AdviceWithRouteBuilder() {
             @Override
@@ -353,20 +382,28 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
     }
 
     @Test
+    @Ignore
     public void testConvertScheduledFlightsToNetex() throws Exception {
         context.getRouteDefinition("ScheduledFlightsToNetexConverter").adviceWith(context, new AdviceWithRouteBuilder() {
             @Override
             public void configure() throws Exception {
+                weaveById("AirlineIataPreEnrichProcessor").replace().to("mock:airlineIataPreProcess");
                 weaveById("ConvertFlightsToNetexProcessor").replace().to("mock:convertToNetex");
                 interceptSendToEndpoint("mock:convertToNetex").process(exchange -> exchange.getIn().setBody(createPublicationDeliveryElement()));
                 weaveById("GenerateFileNameProcessor").replace().to("mock:generateFileName");
                 interceptSendToEndpoint("mock:generateFileName").process(
                         exchange -> exchange.getIn().setHeader("FileNameGenerated", "067e6162-3b6f-4ae2-a171-2470b63dff00"));
-                mockEndpointsAndSkip("direct:enrichScheduledFlightWithAirportNames", "file:target/netex");
+                mockEndpointsAndSkip(
+                        "direct:retrieveAirlineNameResource",
+                        "direct:enrichScheduledFlightWithAirportNames",
+                        "file:target/netex"
+                );
             }
         });
         context.start();
 
+        getMockEndpoint("mock:airlineIataPreProcess").expectedMessageCount(2);
+        getMockEndpoint("mock:direct:retrieveAirlineNameResource").expectedMessageCount(2);
         getMockEndpoint("mock:direct:enrichScheduledFlightWithAirportNames").expectedMessageCount(2);
         getMockEndpoint("mock:convertToNetex").expectedMessageCount(2);
         getMockEndpoint("mock:generateFileName").expectedMessageCount(2);
@@ -633,6 +670,7 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
                     put("avinor.airport.feed.endpoint", "mock:airportFeedEndpoint");
                     put("avinor.airports.small", "EVE,KRS,MOL,SOG,TOS");
                     put("avinor.airports.large", "BGO,BOO,SVG,TRD");
+                    put("avinor.airline.feed.endpoint", "mock:airlineFeedEndpoint");
                 }};
                 return testProperties.get(key);
             }
