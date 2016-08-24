@@ -116,7 +116,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .log(LoggingLevel.DEBUG, this.getClass().getName(), "Fetching airport name from feed by IATA: ${header.TimetableAirportIATA}")
                 .setHeader(HEADER_EXTIME_HTTP_URI, simple("{{avinor.airport.feed.endpoint}}"))
                 .setHeader(HEADER_EXTIME_URI_PARAMETERS, simpleF("airport=${header.%s}&shortname=Y&ukname=Y", HEADER_TIMETABLE_AIRPORT_IATA))
-                .to("direct:fetchFromHttpResource").id("FetchAirportNameFromHttpResourceProcessor")
+                .to("direct:fetchXmlStreamFromHttpFeed").id("FetchAirportNameFromHttpFeedProcessor")
                 .convertBodyTo(AirportNames.class)
                 .process(exchange -> exchange.getIn().setBody(exchange.getIn().getBody(AirportNames.class).getAirportName().get(0).getName(), String.class))
         ;
@@ -126,7 +126,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .log(LoggingLevel.DEBUG, this.getClass().getName(), "Fetching airline name from feed by IATA: ${header.TimetableAirlineIATA}")
                 .setHeader(HEADER_EXTIME_HTTP_URI, simple("{{avinor.airline.feed.endpoint}}"))
                 .setHeader(HEADER_EXTIME_URI_PARAMETERS, simpleF("airline=${header.%s}", HEADER_TIMETABLE_AIRLINE_IATA))
-                .to("direct:fetchFromHttpResource").id("FetchAirlineNameFromHttpResourceProcessor")
+                .to("direct:fetchXmlStreamFromHttpFeed").id("FetchAirlineNameFromHttpFeedProcessor")
                 .convertBodyTo(AirlineNames.class)
                 .process(exchange -> exchange.getIn().setBody(exchange.getIn().getBody(AirlineNames.class).getAirlineName().get(0).getName(), String.class))
         ;
@@ -150,23 +150,9 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                             HEADER_TIMETABLE_AIRPORT_IATA, HEADER_LOWER_RANGE_ENDPOINT, HEADER_UPPER_RANGE_ENDPOINT))
                     .log(LoggingLevel.DEBUG, this.getClass().getName(),
                             "Fetching flights for ${header.TimetableAirportIATA} by date range: ${header.LowerRangeEndpoint} - ${header.UpperRangeEndpoint}")
-                    .to("direct:fetchFromHttpResource").id("FetchFromHttpResourceByRangeAndSVTProcessor")
+                    .to("direct:fetchXmlStreamFromHttpFeed").id("FetchFromHttpFeedByRangeAndSVTProcessor")
                     .to("direct:splitJoinIncomingFlightMessages").id("SplitAndJoinRangeSVTFlightsProcessor")
                 .end()
-        ;
-
-        from("direct:fetchFromHttpResource")
-                .routeId("FetchFromHttpResource")
-                .setHeader(Exchange.HTTP_METHOD, constant(HttpMethods.GET))
-                .setHeader(Exchange.HTTP_QUERY, simpleF("${header.%s}", HEADER_EXTIME_URI_PARAMETERS))
-                .setHeader(HEADER_EXTIME_HTTP_URI).method(AvinorTimetableUtils.class, "useHttp4Client")
-                .log(LoggingLevel.DEBUG, this.getClass().getName(), "HTTP URI HEADER: ${header.ExtimeHttpUri}")
-                .log(LoggingLevel.DEBUG, this.getClass().getName(), "HTTP QUERY HEADER: ${header.CamelHttpQuery}")
-                .setBody(constant(null))
-                .toD("${header.ExtimeHttpUri}").id("FetchFromHttpResourceProcessor")
-                .convertBodyTo(StreamSource.class, "iso-8859-1") // @todo: consider switching to one of below converters (compare performance!)
-                //.convertBodyTo(String.class, "iso-8859-1")
-                //.convertBodyTo(Document.class, "iso-8859-1")
         ;
 
         // @todo: fixe some useful wiretapping feature in split

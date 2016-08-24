@@ -15,7 +15,6 @@ import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.AdviceWithRouteBuilder;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.cache.CacheConstants;
-import org.apache.camel.component.http4.HttpMethods;
 import org.apache.camel.component.properties.DefaultPropertiesParser;
 import org.apache.camel.component.properties.PropertiesComponent;
 import org.apache.camel.impl.JndiRegistry;
@@ -26,7 +25,10 @@ import org.assertj.core.api.Assertions;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
+import javax.xml.bind.JAXBException;
+import javax.xml.transform.stream.StreamSource;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.math.BigInteger;
@@ -183,7 +185,8 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         context.getRouteDefinition("FetchAirportNameFromFeed").adviceWith(context, new AdviceWithRouteBuilder() {
             @Override
             public void configure() throws Exception {
-                interceptSendToEndpoint("mock:airportFeedEndpoint").process(exchange -> {
+                weaveById("FetchAirportNameFromHttpFeedProcessor").replace().to("mock:fetchXmlFromHttp");
+                interceptSendToEndpoint("mock:fetchXmlFromHttp").process(exchange -> {
                     InputStream inputStream = new FileInputStream("target/classes/xml/airportname-osl.xml");
                     exchange.getIn().setBody(inputStream);
                 });
@@ -191,9 +194,9 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         });
         context.start();
 
-        getMockEndpoint("mock:airportFeedEndpoint").expectedMessageCount(1);
-        getMockEndpoint("mock:airportFeedEndpoint").expectedHeaderReceived(Exchange.HTTP_METHOD, HttpMethods.GET);
-        getMockEndpoint("mock:airportFeedEndpoint").expectedHeaderReceived(Exchange.HTTP_QUERY, "airport=OSL&shortname=Y&ukname=Y");
+        getMockEndpoint("mock:fetchXmlFromHttp").expectedMessageCount(1);
+        getMockEndpoint("mock:fetchXmlFromHttp").expectedHeaderReceived(HEADER_EXTIME_HTTP_URI, "mock:airportFeedEndpoint");
+        getMockEndpoint("mock:fetchXmlFromHttp").expectedHeaderReceived(HEADER_EXTIME_URI_PARAMETERS, "airport=OSL&shortname=Y&ukname=Y");
 
         String airportName = (String) fetchAirportNameTemplate.requestBodyAndHeader("OSL", HEADER_TIMETABLE_AIRPORT_IATA, "OSL");
 
@@ -209,7 +212,8 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         context.getRouteDefinition("FetchAirlineNameFromFeed").adviceWith(context, new AdviceWithRouteBuilder() {
             @Override
             public void configure() throws Exception {
-                interceptSendToEndpoint("mock:airlineFeedEndpoint").process(exchange -> {
+                weaveById("FetchAirlineNameFromHttpFeedProcessor").replace().to("mock:fetchXmlFromHttp");
+                interceptSendToEndpoint("mock:fetchXmlFromHttp").process(exchange -> {
                     InputStream inputStream = new FileInputStream("target/classes/xml/airlinename-dy.xml");
                     exchange.getIn().setBody(inputStream);
                 });
@@ -217,9 +221,9 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         });
         context.start();
 
-        getMockEndpoint("mock:airlineFeedEndpoint").expectedMessageCount(1);
-        getMockEndpoint("mock:airlineFeedEndpoint").expectedHeaderReceived(Exchange.HTTP_METHOD, HttpMethods.GET);
-        getMockEndpoint("mock:airlineFeedEndpoint").expectedHeaderReceived(Exchange.HTTP_QUERY, "airline=DY");
+        getMockEndpoint("mock:fetchXmlFromHttp").expectedMessageCount(1);
+        getMockEndpoint("mock:fetchXmlFromHttp").expectedHeaderReceived(HEADER_EXTIME_HTTP_URI, "mock:airlineFeedEndpoint");
+        getMockEndpoint("mock:fetchXmlFromHttp").expectedHeaderReceived(HEADER_EXTIME_URI_PARAMETERS, "airline=DY");
 
         String airlineName = (String) fetchAirlineNameTemplate.requestBodyAndHeader("DY", HEADER_TIMETABLE_AIRLINE_IATA, "DY");
 
@@ -274,19 +278,17 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         context.getRouteDefinition("FetchFlightsByRangeAndStopVisitType").adviceWith(context, new AdviceWithRouteBuilder() {
             @Override
             public void configure() throws Exception {
-                mockEndpointsAndSkip("direct:fetchFromHttpResource");
+                mockEndpointsAndSkip("direct:fetchXmlStreamFromHttpFeed");
                 weaveById("SplitAndJoinRangeSVTFlightsProcessor").replace().to("mock:splitAndJoinEndpoint");
-                interceptSendToEndpoint("mock:splitAndJoinEndpoint").process(exchange -> {
-                    exchange.getIn().setBody(createDummyFlights());
-                });
+                interceptSendToEndpoint("mock:splitAndJoinEndpoint").process(exchange -> exchange.getIn().setBody(createDummyFlights()));
             }
         });
         context.start();
 
-        getMockEndpoint("mock:direct:fetchFromHttpResource").expectedMessageCount(2);
-        getMockEndpoint("mock:direct:fetchFromHttpResource").expectedHeaderValuesReceivedInAnyOrder(
+        getMockEndpoint("mock:direct:fetchXmlStreamFromHttpFeed").expectedMessageCount(2);
+        getMockEndpoint("mock:direct:fetchXmlStreamFromHttpFeed").expectedHeaderValuesReceivedInAnyOrder(
                 HEADER_TIMETABLE_STOP_VISIT_TYPE, StopVisitType.ARRIVAL, StopVisitType.DEPARTURE);
-        getMockEndpoint("mock:direct:fetchFromHttpResource").expectedHeaderValuesReceivedInAnyOrder(
+        getMockEndpoint("mock:direct:fetchXmlStreamFromHttpFeed").expectedHeaderValuesReceivedInAnyOrder(
                 HEADER_EXTIME_URI_PARAMETERS,
                 "airport=TRD&direction=A&PeriodFrom=2017-01-01Z&PeriodTo=2017-01-31Z",
                 "airport=TRD&direction=D&PeriodFrom=2017-01-01Z&PeriodTo=2017-01-31Z");
@@ -298,33 +300,6 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         headers.put(HEADER_UPPER_RANGE_ENDPOINT, "2017-01-31Z");
 
         template.sendBodyAndHeaders("direct:fetchAirportFlightsByRangeAndStopVisitType", null, headers);
-
-        assertMockEndpointsSatisfied();
-    }
-
-    @Test
-    public void testFetchFromHttpResource() throws Exception {
-        context.getRouteDefinition("FetchFromHttpResource").adviceWith(context, new AdviceWithRouteBuilder() {
-            @Override
-            public void configure() throws Exception {
-                weaveById("FetchFromHttpResourceProcessor").replace().to("mock:fetchFromHttpResource");
-            }
-        });
-        context.start();
-
-        getMockEndpoint("mock:fetchFromHttpResource").expectedMessageCount(1);
-        getMockEndpoint("mock:fetchFromHttpResource").expectedHeaderReceived(
-                Exchange.HTTP_METHOD, HttpMethods.GET);
-        getMockEndpoint("mock:fetchFromHttpResource").expectedHeaderReceived(
-                Exchange.HTTP_QUERY, "airport=TRD&direction=D&PeriodFrom=2017-01-01Z&PeriodTo=2017-01-31Z");
-        getMockEndpoint("mock:fetchFromHttpResource").expectedHeaderReceived(
-                HEADER_EXTIME_HTTP_URI, "http4://flydata.avinor.no/airportNames.asp");
-
-        Map<String,Object> headers = Maps.newHashMap();
-        headers.put(HEADER_EXTIME_HTTP_URI, "http://flydata.avinor.no/airportNames.asp");
-        headers.put(HEADER_EXTIME_URI_PARAMETERS, "airport=TRD&direction=D&PeriodFrom=2017-01-01Z&PeriodTo=2017-01-31Z");
-
-        template.sendBodyAndHeaders("direct:fetchFromHttpResource", null, headers);
 
         assertMockEndpointsSatisfied();
     }
@@ -646,6 +621,11 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
                 .withVersion("1.0")
                 .withPublicationTimestamp(DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse("2016-08-16T08:24:21Z", OffsetDateTime::from))
                 .withParticipantRef("AVI");
+    }
+
+    private <T> T generateObjectsFromXml(String resourceName, Class<T> clazz) throws JAXBException {
+        return JAXBContext.newInstance(clazz).createUnmarshaller().unmarshal(
+                new StreamSource(getClass().getResourceAsStream(resourceName)), clazz).getValue();
     }
 
     @Override
