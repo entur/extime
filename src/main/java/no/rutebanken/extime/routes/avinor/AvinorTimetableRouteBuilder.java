@@ -59,7 +59,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                     .log(LoggingLevel.DEBUG, this.getClass().getName(), "==========================================")
                     .log(LoggingLevel.DEBUG, this.getClass().getName(), "Processing airport with IATA code: ${body}")
                     .setHeader(HEADER_EXTIME_RESOURCE_CODE, simple("${body}"))
-                    .to("direct:fetchAirportNameByIATA").id("FetchAirportNameProcessor")
+                    .to("direct:fetchAndCacheAirportName").id("FetchAirportNameProcessor")
                     .to("direct:fetchTimetableForAirport").id("FetchTimetableProcessor")
                     .log(LoggingLevel.DEBUG, this.getClass().getName(), "Flights fetched for ${header.ExtimeResourceCode}")
                 .end()
@@ -72,22 +72,16 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .to("direct:convertScheduledFlightsToNetex")
         ;
 
-        /**
-         * @todo: change name of route to more descriptive, like fetchAndCacheAirportName
-         */
-        from("direct:fetchAirportNameByIATA")
-                .routeId("FetchAirportNameByIata")
+        from("direct:fetchAndCacheAirportName")
+                .routeId("FetchAndCacheAirportName")
                 .log(LoggingLevel.DEBUG, this.getClass().getName(), "Fetching airport name by IATA: ${header.ExtimeResourceCode}")
                 .to("direct:fetchAirportNameFromFeed")
                 .setHeader(HEADER_EXTIME_CACHE_KEY, simpleF("${header.%s}", HEADER_EXTIME_RESOURCE_CODE))
                 .to("direct:addResourceToCache")
         ;
 
-        /**
-         * @todo: change name of route to more descriptive, like fetchAndCacheAirlineName
-         */
-        from("direct:fetchAirlineNameByIata")
-                .routeId("FetchAirlineNameByIata")
+        from("direct:fetchAndCacheAirlineName")
+                .routeId("FetchAndCacheAirlineName")
                 .log(LoggingLevel.DEBUG, this.getClass().getName(), "Fetching airline name by IATA: ${header.ExtimeResourceCode}")
                 .to("direct:fetchAirlineNameFromFeed")
                 .setHeader(HEADER_EXTIME_CACHE_KEY, simpleF("${header.%s}", HEADER_EXTIME_RESOURCE_CODE))
@@ -169,8 +163,6 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
         from("direct:convertScheduledFlightsToNetex")
                 .routeId("ScheduledFlightsToNetexConverter")
                 .log(LoggingLevel.DEBUG, this.getClass().getName(), "Converting scheduled flights to NeTEx")
-                // @todo: is it the parallel processing that gives the random errors in netex data?
-                // @todo: probably not, because we get the error even without parallel processing
                 .split(body())//.parallelProcessing()
                     .process(exchange -> {
                         ScheduledFlight originalBody = exchange.getIn().getBody(ScheduledFlight.class);
@@ -178,7 +170,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                         String enrichParameter = originalBody.getAirlineIATA();
                         exchange.getIn().setBody(enrichParameter);
                     }).id("AirlineIataPreEnrichProcessor")
-                    .setHeader(HEADER_EXTIME_FETCH_RESOURCE_ENDPOINT, constant("direct:fetchAirlineNameByIata"))
+                    .setHeader(HEADER_EXTIME_FETCH_RESOURCE_ENDPOINT, constant("direct:fetchAndCacheAirlineName"))
                     .enrich("direct:retrieveResource", new AirlineNameEnricherAggregationStrategy())
                     .to("direct:enrichScheduledFlightWithAirportNames")
                     .log(LoggingLevel.DEBUG, this.getClass().getName(), "Converting scheduled direct flight with id: ${body.airlineFlightId}")
@@ -200,7 +192,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
         // @todo: write unit test for this route
         from("direct:enrichScheduledFlightWithAirportNames")
                 .routeId("ScheduledFlightAirportNameEnricher")
-                .setHeader(HEADER_EXTIME_FETCH_RESOURCE_ENDPOINT, constant("direct:fetchAirportNameByIATA"))
+                .setHeader(HEADER_EXTIME_FETCH_RESOURCE_ENDPOINT, constant("direct:fetchAndCacheAirportName"))
                 .choice()
                     .when(body().isInstanceOf(ScheduledDirectFlight.class))
                         .process(new DepartureIataInitProcessor())

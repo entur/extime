@@ -81,7 +81,7 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
                     exchange.getIn().setBody(new AirportIATA[]{AirportIATA.OSL, AirportIATA.BGO, AirportIATA.EVE});
                 });
                 weaveById("TimetableDateRangeProcessor").replace().to("mock:setupDateRanges");
-                mockEndpointsAndSkip("direct:fetchAirportNameByIATA");
+                mockEndpointsAndSkip("direct:fetchAndCacheAirportName");
                 weaveById("FetchTimetableProcessor").replace().to("mock:fetchTimetable");
                 interceptSendToEndpoint("mock:fetchTimetable").process(exchange -> {
                     exchange.getIn().setBody(createDummyFlights());
@@ -92,8 +92,8 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         });
         context.start();
 
-        getMockEndpoint("mock:direct:fetchAirportNameByIATA").expectedMessageCount(3);
-        getMockEndpoint("mock:direct:fetchAirportNameByIATA").expectedHeaderValuesReceivedInAnyOrder(
+        getMockEndpoint("mock:direct:fetchAndCacheAirportName").expectedMessageCount(3);
+        getMockEndpoint("mock:direct:fetchAndCacheAirportName").expectedHeaderValuesReceivedInAnyOrder(
                 HEADER_EXTIME_RESOURCE_CODE, "OSL", "BGO", "EVE");
         getMockEndpoint("mock:fetchTimetable").expectedMessageCount(3);
         getMockEndpoint("mock:convertToScheduledFlights").expectedMessageCount(1);
@@ -105,8 +105,8 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
     }
 
     @Test
-    public void testFetchAirportNameByIata() throws Exception {
-        context.getRouteDefinition("FetchAirportNameByIata").adviceWith(context, new AdviceWithRouteBuilder() {
+    public void testFetchAndCacheAirportName() throws Exception {
+        context.getRouteDefinition("FetchAndCacheAirportName").adviceWith(context, new AdviceWithRouteBuilder() {
             @Override
             public void configure() throws Exception {
                 mockEndpointsAndSkip(
@@ -121,14 +121,14 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         getMockEndpoint("mock:direct:fetchAirportNameFromFeed").expectedHeaderReceived(HEADER_EXTIME_RESOURCE_CODE, "OSL");
         getMockEndpoint("mock:direct:addResourceToCache").expectedMessageCount(1);
 
-        template.sendBodyAndHeader("direct:fetchAirportNameByIATA", null, HEADER_EXTIME_RESOURCE_CODE, "OSL");
+        template.sendBodyAndHeader("direct:fetchAndCacheAirportName", null, HEADER_EXTIME_RESOURCE_CODE, "OSL");
 
         assertMockEndpointsSatisfied();
     }
 
     @Test
-    public void testFetchAirlineNameByIata() throws Exception {
-        context.getRouteDefinition("FetchAirlineNameByIata").adviceWith(context, new AdviceWithRouteBuilder() {
+    public void testFetchAndCacheAirlineName() throws Exception {
+        context.getRouteDefinition("FetchAndCacheAirlineName").adviceWith(context, new AdviceWithRouteBuilder() {
             @Override
             public void configure() throws Exception {
                 mockEndpointsAndSkip(
@@ -144,7 +144,7 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         getMockEndpoint("mock:direct:addResourceToCache").expectedMessageCount(1);
         getMockEndpoint("mock:direct:addResourceToCache").expectedHeaderReceived(HEADER_EXTIME_CACHE_KEY, "DY");
 
-        template.sendBodyAndHeader("direct:fetchAirlineNameByIata", null, HEADER_EXTIME_RESOURCE_CODE, "DY");
+        template.sendBodyAndHeader("direct:fetchAndCacheAirlineName", null, HEADER_EXTIME_RESOURCE_CODE, "DY");
 
         assertMockEndpointsSatisfied();
     }
