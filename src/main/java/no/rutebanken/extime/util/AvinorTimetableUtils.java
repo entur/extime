@@ -4,7 +4,6 @@ import com.google.common.collect.Lists;
 import no.avinor.flydata.xjc.model.scheduled.Flight;
 import no.avinor.flydata.xjc.model.scheduled.Flights;
 import no.rutebanken.extime.model.AirportIATA;
-import no.rutebanken.extime.model.ScheduledFlight;
 import no.rutebanken.extime.model.StopVisitType;
 import org.apache.camel.Header;
 import org.apache.commons.lang3.EnumUtils;
@@ -16,7 +15,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEADER_EXTIME_HTTP_URI;
+import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.HEADER_EXTIME_HTTP_URI;
 
 public class AvinorTimetableUtils {
 
