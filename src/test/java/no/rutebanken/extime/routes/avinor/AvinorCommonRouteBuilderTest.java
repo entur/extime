@@ -28,12 +28,12 @@ public class AvinorCommonRouteBuilderTest extends CamelTestSupport {
         context.start();
 
         getMockEndpoint("mock:cacheAdd").expectedMessageCount(1);
-        getMockEndpoint("mock:cacheAdd").expectedHeaderReceived(HEADER_EXTIME_CACHE_KEY, "OSL");
+        getMockEndpoint("mock:cacheAdd").expectedHeaderReceived(HEADER_EXTIME_RESOURCE_CODE, "OSL");
         getMockEndpoint("mock:cacheAdd").expectedHeaderReceived(CacheConstants.CACHE_OPERATION, CacheConstants.CACHE_OPERATION_ADD);
         getMockEndpoint("mock:cacheAdd").expectedHeaderReceived(CacheConstants.CACHE_KEY, "OSL");
         getMockEndpoint("mock:cacheAdd").expectedBodiesReceived("Oslo");
 
-        template.sendBodyAndHeader("direct:addResourceToCache", "Oslo", HEADER_EXTIME_CACHE_KEY, "OSL");
+        template.sendBodyAndHeader("direct:addResourceToCache", "Oslo", HEADER_EXTIME_RESOURCE_CODE, "OSL");
 
         assertMockEndpointsSatisfied();
     }

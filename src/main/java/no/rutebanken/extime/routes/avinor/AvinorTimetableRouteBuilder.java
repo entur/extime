@@ -74,17 +74,23 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
 
         from("direct:fetchAndCacheAirportName")
                 .routeId("FetchAndCacheAirportName")
-                .log(LoggingLevel.DEBUG, this.getClass().getName(), "Fetching airport name by IATA: ${header.ExtimeResourceCode}")
-                .to("direct:fetchAirportNameFromFeed")
-                .setHeader(HEADER_EXTIME_CACHE_KEY, simpleF("${header.%s}", HEADER_EXTIME_RESOURCE_CODE))
+                .log(LoggingLevel.DEBUG, this.getClass().getName(), "Fetching airport name by IATA code: ${header.ExtimeResourceCode}")
+                .setHeader(HEADER_EXTIME_HTTP_URI, simple("{{avinor.airport.feed.endpoint}}"))
+                .setHeader(HEADER_EXTIME_URI_PARAMETERS, simpleF("airport=${header.%s}&shortname=Y&ukname=Y", HEADER_EXTIME_RESOURCE_CODE))
+                .to("direct:fetchXmlStreamFromHttpFeed").id("FetchAirportNameFromHttpFeedProcessor")
+                .convertBodyTo(AirportNames.class)
+                .process(exchange -> exchange.getIn().setBody(exchange.getIn().getBody(AirportNames.class).getAirportName().get(0).getName(), String.class))
                 .to("direct:addResourceToCache")
         ;
 
         from("direct:fetchAndCacheAirlineName")
                 .routeId("FetchAndCacheAirlineName")
-                .log(LoggingLevel.DEBUG, this.getClass().getName(), "Fetching airline name by IATA: ${header.ExtimeResourceCode}")
-                .to("direct:fetchAirlineNameFromFeed")
-                .setHeader(HEADER_EXTIME_CACHE_KEY, simpleF("${header.%s}", HEADER_EXTIME_RESOURCE_CODE))
+                .log(LoggingLevel.DEBUG, this.getClass().getName(), "Fetching airline name by IATA code: ${header.ExtimeResourceCode}")
+                .setHeader(HEADER_EXTIME_HTTP_URI, simple("{{avinor.airline.feed.endpoint}}"))
+                .setHeader(HEADER_EXTIME_URI_PARAMETERS, simpleF("airline=${header.%s}", HEADER_EXTIME_RESOURCE_CODE))
+                .to("direct:fetchXmlStreamFromHttpFeed").id("FetchAirlineNameFromHttpFeedProcessor")
+                .convertBodyTo(AirlineNames.class)
+                .process(exchange -> exchange.getIn().setBody(exchange.getIn().getBody(AirlineNames.class).getAirlineName().get(0).getName(), String.class))
                 .to("direct:addResourceToCache")
         ;
 
@@ -102,26 +108,6 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                         .setBody(simpleF("${header.%s}", HEADER_TIMETABLE_SMALL_AIRPORT_RANGE))
                         .to("direct:fetchTimetableForAirportByRanges")
                 .end()
-        ;
-
-        from("direct:fetchAirportNameFromFeed")
-                .routeId("FetchAirportNameFromFeed")
-                .log(LoggingLevel.DEBUG, this.getClass().getName(), "Fetching airport name from feed by IATA: ${header.ExtimeResourceCode}")
-                .setHeader(HEADER_EXTIME_HTTP_URI, simple("{{avinor.airport.feed.endpoint}}"))
-                .setHeader(HEADER_EXTIME_URI_PARAMETERS, simpleF("airport=${header.%s}&shortname=Y&ukname=Y", HEADER_EXTIME_RESOURCE_CODE))
-                .to("direct:fetchXmlStreamFromHttpFeed").id("FetchAirportNameFromHttpFeedProcessor")
-                .convertBodyTo(AirportNames.class)
-                .process(exchange -> exchange.getIn().setBody(exchange.getIn().getBody(AirportNames.class).getAirportName().get(0).getName(), String.class))
-        ;
-
-        from("direct:fetchAirlineNameFromFeed")
-                .routeId("FetchAirlineNameFromFeed")
-                .log(LoggingLevel.DEBUG, this.getClass().getName(), "Fetching airline name from feed by IATA: ${header.ExtimeResourceCode}")
-                .setHeader(HEADER_EXTIME_HTTP_URI, simple("{{avinor.airline.feed.endpoint}}"))
-                .setHeader(HEADER_EXTIME_URI_PARAMETERS, simpleF("airline=${header.%s}", HEADER_EXTIME_RESOURCE_CODE))
-                .to("direct:fetchXmlStreamFromHttpFeed").id("FetchAirlineNameFromHttpFeedProcessor")
-                .convertBodyTo(AirlineNames.class)
-                .process(exchange -> exchange.getIn().setBody(exchange.getIn().getBody(AirlineNames.class).getAirlineName().get(0).getName(), String.class))
         ;
 
         from("direct:fetchTimetableForAirportByRanges")
@@ -283,6 +269,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
             }
         }
 
+        // @todo: refactor! - duplicate in AvinorTimetableUtils (make static)
         private boolean isValidFlight(StopVisitType stopVisitType, Flight newFlight) {
             switch (stopVisitType) {
                 case ARRIVAL:
@@ -293,10 +280,12 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
             return false;
         }
 
+        // @todo: refactor! - duplicate in AvinorTimetableUtils (make static)
         private boolean isDomesticFlight(Flight flight) {
             return isValidDepartureAndArrival(flight.getDepartureStation(), flight.getArrivalStation());
         }
 
+        // @todo: refactor! - duplicate in AvinorTimetableUtils (make static)
         private boolean isValidDepartureAndArrival(String departureIATA, String arrivalIATA) {
             return EnumUtils.isValidEnum(AirportIATA.class, departureIATA)
                     && EnumUtils.isValidEnum(AirportIATA.class, arrivalIATA);

@@ -17,7 +17,6 @@ public class AvinorCommonRouteBuilder extends RouteBuilder {
 
     public static final String HEADER_EXTIME_RESOURCE_CODE = "ExtimeResourceCode";
     public static final String HEADER_EXTIME_FETCH_RESOURCE_ENDPOINT = "ExtimeFetchResourceEndpoint";
-    public static final String HEADER_EXTIME_CACHE_KEY = "ExtimeCacheKey";
     public static final String HEADER_EXTIME_HTTP_URI = "ExtimeHttpUri";
     public static final String HEADER_EXTIME_URI_PARAMETERS = "ExtimeUriParameters";
 
@@ -39,7 +38,7 @@ public class AvinorCommonRouteBuilder extends RouteBuilder {
         from("direct:addResourceToCache")
                 .routeId("AddResourceToCache")
                 .setHeader(CacheConstants.CACHE_OPERATION, constant(CacheConstants.CACHE_OPERATION_ADD))
-                .setHeader(CacheConstants.CACHE_KEY, simpleF("${header.%s}", HEADER_EXTIME_CACHE_KEY))
+                .setHeader(CacheConstants.CACHE_KEY, simpleF("${header.%s}", HEADER_EXTIME_RESOURCE_CODE))
                 .log(LoggingLevel.DEBUG, this.getClass().getName(), String.format("Adding resource to cache: ${header.%s}:${body}", CacheConstants.CACHE_KEY))
                 .to("cache://avinorResourceCache").id("CacheAddResourceProcessor")
         ;

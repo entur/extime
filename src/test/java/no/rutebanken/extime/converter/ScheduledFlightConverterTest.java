@@ -374,6 +374,7 @@ public class ScheduledFlightConverterTest {
         }};
     }
 
+    // @todo: refactor! - duplicate in AvinorTimetableUtils (make static)
     private boolean isValidFlight(StopVisitType stopVisitType, Flight newFlight) {
         switch (stopVisitType) {
             case ARRIVAL:
@@ -384,15 +385,18 @@ public class ScheduledFlightConverterTest {
         return false;
     }
 
+    // @todo: refactor! - duplicate in AvinorTimetableUtils (make static)
     private boolean isDomesticFlight(Flight flight) {
         return isValidDepartureAndArrival(flight.getDepartureStation(), flight.getArrivalStation());
     }
 
+    // @todo: refactor! - duplicate in AvinorTimetableUtils (make static)
     private boolean isValidDepartureAndArrival(String departureIATA, String arrivalIATA) {
         return EnumUtils.isValidEnum(AirportIATA.class, departureIATA)
                 && EnumUtils.isValidEnum(AirportIATA.class, arrivalIATA);
     }
 
+    // @todo: refactor! - duplicate in AvinorTimetableUtils (make static)
     private <T> T generateObjectsFromXml(String resourceName, Class<T> clazz) throws JAXBException {
         return JAXBContext.newInstance(clazz).createUnmarshaller().unmarshal(
                 new StreamSource(getClass().getResourceAsStream(resourceName)), clazz).getValue();

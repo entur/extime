@@ -71,7 +71,6 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
     DateUtils dateUtils = new DateUtils();
 
     @Test
-    //@Ignore
     public void testTimetableScheduler() throws Exception {
         context.getRouteDefinition("AvinorTimetableSchedulerStarter").adviceWith(context, new AdviceWithRouteBuilder() {
             @Override
@@ -109,17 +108,21 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         context.getRouteDefinition("FetchAndCacheAirportName").adviceWith(context, new AdviceWithRouteBuilder() {
             @Override
             public void configure() throws Exception {
-                mockEndpointsAndSkip(
-                        "direct:fetchAirportNameFromFeed",
-                        "direct:addResourceToCache"
-                );
+                weaveById("FetchAirportNameFromHttpFeedProcessor").replace().to("mock:fetchXmlFromHttp");
+                interceptSendToEndpoint("mock:fetchXmlFromHttp").process(exchange -> {
+                    InputStream inputStream = new FileInputStream("target/classes/xml/airportname-osl.xml");
+                    exchange.getIn().setBody(inputStream);
+                });
+                mockEndpointsAndSkip("direct:addResourceToCache");
             }
         });
         context.start();
 
-        getMockEndpoint("mock:direct:fetchAirportNameFromFeed").expectedMessageCount(1);
-        getMockEndpoint("mock:direct:fetchAirportNameFromFeed").expectedHeaderReceived(HEADER_EXTIME_RESOURCE_CODE, "OSL");
+        getMockEndpoint("mock:fetchXmlFromHttp").expectedMessageCount(1);
+        getMockEndpoint("mock:fetchXmlFromHttp").expectedHeaderReceived(HEADER_EXTIME_HTTP_URI, "mock:airportFeedEndpoint");
+        getMockEndpoint("mock:fetchXmlFromHttp").expectedHeaderReceived(HEADER_EXTIME_URI_PARAMETERS, "airport=OSL&shortname=Y&ukname=Y");
         getMockEndpoint("mock:direct:addResourceToCache").expectedMessageCount(1);
+        getMockEndpoint("mock:direct:addResourceToCache").expectedHeaderReceived(HEADER_EXTIME_RESOURCE_CODE, "OSL");
 
         template.sendBodyAndHeader("direct:fetchAndCacheAirportName", null, HEADER_EXTIME_RESOURCE_CODE, "OSL");
 
@@ -131,18 +134,21 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         context.getRouteDefinition("FetchAndCacheAirlineName").adviceWith(context, new AdviceWithRouteBuilder() {
             @Override
             public void configure() throws Exception {
-                mockEndpointsAndSkip(
-                        "direct:fetchAirlineNameFromFeed",
-                        "direct:addResourceToCache"
-                );
+                weaveById("FetchAirlineNameFromHttpFeedProcessor").replace().to("mock:fetchXmlFromHttp");
+                interceptSendToEndpoint("mock:fetchXmlFromHttp").process(exchange -> {
+                    InputStream inputStream = new FileInputStream("target/classes/xml/airlinename-dy.xml");
+                    exchange.getIn().setBody(inputStream);
+                });
+                mockEndpointsAndSkip("direct:addResourceToCache");
             }
         });
         context.start();
 
-        getMockEndpoint("mock:direct:fetchAirlineNameFromFeed").expectedMessageCount(1);
-        getMockEndpoint("mock:direct:fetchAirlineNameFromFeed").expectedHeaderReceived(HEADER_EXTIME_RESOURCE_CODE, "DY");
+        getMockEndpoint("mock:fetchXmlFromHttp").expectedMessageCount(1);
+        getMockEndpoint("mock:fetchXmlFromHttp").expectedHeaderReceived(HEADER_EXTIME_HTTP_URI, "mock:airlineFeedEndpoint");
+        getMockEndpoint("mock:fetchXmlFromHttp").expectedHeaderReceived(HEADER_EXTIME_URI_PARAMETERS, "airline=DY");
         getMockEndpoint("mock:direct:addResourceToCache").expectedMessageCount(1);
-        getMockEndpoint("mock:direct:addResourceToCache").expectedHeaderReceived(HEADER_EXTIME_CACHE_KEY, "DY");
+        getMockEndpoint("mock:direct:addResourceToCache").expectedHeaderReceived(HEADER_EXTIME_RESOURCE_CODE, "DY");
 
         template.sendBodyAndHeader("direct:fetchAndCacheAirlineName", null, HEADER_EXTIME_RESOURCE_CODE, "DY");
 
@@ -201,60 +207,6 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         template.sendBodyAndHeaders("direct:fetchTimetableForAirport", null, headers);
 
         assertMockEndpointsSatisfied();
-    }
-
-    @Test
-    public void testFetchAirportNameFromFeed() throws Exception {
-        context.getRouteDefinition("FetchAirportNameFromFeed").adviceWith(context, new AdviceWithRouteBuilder() {
-            @Override
-            public void configure() throws Exception {
-                weaveById("FetchAirportNameFromHttpFeedProcessor").replace().to("mock:fetchXmlFromHttp");
-                interceptSendToEndpoint("mock:fetchXmlFromHttp").process(exchange -> {
-                    InputStream inputStream = new FileInputStream("target/classes/xml/airportname-osl.xml");
-                    exchange.getIn().setBody(inputStream);
-                });
-            }
-        });
-        context.start();
-
-        getMockEndpoint("mock:fetchXmlFromHttp").expectedMessageCount(1);
-        getMockEndpoint("mock:fetchXmlFromHttp").expectedHeaderReceived(HEADER_EXTIME_HTTP_URI, "mock:airportFeedEndpoint");
-        getMockEndpoint("mock:fetchXmlFromHttp").expectedHeaderReceived(HEADER_EXTIME_URI_PARAMETERS, "airport=OSL&shortname=Y&ukname=Y");
-
-        String airportName = (String) fetchAirportNameTemplate.requestBodyAndHeader("OSL", HEADER_EXTIME_RESOURCE_CODE, "OSL");
-
-        assertMockEndpointsSatisfied();
-        Assertions.assertThat(airportName)
-                .isNotNull()
-                .isNotEmpty()
-                .isEqualTo("Oslo");
-    }
-
-    @Test
-    public void testFetchAirlineNameFromFeed() throws Exception {
-        context.getRouteDefinition("FetchAirlineNameFromFeed").adviceWith(context, new AdviceWithRouteBuilder() {
-            @Override
-            public void configure() throws Exception {
-                weaveById("FetchAirlineNameFromHttpFeedProcessor").replace().to("mock:fetchXmlFromHttp");
-                interceptSendToEndpoint("mock:fetchXmlFromHttp").process(exchange -> {
-                    InputStream inputStream = new FileInputStream("target/classes/xml/airlinename-dy.xml");
-                    exchange.getIn().setBody(inputStream);
-                });
-            }
-        });
-        context.start();
-
-        getMockEndpoint("mock:fetchXmlFromHttp").expectedMessageCount(1);
-        getMockEndpoint("mock:fetchXmlFromHttp").expectedHeaderReceived(HEADER_EXTIME_HTTP_URI, "mock:airlineFeedEndpoint");
-        getMockEndpoint("mock:fetchXmlFromHttp").expectedHeaderReceived(HEADER_EXTIME_URI_PARAMETERS, "airline=DY");
-
-        String airlineName = (String) fetchAirlineNameTemplate.requestBodyAndHeader("DY", HEADER_EXTIME_RESOURCE_CODE, "DY");
-
-        assertMockEndpointsSatisfied();
-        Assertions.assertThat(airlineName)
-                .isNotNull()
-                .isNotEmpty()
-                .isEqualTo("Norwegian");
     }
 
     @Test
@@ -549,6 +501,7 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
                 .withParticipantRef("AVI");
     }
 
+    // @todo: refactor! - duplicate in AvinorTimetableUtils (make static)
     private <T> T generateObjectsFromXml(String resourceName, Class<T> clazz) throws JAXBException {
         return JAXBContext.newInstance(clazz).createUnmarshaller().unmarshal(
                 new StreamSource(getClass().getResourceAsStream(resourceName)), clazz).getValue();
