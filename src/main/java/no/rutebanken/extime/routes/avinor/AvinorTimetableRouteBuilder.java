@@ -399,18 +399,12 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
     private class StopoverFlightAggregationStrategy implements AggregationStrategy {
         @Override
         public Exchange aggregate(Exchange oldExchange, Exchange newExchange) {
-            ScheduledStopover newExchangeBody = newExchange.getIn().getBody(ScheduledStopover.class);
             if (oldExchange == null) {
                 ScheduledStopoverFlight originalBody = newExchange.getIn().getHeader(
                         HEADER_STOPOVER_FLIGHT_ORIGINAL_BODY, ScheduledStopoverFlight.class);
-                Integer splitIndex = newExchange.getProperty("CamelSplitIndex", Integer.class);
-                originalBody.getScheduledStopovers().set(splitIndex, newExchangeBody);
                 newExchange.getIn().setBody(originalBody);
                 return newExchange;
             } else {
-                ScheduledStopoverFlight oldExchangeBody = oldExchange.getIn().getBody(ScheduledStopoverFlight.class);
-                Integer splitIndex = newExchange.getProperty("CamelSplitIndex", Integer.class);
-                oldExchangeBody.getScheduledStopovers().set(splitIndex, newExchangeBody);
                 return oldExchange;
             }
         }
