@@ -204,7 +204,7 @@ public class ScheduledFlightToNetexConverter {
 
     public JAXBElement<TimetableFrame> createTimetableFrame(LocalDate dateOfOperation, List<ServiceJourney> serviceJourneys) {
         ValidityConditions_RelStructure validityConditionsRelStructure = objectFactory().createValidityConditions_RelStructure()
-                .withValidityConditionRefOrValidBetweenOrValidityCondition_(createAvailabilityCondition(dateOfOperation, Boolean.TRUE));
+                .withValidityConditionRefOrValidBetweenOrValidityCondition_(createAvailabilityCondition(dateOfOperation));
         JourneysInFrame_RelStructure journeysInFrameRelStructure = objectFactory().createJourneysInFrame_RelStructure();
         journeysInFrameRelStructure.getDatedServiceJourneyOrDeadRunOrServiceJourney().addAll(serviceJourneys);
         TimetableFrame timetableFrame = objectFactory().createTimetableFrame()
@@ -253,13 +253,12 @@ public class ScheduledFlightToNetexConverter {
         }
     }
 
-    public JAXBElement<AvailabilityCondition> createAvailabilityCondition(LocalDate dateOfOperation, Boolean isAvailable) {
+    public JAXBElement<AvailabilityCondition> createAvailabilityCondition(LocalDate dateOfOperation) {
         AvailabilityCondition availabilityCondition = objectFactory().createAvailabilityCondition()
                 .withVersion("any")
                 .withId(String.format("%s:AvailabilityCondition:1", getAvinorConfig().getId()))
                 .withFromDate(DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse("2016-08-16T08:24:21Z", OffsetDateTime::from))
-                .withToDate(DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse("2016-08-16T08:24:21Z", OffsetDateTime::from))
-                .withIsAvailable(isAvailable);
+                .withToDate(DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse("2016-08-16T08:24:21Z", OffsetDateTime::from));
         return objectFactory().createAvailabilityCondition(availabilityCondition);
     }
 
@@ -292,15 +291,16 @@ public class ScheduledFlightToNetexConverter {
                     .withPointInJourneyPatternRef(objectFactory().createStopPointInJourneyPatternRef(arrivalStopPointInJourneyPattern))
                     .withArrivalTime(scheduledFlight.getTimeOfArrival());
             passingTimesRelStructure.withTimetabledPassingTime(arrivalPassingTime);
-            ServiceJourney datedServiceJourney = objectFactory().createServiceJourney()
+            ServiceJourney serviceJourney = objectFactory().createServiceJourney()
                     .withVersion("any")
                     .withId(String.format("%s:ServiceJourney:%s", getAvinorConfig().getId(), scheduledFlight.getAirlineFlightId()))
+                    .withPublicCode(scheduledFlight.getAirlineFlightId())
                     .withDepartureTime(scheduledFlight.getTimeOfDeparture())
                     .withDayTypes(dayTypeStructure)
                     .withJourneyPatternRef(journeyPatternRefStructureElement)
                     .withLineRef(objectFactory().createLineRef(objectFactory().createLineRefStructure().withRef(line.getId())))
                     .withPassingTimes(passingTimesRelStructure);
-            serviceJourneyList.add(datedServiceJourney);
+            serviceJourneyList.add(serviceJourney);
             return serviceJourneyList;
         } else if (scheduledFlight instanceof ScheduledStopoverFlight) {
             List<ScheduledStopover> scheduledStopovers = ((ScheduledStopoverFlight) scheduledFlight).getScheduledStopovers();
@@ -322,15 +322,16 @@ public class ScheduledFlightToNetexConverter {
                 }
                 passingTimesRelStructure.withTimetabledPassingTime(passingTime);
             }
-            ServiceJourney datedServiceJourney = objectFactory().createServiceJourney()
+            ServiceJourney serviceJourney = objectFactory().createServiceJourney()
                     .withVersion("any")
                     .withId(String.format("%s:ServiceJourney:%s", getAvinorConfig().getId(), scheduledFlight.getAirlineFlightId()))
+                    .withPublicCode(scheduledFlight.getAirlineFlightId())
                     .withDepartureTime(scheduledStopovers.get(0).getDepartureTime())
                     .withDayTypes(dayTypeStructure)
                     .withJourneyPatternRef(journeyPatternRefStructureElement)
                     .withLineRef(objectFactory().createLineRef(objectFactory().createLineRefStructure().withRef(line.getId())))
                     .withPassingTimes(passingTimesRelStructure);
-            serviceJourneyList.add(datedServiceJourney);
+            serviceJourneyList.add(serviceJourney);
             return serviceJourneyList;
         } else {
             throw new IllegalArgumentException("Illegal instance class: " + scheduledFlight.getClass().getName());
@@ -365,7 +366,7 @@ public class ScheduledFlightToNetexConverter {
         int[] idx = {1};
         routePoints.forEach(routePoint -> {
             RoutePointRefStructure routePointReference = objectFactory().createRoutePointRefStructure()
-                    //.withVersion("1") // @todo: temp. disable to prevent id check, enable and fix
+                    //.withVersion("any") // @todo: temp. disable to prevent id check, enable and fix
                     .withRef(routePoint.getId());
             PointOnRoute pointOnRoute = objectFactory().createPointOnRoute()
                     .withVersion("any")
@@ -376,7 +377,7 @@ public class ScheduledFlightToNetexConverter {
             idx[0]++;
         });
         return objectFactory().createRoute()
-                .withVersion("1")
+                .withVersion("any")
                 .withId(String.format("%s:Route:%s101", getAvinorConfig().getId(), flightId))
                 .withName(createMultilingualString(String.format("%s: %s", flightId, routePath)))
                 .withPointsInSequence(pointsOnRoute);
@@ -384,7 +385,7 @@ public class ScheduledFlightToNetexConverter {
 
     private Line createLine(Route route, String flightId, String routePath, Operator operator) {
         RouteRefStructure routeRefStructure = objectFactory().createRouteRefStructure()
-                .withVersion("1")
+                .withVersion("any")
                 .withRef(route.getId());
         RouteRefs_RelStructure routeRefs = objectFactory().createRouteRefs_RelStructure()
                 .withRouteRef(routeRefStructure);
@@ -403,11 +404,11 @@ public class ScheduledFlightToNetexConverter {
     private List<ScheduledStopPoint> createScheduledStopPoints(ScheduledFlight scheduledFlight) throws IllegalArgumentException {
         if (scheduledFlight instanceof ScheduledDirectFlight) {
             ScheduledStopPoint scheduledDepartureStopPoint = objectFactory().createScheduledStopPoint()
-                    .withVersion("1")
+                    .withVersion("any")
                     .withId(String.format("%s:ScheduledStopPoint:%s101001", getAvinorConfig().getId(), scheduledFlight.getAirlineFlightId()))
                     .withName(createMultilingualString(scheduledFlight.getDepartureAirportName()));
             ScheduledStopPoint scheduledArrivalStopPoint = objectFactory().createScheduledStopPoint()
-                    .withVersion("1")
+                    .withVersion("any")
                     .withId(String.format("%s:ScheduledStopPoint:%s101002", getAvinorConfig().getId(), scheduledFlight.getAirlineFlightId()))
                     .withName(createMultilingualString(scheduledFlight.getArrivalAirportName()));
             return Lists.newArrayList(scheduledDepartureStopPoint, scheduledArrivalStopPoint);
@@ -417,7 +418,7 @@ public class ScheduledFlightToNetexConverter {
             int[] idx = {1};
             scheduledStopovers.forEach(stopover -> {
                 ScheduledStopPoint scheduledStopPoint = objectFactory().createScheduledStopPoint()
-                        .withVersion("1")
+                        .withVersion("any")
                         .withId(String.format("%s:ScheduledStopPoint:%s10100%d", getAvinorConfig().getId(), scheduledFlight.getAirlineFlightId(), idx[0]))
                         .withName(createMultilingualString(stopover.getAirportName()));
                 scheduledStopPoints.add(scheduledStopPoint);
@@ -434,10 +435,10 @@ public class ScheduledFlightToNetexConverter {
         int[] idx = {1};
         scheduledStopPoints.forEach(stopPoint -> {
             ScheduledStopPointRefStructure scheduledStopPointRefStructure = objectFactory().createScheduledStopPointRefStructure()
-                    .withVersion("1")
+                    .withVersion("any")
                     .withRef(String.format("%s:ScheduledStopPoint:%s10100%d", getAvinorConfig().getId(), flightId, idx[0])); // @todo: fix id generator
             StopPointInJourneyPattern stopPointInJourneyPattern = objectFactory().createStopPointInJourneyPattern()
-                    .withVersion("1")
+                    .withVersion("any")
                     .withId(String.format("%s:StopPointInJourneyPattern:%s10100%d", getAvinorConfig().getId(), flightId, idx[0])) // @todo: fix some id generator-counter here...
                     .withOrder(new BigInteger(Integer.toString(idx[0])))
                     .withScheduledStopPointRef(objectFactory().createScheduledStopPointRef(scheduledStopPointRefStructure));
@@ -451,10 +452,10 @@ public class ScheduledFlightToNetexConverter {
             idx[0]++;
         });
         RouteRefStructure routeRefStructure = objectFactory().createRouteRefStructure()
-                .withVersion("1")
+                .withVersion("any")
                 .withRef(route.getId());
         return objectFactory().createJourneyPattern()
-                .withVersion("1")
+                .withVersion("any")
                 .withId(String.format("%s:JourneyPattern:%s101", getAvinorConfig().getId(), flightId)) // @todo: fix id generator
                 .withRouteRef(routeRefStructure)
                 .withPointsInSequence(pointsInJourneyPattern);
@@ -467,10 +468,10 @@ public class ScheduledFlightToNetexConverter {
         Iterator<StopPlace> stopPlacesIterator = stopPlaces.iterator();
         while (stopPointsIterator.hasNext() && stopPlacesIterator.hasNext() && index <= scheduledStopPoints.size() && index <= stopPlaces.size()) {
             ScheduledStopPointRefStructure scheduledStopPointRef = objectFactory().createScheduledStopPointRefStructure()
-                    .withVersion("1")
+                    .withVersion("any")
                     .withRef(stopPointsIterator.next().getId());
             StopPlaceRefStructure stopPlaceRef = objectFactory().createStopPlaceRefStructure()
-                    .withVersion("1")
+                    .withVersion("any")
                     .withRef(stopPlacesIterator.next().getId());
             PassengerStopAssignment passengerStopAssignment = objectFactory().createPassengerStopAssignment()
                     .withVersion("any")
@@ -525,7 +526,7 @@ public class ScheduledFlightToNetexConverter {
                 getAvinorConfig().getLegalName(), getAvinorConfig().getPhone(),
                 getAvinorConfig().getUrl(), OrganisationTypeEnumeration.AUTHORITY);
         return objectFactory().createAuthority()
-                .withVersion("1")
+                .withVersion("any")
                 .withId(String.format("%s:Company:1", getAvinorConfig().getId()))
                 .withRest(organisationRest);
     }
@@ -536,7 +537,7 @@ public class ScheduledFlightToNetexConverter {
                 getSasConfig().getLegalName(), getSasConfig().getPhone(),
                 getSasConfig().getUrl(), OrganisationTypeEnumeration.OPERATOR);
         return objectFactory().createOperator()
-                .withVersion("1")
+                .withVersion("any")
                 .withId(String.format("%s:Company:2", getSasConfig().getName()))
                 .withRest(operatorRest);
     }
@@ -547,7 +548,7 @@ public class ScheduledFlightToNetexConverter {
                 getWideroeConfig().getLegalName(), getWideroeConfig().getPhone(),
                 getWideroeConfig().getUrl(), OrganisationTypeEnumeration.OPERATOR);
         return objectFactory().createOperator()
-                .withVersion("1")
+                .withVersion("any")
                 .withId(String.format("%s:Company:2", getWideroeConfig().getName()))
                 .withRest(operatorRest);
     }
@@ -558,7 +559,7 @@ public class ScheduledFlightToNetexConverter {
                 getNorwegianConfig().getLegalName(), getNorwegianConfig().getPhone(),
                 getNorwegianConfig().getUrl(), OrganisationTypeEnumeration.OPERATOR);
         return objectFactory().createOperator()
-                .withVersion("1")
+                .withVersion("any")
                 .withId(String.format("%s:Company:2", getNorwegianConfig().getName()))
                 .withRest(operatorRest);
     }
@@ -573,7 +574,7 @@ public class ScheduledFlightToNetexConverter {
                 OrganisationTypeEnumeration.OPERATOR
         );
         return objectFactory().createOperator()
-                .withVersion("1")
+                .withVersion("any")
                 .withId(String.format("UNKNOWN-%s:Company:2", airlineIATA))
                 .withRest(dummyOperatorRest);
     }
