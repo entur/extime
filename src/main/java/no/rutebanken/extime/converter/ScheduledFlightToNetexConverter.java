@@ -461,6 +461,9 @@ public class ScheduledFlightToNetexConverter {
                 .withPointsInSequence(pointsInJourneyPattern);
     }
 
+    /**
+     * @todo: fix problem with id reference for the StopPlaceRefStructure
+     */
     public List<PassengerStopAssignment> createStopAssignments(List<ScheduledStopPoint> scheduledStopPoints, List<StopPlace> stopPlaces, String flightId) {
         List<PassengerStopAssignment> stopAssignments = new ArrayList<>(scheduledStopPoints.size());
         int index = 1;
@@ -478,7 +481,7 @@ public class ScheduledFlightToNetexConverter {
                     .withOrder(new BigInteger(Integer.toString(index)))
                     .withId(String.format("%s:PassengerStopAssignment:%s10100%d", getAvinorConfig().getId(), flightId, index)) // @todo: fix the id generation
                     .withScheduledStopPointRef(scheduledStopPointRef)
-                    .withStopPlaceRef(stopPlaceRef);
+                    // .withStopPlaceRef(stopPlaceRef);
             stopAssignments.add(passengerStopAssignment);
             index++;
         }
