@@ -12,9 +12,7 @@ import org.springframework.stereotype.Component;
 
 import javax.xml.bind.JAXBElement;
 import java.math.BigInteger;
-import java.time.DayOfWeek;
-import java.time.LocalDate;
-import java.time.OffsetDateTime;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -43,6 +41,7 @@ public class ScheduledFlightToNetexConverter {
     private NorwegianOperatorConfig norwegianConfig;
 
     public JAXBElement<PublicationDeliveryStructure> convertToNetex(ScheduledFlight scheduledFlight) {
+        OffsetDateTime publicationTimestamp = OffsetDateTime.ofInstant(Instant.now(), ZoneId.of("UTC"));
         LocalDate dateOfOperation = scheduledFlight.getDateOfOperation();
         String routePath = String.format("%s-%s", scheduledFlight.getDepartureAirportName(), scheduledFlight.getArrivalAirportName());
         String flightId = scheduledFlight.getAirlineFlightId();
@@ -63,45 +62,43 @@ public class ScheduledFlightToNetexConverter {
         Frames_RelStructure frames = objectFactory().createFrames_RelStructure();
         frames.getCommonFrame().add(createResourceFrame(operator));
         frames.getCommonFrame().add(createSiteFrame(stopPlaces));
-        frames.getCommonFrame().add(createServiceFrame(scheduledFlight.getAirlineName(), flightId, routePoints,
+        frames.getCommonFrame().add(createServiceFrame(publicationTimestamp, scheduledFlight.getAirlineName(), flightId, routePoints,
                 route, line, scheduledStopPoints, journeyPattern, stopAssignments));
         frames.getCommonFrame().add(createTimetableFrame(dateOfOperation, serviceJourneys));
         frames.getCommonFrame().add(createServiceCalendarFrame(dayTypes));
 
-        JAXBElement<CompositeFrame> compositeFrame = createCompositeFrame(flightId, frames);
-        PublicationDeliveryStructure publicationDeliveryStructure = createPublicationDeliveryStructure(compositeFrame, flightId, routePath);
+        JAXBElement<CompositeFrame> compositeFrame = createCompositeFrame(publicationTimestamp, flightId, frames);
+        PublicationDeliveryStructure publicationDeliveryStructure = createPublicationDeliveryStructure(publicationTimestamp, compositeFrame, flightId, routePath);
         return objectFactory().createPublicationDelivery(publicationDeliveryStructure);
     }
 
-    public PublicationDeliveryStructure createPublicationDeliveryStructure(
-            JAXBElement<CompositeFrame> compositeFrame, String flightId, String routePath) {
+    public PublicationDeliveryStructure createPublicationDeliveryStructure(OffsetDateTime publicationTimestamp,
+                                                                           JAXBElement<CompositeFrame> compositeFrame,
+                                                                           String flightId, String routePath) {
         DataObjects dataObjects = objectFactory().createPublicationDeliveryStructureDataObjects();
         dataObjects.getCompositeFrameOrCommonFrame().add(compositeFrame);
         return objectFactory().createPublicationDeliveryStructure()
                 .withVersion("1.0")
-                // @todo: fill with real timestamp
-                .withPublicationTimestamp(DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse("2016-08-16T08:24:21Z", OffsetDateTime::from))
+                .withPublicationTimestamp(publicationTimestamp)
                 .withParticipantRef(getNhrConfig().getId())
                 .withDescription(createMultilingualString(String.format("Flight %s : %s", flightId, routePath)))
                 .withDataObjects(dataObjects);
     }
 
-    public JAXBElement<CompositeFrame> createCompositeFrame(String flightId, Frames_RelStructure frames) {
+    public JAXBElement<CompositeFrame> createCompositeFrame(OffsetDateTime publicationTimestamp, String flightId, Frames_RelStructure frames) {
         Codespaces_RelStructure codespaces = objectFactory().createCodespaces_RelStructure()
                 .withCodespaceRefOrCodespace(Arrays.asList(avinorCodespace(), nhrCodespace()));
         CodespaceRefStructure codespaceRefStructure = objectFactory().createCodespaceRefStructure()
                 .withRef(avinorCodespace().getId());
         LocaleStructure localeStructure = objectFactory().createLocaleStructure()
-                .withTimeZone("CET")
-                .withSummerTimeZone("CEST")
+                .withTimeZone("UTC")
                 .withDefaultLanguage("no");
         VersionFrameDefaultsStructure versionFrameDefaultsStructure = objectFactory().createVersionFrameDefaultsStructure()
                 .withDefaultCodespaceRef(codespaceRefStructure)
                 .withDefaultLocale(localeStructure);
         CompositeFrame compositeFrame = objectFactory().createCompositeFrame()
                 .withVersion("1")
-                // @todo: fill with real timestamp
-                .withCreated(DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse("2016-08-16T08:24:21Z", OffsetDateTime::from))
+                .withCreated(publicationTimestamp)
                 .withId(String.format("%s:CompositeFrame:%s", getAvinorConfig().getId(), flightId))
                 .withCodespaces(codespaces)
                 .withFrameDefaults(versionFrameDefaultsStructure)
@@ -130,12 +127,12 @@ public class ScheduledFlightToNetexConverter {
         return objectFactory().createSiteFrame(siteFrame);
     }
 
-    public JAXBElement<ServiceFrame> createServiceFrame(String airlineName, String flightId, List<RoutePoint> routePoints,
+    public JAXBElement<ServiceFrame> createServiceFrame(OffsetDateTime publicationTimestamp, String airlineName, String flightId, List<RoutePoint> routePoints,
                                                         Route route, Line line, List<ScheduledStopPoint> scheduledStopPoints,
                                                         JourneyPattern journeyPattern, List<PassengerStopAssignment> stopAssignments) {
         Network network = objectFactory().createNetwork()
                 .withVersion("1")
-                .withChanged(DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse("2016-08-16T08:24:21Z", OffsetDateTime::from))
+                .withChanged(publicationTimestamp)
                 .withId(String.format("%s:GroupOfLine:%s", getAvinorConfig().getId(), getAvinorConfig().getName()))
                 .withName(createMultilingualString(airlineName));
         RoutePointsInFrame_RelStructure routePointsInFrame = objectFactory().createRoutePointsInFrame_RelStructure()
