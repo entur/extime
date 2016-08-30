@@ -3,7 +3,7 @@ package no.rutebanken.extime.model;
 import com.google.common.base.Joiner;
 
 import java.math.BigInteger;
-import java.time.LocalTime;
+import java.time.OffsetTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -69,12 +69,12 @@ public class ScheduledStopoverFlight extends ScheduledFlight {
     }
 
     @Override
-    public LocalTime getTimeOfDeparture() {
+    public OffsetTime getTimeOfDeparture() {
         return scheduledStopovers.get(0).getDepartureTime();
     }
 
     @Override
-    public LocalTime getTimeOfArrival() {
+    public OffsetTime getTimeOfArrival() {
         return scheduledStopovers.get(scheduledStopovers.size() - 1).getArrivalTime();
     }
 

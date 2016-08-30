@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 import java.math.BigInteger;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.OffsetTime;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -143,10 +143,10 @@ public class ScheduledFlightConverter {
                     .collect(Collectors.toSet());
             uniqueFlightIds.forEach(uniqueId -> UNIQUE_FLIGHT_IDS.add(uniqueId));
 
-            List<Triple<StopVisitType, String, LocalTime>> stopovers = extractStopoversFromFlights(stopoverFlights);
-            Triple<StopVisitType, String, LocalTime> tempArrivalStopover = null;
-            for (ListIterator<Triple<StopVisitType, String, LocalTime>> it = stopovers.listIterator(); it.hasNext(); ) {
-                Triple<StopVisitType, String, LocalTime> stopover = it.next();
+            List<Triple<StopVisitType, String, OffsetTime>> stopovers = extractStopoversFromFlights(stopoverFlights);
+            Triple<StopVisitType, String, OffsetTime> tempArrivalStopover = null;
+            for (ListIterator<Triple<StopVisitType, String, OffsetTime>> it = stopovers.listIterator(); it.hasNext(); ) {
+                Triple<StopVisitType, String, OffsetTime> stopover = it.next();
                 if (stopover.getLeft().equals(StopVisitType.DEPARTURE)) {
                     ScheduledStopover scheduledStopover = new ScheduledStopover();
                     scheduledStopover.setAirportIATA(stopover.getMiddle());
@@ -223,13 +223,13 @@ public class ScheduledFlightConverter {
                 .and(arrivalDepartureTimePredicate);
     }
 
-    public List<Triple<StopVisitType, String, LocalTime>> extractStopoversFromFlights(List<Flight> stopoverFlights) {
-        List<Triple<StopVisitType, String, LocalTime>> stopoverTriples = new ArrayList<>();
+    public List<Triple<StopVisitType, String, OffsetTime>> extractStopoversFromFlights(List<Flight> stopoverFlights) {
+        List<Triple<StopVisitType, String, OffsetTime>> stopoverTriples = new ArrayList<>();
         stopoverFlights.forEach(stopoverFlight -> {
-            Triple<StopVisitType, String, LocalTime> departureTriple = new ImmutableTriple<>(
+            Triple<StopVisitType, String, OffsetTime> departureTriple = new ImmutableTriple<>(
                     StopVisitType.DEPARTURE, stopoverFlight.getDepartureStation(), stopoverFlight.getStd());
 
-            Triple<StopVisitType, String, LocalTime> arrivalTriple = new ImmutableTriple<>(
+            Triple<StopVisitType, String, OffsetTime> arrivalTriple = new ImmutableTriple<>(
                     StopVisitType.ARRIVAL, stopoverFlight.getArrivalStation(), stopoverFlight.getSta());
 
             stopoverTriples.add(departureTriple);

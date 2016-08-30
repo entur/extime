@@ -156,7 +156,7 @@
         <dependency>
             <groupId>no.rutebanken</groupId>
             <artifactId>netex-java-model</artifactId>
-            <version>0.0.6</version>
+            <version>0.0.7</version>
         </dependency>
         <dependency>
             <groupId>org.rutebanken</groupId>
@@ -270,7 +270,7 @@
                                 <include>XmlFeedScheduled-Named.xsd</include>
                             </schemaIncludes>
                             <bindingIncludes>
-                                <include>XmlFeedScheduled-mod.xjb</include>
+                                <include>XmlFeedScheduled.xjb</include>
                             </bindingIncludes>
                             <plugins>
                                 <plugin>

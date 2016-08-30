@@ -17,7 +17,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import javax.xml.bind.JAXBElement;
 import java.math.BigInteger;
 import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.OffsetTime;
 import java.util.List;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -163,9 +163,9 @@ public class ScheduledFlightToNetexConverterTest {
         directFlight.setAirlineFlightId(flightId);
         directFlight.setDateOfOperation(LocalDate.now());
         directFlight.setDepartureAirportIATA("BGO");
-        directFlight.setTimeOfDeparture(LocalTime.NOON);
+        directFlight.setTimeOfDeparture(OffsetTime.MIN);
         directFlight.setArrivalAirportIATA("OSL");
-        directFlight.setTimeOfArrival(LocalTime.MIDNIGHT);
+        directFlight.setTimeOfArrival(OffsetTime.MAX);
         return directFlight;
     }
 

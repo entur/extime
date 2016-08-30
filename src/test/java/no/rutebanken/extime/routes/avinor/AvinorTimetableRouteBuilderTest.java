@@ -32,8 +32,8 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.time.OffsetDateTime;
+import java.time.OffsetTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
@@ -376,6 +376,9 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
 
     @Test
     public void testEnrichScheduledStopoverFlightWithAirportNames() throws Exception {
+        ScheduledStopoverFlight scheduledStopoverFlight = createScheduledStopoverFlight(
+                "WF", "WF149", LocalDate.parse("2016-12-24"), createScheduledStopovers());
+
         context.getRouteDefinition("ScheduledStopoverFlightAirportNameEnricher").adviceWith(context, new AdviceWithRouteBuilder() {
             @Override
             public void configure() throws Exception {
@@ -388,9 +391,6 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
             }
         });
         context.start();
-
-        ScheduledStopoverFlight scheduledStopoverFlight = createScheduledStopoverFlight(
-                "WF", "WF149", LocalDate.parse("2016-12-24"), createScheduledStopovers());
 
         getMockEndpoint("mock:setEnrichParameter").expectedMessageCount(4);
         getMockEndpoint("mock:setEnrichParameter").expectedHeaderReceived(
@@ -419,22 +419,22 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
 
     private List<Flight> createDummyFlights() {
         return Lists.newArrayList(
-                createDummyFlight(1L, "SK", "4455", LocalDate.parse("2017-01-01"), "BGO", LocalTime.MIN, "OSL", LocalTime.MAX),
-                createDummyFlight(2L, "DY", "6677", LocalDate.parse("2017-01-02"), "BGO", LocalTime.MIN, "TRD", LocalTime.MAX),
-                createDummyFlight(3L, "WF", "199", LocalDate.parse("2017-01-03"), "BGO", LocalTime.MIN, "SVG", LocalTime.MAX)
+                createDummyFlight(1L, "SK", "4455", LocalDate.parse("2017-01-01"), "BGO", OffsetTime.MIN, "OSL", OffsetTime.MAX),
+                createDummyFlight(2L, "DY", "6677", LocalDate.parse("2017-01-02"), "BGO", OffsetTime.MIN, "TRD", OffsetTime.MAX),
+                createDummyFlight(3L, "WF", "199", LocalDate.parse("2017-01-03"), "BGO", OffsetTime.MIN, "SVG", OffsetTime.MAX)
         );
     }
 
     private List<ScheduledStopover> createScheduledStopovers() {
         return Lists.newArrayList(
-                createScheduledStopover("OSL", null, LocalTime.parse("12:15:00")),
-                createScheduledStopover("HOV", LocalTime.parse("12:45:00"), LocalTime.parse("13:00:00")),
-                createScheduledStopover("SOG", LocalTime.parse("13:30:00"), LocalTime.parse("13:45:00")),
-                createScheduledStopover("BGO", LocalTime.parse("14:15:00"), null)
+                createScheduledStopover("OSL", null, OffsetTime.parse("12:15:00Z")),
+                createScheduledStopover("HOV", OffsetTime.parse("12:45:00Z"), OffsetTime.parse("13:00:00Z")),
+                createScheduledStopover("SOG", OffsetTime.parse("13:30:00Z"), OffsetTime.parse("13:45:00Z")),
+                createScheduledStopover("BGO", OffsetTime.parse("14:15:00Z"), null)
         );
     }
 
-    private ScheduledStopover createScheduledStopover(String airportIata, LocalTime arrivalTime, LocalTime departureTime) {
+    private ScheduledStopover createScheduledStopover(String airportIata, OffsetTime arrivalTime, OffsetTime departureTime) {
         ScheduledStopover scheduledStopover = new ScheduledStopover();
         scheduledStopover.setAirportIATA(airportIata);
         if (arrivalTime != null) {
@@ -455,8 +455,8 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         scheduledFlight.setDepartureAirportName("");
         scheduledFlight.setArrivalAirportIATA("");
         scheduledFlight.setArrivalAirportName("");
-        scheduledFlight.setTimeOfDeparture(LocalTime.NOON);
-        scheduledFlight.setTimeOfArrival(LocalTime.MIDNIGHT);
+        scheduledFlight.setTimeOfDeparture(OffsetTime.MIN);
+        scheduledFlight.setTimeOfArrival(OffsetTime.MAX);
         return scheduledFlight;
     }
 
@@ -471,7 +471,7 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
     }
 
     private Flight createDummyFlight(long dummyId, String dummyDesignator, String dummyFlightNumber, LocalDate dummyDateOfOperation,
-                                     String dummyDepartureStation, LocalTime dummyDepartureTime, String dummyArrivalStation, LocalTime dummyArrivalTime) {
+                                     String dummyDepartureStation, OffsetTime dummyDepartureTime, String dummyArrivalStation, OffsetTime dummyArrivalTime) {
         return new Flight() {{
             setId(BigInteger.valueOf(dummyId));
             setAirlineDesignator(dummyDesignator);

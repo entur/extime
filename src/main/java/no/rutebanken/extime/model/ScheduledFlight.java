@@ -2,7 +2,7 @@ package no.rutebanken.extime.model;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.OffsetTime;
 import java.util.Set;
 
 public abstract class ScheduledFlight {
@@ -61,9 +61,9 @@ public abstract class ScheduledFlight {
 
     public abstract String getArrivalAirportName();
 
-    public abstract LocalTime getTimeOfDeparture();
+    public abstract OffsetTime getTimeOfDeparture();
 
-    public abstract LocalTime getTimeOfArrival();
+    public abstract OffsetTime getTimeOfArrival();
 
     @Override
     public boolean equals(Object o) {

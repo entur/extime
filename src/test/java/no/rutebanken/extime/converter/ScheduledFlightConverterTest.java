@@ -17,7 +17,7 @@ import javax.xml.bind.JAXBException;
 import javax.xml.transform.stream.StreamSource;
 import java.math.BigInteger;
 import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.OffsetTime;
 import java.util.*;
 import java.util.function.Predicate;
 
@@ -99,55 +99,12 @@ public class ScheduledFlightConverterTest {
 
     @Test
     @Ignore
-    public void convertFlightWithOnceAWeekPattern() throws Exception {
-        // @todo: use flight DY743 from TRD-OSL
-    }
-
-    @Test
-    @Ignore
-    public void convertFlightWeeklyWorkDayPattern() throws Exception {
-    }
-
-    @Test
-    @Ignore
-    public void convertFlightWithWeeklyGapPattern() throws Exception {
-        // @todo: use flight SK249 from OSL-BGO, which operates monday-thursday, and sunday
-    }
-
-    @Test
-    @Ignore
-    public void convertFlightWithDifferentDepartureTimesInPattern() throws Exception {
-    }
-
-    @Test
-    @Ignore
-    public void doNotFindPossibleStopoversForFlight() throws Exception {
-    }
-
-    @Test
-    @Ignore
     public void findPossibleStopoversForFlight() throws Exception {
-        Flight currentFlight = createDummyFlight(
-                1L,
-                "SK",
-                "4455",
-                LocalDate.parse("2017-01-01"),
-                "BGO",
-                LocalTime.parse("09:00:00"),
-                "OSL",
-                LocalTime.parse("09:30:00")
-        );
-        Flight destinationFlight = createDummyFlight(
-                2L,
-                "SK",
-                "4455",
-                LocalDate.parse("2017-01-01"),
-                "OSL",
-                LocalTime.parse("10:00:00"),
-                "TRD",
-                LocalTime.parse("10:30:00")
-        );
-        List<Flight> flights = Arrays.asList(destinationFlight);
+        Flight currentFlight = createDummyFlight(1L, "SK", "4455", LocalDate.parse("2017-01-01"),
+                "BGO", OffsetTime.parse("09:00:00"), "OSL", OffsetTime.parse("09:30:00"));
+        Flight destinationFlight = createDummyFlight(2L, "SK", "4455", LocalDate.parse("2017-01-01"),
+                "OSL", OffsetTime.parse("10:00:00"), "TRD", OffsetTime.parse("10:30:00"));
+        List<Flight> flights = Collections.singletonList(destinationFlight);
         HashMap<String, List<Flight>> flightsByDepartureAirport = Maps.newHashMap();
         flightsByDepartureAirport.put(destinationFlight.getDepartureStation(), flights);
 
@@ -163,27 +120,11 @@ public class ScheduledFlightConverterTest {
 
     @Test
     public void doNotFindPresentStopoverFlight() throws Exception {
-        Flight currentFlight = createDummyFlight(
-                1L,
-                "SK",
-                "4455",
-                LocalDate.parse("2017-01-01"),
-                "BGO",
-                LocalTime.parse("09:00:00"),
-                "OSL",
-                LocalTime.parse("09:30:00")
-        );
-        Flight destinationFlight = createDummyFlight(
-                11L,
-                "WF",
-                "8899",
-                LocalDate.parse("2017-01-03"),
-                "OSL",
-                LocalTime.parse("08:00:00"),
-                "TRD",
-                LocalTime.parse("08:30:00")
-        );
-        List<Flight> flights = Arrays.asList(destinationFlight);
+        Flight currentFlight = createDummyFlight(1L, "SK", "4455", LocalDate.parse("2017-01-01"),
+                "BGO", OffsetTime.parse("09:00:00Z"), "OSL", OffsetTime.parse("09:30:00Z"));
+        Flight destinationFlight = createDummyFlight(11L, "WF", "8899", LocalDate.parse("2017-01-03"),
+                "OSL", OffsetTime.parse("08:00:00Z"), "TRD", OffsetTime.parse("08:30:00Z"));
+        List<Flight> flights = Collections.singletonList(destinationFlight);
 
         Flight presentFlight = clazzUnderTest.findPresentStopoverFlight(currentFlight, flights);
 
@@ -193,27 +134,11 @@ public class ScheduledFlightConverterTest {
 
     @Test
     public void findPresentStopoverFlight() throws Exception {
-        Flight currentFlight = createDummyFlight(
-                1L,
-                "SK",
-                "4455",
-                LocalDate.parse("2017-01-01"),
-                "BGO",
-                LocalTime.parse("09:00:00"),
-                "OSL",
-                LocalTime.parse("09:30:00")
-        );
-        Flight destinationFlight = createDummyFlight(
-                2L,
-                "SK",
-                "4455",
-                LocalDate.parse("2017-01-01"),
-                "OSL",
-                LocalTime.parse("10:00:00"),
-                "TRD",
-                LocalTime.parse("10:30:00")
-        );
-        List<Flight> flights = Arrays.asList(destinationFlight);
+        Flight currentFlight = createDummyFlight(1L, "SK", "4455", LocalDate.parse("2017-01-01"),
+                "BGO", OffsetTime.parse("09:00:00Z"), "OSL", OffsetTime.parse("09:30:00Z"));
+        Flight destinationFlight = createDummyFlight(2L, "SK", "4455", LocalDate.parse("2017-01-01"),
+                "OSL", OffsetTime.parse("10:00:00Z"), "TRD", OffsetTime.parse("10:30:00Z"));
+        List<Flight> flights = Collections.singletonList(destinationFlight);
 
         Flight presentFlight = clazzUnderTest.findPresentStopoverFlight(currentFlight, flights);
 
@@ -224,26 +149,11 @@ public class ScheduledFlightConverterTest {
 
     @Test
     public void doNotMatchStopoverFlightPredicate() throws Exception {
-        Flight flight1 = createDummyFlight(
-                1L,
-                "SK",
-                "4455",
-                LocalDate.parse("2017-01-01"),
-                "BGO",
-                LocalTime.parse("09:00:00"),
-                "OSL",
-                LocalTime.parse("09:30:00")
-        );
-        Flight flight2 = createDummyFlight(
-                11L,
-                "WF",
-                "8899",
-                LocalDate.parse("2017-01-03"),
-                "OSL",
-                LocalTime.parse("08:00:00"),
-                "TRD",
-                LocalTime.parse("08:30:00")
-        );
+        Flight flight1 = createDummyFlight(1L, "SK", "4455", LocalDate.parse("2017-01-01"),
+                "BGO", OffsetTime.parse("09:00:00Z"), "OSL", OffsetTime.parse("09:30:00Z"));
+        Flight flight2 = createDummyFlight(11L, "WF", "8899", LocalDate.parse("2017-01-03"),
+                "OSL", OffsetTime.parse("08:00:00Z"), "TRD", OffsetTime.parse("08:30:00Z"));
+
         Predicate<Flight> predicate = clazzUnderTest.createStopoverFlightPredicate(flight1);
 
         Assertions.assertThat(predicate.test(flight2))
@@ -252,26 +162,11 @@ public class ScheduledFlightConverterTest {
 
     @Test
     public void matchStopoverFlightPredicate() throws Exception {
-        Flight flight1 = createDummyFlight(
-                1L,
-                "SK",
-                "4455",
-                LocalDate.parse("2017-01-01"),
-                "BGO",
-                LocalTime.parse("09:00:00"),
-                "OSL",
-                LocalTime.parse("09:30:00")
-        );
-        Flight flight2 = createDummyFlight(
-                2L,
-                "SK",
-                "4455",
-                LocalDate.parse("2017-01-01"),
-                "OSL",
-                LocalTime.parse("10:00:00"),
-                "TRD",
-                LocalTime.parse("10:30:00")
-        );
+        Flight flight1 = createDummyFlight(1L, "SK", "4455", LocalDate.parse("2017-01-01"),
+                "BGO", OffsetTime.parse("09:00:00Z"), "OSL", OffsetTime.parse("09:30:00Z"));
+        Flight flight2 = createDummyFlight(2L, "SK", "4455", LocalDate.parse("2017-01-01"),
+                "OSL", OffsetTime.parse("10:00:00Z"), "TRD", OffsetTime.parse("10:30:00Z"));
+
         Predicate<Flight> predicate = clazzUnderTest.createStopoverFlightPredicate(flight1);
 
         Assertions.assertThat(predicate.test(flight2))
@@ -280,7 +175,7 @@ public class ScheduledFlightConverterTest {
 
     @Test
     public void extractNoStopoversFromFlights() throws Exception {
-        List<Triple<StopVisitType, String, LocalTime>> triples =
+        List<Triple<StopVisitType, String, OffsetTime>> triples =
                 clazzUnderTest.extractStopoversFromFlights(Collections.emptyList());
         Assertions.assertThat(triples)
                 .isNotNull()
@@ -289,7 +184,7 @@ public class ScheduledFlightConverterTest {
 
     @Test
     public void extractStopoversFromFlights() throws Exception {
-        List<Triple<StopVisitType, String, LocalTime>> triples =
+        List<Triple<StopVisitType, String, OffsetTime>> triples =
                 clazzUnderTest.extractStopoversFromFlights(createDummyFlights());
 
         Assertions.assertThat(triples)
@@ -311,16 +206,9 @@ public class ScheduledFlightConverterTest {
     @Test
     @Ignore
     public void convertFlightToScheduledDirectFlight() throws Exception {
-        Flight dummyFlight = createDummyFlight(
-                1L,
-                "SK",
-                "4455",
-                LocalDate.parse("2017-01-01"),
-                "BGO",
-                LocalTime.MIN,
-                "OSL",
-                LocalTime.MAX
-        );
+        Flight dummyFlight = createDummyFlight(1L, "SK", "4455",
+                LocalDate.parse("2017-01-01"), "BGO", OffsetTime.MIN, "OSL", OffsetTime.MAX);
+
         ScheduledDirectFlight directFlight = clazzUnderTest.convertToScheduledDirectFlight(dummyFlight);
 
         Assertions.assertThat(directFlight)
@@ -354,14 +242,14 @@ public class ScheduledFlightConverterTest {
 
     private List<Flight> createDummyFlights() {
         return Lists.newArrayList(
-                createDummyFlight(1L, "SK", "4455", LocalDate.parse("2017-01-01"), "BGO", LocalTime.MIN, "OSL", LocalTime.MAX),
-                createDummyFlight(2L, "DY", "6677", LocalDate.parse("2017-01-02"), "BGO", LocalTime.MIN, "TRD", LocalTime.MAX),
-                createDummyFlight(3L, "WF", "199", LocalDate.parse("2017-01-03"), "BGO", LocalTime.MIN, "SVG", LocalTime.MAX)
+                createDummyFlight(1L, "SK", "4455", LocalDate.parse("2017-01-01"), "BGO", OffsetTime.MIN, "OSL", OffsetTime.MAX),
+                createDummyFlight(2L, "DY", "6677", LocalDate.parse("2017-01-02"), "BGO", OffsetTime.MIN, "TRD", OffsetTime.MAX),
+                createDummyFlight(3L, "WF", "199", LocalDate.parse("2017-01-03"), "BGO", OffsetTime.MIN, "SVG", OffsetTime.MAX)
         );
     }
 
     private Flight createDummyFlight(long dummyId, String dummyDesignator, String dummyFlightNumber, LocalDate dummyDateOfOperation,
-                                     String dummyDepartureStation, LocalTime dummyDepartureTime, String dummyArrivalStation, LocalTime dummyArrivalTime) {
+                                     String dummyDepartureStation, OffsetTime dummyDepartureTime, String dummyArrivalStation, OffsetTime dummyArrivalTime) {
         return new Flight() {{
             setId(BigInteger.valueOf(dummyId));
             setAirlineDesignator(dummyDesignator);

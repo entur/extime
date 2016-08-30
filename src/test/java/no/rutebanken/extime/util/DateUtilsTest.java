@@ -33,6 +33,12 @@ public class DateUtilsTest {
     }
 
     @Test
+    public void testDateParsing() {
+        LocalDate localDate = LocalDate.parse("2016-12-24");
+        System.out.println(localDate);
+    }
+
+    @Test
     @SuppressWarnings("unchecked")
     public void testGenerateDateRangesInHeaders() {
         clazzUnderTest.generateDateRanges(exchange);

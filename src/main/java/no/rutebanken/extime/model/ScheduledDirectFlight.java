@@ -1,7 +1,7 @@
 package no.rutebanken.extime.model;
 
 import java.math.BigInteger;
-import java.time.LocalTime;
+import java.time.OffsetTime;
 
 public class ScheduledDirectFlight extends ScheduledFlight {
 
@@ -10,8 +10,8 @@ public class ScheduledDirectFlight extends ScheduledFlight {
     private String arrivalAirportIATA;
     private String departureAirportName;
     private String arrivalAirportName;
-    private LocalTime timeOfDeparture;
-    private LocalTime timeOfArrival;
+    private OffsetTime timeOfDeparture;
+    private OffsetTime timeOfArrival;
 
     public BigInteger getFlightId() {
         return flightId;
@@ -58,20 +58,20 @@ public class ScheduledDirectFlight extends ScheduledFlight {
     }
 
     @Override
-    public LocalTime getTimeOfDeparture() {
+    public OffsetTime getTimeOfDeparture() {
         return timeOfDeparture;
     }
 
-    public void setTimeOfDeparture(LocalTime timeOfDeparture) {
+    public void setTimeOfDeparture(OffsetTime timeOfDeparture) {
         this.timeOfDeparture = timeOfDeparture;
     }
 
     @Override
-    public LocalTime getTimeOfArrival() {
+    public OffsetTime getTimeOfArrival() {
         return timeOfArrival;
     }
 
-    public void setTimeOfArrival(LocalTime timeOfArrival) {
+    public void setTimeOfArrival(OffsetTime timeOfArrival) {
         this.timeOfArrival = timeOfArrival;
     }
 
