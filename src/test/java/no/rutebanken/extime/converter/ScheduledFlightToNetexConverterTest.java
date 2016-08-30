@@ -49,19 +49,6 @@ public class ScheduledFlightToNetexConverterTest {
     }
 
     @Test
-    @Ignore
-    public void testSimpNetexConversion() {
-/*
-        ScheduledDirectFlight directFlight = createScheduledDirectFlight("DY", "DY4455");
-        JAXBElement<PublicationDeliveryStructure> publicationDeliveryStructure = clazzUnderTest.convertToNetex(directFlight);
-        Assertions.assertThat(publicationDeliveryStructure).isNotNull();
-        String xml = new XmlUtil().convertToXml(
-                publicationDeliveryStructure, publicationDeliveryStructure.getValue().getClass());
-        System.out.println(xml);
-*/
-    }
-
-    @Test
     public void testCreateJourneyPattern() {
         String flightId = "WF305";
         String routePath = "Trondheim - Sandefjord";
