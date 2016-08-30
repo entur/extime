@@ -2,6 +2,7 @@ package no.rutebanken.extime.model;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.util.Set;
 
@@ -10,6 +11,7 @@ public abstract class ScheduledFlight {
     private String airlineIATA;
     private String airlineName;
     private String airlineFlightId;
+    private AvailabilityPeriod availabilityPeriod;
     private LocalDate dateOfOperation;
     private Set<DayOfWeek> weekDaysPattern;
 
@@ -65,6 +67,14 @@ public abstract class ScheduledFlight {
 
     public abstract OffsetTime getTimeOfArrival();
 
+    public AvailabilityPeriod getAvailabilityPeriod() {
+        return availabilityPeriod;
+    }
+
+    public void setAvailabilityPeriod(AvailabilityPeriod availabilityPeriod) {
+        this.availabilityPeriod = availabilityPeriod;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -103,4 +113,5 @@ public abstract class ScheduledFlight {
         sb.append('}');
         return sb.toString();
     }
+
 }

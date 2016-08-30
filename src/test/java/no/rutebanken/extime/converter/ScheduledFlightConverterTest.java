@@ -17,6 +17,7 @@ import javax.xml.bind.JAXBException;
 import javax.xml.transform.stream.StreamSource;
 import java.math.BigInteger;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.util.*;
 import java.util.function.Predicate;
@@ -209,7 +210,7 @@ public class ScheduledFlightConverterTest {
         Flight dummyFlight = createDummyFlight(1L, "SK", "4455",
                 LocalDate.parse("2017-01-01"), "BGO", OffsetTime.MIN, "OSL", OffsetTime.MAX);
 
-        ScheduledDirectFlight directFlight = clazzUnderTest.convertToScheduledDirectFlight(dummyFlight);
+        ScheduledDirectFlight directFlight = clazzUnderTest.convertToScheduledDirectFlight(dummyFlight, OffsetDateTime.MIN, OffsetDateTime.MAX);
 
         Assertions.assertThat(directFlight)
                 .isNotNull()

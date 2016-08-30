@@ -8,8 +8,8 @@ import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.time.DayOfWeek;
-import java.time.LocalDate;
+import java.time.*;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -30,12 +30,6 @@ public class DateUtilsTest {
         clazzUnderTest.numberOfMonthsInPeriod = 3;
         clazzUnderTest.maxRangeDays = 180;
         clazzUnderTest.minRangeDays = 60;
-    }
-
-    @Test
-    public void testDateParsing() {
-        LocalDate localDate = LocalDate.parse("2016-12-24");
-        System.out.println(localDate);
     }
 
     @Test

@@ -13,7 +13,6 @@ import org.springframework.stereotype.Component;
 import javax.xml.bind.JAXBElement;
 import java.math.BigInteger;
 import java.time.*;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -64,7 +63,7 @@ public class ScheduledFlightToNetexConverter {
         frames.getCommonFrame().add(createSiteFrame(stopPlaces));
         frames.getCommonFrame().add(createServiceFrame(publicationTimestamp, scheduledFlight.getAirlineName(), flightId, routePoints,
                 route, line, scheduledStopPoints, journeyPattern, stopAssignments));
-        frames.getCommonFrame().add(createTimetableFrame(dateOfOperation, serviceJourneys));
+        frames.getCommonFrame().add(createTimetableFrame(scheduledFlight.getAvailabilityPeriod(), serviceJourneys));
         frames.getCommonFrame().add(createServiceCalendarFrame(dayTypes));
 
         JAXBElement<CompositeFrame> compositeFrame = createCompositeFrame(publicationTimestamp, flightId, frames);
@@ -199,9 +198,9 @@ public class ScheduledFlightToNetexConverter {
                 .withProperties(propertiesOfDay);
     }
 
-    public JAXBElement<TimetableFrame> createTimetableFrame(LocalDate dateOfOperation, List<ServiceJourney> serviceJourneys) {
+    public JAXBElement<TimetableFrame> createTimetableFrame(AvailabilityPeriod availabilityPeriod, List<ServiceJourney> serviceJourneys) {
         ValidityConditions_RelStructure validityConditionsRelStructure = objectFactory().createValidityConditions_RelStructure()
-                .withValidityConditionRefOrValidBetweenOrValidityCondition_(createAvailabilityCondition(dateOfOperation));
+                .withValidityConditionRefOrValidBetweenOrValidityCondition_(createAvailabilityCondition(availabilityPeriod));
         JourneysInFrame_RelStructure journeysInFrameRelStructure = objectFactory().createJourneysInFrame_RelStructure();
         journeysInFrameRelStructure.getDatedServiceJourneyOrDeadRunOrServiceJourney().addAll(serviceJourneys);
         TimetableFrame timetableFrame = objectFactory().createTimetableFrame()
@@ -250,12 +249,12 @@ public class ScheduledFlightToNetexConverter {
         }
     }
 
-    public JAXBElement<AvailabilityCondition> createAvailabilityCondition(LocalDate dateOfOperation) {
+    public JAXBElement<AvailabilityCondition> createAvailabilityCondition(AvailabilityPeriod availabilityPeriod) {
         AvailabilityCondition availabilityCondition = objectFactory().createAvailabilityCondition()
                 .withVersion("any")
                 .withId(String.format("%s:AvailabilityCondition:1", getAvinorConfig().getId()))
-                .withFromDate(DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse("2016-08-16T08:24:21Z", OffsetDateTime::from))
-                .withToDate(DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse("2016-08-16T08:24:21Z", OffsetDateTime::from));
+                .withFromDate(availabilityPeriod.getPeriodFromDateTime())
+                .withToDate(availabilityPeriod.getPeriodToDateTime());
         return objectFactory().createAvailabilityCondition(availabilityCondition);
     }
 

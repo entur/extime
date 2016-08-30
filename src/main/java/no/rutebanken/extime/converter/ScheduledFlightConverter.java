@@ -5,12 +5,11 @@ import no.avinor.flydata.xjc.model.scheduled.Flight;
 import no.rutebanken.extime.model.*;
 import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.apache.commons.lang3.tuple.Triple;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.math.BigInteger;
-import java.time.DayOfWeek;
-import java.time.LocalDate;
-import java.time.OffsetTime;
+import java.time.*;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -20,7 +19,19 @@ public class ScheduledFlightConverter {
 
     private static Set<BigInteger> UNIQUE_FLIGHT_IDS = new HashSet<>();
 
+    @Value("${avinor.timetable.period.months}") int numberOfMonthsInPeriod;
+
     public List<ScheduledFlight> convertToScheduledFlights(List<Flight> scheduledFlights) {
+        // @todo: For now we create a separate from- and to date in converter, but this should actualy
+        // @todo: come as input headers from previous date range generator, to be 100% sure these are always the same
+        LocalDate requestPeriodFromDate = LocalDate.now(ZoneId.of("UTC"));
+        LocalDate requestPeriodToDate = requestPeriodFromDate.plusMonths(numberOfMonthsInPeriod);
+
+        OffsetTime offsetMidnight = OffsetTime.parse("00:00:00Z").withOffsetSameLocal(ZoneOffset.UTC);
+
+        OffsetDateTime requestPeriodFromDateTime = requestPeriodFromDate.atTime(offsetMidnight);
+        OffsetDateTime requestPeriodToDateTime = requestPeriodToDate.atTime(offsetMidnight);
+
         Map<String, List<Flight>> flightsByDepartureAirport = scheduledFlights.stream()
                 .collect(Collectors.groupingBy(Flight::getDepartureStation));
         List<ScheduledStopoverFlight> scheduledStopoverFlights = new ArrayList<>();
@@ -36,6 +47,7 @@ public class ScheduledFlightConverter {
                 scheduledStopoverFlight.setAirlineFlightId(String.format("%s%s",
                         scheduledFlight.getAirlineDesignator(), scheduledFlight.getFlightNumber()));
                 scheduledStopoverFlight.setAirlineIATA(scheduledFlight.getAirlineDesignator());
+                scheduledStopoverFlight.setAvailabilityPeriod(new AvailabilityPeriod(requestPeriodFromDateTime, requestPeriodToDateTime));
                 scheduledStopoverFlight.setDateOfOperation(scheduledFlight.getDateOfOperation());
                 scheduledStopoverFlight.getScheduledStopovers().addAll(scheduledStopovers);
                 scheduledStopoverFlights.add(scheduledStopoverFlight);
@@ -46,7 +58,8 @@ public class ScheduledFlightConverter {
                 .filter(scheduledFlight -> !UNIQUE_FLIGHT_IDS.contains(scheduledFlight.getId()))
                 .collect(Collectors.toList());
         List<ScheduledDirectFlight> scheduledDirectFlights = new ArrayList<>();
-        directFlights.forEach(scheduledFlight -> scheduledDirectFlights.add(convertToScheduledDirectFlight(scheduledFlight)));
+        directFlights.forEach(scheduledFlight -> scheduledDirectFlights.add(
+                convertToScheduledDirectFlight(scheduledFlight, requestPeriodFromDateTime, requestPeriodToDateTime)));
         Map<String, List<ScheduledStopoverFlight>> stopoverFlightsByFlightId = scheduledStopoverFlights.stream()
                 .sorted(Comparator.comparing(ScheduledStopoverFlight::getDateOfOperation))
                 .collect(Collectors.groupingBy(ScheduledStopoverFlight::getAirlineFlightId));
@@ -242,11 +255,12 @@ public class ScheduledFlightConverter {
         }
     }
 
-    public ScheduledDirectFlight convertToScheduledDirectFlight(Flight scheduledFlight) {
+    public ScheduledDirectFlight convertToScheduledDirectFlight(Flight scheduledFlight, OffsetDateTime fromDateTime, OffsetDateTime toDateTime) {
         ScheduledDirectFlight scheduledDirectFlight = new ScheduledDirectFlight();
         scheduledDirectFlight.setFlightId(scheduledFlight.getId());
         scheduledDirectFlight.setAirlineIATA(scheduledFlight.getAirlineDesignator());
         scheduledDirectFlight.setAirlineFlightId(String.format("%s%s", scheduledFlight.getAirlineDesignator(), scheduledFlight.getFlightNumber()));
+        scheduledDirectFlight.setAvailabilityPeriod(new AvailabilityPeriod(fromDateTime, toDateTime));
         scheduledDirectFlight.setDateOfOperation(scheduledFlight.getDateOfOperation());
         scheduledDirectFlight.setDepartureAirportIATA(scheduledFlight.getDepartureStation());
         scheduledDirectFlight.setArrivalAirportIATA(scheduledFlight.getArrivalStation());

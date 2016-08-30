@@ -29,7 +29,7 @@ public class DateUtils {
     }
 
     public List<Range<LocalDate>> generateDateRanges(int numberOfDaysInRange) {
-        LocalDate rangeStartDate = LocalDate.now(ZoneId.of("Europe/Oslo"));
+        LocalDate rangeStartDate = LocalDate.now(ZoneId.of("UTC"));
         List<Range<LocalDate>> dateRanges = Lists.newArrayList();
         LocalDate periodEndDate = rangeStartDate.plusMonths(numberOfMonthsInPeriod);
         while (!rangeStartDate.isAfter(periodEndDate)) {
