@@ -480,7 +480,7 @@ public class ScheduledFlightToNetexConverter {
                     .withVersion("any")
                     .withOrder(new BigInteger(Integer.toString(index)))
                     .withId(String.format("%s:PassengerStopAssignment:%s10100%d", getAvinorConfig().getId(), flightId, index)) // @todo: fix the id generation
-                    .withScheduledStopPointRef(scheduledStopPointRef)
+                    .withScheduledStopPointRef(scheduledStopPointRef);
                     // .withStopPlaceRef(stopPlaceRef);
             stopAssignments.add(passengerStopAssignment);
             index++;
