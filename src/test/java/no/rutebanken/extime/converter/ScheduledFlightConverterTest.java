@@ -2,6 +2,7 @@ package no.rutebanken.extime.converter;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import no.avinor.flydata.xjc.model.scheduled.Flight;
 import no.avinor.flydata.xjc.model.scheduled.Flights;
 import no.rutebanken.extime.model.*;
@@ -21,6 +22,7 @@ import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.util.*;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class ScheduledFlightConverterTest {
 
@@ -101,9 +103,9 @@ public class ScheduledFlightConverterTest {
     @Test
     @Ignore
     public void findPossibleStopoversForFlight() throws Exception {
-        Flight currentFlight = createDummyFlight(1L, "SK", "4455", LocalDate.parse("2017-01-01"),
+        Flight currentFlight = createFlight(1L, "SK", "4455", LocalDate.parse("2017-01-01"),
                 "BGO", OffsetTime.parse("09:00:00"), "OSL", OffsetTime.parse("09:30:00"));
-        Flight destinationFlight = createDummyFlight(2L, "SK", "4455", LocalDate.parse("2017-01-01"),
+        Flight destinationFlight = createFlight(2L, "SK", "4455", LocalDate.parse("2017-01-01"),
                 "OSL", OffsetTime.parse("10:00:00"), "TRD", OffsetTime.parse("10:30:00"));
         List<Flight> flights = Collections.singletonList(destinationFlight);
         HashMap<String, List<Flight>> flightsByDepartureAirport = Maps.newHashMap();
@@ -121,9 +123,9 @@ public class ScheduledFlightConverterTest {
 
     @Test
     public void doNotFindPresentStopoverFlight() throws Exception {
-        Flight currentFlight = createDummyFlight(1L, "SK", "4455", LocalDate.parse("2017-01-01"),
+        Flight currentFlight = createFlight(1L, "SK", "4455", LocalDate.parse("2017-01-01"),
                 "BGO", OffsetTime.parse("09:00:00Z"), "OSL", OffsetTime.parse("09:30:00Z"));
-        Flight destinationFlight = createDummyFlight(11L, "WF", "8899", LocalDate.parse("2017-01-03"),
+        Flight destinationFlight = createFlight(11L, "WF", "8899", LocalDate.parse("2017-01-03"),
                 "OSL", OffsetTime.parse("08:00:00Z"), "TRD", OffsetTime.parse("08:30:00Z"));
         List<Flight> flights = Collections.singletonList(destinationFlight);
 
@@ -135,9 +137,9 @@ public class ScheduledFlightConverterTest {
 
     @Test
     public void findPresentStopoverFlight() throws Exception {
-        Flight currentFlight = createDummyFlight(1L, "SK", "4455", LocalDate.parse("2017-01-01"),
+        Flight currentFlight = createFlight(1L, "SK", "4455", LocalDate.parse("2017-01-01"),
                 "BGO", OffsetTime.parse("09:00:00Z"), "OSL", OffsetTime.parse("09:30:00Z"));
-        Flight destinationFlight = createDummyFlight(2L, "SK", "4455", LocalDate.parse("2017-01-01"),
+        Flight destinationFlight = createFlight(2L, "SK", "4455", LocalDate.parse("2017-01-01"),
                 "OSL", OffsetTime.parse("10:00:00Z"), "TRD", OffsetTime.parse("10:30:00Z"));
         List<Flight> flights = Collections.singletonList(destinationFlight);
 
@@ -150,9 +152,9 @@ public class ScheduledFlightConverterTest {
 
     @Test
     public void doNotMatchStopoverFlightPredicate() throws Exception {
-        Flight flight1 = createDummyFlight(1L, "SK", "4455", LocalDate.parse("2017-01-01"),
+        Flight flight1 = createFlight(1L, "SK", "4455", LocalDate.parse("2017-01-01"),
                 "BGO", OffsetTime.parse("09:00:00Z"), "OSL", OffsetTime.parse("09:30:00Z"));
-        Flight flight2 = createDummyFlight(11L, "WF", "8899", LocalDate.parse("2017-01-03"),
+        Flight flight2 = createFlight(11L, "WF", "8899", LocalDate.parse("2017-01-03"),
                 "OSL", OffsetTime.parse("08:00:00Z"), "TRD", OffsetTime.parse("08:30:00Z"));
 
         Predicate<Flight> predicate = clazzUnderTest.createStopoverFlightPredicate(flight1);
@@ -163,9 +165,9 @@ public class ScheduledFlightConverterTest {
 
     @Test
     public void matchStopoverFlightPredicate() throws Exception {
-        Flight flight1 = createDummyFlight(1L, "SK", "4455", LocalDate.parse("2017-01-01"),
+        Flight flight1 = createFlight(1L, "SK", "4455", LocalDate.parse("2017-01-01"),
                 "BGO", OffsetTime.parse("09:00:00Z"), "OSL", OffsetTime.parse("09:30:00Z"));
-        Flight flight2 = createDummyFlight(2L, "SK", "4455", LocalDate.parse("2017-01-01"),
+        Flight flight2 = createFlight(2L, "SK", "4455", LocalDate.parse("2017-01-01"),
                 "OSL", OffsetTime.parse("10:00:00Z"), "TRD", OffsetTime.parse("10:30:00Z"));
 
         Predicate<Flight> predicate = clazzUnderTest.createStopoverFlightPredicate(flight1);
@@ -207,7 +209,7 @@ public class ScheduledFlightConverterTest {
     @Test
     @Ignore
     public void convertFlightToScheduledDirectFlight() throws Exception {
-        Flight dummyFlight = createDummyFlight(1L, "SK", "4455",
+        Flight dummyFlight = createFlight(1L, "SK", "4455",
                 LocalDate.parse("2017-01-01"), "BGO", OffsetTime.MIN, "OSL", OffsetTime.MAX);
 
         ScheduledDirectFlight directFlight = clazzUnderTest.convertToScheduledDirectFlight(dummyFlight, OffsetDateTime.MIN, OffsetDateTime.MAX);
@@ -241,26 +243,186 @@ public class ScheduledFlightConverterTest {
                 .isEqualTo(dummyFlight.getSta());
     }
 
+    @Test
+    public void testAssertNullWhenLegPreviouslyProcessed() throws Exception {
+        List<Flight> wf149FlightLegs = generateObjectsFromXml("/xml/wf149.xml", Flights.class).getFlight();
+        Map<String, List<Flight>> flightsByDepartureAirport = wf149FlightLegs.stream()
+                .collect(Collectors.groupingBy(Flight::getDepartureStation));
+        Map<String, List<Flight>> flightsByArrivalAirportIata = wf149FlightLegs.stream()
+                .collect(Collectors.groupingBy(Flight::getArrivalStation));
+
+        Flight currentFlight = wf149FlightLegs.get(0);
+        LinkedList<Flight> connectingFlightLegs = clazzUnderTest.findConnectingFlightLegs(
+                currentFlight, flightsByDepartureAirport, flightsByArrivalAirportIata, Sets.newHashSet(currentFlight.getId()));
+
+        Assertions.assertThat(connectingFlightLegs)
+                .isNull();
+    }
+
+    @Test
+    @Ignore
+    public void testFindConnectingFlightLegsForFirstLeg() throws Exception {
+        List<Flight> wf149FlightLegs = generateObjectsFromXml("/xml/wf149.xml", Flights.class).getFlight();
+
+        Map<String, List<Flight>> flightsByDepartureAirport = wf149FlightLegs.stream()
+                .collect(Collectors.groupingBy(Flight::getDepartureStation));
+
+        Map<String, List<Flight>> flightsByArrivalAirportIata = wf149FlightLegs.stream()
+                .collect(Collectors.groupingBy(Flight::getArrivalStation));
+
+        LinkedList<Flight> connectingFlightLegs = clazzUnderTest.findConnectingFlightLegs(
+                wf149FlightLegs.get(0), flightsByDepartureAirport, flightsByArrivalAirportIata, Sets.newHashSet());
+
+        Assertions.assertThat(connectingFlightLegs)
+                .isNotNull();
+    }
+
+    @Test
+    public void testFindNextFlightLegsForLastLeg() throws Exception {
+        List<Flight> flightLegs = Lists.newArrayList(
+                createFlight(1099L, "SK", "4455", LocalDate.parse("2017-01-30"), "BGO",
+                        OffsetTime.parse("07:00:00Z"), "OSL", OffsetTime.parse("07:30:00Z"))
+        );
+        Flight currentFlight = createFlight(1003L, "WF", "149", LocalDate.parse("2017-01-01"), "SOG",
+                OffsetTime.parse("06:00:00Z"), "BGO", OffsetTime.parse("06:30:00Z"));
+
+        Map<String, List<Flight>> flightsByDepartureAirport = flightLegs.stream()
+                .collect(Collectors.groupingBy(Flight::getDepartureStation));
+
+        LinkedList<Flight> nextFlightLegs = clazzUnderTest.findNextFlightLegs(
+                currentFlight, flightsByDepartureAirport, Lists.newLinkedList());
+
+        Assertions.assertThat(nextFlightLegs)
+                .isNotNull()
+                .isEmpty();
+    }
+
+    @Test
+    public void testFindNextFlightLegs() throws Exception {
+        List<Flight> flightLegs = Lists.newArrayList(
+                createFlight(1002L, "WF", "149", LocalDate.parse("2017-01-01"), "HOV",
+                        OffsetTime.parse("09:00:00Z"), "SOG", OffsetTime.parse("09:30:00Z")),
+                createFlight(1003L, "WF", "149", LocalDate.parse("2017-01-01"), "SOG",
+                        OffsetTime.parse("10:00:00Z"), "BGO", OffsetTime.parse("10:30:00Z")),
+                createFlight(1004L, "WF", "148", LocalDate.parse("2017-01-02"), "BGO",
+                        OffsetTime.parse("06:00:00Z"), "SOG", OffsetTime.parse("06:30:00Z"))
+        );
+        Flight currentFlight = createFlight(1001L, "WF", "149", LocalDate.parse("2017-01-01"), "OSL",
+                OffsetTime.parse("08:00:00Z"), "HOV", OffsetTime.parse("08:30:00Z"));
+
+        Map<String, List<Flight>> flightsByDepartureAirport = flightLegs.stream()
+                .collect(Collectors.groupingBy(Flight::getDepartureStation));
+
+        LinkedList<Flight> nextFlightLegs = clazzUnderTest.findNextFlightLegs(
+                currentFlight, flightsByDepartureAirport, Lists.newLinkedList());
+
+        Assertions.assertThat(nextFlightLegs)
+                .isNotNull()
+                .isNotEmpty()
+                .hasSize(2)
+                .containsOnly(flightLegs.get(0), flightLegs.get(1));
+    }
+    @Test
+    public void testFindPreviousFlightLegsForFirstLeg() throws Exception {
+        List<Flight> flightLegs = Lists.newArrayList(
+                createFlight(1099L, "SK", "4455", LocalDate.parse("2017-01-30"), "TRD",
+                        OffsetTime.parse("07:00:00Z"), "OSL", OffsetTime.parse("07:30:00Z"))
+        );
+        Flight currentFlight = createFlight(1001L, "WF", "149", LocalDate.parse("2017-01-01"), "OSL",
+                OffsetTime.parse("06:00:00Z"), "HOV", OffsetTime.parse("06:30:00Z"));
+
+        Map<String, List<Flight>> flightsByArrivalAirportIata = flightLegs.stream()
+                .collect(Collectors.groupingBy(Flight::getArrivalStation));
+
+        LinkedList<Flight> previousFlightLegs = clazzUnderTest.findPreviousFlightLegs(
+                currentFlight, flightsByArrivalAirportIata, Lists.newLinkedList());
+
+        Assertions.assertThat(previousFlightLegs)
+                .isNotNull()
+                .isEmpty();
+    }
+
+    @Test
+    public void testFindPreviousFlightLegs() throws Exception {
+        List<Flight> flightLegs = Lists.newArrayList(
+                createFlight(1001L, "WF", "149", LocalDate.parse("2017-01-01"), "OSL",
+                        OffsetTime.parse("06:00:00Z"), "HOV", OffsetTime.parse("06:30:00Z")),
+                createFlight(1002L, "WF", "149", LocalDate.parse("2017-01-01"), "HOV",
+                        OffsetTime.parse("07:00:00Z"), "SOG", OffsetTime.parse("07:30:00Z")),
+                createFlight(1004L, "WF", "148", LocalDate.parse("2017-01-02"), "HOV",
+                        OffsetTime.parse("07:00:00Z"), "OSL", OffsetTime.parse("07:30:00Z"))
+        );
+        Flight currentFlight = createFlight(1003L, "WF", "149", LocalDate.parse("2017-01-01"), "SOG",
+                OffsetTime.parse("08:00:00Z"), "BGO", OffsetTime.parse("08:30:00Z"));
+
+        Map<String, List<Flight>> flightsByArrivalAirportIata = flightLegs.stream()
+                .collect(Collectors.groupingBy(Flight::getArrivalStation));
+
+        LinkedList<Flight> previousFlightLegs = clazzUnderTest.findPreviousFlightLegs(
+                currentFlight, flightsByArrivalAirportIata, Lists.newLinkedList());
+
+        Assertions.assertThat(previousFlightLegs)
+                .isNotNull()
+                .isNotEmpty()
+                .hasSize(2)
+                .containsOnly(flightLegs.get(0), flightLegs.get(1));
+    }
+
+    @Test
+    public void testFindOptionalConnectingFlightLeg() throws Exception {
+        Flight currentFlightLeg = createFlight(1003L, "WF", "149", LocalDate.parse("2017-01-01"),
+                "SOG", OffsetTime.parse("09:00:00Z"), "BGO", OffsetTime.parse("09:30:00Z"));
+        Predicate<Flight> previousFlightPredicate = FlightPredicate.matchPreviousFlight(currentFlightLeg);
+
+        List<Flight> flightLegs = Lists.newArrayList(
+                createFlight(1002L, "WF", "149", LocalDate.parse("2017-01-01"), "HOV",
+                        OffsetTime.parse("08:00:00Z"), "SOG", OffsetTime.parse("08:30:00Z"))
+        );
+
+        Flight optionalFlight = clazzUnderTest.findOptionalConnectingFlightLeg(previousFlightPredicate, flightLegs);
+
+        Assertions.assertThat(optionalFlight)
+                .isNotNull()
+                .isEqualTo(flightLegs.get(0));
+    }
+
+    @Test
+    public void testDoNotFindOptionalConnectingFlightLeg() throws Exception {
+        Flight currentFlightLeg = createFlight(1001L, "WF", "149", LocalDate.parse("2017-01-01"),
+                "OSL", OffsetTime.parse("07:00:00Z"), "HOV", OffsetTime.parse("07:30:00Z"));
+        Predicate<Flight> previousFlightPredicate = FlightPredicate.matchPreviousFlight(currentFlightLeg);
+
+        List<Flight> flightLegs = Lists.newArrayList(
+                createFlight(1003L, "WF", "149", LocalDate.parse("2017-01-01"), "SOG",
+                        OffsetTime.parse("08:00:00Z"), "BGO", OffsetTime.parse("08:30:00Z"))
+        );
+
+        Flight optionalFlight = clazzUnderTest.findOptionalConnectingFlightLeg(previousFlightPredicate, flightLegs);
+
+        Assertions.assertThat(optionalFlight)
+                .isNull();
+    }
+
     private List<Flight> createDummyFlights() {
         return Lists.newArrayList(
-                createDummyFlight(1L, "SK", "4455", LocalDate.parse("2017-01-01"), "BGO", OffsetTime.MIN, "OSL", OffsetTime.MAX),
-                createDummyFlight(2L, "DY", "6677", LocalDate.parse("2017-01-02"), "BGO", OffsetTime.MIN, "TRD", OffsetTime.MAX),
-                createDummyFlight(3L, "WF", "199", LocalDate.parse("2017-01-03"), "BGO", OffsetTime.MIN, "SVG", OffsetTime.MAX)
+                createFlight(1L, "SK", "4455", LocalDate.parse("2017-01-01"), "BGO", OffsetTime.MIN, "OSL", OffsetTime.MAX),
+                createFlight(2L, "DY", "6677", LocalDate.parse("2017-01-02"), "BGO", OffsetTime.MIN, "TRD", OffsetTime.MAX),
+                createFlight(3L, "WF", "199", LocalDate.parse("2017-01-03"), "BGO", OffsetTime.MIN, "SVG", OffsetTime.MAX)
         );
     }
 
-    private Flight createDummyFlight(long dummyId, String dummyDesignator, String dummyFlightNumber, LocalDate dummyDateOfOperation,
-                                     String dummyDepartureStation, OffsetTime dummyDepartureTime, String dummyArrivalStation, OffsetTime dummyArrivalTime) {
-        return new Flight() {{
-            setId(BigInteger.valueOf(dummyId));
-            setAirlineDesignator(dummyDesignator);
-            setFlightNumber(dummyFlightNumber);
-            setDateOfOperation(dummyDateOfOperation);
-            setDepartureStation(dummyDepartureStation);
-            setStd(dummyDepartureTime);
-            setArrivalStation(dummyArrivalStation);
-            setSta(dummyArrivalTime);
-        }};
+    private Flight createFlight(long id, String designator, String flightNumber, LocalDate dateOfOperation,
+                                String departureStation, OffsetTime departureTime, String arrivalStation, OffsetTime arrivalTime) {
+        Flight flight = new Flight();
+        flight.setId(BigInteger.valueOf(id));
+        flight.setAirlineDesignator(designator);
+        flight.setFlightNumber(flightNumber);
+        flight.setDateOfOperation(dateOfOperation);
+        flight.setDepartureStation(departureStation);
+        flight.setStd(departureTime);
+        flight.setArrivalStation(arrivalStation);
+        flight.setSta(arrivalTime);
+        return flight;
     }
 
     // @todo: refactor! - duplicate in AvinorTimetableUtils (make static)
