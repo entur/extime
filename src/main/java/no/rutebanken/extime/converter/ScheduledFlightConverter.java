@@ -41,9 +41,7 @@ public class ScheduledFlightConverter {
         // @todo: come as input headers from previous date range generator, to be 100% sure these are always the same
         LocalDate requestPeriodFromDate = LocalDate.now(ZoneId.of("UTC"));
         LocalDate requestPeriodToDate = requestPeriodFromDate.plusMonths(numberOfMonthsInPeriod);
-
         OffsetTime offsetMidnight = OffsetTime.parse("00:00:00Z").withOffsetSameLocal(ZoneOffset.UTC);
-
         OffsetDateTime requestPeriodFromDateTime = requestPeriodFromDate.atTime(offsetMidnight);
         OffsetDateTime requestPeriodToDateTime = requestPeriodToDate.atTime(offsetMidnight);
 
@@ -164,7 +162,7 @@ public class ScheduledFlightConverter {
     public LinkedList<Flight> findConnectingFlightLegs(Flight currentFlightLeg, Map<String, List<Flight>> flightsByDepartureAirportIata,
                                Map<String, List<Flight>> flightsByArrivalAirportIata, Set<BigInteger> distinctFlightLegIds) {
 
-        // 1. check if flight's unique id is already found (part of a multi-leg-flight), and thereby present in id set
+        // 1. check if flight's unique id is already found (part of a multi-leg-flight already), and thereby present in id set
         if (distinctFlightLegIds.contains(currentFlightLeg.getId())) {
             // this means the flight leg is already part of a multi-leg flight, and found in a previous run
             // and when this check is true, the flight leg must not be processed any further, return to caller
@@ -178,12 +176,11 @@ public class ScheduledFlightConverter {
         //    we need a recursive function, that walks all the way back to the first flight leg, if there is any...
         //    take care! if it is not possible to find any previously connecting flight legs, we may process the first leg in order
 
-        //Predicate<Flight> previousFlightPredicate = FlightPredicate.matchPreviousFlight(currentFlightLeg);
-        //LinkedList<Flight> previousFlightLegs = findFlightLegs(currentFlightLeg.getDepartureStation(), previousFlightPredicate, flightsByArrivalAirportIata, Lists.newLinkedList());
+        //    consider if we really need a linked list here (which gives overhead), we could instead sort the list by id when done finding legs
 
         LinkedList<Flight> previousFlightLegs = findPreviousFlightLegs(currentFlightLeg, flightsByArrivalAirportIata, Lists.newLinkedList());
 
-        // Examples: if no previous flight is found, current flight is either first flight-leg or only flight-leg
+        // Examples: if no previous flight is found, current flight is either first flight-leg or only the flight-leg (a direct flight)
         // after finding previous legs, and none is found, add current flight to linked list, i.e.
 
         // list[Flight(OSL-BGO)]
@@ -205,15 +202,13 @@ public class ScheduledFlightConverter {
         //          this is a multi-leg flight, process
         //    find out where it is best to register the unique flight ids in cache set, to later be removed from original list
 
-        //Predicate<Flight> nextFlightPredicate = FlightPredicate.matchNextFlight(currentFlightLeg);
-        //LinkedList<Flight> nextFlightLegs = findFlightLegs(currentFlightLeg.getArrivalStation(), nextFlightPredicate, flightsByDepartureAirportIata, Lists.newLinkedList());
-
         LinkedList<Flight> nextFlightLegs = findNextFlightLegs(currentFlightLeg, flightsByDepartureAirportIata, Lists.newLinkedList());
 
         // 5. merge the 2 lists, together with the current flight leg
         //    also consider sorting the legs by id before processing further, instead of trying to insert legs in correct order.
         //    also consider changing the backing flight leg collection, do we really need a linked list? or is it enough with an arraylist or some other collection?
 
+        List<Flight> flights = Lists.newArrayList(currentFlightLeg);
         return Lists.newLinkedList();
     }
 

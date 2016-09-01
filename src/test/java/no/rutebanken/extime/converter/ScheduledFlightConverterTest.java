@@ -260,21 +260,34 @@ public class ScheduledFlightConverterTest {
     }
 
     @Test
-    @Ignore
     public void testFindConnectingFlightLegsForFirstLeg() throws Exception {
-        List<Flight> wf149FlightLegs = generateObjectsFromXml("/xml/wf149.xml", Flights.class).getFlight();
+        List<Flight> flightLegs = Lists.newArrayList(
+                createFlight(1002L, "WF", "149", LocalDate.parse("2017-01-01"), "HOV",
+                        OffsetTime.parse("07:00:00Z"), "SOG", OffsetTime.parse("07:30:00Z")),
+                createFlight(1003L, "WF", "149", LocalDate.parse("2017-01-01"), "SOG",
+                        OffsetTime.parse("08:00:00Z"), "BGO", OffsetTime.parse("08:30:00Z")),
+                createFlight(9999L, "SK", "4455", LocalDate.parse("2017-01-02"), "TRD",
+                        OffsetTime.parse("08:00:00Z"), "OSL", OffsetTime.parse("08:30:00Z")),
+                createFlight(8888L, "DY", "8899", LocalDate.parse("2017-01-03"), "OSL",
+                        OffsetTime.parse("08:00:00Z"), "HOV", OffsetTime.parse("08:30:00Z")),
+                createFlight(7777L, "M3", "566", LocalDate.parse("2017-01-03"), "BGO",
+                        OffsetTime.parse("08:00:00Z"), "TRD", OffsetTime.parse("08:30:00Z"))
+        );
+        Flight currentFlight = createFlight(1001L, "WF", "149", LocalDate.parse("2017-01-01"), "OSL",
+                OffsetTime.parse("06:00:00Z"), "HOV", OffsetTime.parse("06:30:00Z"));
 
-        Map<String, List<Flight>> flightsByDepartureAirport = wf149FlightLegs.stream()
+        Map<String, List<Flight>> flightsByDepartureAirport = flightLegs.stream()
                 .collect(Collectors.groupingBy(Flight::getDepartureStation));
 
-        Map<String, List<Flight>> flightsByArrivalAirportIata = wf149FlightLegs.stream()
+        Map<String, List<Flight>> flightsByArrivalAirportIata = flightLegs.stream()
                 .collect(Collectors.groupingBy(Flight::getArrivalStation));
 
         LinkedList<Flight> connectingFlightLegs = clazzUnderTest.findConnectingFlightLegs(
-                wf149FlightLegs.get(0), flightsByDepartureAirport, flightsByArrivalAirportIata, Sets.newHashSet());
+                currentFlight, flightsByDepartureAirport, flightsByArrivalAirportIata, Sets.newHashSet());
 
         Assertions.assertThat(connectingFlightLegs)
-                .isNotNull();
+                .isNotNull()
+                .isNotEmpty();
     }
 
     @Test
