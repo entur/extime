@@ -68,7 +68,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 //.bean(AvinorTimetableUtils.class, "generateStaticFlights")
 
                 .log(LoggingLevel.DEBUG, this.getClass().getName(), "Converting to scheduled flights")
-                .bean(ScheduledFlightConverter.class, "convertToScheduledFlights").id("ConvertToScheduledFlightsBeanProcessor")
+                .bean(ScheduledFlightConverter.class, "convertToScheduledFlightsNew").id("ConvertToScheduledFlightsBeanProcessor")
                 .to("direct:convertScheduledFlightsToNetex")
         ;
 
