@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<flights xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://195.69.13.136/XmlFeedScheduled.xsd"
+         airport="OSL" time="2016-08-13T17:06:25Z">
+
+    <!-- WF149 - 2016-08-17 - OSL-HOV-SOG-BGO -->
+    <flight id="100769784136">
+        <airline.designator>WF</airline.designator>
+        <flight.number>149</flight.number>
+        <date.of.operation>2016-08-17Z</date.of.operation>
+        <departure.station>OSL</departure.station>
+        <std>14:05:00Z</std>
+        <arrival.station>HOV</arrival.station>
+        <sta>15:13:00Z</sta>
+        <aircraft.configuration>M39VVDH1KB</aircraft.configuration>
+        <aircraft.type>DH1</aircraft.type>
+        <service.type>J</service.type>
+        <creation>SSIM</creation>
+    </flight>
+    <flight id="100769784137">
+        <airline.designator>WF</airline.designator>
+        <flight.number>149</flight.number>
+        <date.of.operation>2016-08-17Z</date.of.operation>
+        <departure.station>HOV</departure.station>
+        <std>15:30:00Z</std>
+        <arrival.station>SOG</arrival.station>
+        <sta>16:05:00Z</sta>
+        <aircraft.configuration>M39VVDH1KB</aircraft.configuration>
+        <aircraft.type>DH1</aircraft.type>
+        <service.type>J</service.type>
+        <creation>SSIM</creation>
+    </flight>
+    <flight id="100769784138">
+        <airline.designator>WF</airline.designator>
+        <flight.number>149</flight.number>
+        <date.of.operation>2016-08-17Z</date.of.operation>
+        <departure.station>SOG</departure.station>
+        <std>16:27:00Z</std>
+        <arrival.station>BGO</arrival.station>
+        <sta>17:00:00Z</sta>
+        <aircraft.configuration>M39VVDH1KB</aircraft.configuration>
+        <aircraft.type>DH1</aircraft.type>
+        <service.type>J</service.type>
+        <creation>SSIM</creation>
+    </flight>
+</flights>
