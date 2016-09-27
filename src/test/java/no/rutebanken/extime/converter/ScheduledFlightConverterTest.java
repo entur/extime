@@ -55,7 +55,7 @@ public class ScheduledFlightConverterTest {
                 }
             }
         }
-        List<ScheduledFlight> scheduledFlights = clazzUnderTest.convertToScheduledFlightsNew(finalList);
+        List<ScheduledFlight> scheduledFlights = clazzUnderTest.convertToScheduledFlights(finalList);
         Assertions.assertThat(scheduledFlights).isNotNull();
     }
 
@@ -74,7 +74,7 @@ public class ScheduledFlightConverterTest {
         expectedWF149Flight.setDateOfOperation(LocalDate.parse("2016-08-17"));
 
         Flights flights = generateObjectsFromXml("/xml/wf148-wf149.xml", Flights.class);
-        List<ScheduledFlight> scheduledFlights = clazzUnderTest.convertToScheduledFlightsNew(flights.getFlight());
+        List<ScheduledFlight> scheduledFlights = clazzUnderTest.convertToScheduledFlights(flights.getFlight());
 
         Assertions.assertThat(scheduledFlights)
                 .isNotNull()

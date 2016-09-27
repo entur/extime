@@ -25,7 +25,7 @@ public class ScheduledFlightConverter {
 
     @Value("${avinor.timetable.period.months}") int numberOfMonthsInPeriod;
 
-    public List<ScheduledFlight> convertToScheduledFlightsNew(List<Flight> scheduledFlights) {
+    public List<ScheduledFlight> convertToScheduledFlights(List<Flight> scheduledFlights) {
         // @todo: For now we create a separate from- and to date in converter, but this should actualy
         // @todo: come as input headers from previous date range generator, to be 100% sure these are always the same
         LocalDate requestPeriodFromDate = LocalDate.now(ZoneId.of("UTC"));
