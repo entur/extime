@@ -1,7 +1,9 @@
 package no.rutebanken.extime.routes.avinor;
 
 import com.google.common.collect.Lists;
+import no.avinor.flydata.xjc.model.airline.AirlineName;
 import no.avinor.flydata.xjc.model.airline.AirlineNames;
+import no.avinor.flydata.xjc.model.airport.AirportName;
 import no.avinor.flydata.xjc.model.airport.AirportNames;
 import no.avinor.flydata.xjc.model.scheduled.Flight;
 import no.rutebanken.extime.converter.ScheduledFlightConverter;
@@ -79,7 +81,11 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .setHeader(HEADER_EXTIME_URI_PARAMETERS, simpleF("airport=${header.%s}&shortname=Y&ukname=Y", HEADER_EXTIME_RESOURCE_CODE))
                 .to("direct:fetchXmlStreamFromHttpFeed").id("FetchAirportNameFromHttpFeedProcessor")
                 .convertBodyTo(AirportNames.class)
-                .process(exchange -> exchange.getIn().setBody(exchange.getIn().getBody(AirportNames.class).getAirportName().get(0).getName(), String.class))
+                .process(exchange -> {
+                    List<AirportName> airportNames = exchange.getIn().getBody(AirportNames.class).getAirportName();
+                    exchange.getIn().setBody((airportNames != null && airportNames.size() > 0) ? airportNames.get(0).getName() :
+                            exchange.getIn().getHeader(HEADER_EXTIME_RESOURCE_CODE), String.class);
+                })
                 .to("direct:addResourceToCache")
         ;
 
@@ -90,7 +96,11 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .setHeader(HEADER_EXTIME_URI_PARAMETERS, simpleF("airline=${header.%s}", HEADER_EXTIME_RESOURCE_CODE))
                 .to("direct:fetchXmlStreamFromHttpFeed").id("FetchAirlineNameFromHttpFeedProcessor")
                 .convertBodyTo(AirlineNames.class)
-                .process(exchange -> exchange.getIn().setBody(exchange.getIn().getBody(AirlineNames.class).getAirlineName().get(0).getName(), String.class))
+                .process(exchange -> {
+                    List<AirlineName> airlineNames = exchange.getIn().getBody(AirlineNames.class).getAirlineName();
+                    exchange.getIn().setBody((airlineNames != null && airlineNames.size() > 0) ? airlineNames.get(0).getName() :
+                            exchange.getIn().getHeader(HEADER_EXTIME_RESOURCE_CODE), String.class);
+                })
                 .to("direct:addResourceToCache")
         ;
 
