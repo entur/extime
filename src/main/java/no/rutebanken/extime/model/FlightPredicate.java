@@ -29,11 +29,13 @@ public class FlightPredicate {
 
     public static Predicate<Flight> matchPreviousFlightId(Flight currentFlight) {
         return previousFlight ->
+                currentFlight.getId().equals(previousFlight.getId()) ||
                 currentFlight.getId().subtract(previousFlight.getId()).equals(BigInteger.ONE);
     }
 
     public static Predicate<Flight> matchNextFlightId(Flight currentFlight) {
         return nextFlight ->
+                nextFlight.getId().equals(currentFlight.getId()) ||
                 nextFlight.getId().subtract(currentFlight.getId()).equals(BigInteger.ONE);
     }
 

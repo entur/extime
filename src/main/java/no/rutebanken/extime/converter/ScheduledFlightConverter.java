@@ -175,6 +175,8 @@ public class ScheduledFlightConverter {
         return daysOfWeek;
     }
 
+    // TODO: We must take into consideration that it is possible to have multiple journey patterns or routes for a specific flight id
+    // like flight WF739 which can take the following route/journey pattern one day: BOO-OSY-TRD, and this route/journey pattern another day: BOO-MJF-OSY-TRD
     public List<Flight> findConnectingFlightLegs(Flight currentFlightLeg, Map<String, List<Flight>> flightsByDepartureAirportIata,
                                Map<String, List<Flight>> flightsByArrivalAirportIata, Set<BigInteger> distinctFlightLegIds) {
         if (distinctFlightLegIds.contains(currentFlightLeg.getId())) {
