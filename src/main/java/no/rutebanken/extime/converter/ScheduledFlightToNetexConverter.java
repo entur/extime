@@ -467,17 +467,17 @@ public class ScheduledFlightToNetexConverter {
         Iterator<StopPlace> stopPlacesIterator = stopPlaces.iterator();
         while (stopPointsIterator.hasNext() && stopPlacesIterator.hasNext() && index <= scheduledStopPoints.size() && index <= stopPlaces.size()) {
             ScheduledStopPointRefStructure scheduledStopPointRef = objectFactory().createScheduledStopPointRefStructure()
-                    .withVersion("any")
+                    //.withVersion("any")
                     .withRef(stopPointsIterator.next().getId());
             StopPlaceRefStructure stopPlaceRef = objectFactory().createStopPlaceRefStructure()
-                    .withVersion("any")
+                    //.withVersion("any")
                     .withRef(stopPlacesIterator.next().getId());
             PassengerStopAssignment passengerStopAssignment = objectFactory().createPassengerStopAssignment()
                     .withVersion("any")
                     .withOrder(new BigInteger(Integer.toString(index)))
                     .withId(String.format("%s:PassengerStopAssignment:%s10100%d", getAvinorConfig().getId(), flightId, index)) // @todo: fix the id generation
-                    .withScheduledStopPointRef(scheduledStopPointRef);
-                    // .withStopPlaceRef(stopPlaceRef);
+                    .withScheduledStopPointRef(scheduledStopPointRef)
+                    .withStopPlaceRef(stopPlaceRef);
             stopAssignments.add(passengerStopAssignment);
             index++;
         }
