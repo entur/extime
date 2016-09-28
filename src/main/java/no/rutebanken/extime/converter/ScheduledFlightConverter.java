@@ -48,10 +48,12 @@ public class ScheduledFlightConverter {
         for (Flight flight : scheduledFlights) {
             List<Flight> connectingFlightLegs = findConnectingFlightLegs(flight, flightsByDepartureAirport, flightsByArrivalAirportIata, distinctFlightLegIds);
             if (CollectionUtils.isEmpty(connectingFlightLegs)) {
+/*
                 logger.debug("Flight with unique id: {}, and flightId: {} is part of multi leg flight, and already processed, skipping...",
                         flight.getId(),
                         flight.getAirlineDesignator(),
                         flight.getFlightNumber());
+*/
                 continue;
             }
             if (isMultiLegFlightRoute(connectingFlightLegs)) {

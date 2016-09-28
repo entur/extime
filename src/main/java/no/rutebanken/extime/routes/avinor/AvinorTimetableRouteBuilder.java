@@ -17,6 +17,7 @@ import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.converter.jaxb.JaxbDataFormat;
 import org.apache.camel.processor.aggregate.AggregationStrategy;
+import org.apache.camel.processor.aggregate.zipfile.ZipAggregationStrategy;
 import org.apache.commons.lang3.EnumUtils;
 import org.springframework.stereotype.Component;
 
@@ -159,6 +160,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
         from("direct:convertScheduledFlightsToNetex")
                 .routeId("ScheduledFlightsToNetexConverter")
                 .log(LoggingLevel.DEBUG, this.getClass().getName(), "Converting scheduled flights to NeTEx")
+                .setHeader("NumberOfNetexFiles", simple("${body.size}"))
                 .split(body())//.parallelProcessing()
                     .process(exchange -> {
                         ScheduledFlight originalBody = exchange.getIn().getBody(ScheduledFlight.class);
@@ -174,7 +176,8 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                     .marshal(jaxbDataFormat)
                     //.log(LoggingLevel.DEBUG, this.getClass().getName(), "${body}")
                     .process(exchange -> {
-                        String uuid = getContext().getUuidGenerator().generateUuid();
+                        //String uuid = getContext().getUuidGenerator().generateUuid();
+                        String uuid = UUID.randomUUID().toString();
                         exchange.getIn().setHeader("FileNameGenerated", uuid);
                     }).id("GenerateFileNameProcessor")
                     .setHeader(Exchange.FILE_NAME, simple("${header.FileNameGenerated}.xml"))
@@ -182,7 +185,9 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                     .setHeader(Exchange.CHARSET_NAME, constant("utf-8"))
                     .to("file:target/netex")
                     //.to("file:target/netex?charset=utf-8")
+                    .to("direct:aggregateToZipFile")
                 .end()
+                // TODO: consider some cleanup of generated files here
         ;
 
         // @todo: write unit test for this route
@@ -215,6 +220,20 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                     }).id("SetEnrichParameterForStopoverProcessor")
                     .enrich("direct:retrieveResource", new StopoverIataEnricherAggregationStrategy())
                 .end()
+        ;
+
+        // TODO: consider reading the netex file directory after all files are created and add to zip
+        from("direct:aggregateToZipFile")
+                .routeId("AggregateToZipFile")
+                .aggregate(new ZipAggregationStrategy(false, true))
+                    .constant(true)
+                    .completionFromBatchConsumer()
+                    .eagerCheckCompletion()
+                    //.completionTimeout(50)
+                    .completionSize(simpleF("${header.%s}", "NumberOfNetexFiles"))
+                    .setHeader(Exchange.FILE_NAME, constant("avinor-netex.zip"))
+                    .to("file:target/marduk")
+                    //.log("Done processing zip file: ${header.CamelFileName}");
         ;
     }
 
