@@ -4,7 +4,7 @@ import com.google.common.collect.Lists;
 import no.rutebanken.extime.AppTest;
 import no.rutebanken.extime.config.*;
 import no.rutebanken.extime.model.ScheduledDirectFlight;
-import no.rutebanken.netex.model.*;
+import org.rutebanken.netex.model.*;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Ignore;
