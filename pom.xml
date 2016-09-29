@@ -159,9 +159,9 @@
             <version>1.3.4</version>
         </dependency>
         <dependency>
-            <groupId>no.rutebanken</groupId>
+            <groupId>org.rutebanken</groupId>
             <artifactId>netex-java-model</artifactId>
-            <version>0.0.7</version>
+            <version>0.0.8</version>
         </dependency>
         <dependency>
             <groupId>org.rutebanken</groupId>
