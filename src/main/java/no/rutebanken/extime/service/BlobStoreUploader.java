@@ -5,9 +5,7 @@ import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
 import org.apache.camel.Exchange;
-import org.apache.camel.ExchangeProperty;
 import org.apache.camel.Header;
-import org.apache.camel.Property;
 import org.apache.camel.language.Simple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,9 +18,6 @@ import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-
-import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEADER_NETEX_ZIP_FILE_NAME;
-import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.PROPERTY_NETEX_ZIP_FILE_NAME;
 
 @Service
 public class BlobStoreUploader {
