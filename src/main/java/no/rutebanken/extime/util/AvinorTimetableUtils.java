@@ -1,16 +1,26 @@
 package no.rutebanken.extime.util;
 
+import com.google.cloud.storage.Storage;
 import com.google.common.collect.Lists;
 import no.avinor.flydata.xjc.model.scheduled.Flight;
 import no.avinor.flydata.xjc.model.scheduled.Flights;
 import no.rutebanken.extime.model.AirportIATA;
 import no.rutebanken.extime.model.StopVisitType;
+import org.apache.camel.Exchange;
 import org.apache.camel.Header;
+import org.apache.camel.language.Simple;
 import org.apache.commons.lang3.EnumUtils;
+import org.rutebanken.helper.gcp.BlobStoreHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.transform.stream.StreamSource;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -18,6 +28,11 @@ import java.util.List;
 import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.HEADER_EXTIME_HTTP_URI;
 
 public class AvinorTimetableUtils {
+
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
+
+    @Autowired
+    private Storage storage;
 
     public String useHttp4Client(@Header(HEADER_EXTIME_HTTP_URI) String httpUri) {
         return httpUri.replace("http", "http4");
@@ -54,6 +69,15 @@ public class AvinorTimetableUtils {
             }
         }
         return filteredFlights;
+    }
+
+    public void uploadBlobToStorage(@Simple(value = "${properties:blobstore.gcs.bucket.name}") String bucketName,
+                                    @Simple(value = "${properties:blobstore.gcs.blob.path}") String blobPath,
+                                    @Simple(value = "${properties:netex.compressed.output.path}") String compressedOutputPath,
+                                    @Header(Exchange.FILE_NAME) String compressedFileName) throws Exception {
+        Path filePath = Paths.get(compressedOutputPath, compressedFileName);
+        BlobStoreHelper.uploadBlob(storage, bucketName, blobPath, filePath, true);
+        logger.debug("Stored blob with name '{}' and size '{}' in bucket '{}'", filePath.getFileName().toString(), Files.size(filePath), bucketName);
     }
 
     private boolean isValidFlight(StopVisitType stopVisitType, Flight newFlight) {
