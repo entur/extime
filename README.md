@@ -32,6 +32,17 @@ avinor.airport.feed.endpoint=http://flydata.avinor.no/airportNames.asp
 # Avinor airline service settings
 avinor.airline.feed.endpoint=http://flydata.avinor.no/airlineNames.asp
 
+# NeTEx generation settings
+netex.generated.output.path=/Users/swirzen/dev/git/extime/target/netex
+netex.compressed.output.path=/Users/swirzen/dev/git/extime/target/marduk
+netex.compressed.file.prefix=avinor-netex_
+
+# Google Cloud Storage blobstore settings
+blobstore.gcs.bucket.name=marduk-exchange
+blobstore.gcs.blob.path=inbound/avinor/
+blobstore.gcs.credential.path=/etc/avinor/avinor-bs-creds.json
+blobstore.gcs.project.id=carbon-1287
+
 # Logging settings
 logging.level.no.rutebanken=DEBUG
 

@@ -9,6 +9,7 @@ import no.avinor.flydata.xjc.model.scheduled.Flight;
 import no.rutebanken.extime.converter.ScheduledFlightConverter;
 import no.rutebanken.extime.converter.ScheduledFlightToNetexConverter;
 import no.rutebanken.extime.model.*;
+import no.rutebanken.extime.service.BlobStoreUploader;
 import no.rutebanken.extime.util.DateUtils;
 import no.rutebanken.netex.model.PublicationDeliveryStructure;
 import org.apache.camel.Exchange;
@@ -35,10 +36,12 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
     static final String HEADER_LOWER_RANGE_ENDPOINT = "LowerRangeEndpoint";
     static final String HEADER_UPPER_RANGE_ENDPOINT = "UpperRangeEndpoint";
     static final String HEADER_STOPOVER_FLIGHT_ORIGINAL_BODY = "StopoverFlightOriginalBody";
+    public static final String HEADER_NETEX_ZIP_FILE_NAME = "NetexZipFileName";
 
     static final String PROPERTY_DIRECT_FLIGHT_ORIGINAL_BODY = "DirectFlightOriginalBody";
     static final String PROPERTY_SCHEDULED_FLIGHT_ORIGINAL_BODY = "ScheduledFlightOriginalBody";
     static final String PROPERTY_STOPOVER_ORIGINAL_BODY = "StopoverOriginalBody";
+    public static final String PROPERTY_NETEX_ZIP_FILE_NAME = "NetexGeneratedZipFileName";
 
     @Override
     public void configure() throws Exception {
@@ -70,9 +73,12 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 // alternative run, with static test data from file
                 //.bean(AvinorTimetableUtils.class, "generateStaticFlights")
 
-                .log(LoggingLevel.DEBUG, this.getClass().getName(), "Converting to scheduled flights")
+                .log(LoggingLevel.INFO, this.getClass().getName(), "Converting to scheduled flights")
                 .bean(ScheduledFlightConverter.class, "convertToScheduledFlights").id("ConvertToScheduledFlightsBeanProcessor")
+                .log(LoggingLevel.INFO, "Converting flights to NeTEx")
                 .to("direct:convertScheduledFlightsToNetex")
+                .log(LoggingLevel.INFO, "Compressing XML files and send to storage")
+                .to("controlbus:route?routeId=CompressAndSendToStorage&action=start")
         ;
 
         from("direct:fetchAndCacheAirportName")
@@ -171,12 +177,12 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                     .setHeader(HEADER_EXTIME_FETCH_RESOURCE_ENDPOINT, constant("direct:fetchAndCacheAirlineName"))
                     .enrich("direct:retrieveResource", new AirlineNameEnricherAggregationStrategy())
                     .to("direct:enrichScheduledFlightWithAirportNames")
-                    .log(LoggingLevel.DEBUG, this.getClass().getName(), "Converting scheduled direct flight with id: ${body.airlineFlightId}")
+                    //.log(LoggingLevel.DEBUG, this.getClass().getName(), "Converting scheduled direct flight with id: ${body.airlineFlightId}")
                     .bean(ScheduledFlightToNetexConverter.class, "convertToNetex").id("ConvertFlightsToNetexProcessor")
                     .marshal(jaxbDataFormat)
                     //.log(LoggingLevel.DEBUG, this.getClass().getName(), "${body}")
                     .process(exchange -> {
-                        //String uuid = getContext().getUuidGenerator().generateUuid();
+                        //String uuid = getContext().getUuidGenerator().generateUuid(); // adds machine id/name to uuid, can we customize?
                         String uuid = UUID.randomUUID().toString();
                         exchange.getIn().setHeader("FileNameGenerated", uuid);
                     }).id("GenerateFileNameProcessor")
@@ -185,9 +191,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                     .setHeader(Exchange.CHARSET_NAME, constant("utf-8"))
                     .to("file:target/netex")
                     //.to("file:target/netex?charset=utf-8")
-                    .to("direct:aggregateToZipFile")
                 .end()
-                // TODO: consider some cleanup of generated files here
         ;
 
         // @todo: write unit test for this route
@@ -222,19 +226,33 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .end()
         ;
 
-        // TODO: consider reading the netex file directory after all files are created and add to zip
-        from("direct:aggregateToZipFile")
-                .routeId("AggregateToZipFile")
+
+        from("file:{{netex.generated.output.path}}?delete=true&idempotent=true&antInclude=**/*.xml")
+                .routeId("CompressAndSendToStorage")
+                .autoStartup(false)
+                .log(LoggingLevel.INFO, "Compressing XML file ${in.header.CamelFileName}")
                 .aggregate(new ZipAggregationStrategy(false, true))
                     .constant(true)
                     .completionFromBatchConsumer()
                     .eagerCheckCompletion()
-                    //.completionTimeout(50)
-                    .completionSize(simpleF("${header.%s}", "NumberOfNetexFiles"))
-                    .setHeader(Exchange.FILE_NAME, constant("avinor-netex.zip"))
-                    .to("file:target/marduk")
-                    //.log("Done processing zip file: ${header.CamelFileName}");
+                .setHeader(Exchange.FILE_NAME, simple("avinor-netex_${bean:dateUtils.timestamp()}.zip"))
+                .to("file:{{netex.compressed.output.path}}")
+                .log("Done compressing all files to zip archive : ${header.CamelFileName}")
+                .bean(BlobStoreUploader.class, "uploadFile").id("UploadZipToBlobStore")
+                .process(exchange -> {
+                    Thread stop = new Thread() {
+                        @Override
+                        public void run() {
+                            try {
+                                exchange.getContext().stopRoute(exchange.getFromRouteId());
+                            } catch (Exception ignored) {
+                            }
+                        }
+                    };
+                    stop.start();
+                })
         ;
+
     }
 
     private class AirportIataProcessor implements Processor {
