@@ -11,7 +11,7 @@ import no.rutebanken.extime.converter.ScheduledFlightToNetexConverter;
 import no.rutebanken.extime.model.*;
 import no.rutebanken.extime.service.BlobStoreUploader;
 import no.rutebanken.extime.util.DateUtils;
-import no.rutebanken.netex.model.PublicationDeliveryStructure;
+import org.rutebanken.netex.model.PublicationDeliveryStructure;
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.Processor;
