@@ -22,15 +22,15 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!-- versions for use in mvn plugins as we cannot inherit them from a BOM -->
-        <docker.maven.plugin.version>0.13.8</docker.maven.plugin.version>
+        <docker.maven.plugin.version>0.13.9</docker.maven.plugin.version>
         <spring-boot-plugin.version>1.3.5.RELEASE</spring-boot-plugin.version>
         <spring-boot.version>1.3.5.RELEASE</spring-boot.version>
         <camel.version>2.17.0</camel.version>
 
         <!-- Docker & Fabric8 Configs -->
-        <docker.from>dr.rutebanken.org/rutebanken/java-base-image</docker.from>
-        <fabric8.dockerUser>rutebanken/</fabric8.dockerUser>
-        <docker.image>dr.rutebanken.org/${fabric8.dockerUser}${project.artifactId}:${project.version}</docker.image>
+        <docker.from>eu.gcr.io/carbon-1287/java-base-image</docker.from>
+        <fabric8.dockerUser>carbon-1287/</fabric8.dockerUser>
+        <docker.image>eu.gcr.io/${fabric8.dockerUser}${project.artifactId}:${project.version}</docker.image>
 
         <!-- fabric8.env.AB_JOLOKIA_AUTH_OPENSHIFT>true</fabric8.env.AB_JOLOKIA_AUTH_OPENSHIFT -->
         <fabric8.label.component>${project.artifactId}</fabric8.label.component>
@@ -487,7 +487,7 @@
                             <build>
                                 <from>${docker.from}</from>
                                 <assembly>
-                                    <basedir>/app</basedir>
+                                    <basedir>/deployments</basedir>
                                     <descriptorRef>artifact</descriptorRef>
                                 </assembly>
                                 <env>
