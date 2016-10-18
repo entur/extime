@@ -39,6 +39,10 @@
         <fabric8.iconRef>camel</fabric8.iconRef>
 
         <docker.port.container.jolokia>8080</docker.port.container.jolokia>
+
+        <!-- NB: Concious choice of using snapshot version. This is to keep in
+            sync, and fail fast if incompatibilities -->
+        <netex-java-model.version>0.0.9-SNAPSHOT</netex-java-model.version>
     </properties>
 
     <dependencyManagement>
@@ -161,7 +165,7 @@
         <dependency>
             <groupId>org.rutebanken</groupId>
             <artifactId>netex-java-model</artifactId>
-            <version>0.0.8</version>
+            <version>${netex-java-model.version}</version>
         </dependency>
         <dependency>
             <groupId>org.rutebanken.helpers</groupId>
