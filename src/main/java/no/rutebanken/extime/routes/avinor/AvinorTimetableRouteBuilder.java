@@ -1,6 +1,7 @@
 package no.rutebanken.extime.routes.avinor;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import no.avinor.flydata.xjc.model.airline.AirlineName;
 import no.avinor.flydata.xjc.model.airline.AirlineNames;
 import no.avinor.flydata.xjc.model.airport.AirportName;
@@ -16,6 +17,9 @@ import org.apache.camel.LoggingLevel;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.converter.jaxb.JaxbDataFormat;
+import org.apache.camel.impl.DefaultCamelContext;
+import org.apache.camel.impl.JndiRegistry;
+import org.apache.camel.impl.SimpleRegistry;
 import org.apache.camel.processor.aggregate.AggregationStrategy;
 import org.apache.camel.processor.aggregate.zipfile.ZipAggregationStrategy;
 import org.apache.commons.lang3.EnumUtils;
@@ -41,6 +45,8 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
     static final String PROPERTY_SCHEDULED_FLIGHT_ORIGINAL_BODY = "ScheduledFlightOriginalBody";
     static final String PROPERTY_STOPOVER_ORIGINAL_BODY = "StopoverOriginalBody";
 
+    private static final String NAMESPACE_PREFIX_REF = "namespacePrefixBean";
+
     @Override
     public void configure() throws Exception {
         // @todo: look over need for a superclass, and general error handling.
@@ -51,6 +57,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
         JaxbDataFormat jaxbDataFormat = new JaxbDataFormat();
         jaxbDataFormat.setContextPath(PublicationDeliveryStructure.class.getPackage().getName());
         jaxbDataFormat.setSchema("classpath:/xsd/NeTEx-XML-1.04beta/schema/xsd/NeTEx_publication.xsd"); // @TODO: use schema from netex-java-model instead
+        //jaxbDataFormat.setNamespacePrefixRef(NAMESPACE_PREFIX_REF);
         jaxbDataFormat.setPrettyPrint(true);
         jaxbDataFormat.setEncoding("UTF-8");
 

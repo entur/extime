@@ -18,6 +18,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.transform.stream.StreamSource;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -74,10 +76,32 @@ public class AvinorTimetableUtils {
     public void uploadBlobToStorage(@Simple(value = "${properties:blobstore.gcs.bucket.name}") String bucketName,
                                     @Simple(value = "${properties:blobstore.gcs.blob.path}") String blobPath,
                                     @Simple(value = "${properties:netex.compressed.output.path}") String compressedOutputPath,
-                                    @Header(Exchange.FILE_NAME) String compressedFileName) throws Exception {
+                                    @Header(Exchange.FILE_NAME) String compressedFileName,
+                                    @Header(Exchange.FILE_NAME_PRODUCED) String compressedFilePath) throws Exception {
+
+/*
         Path filePath = Paths.get(compressedOutputPath, compressedFileName);
         BlobStoreHelper.uploadBlob(storage, bucketName, blobPath, filePath, true);
         logger.debug("Stored blob with name '{}' and size '{}' in bucket '{}'", filePath.getFileName().toString(), Files.size(filePath), bucketName);
+*/
+
+        String blobIdName = blobPath + compressedFileName;
+        Path filePath = Paths.get(compressedFilePath);
+
+        try (InputStream inputStream = Files.newInputStream(filePath)) {
+            BlobStoreHelper.uploadBlob(storage, bucketName, blobIdName, inputStream, true);
+            //BlobStoreHelper.uploadBlob(storage, bucketName, blobPath, filePath, true);
+            logger.debug("Stored blob with name '{}' and size '{}' in bucket '{}'", filePath.getFileName().toString(), Files.size(filePath), bucketName);
+        }
+/*
+        try {
+            Path path2 = FileSystems.getDefault().getPath(".", "");
+            InputStream in2 = Files.newInputStream(path2);
+        }
+        catch ( IOException ioe ) {
+            ioe.printStackTrace();
+        }
+*/
     }
 
     private boolean isValidFlight(StopVisitType stopVisitType, Flight newFlight) {

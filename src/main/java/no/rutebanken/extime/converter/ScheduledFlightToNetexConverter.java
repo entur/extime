@@ -61,7 +61,7 @@ public class ScheduledFlightToNetexConverter {
         Frames_RelStructure frames = objectFactory().createFrames_RelStructure();
         frames.getCommonFrame().add(createResourceFrame(operator));
         frames.getCommonFrame().add(createSiteFrame(stopPlaces));
-        frames.getCommonFrame().add(createServiceFrame(publicationTimestamp, scheduledFlight.getAirlineName(), flightId, routePoints,
+        frames.getCommonFrame().add(createServiceFrame(publicationTimestamp, operator.getId(), scheduledFlight.getAirlineName(), flightId, routePoints,
                 route, line, scheduledStopPoints, journeyPattern, stopAssignments));
         frames.getCommonFrame().add(createTimetableFrame(scheduledFlight.getAvailabilityPeriod(), serviceJourneys));
         frames.getCommonFrame().add(createServiceCalendarFrame(dayTypes));
@@ -126,26 +126,51 @@ public class ScheduledFlightToNetexConverter {
         return objectFactory().createSiteFrame(siteFrame);
     }
 
-    public JAXBElement<ServiceFrame> createServiceFrame(OffsetDateTime publicationTimestamp, String airlineName, String flightId, List<RoutePoint> routePoints,
-                                                        Route route, Line line, List<ScheduledStopPoint> scheduledStopPoints,
-                                                        JourneyPattern journeyPattern, List<PassengerStopAssignment> stopAssignments) {
+    // TODO consider making line argument/parameter varargs instead (a Network can have multiple lines)
+    public JAXBElement<ServiceFrame> createServiceFrame(OffsetDateTime publicationTimestamp, String organisationId,
+            String airlineName, String flightId, List<RoutePoint> routePoints, Route route, Line line,
+            List<ScheduledStopPoint> scheduledStopPoints, JourneyPattern journeyPattern, List<PassengerStopAssignment> stopAssignments) {
+
+        OrganisationRefStructure organisationRefStructure = objectFactory().createOrganisationRefStructure()
+                .withRef(organisationId);
+        JAXBElement<OrganisationRefStructure> organisationRefStructElement = objectFactory().createTransportOrganisationRef(organisationRefStructure);
+
+        LineRefStructure lineRefStructure = objectFactory().createLineRefStructure().withVersion("any").withValue(line.getId()).withRef(line.getId());
+
+        JAXBElement<LineRefStructure> lineRefStructElement = objectFactory().createLineRef(lineRefStructure);
+
+        @SuppressWarnings("unchecked")
+        LineRefs_RelStructure lineRefRelsStruct = objectFactory().createLineRefs_RelStructure().withLineRef(lineRefStructElement);
+
+        GroupOfLines groupOfLines = objectFactory().createGroupOfLines().withMembers(lineRefRelsStruct).withId("AVI:GroupOfLines:1").withVersion("any");
+
+        GroupsOfLinesInFrame_RelStructure groupsOfLinesInFrameStruct = objectFactory().createGroupsOfLinesInFrame_RelStructure().withGroupOfLines(groupOfLines);
+
         Network network = objectFactory().createNetwork()
                 .withVersion("1")
                 .withChanged(publicationTimestamp)
                 .withId(String.format("%s:GroupOfLine:%s", getAvinorConfig().getId(), getAvinorConfig().getName()))
-                .withName(createMultilingualString(airlineName));
+                .withName(createMultilingualString(airlineName))
+                //.withTransportOrganisationRef(organisationRefStructElement); // schema validation requires 'abstract' attribute set to false (not available in netex model)
+                .withGroupsOfLines(groupsOfLinesInFrameStruct);
+
         RoutePointsInFrame_RelStructure routePointsInFrame = objectFactory().createRoutePointsInFrame_RelStructure()
                 .withRoutePoint(routePoints);
         RoutesInFrame_RelStructure routesInFrame = objectFactory().createRoutesInFrame_RelStructure();
         routesInFrame.getRoute_().add(objectFactory().createRoute(route));
+
         LinesInFrame_RelStructure linesInFrame = objectFactory().createLinesInFrame_RelStructure();
         linesInFrame.getLine_().add(objectFactory().createLine(line));
+
         ScheduledStopPointsInFrame_RelStructure scheduledStopPointsInFrame = objectFactory().createScheduledStopPointsInFrame_RelStructure()
                 .withScheduledStopPoint(scheduledStopPoints);
+
         JourneyPatternsInFrame_RelStructure journeyPatternsInFrame = objectFactory().createJourneyPatternsInFrame_RelStructure()
                 .withJourneyPattern_OrJourneyPatternView(objectFactory().createJourneyPattern(journeyPattern));
+
         StopAssignmentsInFrame_RelStructure stopAssignmentsInFrame = objectFactory().createStopAssignmentsInFrame_RelStructure();
         stopAssignments.forEach(stopAssignment -> stopAssignmentsInFrame.getStopAssignment().add(objectFactory().createPassengerStopAssignment(stopAssignment)));
+
         ServiceFrame serviceFrame = objectFactory().createServiceFrame()
                 .withVersion("any")
                 .withId(String.format("%s:ServiceFrame:%s", getAvinorConfig().getId(), flightId))
@@ -156,6 +181,7 @@ public class ScheduledFlightToNetexConverter {
                 .withScheduledStopPoints(scheduledStopPointsInFrame)
                 .withStopAssignments(stopAssignmentsInFrame)
                 .withJourneyPatterns(journeyPatternsInFrame);
+
         return objectFactory().createServiceFrame(serviceFrame);
     }
 
