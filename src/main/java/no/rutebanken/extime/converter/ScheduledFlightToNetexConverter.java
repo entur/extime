@@ -135,16 +135,25 @@ public class ScheduledFlightToNetexConverter {
                 .withRef(organisationId);
         JAXBElement<OrganisationRefStructure> organisationRefStructElement = objectFactory().createTransportOrganisationRef(organisationRefStructure);
 
-        LineRefStructure lineRefStructure = objectFactory().createLineRefStructure().withVersion("any").withValue(line.getId()).withRef(line.getId());
+        LineRefStructure lineRefStructure = objectFactory().createLineRefStructure()
+                .withVersion("any")
+                .withValue(line.getId())
+                .withRef(line.getId());
 
         JAXBElement<LineRefStructure> lineRefStructElement = objectFactory().createLineRef(lineRefStructure);
 
         @SuppressWarnings("unchecked")
-        LineRefs_RelStructure lineRefRelsStruct = objectFactory().createLineRefs_RelStructure().withLineRef(lineRefStructElement);
+        LineRefs_RelStructure lineRefRelsStruct = objectFactory().createLineRefs_RelStructure()
+                .withLineRef(lineRefStructElement);
 
-        GroupOfLines groupOfLines = objectFactory().createGroupOfLines().withMembers(lineRefRelsStruct).withId("AVI:GroupOfLines:1").withVersion("any");
+        GroupOfLines groupOfLines = objectFactory().createGroupOfLines()
+                .withMembers(lineRefRelsStruct)
+                .withId("AVI:GroupOfLines:1")
+                .withVersion("any")
+                .withName(createMultilingualString("Operator:GroupOfLines:1"));
 
-        GroupsOfLinesInFrame_RelStructure groupsOfLinesInFrameStruct = objectFactory().createGroupsOfLinesInFrame_RelStructure().withGroupOfLines(groupOfLines);
+        GroupsOfLinesInFrame_RelStructure groupsOfLinesInFrameStruct = objectFactory().createGroupsOfLinesInFrame_RelStructure()
+                .withGroupOfLines(groupOfLines);
 
         Network network = objectFactory().createNetwork()
                 .withVersion("1")
