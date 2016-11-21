@@ -6,8 +6,6 @@ import com.google.common.collect.Range;
 import no.avinor.flydata.xjc.model.scheduled.Flight;
 import no.rutebanken.extime.model.*;
 import no.rutebanken.extime.util.DateUtils;
-import org.rutebanken.netex.model.ObjectFactory;
-import org.rutebanken.netex.model.PublicationDeliveryStructure;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.Produce;
@@ -23,6 +21,8 @@ import org.apache.camel.util.jndi.JndiContext;
 import org.assertj.core.api.Assertions;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.rutebanken.netex.model.ObjectFactory;
+import org.rutebanken.netex.model.PublicationDeliveryStructure;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;

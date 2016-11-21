@@ -2,7 +2,6 @@ package no.rutebanken.extime.model;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.util.Set;
 

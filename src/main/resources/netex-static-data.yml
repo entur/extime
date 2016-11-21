@@ -1,0 +1,335 @@
+# NeTEx fixed data sets, holding data that will not change on a regular basis
+
+netex-data-sets:
+
+  # Organisation types of sub-types Authority and Operator,
+  # most often corresponding to aviation authorities and airlines
+
+  organisations:
+    nsr:
+      company-number:
+      name: Nasjonalt Stoppestedregister
+      legal-name: NASJONALT STOPPESTEDREGISTER
+      phone:
+      url: http://www.nasjonaltstoppestedregister.rutebanken.no
+      details:
+    avi:
+      company-number: 985198292
+      name: Avinor
+      legal-name: AVINOR AS
+      phone: 0047 815 30 550
+      url: http://avinor.no/
+      details:
+    sk:
+      company-number: 811176702
+      name: SAS
+      legal-name: SAS NORGE AS
+      phone: 0047 648 16 050
+      url: http://www.sas.no/
+      details:
+    wf:
+      company-number: 917330557
+      name: Widerøe
+      legal-name: WIDERØE'S FLYVESELSKAP AS
+      phone: 0047 755 13 500
+      url: http://www.wideroe.no/
+      details:
+    dy:
+      company-number: 912084949
+      name: Norwegian
+      legal-name: NORWEGIAN AIR NORWAY AS
+      phone: 0047 815 21 815
+      url: http://www.norwegian.no/
+      details:
+    fi:
+      company-number:
+      name: Icelandair
+      legal-name:
+      phone:
+      url:
+      details:
+    kf:
+      company-number:
+      name: Blue1
+      legal-name:
+      phone:
+      url:
+      details:
+    m3:
+      company-number:
+      name: Air Norway
+      legal-name:
+      phone:
+      url:
+      details:
+    st:
+      company-number:
+      name: Germania
+      legal-name:
+      phone:
+      url:
+      details:
+    xc:
+      company-number:
+      name: Corendon Airlines
+      legal-name:
+      phone:
+      url:
+      details:
+    6y:
+      company-number:
+      name: SmartLynx
+      legal-name:
+      phone:
+      url:
+      details:
+    os:
+      company-number:
+      name: Austrian Airlines
+      legal-name:
+      phone:
+      url:
+      details:
+
+  # StopPlace types that, for now, corresponding directly to the actual airports. In future versions these can
+  # be divided into actual gates at the airport, that will map directly to the Quay type in NeTEx.
+
+  # TODO: consider recording the actual city which the airport is connected to, which will be the destination/arrival
+  # TODO: if we record this name, we can skip the all too complex enrichment in the camel route
+
+  stop-places:
+    aes:
+      name: Ålesund Lufthavn
+      location:
+        latitude: 62.5823
+        longitude: 6.123
+    alf:
+      name: Alta Lufthavn
+      location:
+        latitude: 69.976058
+        longitude: 23.34069
+    anx:
+      name: Andøya Lufthavn
+      location:
+        latitude: 69.317744
+        longitude: 16.121335
+    bdu:
+      name: Bardufoss Lufthavn
+      location:
+        latitude: 69.065297
+        longitude: 18.510332
+    bgo:
+      name: Bergen Lufthavn
+      location:
+        latitude: 60.29230
+        longitude: 5.22210
+    bjf:
+      name: Båtsfjord Lufthavn
+      location:
+        latitude: 70.63790
+        longitude: 29.72702
+    bnn:
+      name: Brønnøysund Lufthavn
+      location:
+        latitude: 65.469845
+        longitude: 12.205811
+    boo:
+      name: Bodø Lufthavn
+      location:
+        latitude: 67.29449
+        longitude: 14.59231
+    bvg:
+      name: Berlevåg Lufthavn
+      location:
+        latitude: 70.84142
+        longitude: 29.10564
+    eve:
+      name: Harstad/Narvik Lufthavn
+      location:
+        latitude: 68.582961
+        longitude: 16.573734
+    fde:
+      name: Førde Lufthamn
+      location:
+        latitude: 61.37589
+        longitude: 5.65343
+    fro:
+      name: Florø Lufthamn
+      location:
+        latitude: 61.60059
+        longitude: 5.04397
+    haa:
+      name: Hasvik Lufthavn
+      location:
+        latitude: 70.488330
+        longitude: 22.139631
+    hau:
+      name: Haugesund Lufthavn
+      location:
+        latitude: 59.355935
+        longitude: 5.277621
+    hft:
+      name: Hammerfest Lufthavn
+      location:
+        latitude: 70.66299
+        longitude: 23.67996
+    hov:
+      name: Ørsta-Volda Lufthamn
+      location:
+        latitude: 62.20290
+        longitude: 6.12720
+    hvg:
+      name: Honningsvåg Lufthavn
+      location:
+        latitude: 70.98214
+        longitude: 25.97076
+    kkn:
+      name: Kirkenes Lufthavn
+      location:
+        latitude: 69.69152
+        longitude: 29.99221
+    krs:
+      name: Kristiansand Lufthavn
+      location:
+        latitude: 58.20733
+        longitude: 8.07991
+    ksu:
+      name: Kristiansund Lufthavn
+      location:
+        latitude: 63.11029
+        longitude: 7.79234
+    lkl:
+      name: Lakselv Lufthavn
+      location:
+        latitude: 70.056306
+        longitude: 25.000935
+    lkn:
+      name: Leknes Lufthavn
+      location:
+        latitude: 68.148182
+        longitude: 13.611546
+    lyr:
+      name: Svalbard Lufthavn
+      location:
+        latitude: 78.22220
+        longitude: 15.63150
+    meh:
+      name: Mehamn Lufthavn
+      location:
+        latitude: 71.03883
+        longitude: 27.85206
+    mjf:
+      name: Mosjøen Lufthavn
+      location:
+        latitude: 65.81893
+        longitude: 13.2741
+    mol:
+      name: Molde Lufthavn
+      location:
+        latitude: 62.75212
+        longitude: 7.29143
+    mqn:
+      name: Mo i Rana Lufthavn
+      location:
+        latitude: 66.356186
+        longitude: 14.321322
+    nvk:
+      name: Narvik Lufthavn
+      location:
+        latitude: 68.44052
+        longitude: 17.40815
+    ola:
+      name: Ørland Lufthavn
+      location:
+        latitude: 63.703955
+        longitude: 9.616490
+    osl:
+      name: Oslo Lufthavn
+      location:
+        latitude: 60.202586
+        longitude: 11.099552
+    osy:
+      name: Namsos Lufthavn
+      location:
+        latitude: 60.202586
+        longitude: 11.099552
+    ret:
+      name: Røst Lufthavn
+      location:
+        latitude: 67.518154
+        longitude: 12.125261
+    rrs:
+      name: Røros Lufthavn
+      location:
+        latitude: 67.518154
+        longitude: 12.125261
+    rvk:
+      name: Rørvik Lufthavn
+      location:
+        latitude: 64.86556
+        longitude: 11.23482
+    sdn:
+      name: Sandane Lufthamn
+      location:
+        latitude: 61.780673
+        longitude: 6.220193
+    skn:
+      name: Stokmarknes Lufthavn
+      location:
+        latitude: 61.780673
+        longitude: 6.220193
+    sog:
+      name: Sogndal Lufthamn
+      location:
+        latitude: 61.780673
+        longitude: 6.220193
+    soj:
+      name: Sørkjosen Lufthavn
+      location:
+        latitude: 69.79265
+        longitude: 20.93912
+    ssj:
+      name: Sandnessjøen Lufthavn
+      location:
+        latitude: 66.01263
+        longitude: 12.60632
+    svg:
+      name: Stavanger Lufthavn
+      location:
+        latitude: 58.88959
+        longitude: 5.62566
+    svj:
+      name: Svolvær Lufthavn
+      location:
+        latitude: 68.23224
+        longitude: 14.564524
+    tos:
+      name: Tromsø Lufthavn
+      location:
+        latitude: 69.64810
+        longitude: 18.95670
+    trd:
+      name: Trondheim Lufthavn
+      location:
+        latitude: 63.46954
+        longitude: 10.920721
+    vaw:
+      name: Vardø Lufthavn
+      location:
+        latitude: 70.37033
+        longitude: 31.105814
+    vdb:
+      name: Fagernes Lufthamn
+      location:
+        latitude: 60.985953
+        longitude: 9.236697
+    vds:
+      name: Vadsø Lufthavn
+      location:
+        latitude: 70.07306
+        longitude: 29.75280
+    vry:
+      name: Værøy Helikopterhavn
+      location:
+        latitude: 67.654444
+        longitude: 12.726944

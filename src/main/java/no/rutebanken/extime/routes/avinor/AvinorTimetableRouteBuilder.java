@@ -1,7 +1,6 @@
 package no.rutebanken.extime.routes.avinor;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import no.avinor.flydata.xjc.model.airline.AirlineName;
 import no.avinor.flydata.xjc.model.airline.AirlineNames;
 import no.avinor.flydata.xjc.model.airport.AirportName;
@@ -17,9 +16,6 @@ import org.apache.camel.LoggingLevel;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.converter.jaxb.JaxbDataFormat;
-import org.apache.camel.impl.DefaultCamelContext;
-import org.apache.camel.impl.JndiRegistry;
-import org.apache.camel.impl.SimpleRegistry;
 import org.apache.camel.processor.aggregate.AggregationStrategy;
 import org.apache.camel.processor.aggregate.zipfile.ZipAggregationStrategy;
 import org.apache.commons.lang3.EnumUtils;

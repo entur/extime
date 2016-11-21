@@ -2,26 +2,19 @@ package no.rutebanken.extime.converter;
 
 import com.google.common.collect.Lists;
 import no.rutebanken.extime.AppTest;
-import no.rutebanken.extime.config.*;
 import no.rutebanken.extime.model.ScheduledDirectFlight;
-import org.rutebanken.netex.model.*;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.rutebanken.netex.model.*;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import java.io.StringWriter;
 import java.math.BigInteger;
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.util.List;
 
@@ -30,27 +23,11 @@ import java.util.List;
 @Ignore
 public class ScheduledFlightToNetexConverterTest {
 
-    @Autowired
-    private AvinorAuthorityConfig avinorConfig;
-    @Autowired
-    private NhrAuthorityConfig nhrConfig;
-    @Autowired
-    private SasOperatorConfig sasConfig;
-    @Autowired
-    private WideroeOperatorConfig wideroeConfig;
-    @Autowired
-    private NorwegianOperatorConfig norwegianConfig;
-
     private ScheduledFlightToNetexConverter clazzUnderTest;
 
     @Before
     public void setUp() throws Exception {
         clazzUnderTest = new ScheduledFlightToNetexConverter();
-        clazzUnderTest.setAvinorConfig(avinorConfig);
-        clazzUnderTest.setNhrConfig(nhrConfig);
-        clazzUnderTest.setSasConfig(sasConfig);
-        clazzUnderTest.setWideroeConfig(wideroeConfig);
-        clazzUnderTest.setNorwegianConfig(norwegianConfig);
     }
 
     @Test
