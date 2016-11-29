@@ -35,3 +35,4 @@ gradlew.bat
 #OS X specific files
 .DS_Store
     
+/local_config/
