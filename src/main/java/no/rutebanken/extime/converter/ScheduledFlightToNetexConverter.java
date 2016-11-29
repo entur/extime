@@ -34,7 +34,7 @@ public class ScheduledFlightToNetexConverter {
 
     private static final Logger logger = LoggerFactory.getLogger(ScheduledFlightToNetexConverter.class);
 
-    private static final String VERSION_ANY = "any";
+    private static final String VERSION_ONE = "1";
     private static final String AVINOR_AUTHORITY_ID = "AVI";
     private static final String NSR_AUTHORITY_ID = "NSR";
     private static final String WORK_DAYS_DISPLAY_NAME = "Ukedager (mandag til fredag)";
@@ -137,7 +137,7 @@ public class ScheduledFlightToNetexConverter {
                 .withDefaultLocale(localeStructure);
 
         CompositeFrame compositeFrame = objectFactory().createCompositeFrame()
-                .withVersion("1")
+                .withVersion(VERSION_ONE)
                 .withCreated(publicationTimestamp)
                 .withId(String.format("%s:CompositeFrame:%s", AVINOR_AUTHORITY_ID, flightId))
                 .withCodespaces(codespaces)
@@ -153,7 +153,7 @@ public class ScheduledFlightToNetexConverter {
         organisationsInFrame.getOrganisation_().add(objectFactory().createOperator(operator));
 
         ResourceFrame resourceFrame = objectFactory().createResourceFrame()
-                .withVersion("any")
+                .withVersion(VERSION_ONE)
                 .withId(String.format("%s:ResourceFrame:1", AVINOR_AUTHORITY_ID)) // TODO: generate id
                 .withOrganisations(organisationsInFrame);
 
@@ -164,7 +164,7 @@ public class ScheduledFlightToNetexConverter {
         StopPlacesInFrame_RelStructure stopPlacesInFrameRelStructure = objectFactory().createStopPlacesInFrame_RelStructure()
                         .withStopPlace(stopPlaces);
         SiteFrame siteFrame = objectFactory().createSiteFrame()
-                .withVersion("any")
+                .withVersion(VERSION_ONE)
                 .withId(String.format("%s:SiteFrame:1", AVINOR_AUTHORITY_ID))
                 .withStopPlaces(stopPlacesInFrameRelStructure);
         return objectFactory().createSiteFrame(siteFrame);
@@ -181,7 +181,7 @@ public class ScheduledFlightToNetexConverter {
         JAXBElement<OrganisationRefStructure> organisationRefStructElement = objectFactory().createTransportOrganisationRef(organisationRefStructure);
 
         LineRefStructure lineRefStructure = objectFactory().createLineRefStructure()
-                .withVersion("any")
+                .withVersion(VERSION_ONE)
                 .withValue(line.getId())
                 .withRef(line.getId());
 
@@ -194,7 +194,7 @@ public class ScheduledFlightToNetexConverter {
         GroupOfLines groupOfLines = objectFactory().createGroupOfLines()
                 .withMembers(lineRefRelsStruct)
                 .withId("AVI:GroupOfLines:1")
-                .withVersion("any")
+                .withVersion(VERSION_ONE)
                 .withName(createMultilingualString("Operator:GroupOfLines:1"));
 
         GroupsOfLinesInFrame_RelStructure groupsOfLinesInFrameStruct = objectFactory().createGroupsOfLinesInFrame_RelStructure()
@@ -204,7 +204,7 @@ public class ScheduledFlightToNetexConverter {
         String networkId = NetexObjectIdCreator.createNetworkId(AVINOR_AUTHORITY_ID, airlineIata);
 
         Network network = objectFactory().createNetwork()
-                .withVersion("1")
+                .withVersion(VERSION_ONE)
                 .withChanged(publicationTimestamp)
                 .withId(networkId)
                 .withName(createMultilingualString(airlineName));
@@ -229,7 +229,7 @@ public class ScheduledFlightToNetexConverter {
         stopAssignments.forEach(stopAssignment -> stopAssignmentsInFrame.getStopAssignment().add(objectFactory().createPassengerStopAssignment(stopAssignment)));
 
         ServiceFrame serviceFrame = objectFactory().createServiceFrame()
-                .withVersion("any")
+                .withVersion(VERSION_ONE)
                 .withId(String.format("%s:ServiceFrame:%s", AVINOR_AUTHORITY_ID, flightId))
                 .withNetwork(network)
                 .withRoutePoints(routePointsInFrame)
@@ -246,7 +246,7 @@ public class ScheduledFlightToNetexConverter {
         DayTypesInFrame_RelStructure dayTypesStructure = objectFactory().createDayTypesInFrame_RelStructure();
         dayTypes.forEach(dayType -> dayTypesStructure.getDayType_().add(objectFactory().createDayType(dayType)));
         ServiceCalendarFrame serviceCalendarFrame = objectFactory().createServiceCalendarFrame()
-                .withVersion("1")
+                .withVersion(VERSION_ONE)
                 .withId(String.format("%s:ServiceCalendarFrame:1", AVINOR_AUTHORITY_ID))
                 .withDayTypes(dayTypesStructure);
         return objectFactory().createServiceCalendarFrame(serviceCalendarFrame);
@@ -275,7 +275,7 @@ public class ScheduledFlightToNetexConverter {
         PropertiesOfDay_RelStructure propertiesOfDay = objectFactory().createPropertiesOfDay_RelStructure()
                 .withPropertyOfDay(propertyOfDayWeekDays);
         return objectFactory().createDayType()
-                .withVersion("any")
+                .withVersion(VERSION_ONE)
                 .withId(String.format("%s:DayType:%s", flightId, isWorkDays ? "weekday" : "weekend"))
                 .withName(createMultilingualString(isWorkDays ? WORK_DAYS_DISPLAY_NAME : WEEKEND_DAYS_DISPLAY_NAME))
                 .withProperties(propertiesOfDay);
@@ -287,7 +287,7 @@ public class ScheduledFlightToNetexConverter {
         JourneysInFrame_RelStructure journeysInFrameRelStructure = objectFactory().createJourneysInFrame_RelStructure();
         journeysInFrameRelStructure.getDatedServiceJourneyOrDeadRunOrServiceJourney().addAll(serviceJourneys);
         TimetableFrame timetableFrame = objectFactory().createTimetableFrame()
-                .withVersion("any")
+                .withVersion(VERSION_ONE)
                 .withId(String.format("%s:TimetableFrame:1", AVINOR_AUTHORITY_ID))
                 .withValidityConditions(validityConditionsRelStructure)
                 .withVehicleJourneys(journeysInFrameRelStructure);
@@ -348,7 +348,7 @@ public class ScheduledFlightToNetexConverter {
                 .withLocation(locationStruct);
 
         return objectFactory().createStopPlace()
-                .withVersion("1")
+                .withVersion(VERSION_ONE)
                 .withId(id)
                 .withName(createMultilingualString(stopPlaceDataSet.getName()))
                 .withShortName(createMultilingualString(airportIATA))
@@ -359,7 +359,7 @@ public class ScheduledFlightToNetexConverter {
 
     public JAXBElement<AvailabilityCondition> createAvailabilityCondition(AvailabilityPeriod availabilityPeriod) {
         AvailabilityCondition availabilityCondition = objectFactory().createAvailabilityCondition()
-                .withVersion("any")
+                .withVersion(VERSION_ONE)
                 .withId(String.format("%s:AvailabilityCondition:1", AVINOR_AUTHORITY_ID))
                 .withFromDate(availabilityPeriod.getPeriodFromDateTime())
                 .withToDate(availabilityPeriod.getPeriodToDateTime());
@@ -388,7 +388,7 @@ public class ScheduledFlightToNetexConverter {
 
         if (scheduledFlight instanceof ScheduledDirectFlight) {
             StopPointInJourneyPatternRefStructure departureStopPointInJourneyPattern = objectFactory().createStopPointInJourneyPatternRefStructure()
-                    .withVersion(VERSION_ANY)
+                    .withVersion(VERSION_ONE)
                     .withRef(pointsInLinkSequence.get(0).getId());
 
             TimetabledPassingTime departurePassingTime = objectFactory().createTimetabledPassingTime()
@@ -397,7 +397,7 @@ public class ScheduledFlightToNetexConverter {
             passingTimesRelStructure.withTimetabledPassingTime(departurePassingTime);
 
             StopPointInJourneyPatternRefStructure arrivalStopPointInJourneyPattern = objectFactory().createStopPointInJourneyPatternRefStructure()
-                    .withVersion(VERSION_ANY)
+                    .withVersion(VERSION_ONE)
                     .withRef(pointsInLinkSequence.get(1).getId());
 
             TimetabledPassingTime arrivalPassingTime = objectFactory().createTimetabledPassingTime()
@@ -406,12 +406,12 @@ public class ScheduledFlightToNetexConverter {
             passingTimesRelStructure.withTimetabledPassingTime(arrivalPassingTime);
 
             LineRefStructure lineRefStruct = objectFactory().createLineRefStructure()
-                    .withVersion(VERSION_ANY)
+                    .withVersion(VERSION_ONE)
                     .withRef(line.getId());
             JAXBElement<LineRefStructure> lineRefStructElement = objectFactory().createLineRef(lineRefStruct);
 
             ServiceJourney serviceJourney = objectFactory().createServiceJourney()
-                    .withVersion(VERSION_ANY)
+                    .withVersion(VERSION_ONE)
                     .withId(String.format("%s:ServiceJourney:%s", AVINOR_AUTHORITY_ID, scheduledFlight.getAirlineFlightId()))
                     .withPublicCode(scheduledFlight.getAirlineFlightId())
                     .withDepartureTime(scheduledFlight.getTimeOfDeparture())
@@ -432,7 +432,7 @@ public class ScheduledFlightToNetexConverter {
                 PointInLinkSequence_VersionedChildStructure pointInLinkSequence = pointInLinkSequenceIterator.next();
 
                 StopPointInJourneyPatternRefStructure stopPointInJourneyPatternRef = objectFactory().createStopPointInJourneyPatternRefStructure()
-                        .withVersion(VERSION_ANY)
+                        .withVersion(VERSION_ONE)
                         .withRef(pointInLinkSequence.getId());
 
                 TimetabledPassingTime passingTime = objectFactory().createTimetabledPassingTime()
@@ -449,12 +449,12 @@ public class ScheduledFlightToNetexConverter {
             }
 
             LineRefStructure lineRefStruct = objectFactory().createLineRefStructure()
-                    .withVersion(VERSION_ANY)
+                    .withVersion(VERSION_ONE)
                     .withRef(line.getId());
             JAXBElement<LineRefStructure> lineRefStructElement = objectFactory().createLineRef(lineRefStruct);
 
             ServiceJourney serviceJourney = objectFactory().createServiceJourney()
-                    .withVersion(VERSION_ANY)
+                    .withVersion(VERSION_ONE)
                     .withId(String.format("%s:ServiceJourney:%s", AVINOR_AUTHORITY_ID, scheduledFlight.getAirlineFlightId()))
                     .withPublicCode(scheduledFlight.getAirlineFlightId())
                     .withDepartureTime(scheduledStopovers.get(0).getDepartureTime())
@@ -478,12 +478,12 @@ public class ScheduledFlightToNetexConverter {
             Line line, TimetabledPassingTimes_RelStructure passingTimesRelStructure) {
 
         LineRefStructure lineRefStruct = objectFactory().createLineRefStructure()
-                .withVersion(VERSION_ANY)
+                .withVersion(VERSION_ONE)
                 .withRef(line.getId());
         JAXBElement<LineRefStructure> lineRefStructElement = objectFactory().createLineRef(lineRefStruct);
 
         return objectFactory().createServiceJourney()
-                .withVersion(VERSION_ANY)
+                .withVersion(VERSION_ONE)
                 .withId(id)
                 .withPublicCode(publicCode)
                 .withDepartureTime(departureTime)
@@ -498,16 +498,16 @@ public class ScheduledFlightToNetexConverter {
         int[] idx = {1};
         scheduledStopPoints.forEach(stopPoint -> {
             PointRefStructure pointRefStructure = objectFactory().createPointRefStructure()
-                    .withVersion("any")
+                    .withVersion(VERSION_ONE)
                     .withRef(stopPoint.getId());
             PointProjection pointProjection = objectFactory().createPointProjection()
-                    .withVersion("any")
+                    .withVersion(VERSION_ONE)
                     .withId(String.format("%s:PointProjection:%s101A0A006110100%d", AVINOR_AUTHORITY_ID, flightId, idx[0])) // @todo: generate postfix id in a serie
                     .withProjectedPointRef(pointRefStructure);
             Projections_RelStructure projections = objectFactory().createProjections_RelStructure()
                     .withProjectionRefOrProjection(objectFactory().createPointProjection(pointProjection));
             RoutePoint routePoint = objectFactory().createRoutePoint()
-                    .withVersion("any")
+                    .withVersion(VERSION_ONE)
                     .withId(String.format("%s:RoutePoint:%s101A0A006110100%d", AVINOR_AUTHORITY_ID, flightId, idx[0])) // @todo: generate postfix id in a serie
                     .withProjections(projections);
             routePoints.add(routePoint);
@@ -522,10 +522,10 @@ public class ScheduledFlightToNetexConverter {
         int[] idx = {1};
         routePoints.forEach(routePoint -> {
             RoutePointRefStructure routePointReference = objectFactory().createRoutePointRefStructure()
-                    //.withVersion("any") // @todo: temp. disable to prevent id check, enable and fix
+                    .withVersion(VERSION_ONE) 
                     .withRef(routePoint.getId());
             PointOnRoute pointOnRoute = objectFactory().createPointOnRoute()
-                    .withVersion("any")
+                    .withVersion(VERSION_ONE)
                     // @todo: fix this id, and remove the dash '-'
                     .withId(String.format("%s:PointOnRoute:%s101001%d", AVINOR_AUTHORITY_ID, flightId, idx[0])) // @todo: fix generation of serial numbers
                     .withPointRef(objectFactory().createRoutePointRef(routePointReference));
@@ -535,7 +535,7 @@ public class ScheduledFlightToNetexConverter {
 
         //NetexObjectIdCreator.createRouteId(AVINOR_AUTHORITY_ID, "routeId"); // TODO use this instead
         return objectFactory().createRoute()
-                .withVersion("any")
+                .withVersion(VERSION_ONE)
                 .withId(String.format("%s:Route:%s101", AVINOR_AUTHORITY_ID, flightId))
                 .withName(createMultilingualString(routePath))
                 .withPointsInSequence(pointsOnRoute);
@@ -544,14 +544,14 @@ public class ScheduledFlightToNetexConverter {
     // TODO consider moving to object fixture or factory class
     private Line createLine(Route route, String flightId, String routePath, Operator operator) {
         RouteRefStructure routeRefStructure = objectFactory().createRouteRefStructure()
-                .withVersion("any")
+                .withVersion(VERSION_ONE)
                 .withRef(route.getId());
         RouteRefs_RelStructure routeRefs = objectFactory().createRouteRefs_RelStructure()
                 .withRouteRef(routeRefStructure);
         OperatorRefStructure operatorRefStructure = objectFactory().createOperatorRefStructure()
                 .withRef(operator.getId());
         return objectFactory().createLine()
-                .withVersion("any")
+                .withVersion(VERSION_ONE)
                 .withId(String.format("%s:Line:%s", AVINOR_AUTHORITY_ID, flightId))
                 .withName(createMultilingualString(routePath))
                 .withTransportMode(AllVehicleModesOfTransportEnumeration.AIR)
@@ -564,13 +564,13 @@ public class ScheduledFlightToNetexConverter {
         if (scheduledFlight instanceof ScheduledDirectFlight) {
 
             ScheduledStopPoint scheduledDepartureStopPoint = objectFactory().createScheduledStopPoint()
-                    .withVersion("any")
+                    .withVersion(VERSION_ONE)
                     .withId(String.format("%s:ScheduledStopPoint:%s101001", AVINOR_AUTHORITY_ID, scheduledFlight.getAirlineFlightId()))
                     .withName(createMultilingualString(scheduledFlight.getDepartureAirportName()))
                     .withShortName(createMultilingualString(scheduledFlight.getDepartureAirportIATA()));
 
             ScheduledStopPoint scheduledArrivalStopPoint = objectFactory().createScheduledStopPoint()
-                    .withVersion("any")
+                    .withVersion(VERSION_ONE)
                     .withId(String.format("%s:ScheduledStopPoint:%s101002", AVINOR_AUTHORITY_ID, scheduledFlight.getAirlineFlightId()))
                     .withName(createMultilingualString(scheduledFlight.getArrivalAirportName()))
                     .withShortName(createMultilingualString(scheduledFlight.getArrivalAirportIATA()));
@@ -590,7 +590,7 @@ public class ScheduledFlightToNetexConverter {
             int[] idx = {1};
             scheduledStopovers.forEach(stopover -> {
                 ScheduledStopPoint scheduledStopPoint = objectFactory().createScheduledStopPoint()
-                        .withVersion("any")
+                        .withVersion(VERSION_ONE)
                         .withId(String.format("%s:ScheduledStopPoint:%s10100%d", AVINOR_AUTHORITY_ID, scheduledFlight.getAirlineFlightId(), idx[0]))
                         .withName(createMultilingualString(stopover.getAirportName()))
                         .withShortName(createMultilingualString(stopover.getAirportIATA()));
@@ -609,10 +609,10 @@ public class ScheduledFlightToNetexConverter {
         int[] idx = {1};
         scheduledStopPoints.forEach(stopPoint -> {
             ScheduledStopPointRefStructure scheduledStopPointRefStructure = objectFactory().createScheduledStopPointRefStructure()
-                    .withVersion("any")
+                    .withVersion(VERSION_ONE)
                     .withRef(String.format("%s:ScheduledStopPoint:%s10100%d", AVINOR_AUTHORITY_ID, flightId, idx[0])); // @todo: fix id generator
             StopPointInJourneyPattern stopPointInJourneyPattern = objectFactory().createStopPointInJourneyPattern()
-                    .withVersion("any")
+                    .withVersion(VERSION_ONE)
                     .withId(String.format("%s:StopPointInJourneyPattern:%s10100%d", AVINOR_AUTHORITY_ID, flightId, idx[0])) // @todo: fix some id generator-counter here...
                     .withOrder(new BigInteger(Integer.toString(idx[0])))
                     .withScheduledStopPointRef(objectFactory().createScheduledStopPointRef(scheduledStopPointRefStructure));
@@ -626,10 +626,10 @@ public class ScheduledFlightToNetexConverter {
             idx[0]++;
         });
         RouteRefStructure routeRefStructure = objectFactory().createRouteRefStructure()
-                .withVersion("any")
+                .withVersion(VERSION_ONE)
                 .withRef(route.getId());
         return objectFactory().createJourneyPattern()
-                .withVersion("any")
+                .withVersion(VERSION_ONE)
                 .withId(String.format("%s:JourneyPattern:%s101", AVINOR_AUTHORITY_ID, flightId)) // @todo: fix id generator
                 .withRouteRef(routeRefStructure)
                 .withPointsInSequence(pointsInJourneyPattern);
@@ -641,16 +641,17 @@ public class ScheduledFlightToNetexConverter {
         int index = 1;
         for (ScheduledStopPoint scheduledStopPoint : scheduledStopPoints) {
             ScheduledStopPointRefStructure scheduledStopPointRef = objectFactory().createScheduledStopPointRefStructure()
-                    //.withVersion("any")
+                    .withVersion(VERSION_ONE)
                     .withRef(scheduledStopPoint.getId());
 
             String stopPlaceId = stopPlaceIdCache.get(scheduledStopPoint.getShortName().getValue());
             StopPlaceRefStructure stopPlaceRef = objectFactory().createStopPlaceRefStructure()
-                    //.withVersion("any")
+                    //.withVersion(VERSION_ONE)
                     .withRef(stopPlaceId);
+            
 
             PassengerStopAssignment passengerStopAssignment = objectFactory().createPassengerStopAssignment()
-                    .withVersion("any")
+                    .withVersion(VERSION_ONE)
                     .withOrder(new BigInteger(Integer.toString(index)))
                     .withId(String.format("%s:PassengerStopAssignment:%s10100%d", AVINOR_AUTHORITY_ID, flightId, index)) // @todo: fix the id generation
                     .withScheduledStopPointRef(scheduledStopPointRef)
@@ -714,7 +715,7 @@ public class ScheduledFlightToNetexConverter {
         String authorityId = NetexObjectIdCreator.createAuthorityId(AVINOR_AUTHORITY_ID, avinorDataSet.getName());
 
         return objectFactory().createAuthority()
-                .withVersion(VERSION_ANY)
+                .withVersion(VERSION_ONE)
                 .withId(authorityId)
                 .withRest(organisationRest);
     }
@@ -732,7 +733,7 @@ public class ScheduledFlightToNetexConverter {
         String operatorId = NetexObjectIdCreator.createOperatorId(AVINOR_AUTHORITY_ID, airlineIata);
 
         return objectFactory().createOperator()
-                .withVersion(VERSION_ANY)
+                .withVersion(VERSION_ONE)
                 .withId(operatorId)
                 .withRest(operatorRest);
     }
@@ -752,7 +753,7 @@ public class ScheduledFlightToNetexConverter {
         String operatorId = NetexObjectIdCreator.createOperatorId(AVINOR_AUTHORITY_ID, airlineIata);
 
         return objectFactory().createOperator()
-                .withVersion(VERSION_ANY)
+                .withVersion(VERSION_ONE)
                 .withId(operatorId)
                 .withRest(dummyOperatorRest);
     }
