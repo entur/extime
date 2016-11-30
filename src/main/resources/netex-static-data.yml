@@ -44,9 +44,9 @@ netex-data-sets:
     fi:
       company-number:
       name: Icelandair
-      legal-name:
-      phone:
-      url:
+      legal-name: ICELANDAIR SCANDINAVIA
+      phone: 0047 220 34 050
+      url: http://www.icelandair.no/
       details:
     kf:
       company-number:
@@ -58,37 +58,37 @@ netex-data-sets:
     m3:
       company-number:
       name: Air Norway
-      legal-name:
-      phone:
-      url:
+      legal-name: AIR NORWAY
+      phone: 0047 725 22 790
+      url: https://www.airnorway.no/
       details:
     st:
       company-number:
       name: Germania
-      legal-name:
-      phone:
-      url:
+      legal-name: GERMANIA FLUGGESELLSCHAFT MBH
+      phone: 0049 (0) 30 610 818 000
+      url: https://www.flygermania.com/
       details:
     xc:
       company-number:
       name: Corendon Airlines
-      legal-name:
-      phone:
-      url:
+      legal-name: CORENDON AIRLINES
+      phone: 0049 211 546 922 307
+      url: https://www.corendonairlines.com/
       details:
     6y:
       company-number:
       name: SmartLynx
-      legal-name:
-      phone:
-      url:
+      legal-name: SMARTLYNX AIRLINES SIA
+      phone: 0037 167 20 7392
+      url: http://www.smartlynx.aero/
       details:
     os:
       company-number:
       name: Austrian Airlines
-      legal-name:
-      phone:
-      url:
+      legal-name: AUSTRIAN AIRLINES
+      phone: 0047 815 21 052
+      url: https://www.austrian.com/
       details:
 
   # StopPlace types that, for now, corresponding directly to the actual airports. In future versions these can

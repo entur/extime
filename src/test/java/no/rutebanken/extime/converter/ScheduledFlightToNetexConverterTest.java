@@ -37,7 +37,8 @@ public class ScheduledFlightToNetexConverterTest {
         Route route = createDummyRoute(flightId, routePath);
         List<ScheduledStopPoint> scheduledStopPoints = createDummyScheduledStopPoints(flightId, "Trondheim", "Sandefjord");
 
-        JourneyPattern journeyPattern = clazzUnderTest.createJourneyPattern(flightId, route, scheduledStopPoints);
+        //JourneyPattern journeyPattern = clazzUnderTest.createJourneyPattern(flightId, route, scheduledStopPoints);
+        JourneyPattern journeyPattern = null;
 
         Assertions.assertThat(journeyPattern)
                 .isNotNull();
