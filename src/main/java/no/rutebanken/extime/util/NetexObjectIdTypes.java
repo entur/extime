@@ -8,6 +8,7 @@ public interface NetexObjectIdTypes {
     public static final String SITE_FRAME_KEY = "SiteFrame";
     public static final String SERVICE_FRAME_KEY = "ServiceFrame";
     public static final String SERVICE_CALENDAR_FRAME_KEY = "ServiceCalendarFrame";
+    public static final String TIMETABLE_FRAME_KEY = "TimetableFrame";
 
     // entity id keys
     public static final String AUTHORITY_KEY = "Authority";
@@ -23,5 +24,7 @@ public interface NetexObjectIdTypes {
     public static final String JOURNEY_PATTERN_KEY = "JourneyPattern";
     public static final String STOP_POINT_IN_JOURNEY_PATTERN_KEY = "StopPointInJourneyPattern";
     public static final String DAY_TYPE_KEY = "DayType";
+    public static final String AVAILABILITY_CONDITION_KEY = "AvailabilityCondition";
+    public static final String SERVICE_JOURNEY_KEY = "ServiceJourney";
 
 }

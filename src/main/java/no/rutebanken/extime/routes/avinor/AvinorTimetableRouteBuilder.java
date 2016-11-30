@@ -79,7 +79,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .log(LoggingLevel.INFO, "Converting flights to NeTEx")
                 .to("direct:convertScheduledFlightsToNetex")
                 .log(LoggingLevel.INFO, "Compressing XML files and send to storage")
-                //.to("controlbus:route?routeId=CompressAndSendToStorage&action=start")
+                .to("controlbus:route?routeId=CompressAndSendToStorage&action=start")
         ;
 
         from("direct:fetchAndCacheAirportName")

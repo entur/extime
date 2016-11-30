@@ -9,7 +9,7 @@ import java.math.BigInteger;
 public class NetexObjectFactory {
 
     private static final String DEFAULT_ID_PREFIX = "AVI";
-    private static final String DEFAULT_VERSION_NUMBER = "1";
+    static final String DEFAULT_VERSION_NUMBER = "1";
 
     private static ObjectFactory objectFactory = new ObjectFactory();
 
@@ -33,12 +33,10 @@ public class NetexObjectFactory {
                 .withStopPlaceType(StopTypeEnumeration.AIRPORT);
     }
 
-    public static PointOnRoute createPointOnRoute(String objectId, String stopPointRef) {
+    // TODO consider the id generation to moved to converter level instead, for more precise control, use a uniform way of doing it
+    public static PointOnRoute createPointOnRoute(String objectId, String stopPointId) {
         String pointOnRouteId = NetexObjectIdCreator.createPointOnRouteId(DEFAULT_ID_PREFIX, objectId);
-
-        RoutePointRefStructure routePointRefStruct = objectFactory.createRoutePointRefStructure()
-                // .withVersion(DEFAULT_VERSION_TEXT) // TODO: temp. disableD to prevent id check, enable and fix
-                .withRef(stopPointRef);
+        RoutePointRefStructure routePointRefStruct = createRoutePointRefStructure(stopPointId);
         JAXBElement<RoutePointRefStructure> routePointRefStructElement = objectFactory.createRoutePointRef(routePointRefStruct);
 
         return objectFactory.createPointOnRoute()
@@ -59,14 +57,70 @@ public class NetexObjectFactory {
                 .withScheduledStopPointRef(stopPointRefStructElement);
     }
 
+    // TODO find out how to best handle incoming departure and arrival times, disabled for now, caller responsible to set
+    public static TimetabledPassingTime createTimetabledPassingTime(String stopPointInJourneyPatternId) {
+        StopPointInJourneyPatternRefStructure stopPointInJourneyPatternRefStruct =
+                createStopPointInJourneyPatternRefStructure(stopPointInJourneyPatternId);
+
+        JAXBElement<StopPointInJourneyPatternRefStructure> stopPointInJourneyPatternRefStructElement = objectFactory
+                .createStopPointInJourneyPatternRef(stopPointInJourneyPatternRefStruct);
+
+        return objectFactory.createTimetabledPassingTime()
+                .withPointInJourneyPatternRef(stopPointInJourneyPatternRefStructElement);
+    }
+
+    public static MultilingualString createMultilingualString(String value) {
+        return objectFactory.createMultilingualString().withValue(value);
+    }
+
+    // reference structures creation
+
+    public static OperatorRefStructure createOperatorRefStructure(String operatorId) {
+        return objectFactory.createOperatorRefStructure()
+                .withVersion(DEFAULT_VERSION_NUMBER)
+                .withRef(operatorId);
+    }
+
+    public static RouteRefStructure createRouteRefStructure(String routeId) {
+        return objectFactory.createRouteRefStructure()
+                .withVersion(DEFAULT_VERSION_NUMBER)
+                .withRef(routeId);
+    }
+
+    public static StopPlaceRefStructure createStopPlaceRefStructure(String stopPlaceId) {
+        return objectFactory.createStopPlaceRefStructure()
+                .withVersion(DEFAULT_VERSION_NUMBER)
+                .withRef(stopPlaceId);
+    }
+
     public static ScheduledStopPointRefStructure createScheduledStopPointRefStructure(String stopPointId) {
         return objectFactory.createScheduledStopPointRefStructure()
                 .withVersion(DEFAULT_VERSION_NUMBER)
                 .withRef(stopPointId);
     }
 
-    public static MultilingualString createMultilingualString(String value) {
-        return objectFactory.createMultilingualString().withValue(value);
+    public static StopPointInJourneyPatternRefStructure createStopPointInJourneyPatternRefStructure(String stopPointInJourneyPatternId) {
+        return objectFactory.createStopPointInJourneyPatternRefStructure()
+                .withVersion(DEFAULT_VERSION_NUMBER)
+                .withRef(stopPointInJourneyPatternId);
+    }
+
+    public static PointRefStructure createPointRefStructure(String stopPointId) {
+        return objectFactory.createPointRefStructure()
+                .withVersion(DEFAULT_VERSION_NUMBER)
+                .withRef(stopPointId);
+    }
+
+    public static RoutePointRefStructure createRoutePointRefStructure(String stopPointId) {
+        return objectFactory.createRoutePointRefStructure()
+                .withVersion(DEFAULT_VERSION_NUMBER)
+                .withRef(stopPointId);
+    }
+
+    public static DayTypeRefStructure createDayTypeRefStructure(String dayTypeId) {
+        return objectFactory.createDayTypeRefStructure()
+                .withVersion(DEFAULT_VERSION_NUMBER)
+                .withRef(dayTypeId);
     }
 
 }

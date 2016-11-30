@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import no.rutebanken.extime.config.NetexStaticDataSet;
 import no.rutebanken.extime.config.NetexStaticDataSet.StopPlaceDataSet;
 import no.rutebanken.extime.model.AirportIATA;
+import no.rutebanken.extime.util.NetexObjectFactory;
 import no.rutebanken.extime.util.NetexObjectIdCreator;
 import org.apache.commons.lang3.StringUtils;
 import org.rutebanken.netex.model.*;
@@ -24,6 +25,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static no.rutebanken.extime.converter.ScheduledFlightToNetexConverter.VERSION_ONE;
 
 // TODO refactor and optimize this class
+// TODO make use of the netex object factory class in all cases
 @Component(value = "netexCommonDataSet")
 public class NetexCommonDataSet {
 
@@ -115,23 +117,19 @@ public class NetexCommonDataSet {
         int index = 1;
         for (AirportIATA airportIATA : airportIATAS) {
             ScheduledStopPoint scheduledStopPoint = stopPointMap.get(airportIATA.name());
-            ScheduledStopPointRefStructure scheduledStopPointRef = objectFactory().createScheduledStopPointRefStructure()
-                    //.withVersion("any")
-                    .withRef(scheduledStopPoint.getId());
+            ScheduledStopPointRefStructure scheduledStopPointRefStruc =
+                    NetexObjectFactory.createScheduledStopPointRefStructure(scheduledStopPoint.getId());
 
             StopPlace stopPlace = stopPlaceMap.get(airportIATA.name());
-            StopPlaceRefStructure stopPlaceRef = objectFactory().createStopPlaceRefStructure()
-                    //.withVersion("any")
-                    .withRef(stopPlace.getId());
-
+            StopPlaceRefStructure stopPlaceRefStruct = NetexObjectFactory.createStopPlaceRefStructure(stopPlace.getId());
             String stopPointIdSuffix = StringUtils.split(scheduledStopPoint.getId(), ":")[2];
 
             PassengerStopAssignment stopAssignment = objectFactory().createPassengerStopAssignment()
                     .withVersion(VERSION_ONE)
                     .withOrder(new BigInteger(Integer.toString(index)))
                     .withId(String.format("AVI:PassengerStopAssignment:%s", stopPointIdSuffix))
-                    .withScheduledStopPointRef(scheduledStopPointRef)
-                    .withStopPlaceRef(stopPlaceRef);
+                    .withScheduledStopPointRef(scheduledStopPointRefStruc)
+                    .withStopPlaceRef(stopPlaceRefStruct);
             stopAssignmentMap.put(airportIATA.name(), stopAssignment);
             index++;
         }
@@ -146,9 +144,7 @@ public class NetexCommonDataSet {
         for (AirportIATA airportIATA : airportIATAS) {
             ScheduledStopPoint scheduledStopPoint = stopPointMap.get(airportIATA.name());
 
-            PointRefStructure pointRefStructure = objectFactory().createPointRefStructure()
-                    .withVersion(VERSION_ONE)
-                    .withRef(scheduledStopPoint.getId());
+            PointRefStructure pointRefStruct = NetexObjectFactory.createPointRefStructure(scheduledStopPoint.getId());
 
             String stopPointIdSuffix = StringUtils.split(scheduledStopPoint.getId(), ":")[2];
             String pointProjectionId = NetexObjectIdCreator.createPointProjectionId("AVI", stopPointIdSuffix);
@@ -156,7 +152,7 @@ public class NetexCommonDataSet {
             PointProjection pointProjection = objectFactory().createPointProjection()
                     .withVersion(VERSION_ONE)
                     .withId(pointProjectionId)
-                    .withProjectedPointRef(pointRefStructure);
+                    .withProjectedPointRef(pointRefStruct);
 
             Projections_RelStructure projections = objectFactory().createProjections_RelStructure()
                     .withProjectionRefOrProjection(objectFactory().createPointProjection(pointProjection));

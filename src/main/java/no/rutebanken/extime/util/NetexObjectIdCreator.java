@@ -29,6 +29,10 @@ public class NetexObjectIdCreator {
         return NetexObjectIdCreator.composeNetexObjectId(objectIdPrefix, NetexObjectIdTypes.SERVICE_CALENDAR_FRAME_KEY, objectId);
     }
 
+    public static String createTimetableFrameId(String objectIdPrefix, String objectId) {
+        return NetexObjectIdCreator.composeNetexObjectId(objectIdPrefix, NetexObjectIdTypes.TIMETABLE_FRAME_KEY, objectId);
+    }
+
     // entity ids
 
     public static String createAuthorityId(String objectIdPrefix, String objectId) {
@@ -81,6 +85,14 @@ public class NetexObjectIdCreator {
 
     public static String createDayTypeId(String objectIdPrefix, String objectId) {
         return NetexObjectIdCreator.composeNetexObjectId(objectIdPrefix, NetexObjectIdTypes.DAY_TYPE_KEY, objectId);
+    }
+
+    public static String createAvailabilityConditionId(String objectIdPrefix, String objectId) {
+        return NetexObjectIdCreator.composeNetexObjectId(objectIdPrefix, NetexObjectIdTypes.AVAILABILITY_CONDITION_KEY, objectId);
+    }
+
+    public static String createServiceJourneyId(String objectIdPrefix, String objectId) {
+        return NetexObjectIdCreator.composeNetexObjectId(objectIdPrefix, NetexObjectIdTypes.SERVICE_JOURNEY_KEY, objectId);
     }
 
     public static String composeNetexObjectId(String objectIdPrefix, String objectIdType, String objectId) {
