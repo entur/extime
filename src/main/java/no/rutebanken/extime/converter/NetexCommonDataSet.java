@@ -21,6 +21,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static no.rutebanken.extime.converter.ScheduledFlightToNetexConverter.VERSION_ONE;
+
 // TODO refactor and optimize this class
 @Component(value = "netexCommonDataSet")
 public class NetexCommonDataSet {
@@ -68,7 +70,7 @@ public class NetexCommonDataSet {
                     .withLocation(locationStruct);
 
             StopPlace stopPlace = objectFactory().createStopPlace()
-                    .withVersion("1")
+                    .withVersion(VERSION_ONE)
                     .withId(stopPlaceId)
                     .withName(objectFactory().createMultilingualString().withValue(stopPlaceDataSet.getName()))
                     .withShortName(objectFactory().createMultilingualString().withValue(airportIATA.name()))
@@ -94,7 +96,7 @@ public class NetexCommonDataSet {
             String stopPointId = NetexObjectIdCreator.createStopPointId("AVI", String.valueOf(stopPointIdSuffix));
 
             ScheduledStopPoint stopPoint = objectFactory().createScheduledStopPoint()
-                    .withVersion("any")
+                    .withVersion(VERSION_ONE)
                     .withId(stopPointId)
                     .withName(objectFactory().createMultilingualString().withValue(stopPlaceDataSet.getName()))
                     .withShortName(objectFactory().createMultilingualString().withValue(airportIATA.name()));
@@ -125,7 +127,7 @@ public class NetexCommonDataSet {
             String stopPointIdSuffix = StringUtils.split(scheduledStopPoint.getId(), ":")[2];
 
             PassengerStopAssignment stopAssignment = objectFactory().createPassengerStopAssignment()
-                    .withVersion("any")
+                    .withVersion(VERSION_ONE)
                     .withOrder(new BigInteger(Integer.toString(index)))
                     .withId(String.format("AVI:PassengerStopAssignment:%s", stopPointIdSuffix))
                     .withScheduledStopPointRef(scheduledStopPointRef)
@@ -145,14 +147,14 @@ public class NetexCommonDataSet {
             ScheduledStopPoint scheduledStopPoint = stopPointMap.get(airportIATA.name());
 
             PointRefStructure pointRefStructure = objectFactory().createPointRefStructure()
-                    .withVersion("any")
+                    .withVersion(VERSION_ONE)
                     .withRef(scheduledStopPoint.getId());
 
             String stopPointIdSuffix = StringUtils.split(scheduledStopPoint.getId(), ":")[2];
             String pointProjectionId = NetexObjectIdCreator.createPointProjectionId("AVI", stopPointIdSuffix);
 
             PointProjection pointProjection = objectFactory().createPointProjection()
-                    .withVersion("any")
+                    .withVersion(VERSION_ONE)
                     .withId(pointProjectionId)
                     .withProjectedPointRef(pointRefStructure);
 
@@ -162,7 +164,7 @@ public class NetexCommonDataSet {
             String routePointId = NetexObjectIdCreator.createRoutePointId("AVI", stopPointIdSuffix);
 
             RoutePoint routePoint = objectFactory().createRoutePoint()
-                    .withVersion("any")
+                    .withVersion(VERSION_ONE)
                     .withId(routePointId)
                     .withProjections(projections);
 

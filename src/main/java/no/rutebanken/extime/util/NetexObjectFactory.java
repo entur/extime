@@ -9,7 +9,6 @@ import java.math.BigInteger;
 public class NetexObjectFactory {
 
     private static final String DEFAULT_ID_PREFIX = "AVI";
-    private static final String DEFAULT_VERSION_TEXT = "any";
     private static final String DEFAULT_VERSION_NUMBER = "1";
 
     private static ObjectFactory objectFactory = new ObjectFactory();
@@ -43,7 +42,7 @@ public class NetexObjectFactory {
         JAXBElement<RoutePointRefStructure> routePointRefStructElement = objectFactory.createRoutePointRef(routePointRefStruct);
 
         return objectFactory.createPointOnRoute()
-                .withVersion(DEFAULT_VERSION_TEXT)
+                .withVersion(DEFAULT_VERSION_NUMBER)
                 .withId(pointOnRouteId)
                 .withPointRef(routePointRefStructElement);
     }
@@ -54,7 +53,7 @@ public class NetexObjectFactory {
         JAXBElement<ScheduledStopPointRefStructure> stopPointRefStructElement = objectFactory.createScheduledStopPointRef(stopPointRefStruct);
 
         return objectFactory.createStopPointInJourneyPattern()
-                .withVersion(DEFAULT_VERSION_TEXT)
+                .withVersion(DEFAULT_VERSION_NUMBER)
                 .withId(stopPointInJourneyPatternId)
                 .withOrder(orderIndex)
                 .withScheduledStopPointRef(stopPointRefStructElement);
@@ -62,7 +61,7 @@ public class NetexObjectFactory {
 
     public static ScheduledStopPointRefStructure createScheduledStopPointRefStructure(String stopPointId) {
         return objectFactory.createScheduledStopPointRefStructure()
-                .withVersion(DEFAULT_VERSION_TEXT)
+                .withVersion(DEFAULT_VERSION_NUMBER)
                 .withRef(stopPointId);
     }
 
