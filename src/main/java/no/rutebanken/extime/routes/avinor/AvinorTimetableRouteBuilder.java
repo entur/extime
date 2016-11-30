@@ -18,7 +18,6 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.converter.jaxb.JaxbDataFormat;
 import org.apache.camel.processor.aggregate.AggregationStrategy;
 import org.apache.camel.processor.aggregate.zipfile.ZipAggregationStrategy;
-import org.apache.commons.lang3.EnumUtils;
 import org.rutebanken.netex.model.PublicationDeliveryStructure;
 import org.springframework.stereotype.Component;
 
@@ -296,7 +295,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
             Flight newFlight = newExchange.getIn().getBody(Flight.class);
             if (oldExchange == null) {
                 List<Flight> flightList = new ArrayList<>();
-                if (isValidFlight(stopVisitType, newFlight)) {
+                if (AvinorTimetableUtils.isValidFlight(stopVisitType, newFlight)) {
                     flightList.add(newFlight);
                 }
                 newExchange.getIn().setBody(flightList);
@@ -305,33 +304,11 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 @SuppressWarnings("unchecked")
                 List<Flight> flightList = Collections.checkedList(
                         oldExchange.getIn().getBody(List.class), Flight.class);
-                if (isValidFlight(stopVisitType, newFlight)) {
+                if (AvinorTimetableUtils.isValidFlight(stopVisitType, newFlight)) {
                     flightList.add(newFlight);
                 }
                 return oldExchange;
             }
-        }
-
-        // @todo: refactor! - duplicate in AvinorTimetableUtils (make static)
-        private boolean isValidFlight(StopVisitType stopVisitType, Flight newFlight) {
-            switch (stopVisitType) {
-                case ARRIVAL:
-                    return AirportIATA.OSL.name().equalsIgnoreCase(newFlight.getDepartureStation());
-                case DEPARTURE:
-                    return isDomesticFlight(newFlight);
-            }
-            return false;
-        }
-
-        // @todo: refactor! - duplicate in AvinorTimetableUtils (make static)
-        private boolean isDomesticFlight(Flight flight) {
-            return isValidDepartureAndArrival(flight.getDepartureStation(), flight.getArrivalStation());
-        }
-
-        // @todo: refactor! - duplicate in AvinorTimetableUtils (make static)
-        private boolean isValidDepartureAndArrival(String departureIATA, String arrivalIATA) {
-            return EnumUtils.isValidEnum(AirportIATA.class, departureIATA)
-                    && EnumUtils.isValidEnum(AirportIATA.class, arrivalIATA);
         }
     }
 

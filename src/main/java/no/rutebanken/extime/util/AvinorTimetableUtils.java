@@ -5,6 +5,7 @@ import com.google.common.collect.Lists;
 import no.avinor.flydata.xjc.model.scheduled.Flight;
 import no.avinor.flydata.xjc.model.scheduled.Flights;
 import no.rutebanken.extime.model.AirportIATA;
+import no.rutebanken.extime.model.ServiceType;
 import no.rutebanken.extime.model.StopVisitType;
 import org.apache.camel.Exchange;
 import org.apache.camel.Header;
@@ -103,21 +104,31 @@ public class AvinorTimetableUtils {
 */
     }
 
-    private boolean isValidFlight(StopVisitType stopVisitType, Flight newFlight) {
+
+    public static boolean isValidFlight(StopVisitType stopVisitType, Flight newFlight) {
+        if (!isScheduledPassengerFlight(newFlight)) {
+            return false;
+        }
+
         switch (stopVisitType) {
             case ARRIVAL:
                 return AirportIATA.OSL.name().equalsIgnoreCase(newFlight.getDepartureStation());
             case DEPARTURE:
                 return isDomesticFlight(newFlight);
         }
+
         return false;
     }
 
-    private boolean isDomesticFlight(Flight flight) {
+    public static boolean isScheduledPassengerFlight(Flight flight) {
+        return ServiceType.fromCode(flight.getServiceType()) != null;
+    }
+
+    public static boolean isDomesticFlight(Flight flight) {
         return isValidDepartureAndArrival(flight.getDepartureStation(), flight.getArrivalStation());
     }
 
-    private boolean isValidDepartureAndArrival(String departureIATA, String arrivalIATA) {
+    public static boolean isValidDepartureAndArrival(String departureIATA, String arrivalIATA) {
         return EnumUtils.isValidEnum(AirportIATA.class, departureIATA)
                 && EnumUtils.isValidEnum(AirportIATA.class, arrivalIATA);
     }
