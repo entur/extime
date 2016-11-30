@@ -23,8 +23,6 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.time.*;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
 @Component(value = "scheduledFlightToNetexConverter")
@@ -33,16 +31,22 @@ public class ScheduledFlightToNetexConverter {
     private static final Logger logger = LoggerFactory.getLogger(ScheduledFlightToNetexConverter.class);
 
     public static final String VERSION_ONE = "1";
-    private static final String VERSION_ANY = "any";
+    private static final String MAIN_VERSION = "1.0";
     private static final String AVINOR_AUTHORITY_ID = "AVI";
     private static final String NSR_AUTHORITY_ID = "NSR";
+
     private static final String WORK_DAYS_DISPLAY_NAME = "Ukedager (mandag til fredag)";
-    private static final String WEEKEND_DAYS_DISPLAY_NAME = "Helgdager (lørdag og søndag)";
+    private static final String SATURDAY_DISPLAY_NAME = "Helgdag (lørdag)";
+    private static final String SUNDAY_DISPLAY_NAME = "Helgdag (søndag)";
+
+    private static final String WORK_DAYS_LABEL = "weekday";
+    private static final String SATURDAY_LABEL = "saturday";
+    private static final String SUNDAY_LABEL = "sunday";
 
     private static final String DEFAULT_ZONE_ID = "UTC";
+    private static final String DEFAULT_LANGUAGE = "no";
     private static final int DEFAULT_START_INCLUSIVE = 1111111;
     private static final int DEFAULT_END_EXCLUSIVE = 8888888;
-    private static final String DEFAULT_SRS_NAME = "WGS84";
 
     private static final HashMap<DayOfWeek, DayOfWeekEnumeration> dayOfWeekMap = new HashMap<>();
 
@@ -55,8 +59,6 @@ public class ScheduledFlightToNetexConverter {
         dayOfWeekMap.put(DayOfWeek.SATURDAY, DayOfWeekEnumeration.SATURDAY);
         dayOfWeekMap.put(DayOfWeek.SUNDAY, DayOfWeekEnumeration.SUNDAY);
     }
-
-    private ConcurrentMap<String, String> stopPlaceIdCache = new ConcurrentHashMap<>();
 
     @Autowired
     private NetexCommonDataSet netexCommonDataSet;
@@ -71,7 +73,8 @@ public class ScheduledFlightToNetexConverter {
 
     public JAXBElement<PublicationDeliveryStructure> convertToNetex(ScheduledFlight scheduledFlight) throws Exception {
         OffsetDateTime publicationTimestamp = OffsetDateTime.ofInstant(Instant.now(), ZoneId.of(DEFAULT_ZONE_ID));
-        LocalDate dateOfOperation = scheduledFlight.getDateOfOperation();
+        //LocalDate dateOfOperation = scheduledFlight.getDateOfOperation();
+
         String routePath = String.format("%s-%s", scheduledFlight.getDepartureAirportName(), scheduledFlight.getArrivalAirportName());
         String flightId = scheduledFlight.getAirlineFlightId();
 
@@ -92,11 +95,10 @@ public class ScheduledFlightToNetexConverter {
         frames.getCommonFrame().add(createResourceFrame(operator));
         frames.getCommonFrame().add(createSiteFrame(stopPlaces));
 
-        JAXBElement<ServiceFrame> serviceFrame = createServiceFrame(publicationTimestamp, operator.getId(),
+        JAXBElement<ServiceFrame> serviceFrame = createServiceFrame(publicationTimestamp,
                 scheduledFlight.getAirlineName(), scheduledFlight.getAirlineIATA(), flightId, routePoints, route, line,
                 scheduledStopPoints, journeyPattern, stopAssignments);
         frames.getCommonFrame().add(serviceFrame);
-        //frames.getCommonFrame().add(createServiceFrame(publicationTimestamp, operator.getId(), scheduledFlight.getAirlineName(), flightId, routePoints, route, line, scheduledStopPoints, journeyPattern, stopAssignments));
 
         frames.getCommonFrame().add(createTimetableFrame(scheduledFlight.getAvailabilityPeriod(), serviceJourneys));
         frames.getCommonFrame().add(createServiceCalendarFrame(dayTypes));
@@ -116,7 +118,7 @@ public class ScheduledFlightToNetexConverter {
         dataObjects.getCompositeFrameOrCommonFrame().add(compositeFrame);
 
         return objectFactory().createPublicationDeliveryStructure()
-                .withVersion("1.0")
+                .withVersion(MAIN_VERSION)
                 .withPublicationTimestamp(publicationTimestamp)
                 .withParticipantRef(avinorDataSet.getName())
                 .withDescription(createMultilingualString(String.format("Flight %s : %s", flightId, routePath)))
@@ -127,17 +129,11 @@ public class ScheduledFlightToNetexConverter {
         Codespaces_RelStructure codespaces = objectFactory().createCodespaces_RelStructure()
                 .withCodespaceRefOrCodespace(Arrays.asList(avinorCodespace(), nsrCodespace()));
 
-/*
-        CodespaceRefStructure codespaceRefStructure = objectFactory().createCodespaceRefStructure()
-                .withRef(avinorCodespace().getId());
-*/
-
         LocaleStructure localeStructure = objectFactory().createLocaleStructure()
                 .withTimeZone(DEFAULT_ZONE_ID)
-                .withDefaultLanguage("no");
+                .withDefaultLanguage(DEFAULT_LANGUAGE);
 
         VersionFrameDefaultsStructure versionFrameDefaultsStructure = objectFactory().createVersionFrameDefaultsStructure()
-                //.withDefaultCodespaceRef(codespaceRefStructure)
                 .withDefaultLocale(localeStructure);
 
         String compositeFrameId = NetexObjectIdCreator.createCompositeFrameId(AVINOR_AUTHORITY_ID, flightId);
@@ -184,36 +180,9 @@ public class ScheduledFlightToNetexConverter {
         return objectFactory().createSiteFrame(siteFrame);
     }
 
-    // TODO consider making line argument/parameter varargs instead (a Network can have multiple lines)
-    public JAXBElement<ServiceFrame> createServiceFrame(OffsetDateTime publicationTimestamp, String organisationId,
-            String airlineName, String airlineIata, String flightId, List<RoutePoint> routePoints, Route route, Line line,
+    public JAXBElement<ServiceFrame> createServiceFrame(OffsetDateTime publicationTimestamp, String airlineName,
+            String airlineIata, String flightId, List<RoutePoint> routePoints, Route route, Line line,
             List<ScheduledStopPoint> scheduledStopPoints, JourneyPattern journeyPattern, List<PassengerStopAssignment> stopAssignments) {
-
-/*
-        OrganisationRefStructure organisationRefStructure = objectFactory().createOrganisationRefStructure()
-                .withRef(organisationId);
-        JAXBElement<OrganisationRefStructure> organisationRefStructElement = objectFactory().createTransportOrganisationRef(organisationRefStructure);
-
-        LineRefStructure lineRefStructure = objectFactory().createLineRefStructure()
-                .withVersion(VERSION_ONE)
-                .withValue(line.getId())
-                .withRef(line.getId());
-
-        JAXBElement<LineRefStructure> lineRefStructElement = objectFactory().createLineRef(lineRefStructure);
-
-        @SuppressWarnings("unchecked")
-        LineRefs_RelStructure lineRefRelsStruct = objectFactory().createLineRefs_RelStructure()
-                .withLineRef(lineRefStructElement);
-
-        GroupOfLines groupOfLines = objectFactory().createGroupOfLines()
-                .withMembers(lineRefRelsStruct)
-                .withId("AVI:GroupOfLines:1")
-                .withVersion(VERSION_ONE)
-                .withName(createMultilingualString("Operator:GroupOfLines:1"));
-
-        GroupsOfLinesInFrame_RelStructure groupsOfLinesInFrameStruct = objectFactory().createGroupsOfLinesInFrame_RelStructure()
-                .withGroupOfLines(groupOfLines);
-*/
 
         String networkId = NetexObjectIdCreator.createNetworkId(AVINOR_AUTHORITY_ID, airlineIata);
 
@@ -223,7 +192,6 @@ public class ScheduledFlightToNetexConverter {
                 .withId(networkId)
                 .withName(createMultilingualString(airlineName));
                 //.withTransportOrganisationRef(organisationRefStructElement); // schema validation requires 'abstract' attribute set to false (not available in netex model)
-                //.withGroupsOfLines(groupsOfLinesInFrameStruct);
 
         RoutePointsInFrame_RelStructure routePointsInFrame = objectFactory().createRoutePointsInFrame_RelStructure()
                 .withRoutePoint(routePoints);
@@ -277,29 +245,47 @@ public class ScheduledFlightToNetexConverter {
     private List<DayType> createDayTypes(Set<DayOfWeek> weekDaysPattern, String flightId) {
         Map<Boolean, List<DayOfWeek>> dayOfWeeksByDayType = weekDaysPattern.stream()
                 .collect(Collectors.partitioningBy(dayOfWeek -> dayOfWeek.query(DateUtils.WorkDays::isWorkDay)));
+
         List<DayOfWeek> workDays = dayOfWeeksByDayType.get(Boolean.TRUE);
         List<DayOfWeek> weekendDays = dayOfWeeksByDayType.get(Boolean.FALSE);
         List<DayType> dayTypes = Lists.newArrayList();
+
         if (!workDays.isEmpty()) {
-            dayTypes.add(createDayType(workDays, flightId, true));
+            dayTypes.add(createDayType(workDays, flightId, WORK_DAYS_LABEL, WORK_DAYS_DISPLAY_NAME));
         }
+
         if (!weekendDays.isEmpty()) {
-            dayTypes.add(createDayType(weekendDays, flightId, false));
+            if (weekendDays.contains(DayOfWeek.SATURDAY)) {
+                int index = weekendDays.indexOf(DayOfWeek.SATURDAY);
+                List<DayOfWeek> saturday = Lists.newArrayList(weekendDays.get(index));
+                dayTypes.add(createDayType(saturday, flightId, SATURDAY_LABEL, SATURDAY_DISPLAY_NAME));
+            }
+            if (weekendDays.contains(DayOfWeek.SUNDAY)) {
+                int index = weekendDays.indexOf(DayOfWeek.SUNDAY);
+                List<DayOfWeek> sunday = Lists.newArrayList(weekendDays.get(index));
+                dayTypes.add(createDayType(sunday, flightId, SUNDAY_LABEL, SUNDAY_DISPLAY_NAME));
+            }
         }
+
         return dayTypes;
     }
 
-    public DayType createDayType(List<DayOfWeek> daysOfWeekPattern, String flightId, boolean isWorkDays) {
+    public DayType createDayType(List<DayOfWeek> daysOfWeekPattern, String flightId, String objectId, String name) {
         List<DayOfWeekEnumeration> daysOfWeek = Lists.newArrayList();
         daysOfWeekPattern.forEach(dayOfWeek -> daysOfWeek.add(dayOfWeekMap.get(dayOfWeek)));
+
         PropertyOfDay propertyOfDayWeekDays = objectFactory().createPropertyOfDay();
         propertyOfDayWeekDays.getDaysOfWeek().addAll(daysOfWeek);
+
         PropertiesOfDay_RelStructure propertiesOfDay = objectFactory().createPropertiesOfDay_RelStructure()
                 .withPropertyOfDay(propertyOfDayWeekDays);
+
+        String dayTypeId = NetexObjectIdCreator.createDayTypeId(flightId, objectId);
+
         return objectFactory().createDayType()
                 .withVersion(VERSION_ONE)
-                .withId(String.format("%s:DayType:%s", flightId, isWorkDays ? "weekday" : "weekend"))
-                .withName(createMultilingualString(isWorkDays ? WORK_DAYS_DISPLAY_NAME : WEEKEND_DAYS_DISPLAY_NAME))
+                .withId(dayTypeId)
+                .withName(createMultilingualString(name))
                 .withProperties(propertiesOfDay);
     }
 

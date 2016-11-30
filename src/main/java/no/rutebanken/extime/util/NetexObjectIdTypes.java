@@ -22,5 +22,6 @@ public interface NetexObjectIdTypes {
     public static final String POINT_ON_ROUTE_KEY = "PointOnRoute";
     public static final String JOURNEY_PATTERN_KEY = "JourneyPattern";
     public static final String STOP_POINT_IN_JOURNEY_PATTERN_KEY = "StopPointInJourneyPattern";
+    public static final String DAY_TYPE_KEY = "DayType";
 
 }
