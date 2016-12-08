@@ -302,7 +302,7 @@ public class ScheduledFlightToNetexConverter {
         PropertiesOfDay_RelStructure propertiesOfDay = objectFactory().createPropertiesOfDay_RelStructure()
                 .withPropertyOfDay(propertyOfDayWeekDays);
 
-        String dayTypeId = NetexObjectIdCreator.createDayTypeId(flightId, objectId);
+        String dayTypeId = NetexObjectIdCreator.createDayTypeId(flightId, String.format("%s_%s", flightId, objectId));
 
         return objectFactory().createDayType()
                 .withVersion(VERSION_ONE)
