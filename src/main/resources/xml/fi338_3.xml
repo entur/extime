@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<flights xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="http://195.69.13.136/XmlFeedScheduled.xsd"
+         airport="SVG" time="2016-12-23T00:00:00Z">
+    <flight id="100731838821">
+        <airline.designator>FI</airline.designator>
+        <flight.number>338</flight.number>
+        <date.of.operation>2016-12-23Z</date.of.operation>
+        <departure.station>SVG</departure.station>
+        <std>12:35:00Z</std>
+        <arrival.station>OSL</arrival.station>
+        <sta>15:00:00Z</sta>
+        <aircraft.configuration>C10Y12M161VVFI75W3</aircraft.configuration>
+        <aircraft.type>75W</aircraft.type>
+        <service.type>J</service.type>
+        <creation>SSM</creation>
+    </flight>
+</flights>

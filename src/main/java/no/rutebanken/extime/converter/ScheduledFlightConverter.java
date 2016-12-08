@@ -1,43 +1,82 @@
 package no.rutebanken.extime.converter;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import no.avinor.flydata.xjc.model.scheduled.Flight;
+import no.avinor.flydata.xjc.model.scheduled.Flights;
 import no.rutebanken.extime.model.*;
+import no.rutebanken.extime.util.AvinorTimetableUtils;
+import org.apache.camel.Endpoint;
+import org.apache.camel.EndpointInject;
+import org.apache.camel.ProducerTemplate;
+import org.apache.camel.TypeConverter;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.EnumUtils;
 import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.apache.commons.lang3.tuple.Triple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.io.InputStream;
 import java.math.BigInteger;
 import java.time.*;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+
+import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.HEADER_EXTIME_HTTP_URI;
+import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.HEADER_EXTIME_URI_PARAMETERS;
 
 @Component(value = "scheduledFlightConverter")
 public class ScheduledFlightConverter {
 
     private static final Logger logger = LoggerFactory.getLogger(ScheduledFlightConverter.class);
 
-    @Value("${avinor.timetable.period.months}") int numberOfMonthsInPeriod;
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+    @Autowired
+    private TypeConverter typeConverter;
+
+    @Autowired
+    private ProducerTemplate producerTemplate;
+
+    @EndpointInject(uri = "direct:fetchXmlStreamFromHttpFeed")
+    private Endpoint feedEndpoint;
+
+    @Value("${avinor.timetable.feed.endpoint}")
+    private String httpFeedEndpointUri;
+
+    @Value("${avinor.timetable.period.months}")
+    private int numberOfMonthsInPeriod;
+
+    private String uriParametersFormat = "airport=%s&direction=%s&designator=%s&number=%s&PeriodFrom=%sZ&PeriodTo=%sZ";
 
     public List<ScheduledFlight> convertToScheduledFlights(List<Flight> scheduledFlights) {
-        // @todo: For now we create a separate from- and to date in converter, but this should actualy
-        // @todo: come as input headers from previous date range generator, to be 100% sure these are always the same
+
+        // TODO For now we create a separate from- and to date in converter, but this should actually
+        //      come as input headers from previous date range generator, to be 100% sure these are always the same
         LocalDate requestPeriodFromDate = LocalDate.now(ZoneId.of("UTC"));
         LocalDate requestPeriodToDate = requestPeriodFromDate.plusMonths(numberOfMonthsInPeriod);
+
         OffsetTime offsetMidnight = OffsetTime.parse("00:00:00Z").withOffsetSameLocal(ZoneOffset.UTC);
         OffsetDateTime requestPeriodFromDateTime = requestPeriodFromDate.atTime(offsetMidnight);
         OffsetDateTime requestPeriodToDateTime = requestPeriodToDate.atTime(offsetMidnight);
 
-        Map<String, List<Flight>> flightsByDepartureAirport = scheduledFlights.stream()
+        // TODO check for codeshare flights here, use the infrequent designator enumset group, to only check international airlines
+
+        // filter section
+        List<Flight> filteredFlights = filterValidFlights(scheduledFlights);
+
+        // conversion section
+        Map<String, List<Flight>> flightsByDepartureAirport = filteredFlights.stream()
                 .collect(Collectors.groupingBy(Flight::getDepartureStation));
 
-        Map<String, List<Flight>> flightsByArrivalAirportIata = scheduledFlights.stream()
+        Map<String, List<Flight>> flightsByArrivalAirportIata = filteredFlights.stream()
                 .collect(Collectors.groupingBy(Flight::getArrivalStation));
 
         Set<BigInteger> distinctFlightLegIds = Sets.newHashSet();
@@ -45,8 +84,9 @@ public class ScheduledFlightConverter {
         List<ScheduledDirectFlight> scheduledDirectFlights = Lists.newArrayList();
         List<ScheduledFlight> distinctFlights = Lists.newArrayList();
 
-        for (Flight flight : scheduledFlights) {
+        for (Flight flight : filteredFlights) {
             List<Flight> connectingFlightLegs = findConnectingFlightLegs(flight, flightsByDepartureAirport, flightsByArrivalAirportIata, distinctFlightLegIds);
+
             if (CollectionUtils.isEmpty(connectingFlightLegs)) {
 /*
                 logger.debug("Flight with unique id: {}, and flightId: {} is part of multi leg flight, and already processed, skipping...",
@@ -56,10 +96,12 @@ public class ScheduledFlightConverter {
 */
                 continue;
             }
+
             if (isMultiLegFlightRoute(connectingFlightLegs)) {
                 List<Triple<StopVisitType, String, OffsetTime>> stopovers = extractStopoversFromFlights(connectingFlightLegs);
                 List<ScheduledStopover> scheduledStopovers = createScheduledStopovers(stopovers);
                 ScheduledStopoverFlight scheduledStopoverFlight = createScheduledStopoverFlight(requestPeriodFromDateTime, requestPeriodToDateTime, flight, scheduledStopovers);
+
                 if (scheduledStopoverFlight != null) {
                     scheduledStopoverFlights.add(scheduledStopoverFlight);
                 }
@@ -92,6 +134,7 @@ public class ScheduledFlightConverter {
             scheduledFlight.setWeekDaysPattern(daysOfWeek);
             distinctFlights.add(scheduledFlight);
         }
+
         for (Map.Entry<String, List<ScheduledDirectFlight>> entry : directFlightsByFlightId.entrySet()) {
             String flightId = entry.getKey();
             List<ScheduledDirectFlight> flights = entry.getValue();
@@ -100,21 +143,101 @@ public class ScheduledFlightConverter {
             scheduledFlight.setWeekDaysPattern(daysOfWeek);
             distinctFlights.add(scheduledFlight);
         }
+
         return distinctFlights;
+    }
+
+    private List<Flight> filterValidFlights(List<Flight> scheduledFlights) {
+        Set<BigInteger> invalidFlightIds = Sets.newHashSet();
+
+        for (Flight flight : scheduledFlights) {
+            if (hasInfrequentDesignator(flight)) {
+
+                if (isInternationalDepartureFound(flight) || isInternationalArrivalFound(flight)) {
+                    logger.info("Flight with id {} is part of an international flight route, and marked as invalid", flight.getId());
+                    invalidFlightIds.add(flight.getId());
+                }
+            }
+        }
+
+        logger.info("Number of invalid flights : {}", invalidFlightIds.size());
+
+        return scheduledFlights.stream()
+                .filter(flight -> !invalidFlightIds.contains(flight.getId()))
+                .collect(Collectors.toList());
+    }
+
+    private boolean hasInfrequentDesignator(Flight flight) {
+        boolean validEnum = EnumUtils.isValidEnum(AirlineDesignator.class, flight.getAirlineDesignator());
+
+        if (validEnum) {
+            AirlineDesignator designator = AirlineDesignator.valueOf(flight.getAirlineDesignator());
+            return !AirlineDesignator.commonDesignators.contains(designator);
+        }
+
+        return true;
+    }
+
+    private boolean isInternationalDepartureFound(Flight currentFlight) {
+        String dateOfOperation = currentFlight.getDateOfOperation().format(DATE_TIME_FORMATTER);
+
+        String uriParameters = String.format(uriParametersFormat,
+                currentFlight.getDepartureStation(), StopVisitType.ARRIVAL.getCode(),
+                currentFlight.getAirlineDesignator(), currentFlight.getFlightNumber(), dateOfOperation, dateOfOperation);
+
+        Flight previousFlight = fetchConnectingFlight(uriParameters);
+
+        return previousFlight != null && isValidPreviousFlight(previousFlight, currentFlight) &&
+                (!AvinorTimetableUtils.isDomesticFlight(previousFlight) || isInternationalDepartureFound(previousFlight));
+    }
+
+    private boolean isInternationalArrivalFound(Flight currentFlight) {
+        String dateOfOperation = currentFlight.getDateOfOperation().format(DATE_TIME_FORMATTER);
+
+        String uriParameters = String.format(uriParametersFormat,
+                currentFlight.getDepartureStation(), StopVisitType.DEPARTURE.getCode(),
+                currentFlight.getAirlineDesignator(), currentFlight.getFlightNumber(), dateOfOperation, dateOfOperation);
+
+        Flight nextFlight = fetchConnectingFlight(uriParameters);
+
+        return nextFlight != null && isValidNextFlight(nextFlight, currentFlight) &&
+                (!AvinorTimetableUtils.isDomesticFlight(nextFlight) || isInternationalArrivalFound(nextFlight));
+    }
+
+    private Flight fetchConnectingFlight(String uriParameters) {
+        Map<String, Object> headers = Maps.newHashMap();
+        headers.put(HEADER_EXTIME_HTTP_URI, httpFeedEndpointUri);
+        headers.put(HEADER_EXTIME_URI_PARAMETERS, uriParameters);
+
+        InputStream xmlStream = producerTemplate.requestBodyAndHeaders(feedEndpoint, null, headers, InputStream.class);
+        Flights flights = typeConverter.convertTo(Flights.class, xmlStream);
+        return !flights.getFlight().isEmpty() ? flights.getFlight().get(0) : null;
+    }
+
+    private boolean isValidPreviousFlight(Flight previousFlight, Flight currentFlight) {
+        return previousFlight.getSta().isBefore(currentFlight.getStd());
+    }
+
+    private boolean isValidNextFlight(Flight nextFlight, Flight currentFlight) {
+        return nextFlight.getStd().isAfter(currentFlight.getSta());
     }
 
     public List<ScheduledStopover> createScheduledStopovers(List<Triple<StopVisitType, String, OffsetTime>> stopovers) {
         List<ScheduledStopover> multiLegFlights = Lists.newArrayList();
         Triple<StopVisitType, String, OffsetTime> tempArrivalStopover = null;
+
         for (ListIterator<Triple<StopVisitType, String, OffsetTime>> it = stopovers.listIterator(); it.hasNext(); ) {
             Triple<StopVisitType, String, OffsetTime> stopover = it.next();
+
             if (stopover.getLeft().equals(StopVisitType.DEPARTURE)) {
                 ScheduledStopover scheduledStopover = new ScheduledStopover();
                 scheduledStopover.setAirportIATA(stopover.getMiddle());
                 scheduledStopover.setDepartureTime(stopover.getRight());
+
                 if (tempArrivalStopover != null) {
                     scheduledStopover.setArrivalTime(tempArrivalStopover.getRight());
                 }
+
                 multiLegFlights.add(scheduledStopover);
             } else {
                 if (!it.hasNext()) {
@@ -140,8 +263,10 @@ public class ScheduledFlightConverter {
             scheduledStopoverFlight.setAvailabilityPeriod(new AvailabilityPeriod(requestPeriodFromDateTime, requestPeriodToDateTime));
             scheduledStopoverFlight.setDateOfOperation(currentFlight.getDateOfOperation());
             scheduledStopoverFlight.getScheduledStopovers().addAll(scheduledStopovers);
+
             return scheduledStopoverFlight;
         }
+
         return null;
     }
 
@@ -165,6 +290,7 @@ public class ScheduledFlightConverter {
         SortedSet<DayOfWeek> daysOfWeek = new TreeSet<>();
         LocalDate periodStartDate = flights.get(0).getDateOfOperation();
         LocalDate periodEndDate = periodStartDate.plusWeeks(1L);
+
         for (ScheduledFlight flight : flights) {
             if (flight.getDateOfOperation().isAfter(periodEndDate)) {
                 break;
@@ -174,6 +300,7 @@ public class ScheduledFlightConverter {
                 daysOfWeek.add(dayOfWeek);
             }
         }
+
         return daysOfWeek;
     }
 
@@ -181,22 +308,29 @@ public class ScheduledFlightConverter {
     // like flight WF739 which can take the following route/journey pattern one day: BOO-OSY-TRD, and this route/journey pattern another day: BOO-MJF-OSY-TRD
     public List<Flight> findConnectingFlightLegs(Flight currentFlightLeg, Map<String, List<Flight>> flightsByDepartureAirportIata,
                                Map<String, List<Flight>> flightsByArrivalAirportIata, Set<BigInteger> distinctFlightLegIds) {
+
         if (distinctFlightLegIds.contains(currentFlightLeg.getId())) {
             return Collections.emptyList();
         }
+
         List<Flight> connectingFlightLegs = Lists.newArrayList(currentFlightLeg);
         List<Flight> previousFlightLegs = findPreviousFlightLegs(currentFlightLeg, flightsByArrivalAirportIata, Lists.newArrayList());
+
         if (CollectionUtils.isNotEmpty(previousFlightLegs)) {
             connectingFlightLegs.addAll(previousFlightLegs);
         }
+
         List<Flight> nextFlightLegs = findNextFlightLegs(currentFlightLeg, flightsByDepartureAirportIata, Lists.newArrayList());
+
         if (CollectionUtils.isNotEmpty(nextFlightLegs)) {
             connectingFlightLegs.addAll(nextFlightLegs);
         }
+
         if (connectingFlightLegs.size() > 1) {
-            Collections.sort(connectingFlightLegs, (flight1, flight2) -> flight1.getId().compareTo(flight2.getId()));
+            connectingFlightLegs.sort(Comparator.comparing(Flight::getId));
             connectingFlightLegs.forEach(flight -> distinctFlightLegIds.add(flight.getId()));
         }
+
         return connectingFlightLegs;
     }
 
@@ -205,10 +339,12 @@ public class ScheduledFlightConverter {
         List<Flight> flightLegsForIata = flightsByArrivalAirportIata.get(departureAirportIata);
         Predicate<Flight> flightPredicate = FlightPredicate.matchPreviousFlight(currentFlightLeg);
         Flight optionalFlightLeg = findOptionalConnectingFlightLeg(flightPredicate, flightLegsForIata);
+
         if (optionalFlightLeg != null) {
             previousFlightLegs.add(optionalFlightLeg);
             findPreviousFlightLegs(optionalFlightLeg, flightsByArrivalAirportIata, previousFlightLegs);
         }
+
         return previousFlightLegs;
     }
 
@@ -217,10 +353,12 @@ public class ScheduledFlightConverter {
         List<Flight> flightLegsForIata = flightsByDepartureAirportIata.get(arrivalAirportIata);
         Predicate<Flight> flightPredicate = FlightPredicate.matchNextFlight(currentFlightLeg);
         Flight optionalFlightLeg = findOptionalConnectingFlightLeg(flightPredicate, flightLegsForIata);
+
         if (optionalFlightLeg != null) {
             nextFlightLegs.add(optionalFlightLeg);
             findNextFlightLegs(optionalFlightLeg, flightsByDepartureAirportIata, nextFlightLegs);
         }
+
         return nextFlightLegs;
     }
 
@@ -228,14 +366,12 @@ public class ScheduledFlightConverter {
         Optional<Flight> optionalStopoverFlight = flightLegs.stream()
                 .filter(flightPredicate)
                 .findFirst();
-        if (optionalStopoverFlight.isPresent()) {
-            return optionalStopoverFlight.get();
-        }
-        return null;
+        return optionalStopoverFlight.orElse(null);
     }
 
     public List<Triple<StopVisitType, String, OffsetTime>> extractStopoversFromFlights(List<Flight> stopoverFlights) {
         List<Triple<StopVisitType, String, OffsetTime>> stopoverTriples = new ArrayList<>();
+
         stopoverFlights.forEach(stopoverFlight -> {
             Triple<StopVisitType, String, OffsetTime> departureTriple = new ImmutableTriple<>(
                     StopVisitType.DEPARTURE, stopoverFlight.getDepartureStation(), stopoverFlight.getStd());
@@ -246,6 +382,7 @@ public class ScheduledFlightConverter {
             stopoverTriples.add(departureTriple);
             stopoverTriples.add(arrivalTriple);
         });
+
         if (stopoverTriples.isEmpty()) {
             return Collections.emptyList();
         } else {

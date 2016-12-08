@@ -31,16 +31,16 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
 
     public static final String HEADER_TIMETABLE_SMALL_AIRPORT_RANGE = "TimetableSmallAirportRange";
     public static final String HEADER_TIMETABLE_LARGE_AIRPORT_RANGE = "TimetableLargeAirportRange";
+
     static final String HEADER_TIMETABLE_STOP_VISIT_TYPE = "TimetableStopVisitType";
     static final String HEADER_LOWER_RANGE_ENDPOINT = "LowerRangeEndpoint";
     static final String HEADER_UPPER_RANGE_ENDPOINT = "UpperRangeEndpoint";
     static final String HEADER_STOPOVER_FLIGHT_ORIGINAL_BODY = "StopoverFlightOriginalBody";
 
-    static final String PROPERTY_DIRECT_FLIGHT_ORIGINAL_BODY = "DirectFlightOriginalBody";
-    static final String PROPERTY_SCHEDULED_FLIGHT_ORIGINAL_BODY = "ScheduledFlightOriginalBody";
-    static final String PROPERTY_STOPOVER_ORIGINAL_BODY = "StopoverOriginalBody";
+    private static final String PROPERTY_DIRECT_FLIGHT_ORIGINAL_BODY = "DirectFlightOriginalBody";
+    private static final String PROPERTY_SCHEDULED_FLIGHT_ORIGINAL_BODY = "ScheduledFlightOriginalBody";
 
-    private static final String NAMESPACE_PREFIX_REF = "namespacePrefixBean";
+    static final String PROPERTY_STOPOVER_ORIGINAL_BODY = "StopoverOriginalBody";
 
     @Override
     public void configure() throws Exception {
@@ -139,7 +139,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
 
         from("direct:fetchAirportFlightsByRangeAndStopVisitType")
                 .routeId("FetchFlightsByRangeAndStopVisitType")
-                .process(exchange -> {exchange.getIn().setBody(StopVisitType.values());})
+                .process(exchange -> exchange.getIn().setBody(StopVisitType.values()))
                 .split(body(), new ScheduledFlightListAggregationStrategy())
                     .setHeader(HEADER_TIMETABLE_STOP_VISIT_TYPE, body())
                     .setHeader(HEADER_EXTIME_URI_PARAMETERS, simpleF("airport=${header.%s}&direction=${body.code}&PeriodFrom=${header.%s}&PeriodTo=${header.%s}",
@@ -151,7 +151,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .end()
         ;
 
-        // @todo: fixe some useful wiretapping feature in split
+        // @todo: fix some useful wiretapping feature in split
         from("direct:splitJoinIncomingFlightMessages")
                 .routeId("FlightSplitterJoiner")
                 .streamCaching()
@@ -235,19 +235,15 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .log("Done compressing all files to zip archive : ${header.CamelFileName}")
                 .bean(AvinorTimetableUtils.class, "uploadBlobToStorage").id("UploadZipToBlobStore")
                 .process(exchange -> {
-                    Thread stop = new Thread() {
-                        @Override
-                        public void run() {
-                            try {
-                                exchange.getContext().stopRoute(exchange.getFromRouteId());
-                            } catch (Exception ignored) {
-                            }
+                    Thread stop = new Thread(() -> {
+                        try {
+                            exchange.getContext().stopRoute(exchange.getFromRouteId());
+                        } catch (Exception ignored) {
                         }
-                    };
+                    });
                     stop.start();
                 })
         ;
-
     }
 
     private class AirportIataProcessor implements Processor {
