@@ -35,6 +35,7 @@ public class ScheduledFlightToNetexConverter {
     public static final String VERSION_ONE = "1";
     private static final String NETEX_PROFILE_VERSION = "1.04:NO-NeTEx-networktimetable:1.0";
     private static final String AVINOR_AUTHORITY_ID = "AVI";
+    private static final String AVINOR_CODESPACE_NAMESPACE = "http://www.rutebanken.org/ns/avi";
     private static final String NSR_AUTHORITY_ID = "NSR";
 
     private static final String WORK_DAYS_DISPLAY_NAME = "Ukedager (mandag til fredag)";
@@ -674,7 +675,8 @@ public class ScheduledFlightToNetexConverter {
         return objectFactory().createCodespace()
                 .withId(avinorDataSet.getName().toLowerCase())
                 .withXmlns(AVINOR_AUTHORITY_ID)
-                .withXmlnsUrl(avinorDataSet.getUrl());
+                .withXmlnsUrl(AVINOR_CODESPACE_NAMESPACE);
+                //.withXmlnsUrl(avinorDataSet.getUrl());
     }
 
     // TODO move to factory class
