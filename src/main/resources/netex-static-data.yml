@@ -8,10 +8,10 @@ netex-data-sets:
   organisations:
     nsr:
       company-number:
-      name: Nasjonalt Stoppestedregister
-      legal-name: NASJONALT STOPPESTEDREGISTER
+      name: Nasjonal Stoppestedsregister
+      legal-name: NASJONAL STOPPESTEDSREGISTER
       phone:
-      url: http://www.nasjonaltstoppestedregister.rutebanken.no
+      url: http://www.rutebanken.org/ns/nsr
       details:
     avi:
       company-number: 985198292
