@@ -33,7 +33,7 @@ public class ScheduledFlightToNetexConverter {
     private static final Logger logger = LoggerFactory.getLogger(ScheduledFlightToNetexConverter.class);
 
     public static final String VERSION_ONE = "1";
-    private static final String MAIN_VERSION = "1.0";
+    private static final String NETEX_PROFILE_VERSION = "1.04:NO-NeTEx-networktimetable:1.0";
     private static final String AVINOR_AUTHORITY_ID = "AVI";
     private static final String NSR_AUTHORITY_ID = "NSR";
 
@@ -120,7 +120,7 @@ public class ScheduledFlightToNetexConverter {
         dataObjects.getCompositeFrameOrCommonFrame().add(compositeFrame);
 
         return objectFactory().createPublicationDeliveryStructure()
-                .withVersion(MAIN_VERSION)
+                .withVersion(NETEX_PROFILE_VERSION)
                 .withPublicationTimestamp(publicationTimestamp)
                 .withParticipantRef(avinorDataSet.getName())
                 .withDescription(createMultilingualString(String.format("Flight %s : %s", flightId, routePath)))
