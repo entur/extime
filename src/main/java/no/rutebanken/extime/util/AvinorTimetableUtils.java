@@ -75,33 +75,19 @@ public class AvinorTimetableUtils {
 
     public void uploadBlobToStorage(@Simple(value = "${properties:blobstore.gcs.bucket.name}") String bucketName,
                                     @Simple(value = "${properties:blobstore.gcs.blob.path}") String blobPath,
-                                    @Simple(value = "${properties:netex.compressed.output.path}") String compressedOutputPath,
                                     @Header(Exchange.FILE_NAME) String compressedFileName,
                                     @Header(Exchange.FILE_NAME_PRODUCED) String compressedFilePath) throws Exception {
 
-/*
-        Path filePath = Paths.get(compressedOutputPath, compressedFileName);
-        BlobStoreHelper.uploadBlob(storage, bucketName, blobPath, filePath, true);
-        logger.debug("Stored blob with name '{}' and size '{}' in bucket '{}'", filePath.getFileName().toString(), Files.size(filePath), bucketName);
-*/
+        Path filePath = Paths.get(compressedFilePath);
+        logger.info("Placing file '{}' from provider 'avinor' in blob store.", filePath);
 
         String blobIdName = blobPath + compressedFileName;
-        Path filePath = Paths.get(compressedFilePath);
+        logger.info("Created blob : {}", blobIdName);
 
         try (InputStream inputStream = Files.newInputStream(filePath)) {
             BlobStoreHelper.uploadBlob(storage, bucketName, blobIdName, inputStream, true);
-            //BlobStoreHelper.uploadBlob(storage, bucketName, blobPath, filePath, true);
-            logger.debug("Stored blob with name '{}' and size '{}' in bucket '{}'", filePath.getFileName().toString(), Files.size(filePath), bucketName);
+            logger.info("Stored blob with name '{}' and size '{}' in bucket '{}'", filePath.getFileName().toString(), Files.size(filePath), bucketName);
         }
-/*
-        try {
-            Path path2 = FileSystems.getDefault().getPath(".", "");
-            InputStream in2 = Files.newInputStream(path2);
-        }
-        catch ( IOException ioe ) {
-            ioe.printStackTrace();
-        }
-*/
     }
 
 

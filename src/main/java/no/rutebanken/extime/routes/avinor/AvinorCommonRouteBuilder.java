@@ -55,6 +55,7 @@ public class AvinorCommonRouteBuilder extends RouteBuilder {
                 .setHeader(CacheConstants.CACHE_OPERATION, constant(CacheConstants.CACHE_OPERATION_CHECK))
                 .setHeader(CacheConstants.CACHE_KEY, body())
                 .to("cache://avinorResourceCache").id("ResourceCacheCheckProcessor")
+
                 .choice()
                     .when(header(CacheConstants.CACHE_ELEMENT_WAS_FOUND).isNull())
                         .setHeader(HEADER_EXTIME_RESOURCE_CODE, body())
@@ -74,7 +75,8 @@ public class AvinorCommonRouteBuilder extends RouteBuilder {
                 .log(LoggingLevel.DEBUG, this.getClass().getName(), String.format("HTTP QUERY HEADER: ${header.%s}", Exchange.HTTP_QUERY))
                 .setBody(constant(null))
                 .throttle(1).timePeriodMillis(1000)
-                .toD("${header.ExtimeHttpUri}").id("FetchXmlFromHttpFeedProcessor")
+                    .toD("${header.ExtimeHttpUri}").id("FetchXmlFromHttpFeedProcessor")
+                .end()
                 .convertBodyTo(StreamSource.class, DEFAULT_HTTP_CHARSET)
         ;
 

@@ -39,9 +39,18 @@ netex.compressed.file.prefix=avinor-netex_
 
 # Google Cloud Storage blobstore settings
 blobstore.gcs.bucket.name=marduk-exchange
-blobstore.gcs.blob.path=inbound/avinor/
-blobstore.gcs.credential.path=/etc/avinor/avinor-bs-creds.json
+blobstore.gcs.blob.path=inbound/received/avinor/
+blobstore.gcs.credential.path=/etc/exchange/marduk-exchange-blobstore-credentials.json
 blobstore.gcs.project.id=carbon-1287
+
+# ActiveMQ autoconfigure settings
+spring.activemq.broker-url=tcp://activemq:61616?jms.useAsyncSend=true&wireFormat.maxFrameSize=524288000&wireFormat.maxInactivityDuration=120000
+spring.activemq.pooled=true
+spring.activemq.user=admin
+spring.activemq.password=admin
+
+# Marduk notification queue name
+queue.upload.destination.name=MardukInboundQueue
 
 # Logging settings
 logging.level.no.rutebanken=DEBUG

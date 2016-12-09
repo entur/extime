@@ -142,6 +142,12 @@
             <artifactId>camel-zipfile</artifactId>
             <version>${camel.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>activemq-camel</artifactId>
+            <version>5.12.3</version>
+        </dependency>
+
 
         <!-- Spring -->
         <dependency>

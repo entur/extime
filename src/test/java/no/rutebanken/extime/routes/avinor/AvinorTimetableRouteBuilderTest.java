@@ -532,6 +532,7 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
                     put("avinor.airline.feed.endpoint", "mock:airlineFeedEndpoint");
                     put("netex.generated.output.path", "target/netex-mock");
                     put("netex.compressed.output.path", "target/marduk-mock");
+                    put("queue.upload.destination.name", "MockMardukQueue");
                 }};
                 return testProperties.get(key);
             }
