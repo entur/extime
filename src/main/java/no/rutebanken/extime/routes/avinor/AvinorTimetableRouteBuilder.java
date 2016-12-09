@@ -29,7 +29,7 @@ import static org.apache.camel.component.stax.StAXBuilder.stax;
 @Component
 public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRouteBuilder {
 
-    public static final Long PROVIDER_ID = 21L;
+    private static final Long PROVIDER_ID = 21L;
 
     public static final String HEADER_TIMETABLE_SMALL_AIRPORT_RANGE = "TimetableSmallAirportRange";
     public static final String HEADER_TIMETABLE_LARGE_AIRPORT_RANGE = "TimetableLargeAirportRange";
