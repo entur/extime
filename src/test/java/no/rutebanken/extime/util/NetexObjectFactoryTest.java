@@ -6,7 +6,7 @@ import org.rutebanken.netex.model.*;
 
 import java.math.BigInteger;
 
-import static no.rutebanken.extime.util.NetexObjectFactory.DEFAULT_VERSION_NUMBER;
+import static no.rutebanken.extime.Constants.VERSION_ONE;
 
 public class NetexObjectFactoryTest {
 
@@ -102,7 +102,7 @@ public class NetexObjectFactoryTest {
         Assertions.assertThat(operatorRefStructure.getVersion())
                 .isNotNull()
                 .isNotEmpty()
-                .isEqualTo(DEFAULT_VERSION_NUMBER);
+                .isEqualTo(VERSION_ONE);
 
         Assertions.assertThat(operatorRefStructure.getRef())
                 .isNotNull()
@@ -121,7 +121,7 @@ public class NetexObjectFactoryTest {
         Assertions.assertThat(routeRefStructure.getVersion())
                 .isNotNull()
                 .isNotEmpty()
-                .isEqualTo(DEFAULT_VERSION_NUMBER);
+                .isEqualTo(VERSION_ONE);
 
         Assertions.assertThat(routeRefStructure.getRef())
                 .isNotNull()
@@ -140,7 +140,7 @@ public class NetexObjectFactoryTest {
         Assertions.assertThat(stopPlaceRefStructure.getVersion())
                 .isNotNull()
                 .isNotEmpty()
-                .isEqualTo(DEFAULT_VERSION_NUMBER);
+                .isEqualTo(VERSION_ONE);
 
         Assertions.assertThat(stopPlaceRefStructure.getRef())
                 .isNotNull()
@@ -160,7 +160,7 @@ public class NetexObjectFactoryTest {
         Assertions.assertThat(scheduledStopPointRefStructure.getVersion())
                 .isNotNull()
                 .isNotEmpty()
-                .isEqualTo(DEFAULT_VERSION_NUMBER);
+                .isEqualTo(VERSION_ONE);
 
         Assertions.assertThat(scheduledStopPointRefStructure.getRef())
                 .isNotNull()
@@ -180,7 +180,7 @@ public class NetexObjectFactoryTest {
         Assertions.assertThat(stopPointInJourneyPatternRefStructure.getVersion())
                 .isNotNull()
                 .isNotEmpty()
-                .isEqualTo(DEFAULT_VERSION_NUMBER);
+                .isEqualTo(VERSION_ONE);
 
         Assertions.assertThat(stopPointInJourneyPatternRefStructure.getRef())
                 .isNotNull()
@@ -199,7 +199,7 @@ public class NetexObjectFactoryTest {
         Assertions.assertThat(pointRefStructure.getVersion())
                 .isNotNull()
                 .isNotEmpty()
-                .isEqualTo(DEFAULT_VERSION_NUMBER);
+                .isEqualTo(VERSION_ONE);
 
         Assertions.assertThat(pointRefStructure.getRef())
                 .isNotNull()
@@ -218,7 +218,7 @@ public class NetexObjectFactoryTest {
         Assertions.assertThat(routePointRefStructure.getVersion())
                 .isNotNull()
                 .isNotEmpty()
-                .isEqualTo(DEFAULT_VERSION_NUMBER);
+                .isEqualTo(VERSION_ONE);
 
         Assertions.assertThat(routePointRefStructure.getRef())
                 .isNotNull()
@@ -237,7 +237,7 @@ public class NetexObjectFactoryTest {
         Assertions.assertThat(dayTypeRefStructure.getVersion())
                 .isNotNull()
                 .isNotEmpty()
-                .isEqualTo(DEFAULT_VERSION_NUMBER);
+                .isEqualTo(VERSION_ONE);
 
         Assertions.assertThat(dayTypeRefStructure.getRef())
                 .isNotNull()

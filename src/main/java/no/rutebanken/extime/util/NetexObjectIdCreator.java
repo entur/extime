@@ -95,6 +95,10 @@ public class NetexObjectIdCreator {
         return NetexObjectIdCreator.composeNetexObjectId(objectIdPrefix, NetexObjectIdTypes.SERVICE_JOURNEY_KEY, objectId);
     }
 
+    public static String createPassengerStopAssignmentId(String objectIdPrefix, String objectId) {
+        return NetexObjectIdCreator.composeNetexObjectId(objectIdPrefix, NetexObjectIdTypes.PASSENGER_STOP_ASSIGNMENT_KEY, objectId);
+    }
+
     public static String composeNetexObjectId(String objectIdPrefix, String objectIdType, String objectId) {
         return Joiner.on(":").join(
                 objectIdPrefix,

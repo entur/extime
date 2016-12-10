@@ -27,16 +27,12 @@ import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static no.rutebanken.extime.Constants.*;
+
 @Component(value = "scheduledFlightToNetexConverter")
 public class ScheduledFlightToNetexConverter {
 
     private static final Logger logger = LoggerFactory.getLogger(ScheduledFlightToNetexConverter.class);
-
-    public static final String VERSION_ONE = "1";
-    private static final String NETEX_PROFILE_VERSION = "1.04:NO-NeTEx-networktimetable:1.0";
-    private static final String AVINOR_AUTHORITY_ID = "AVI";
-    private static final String AVINOR_CODESPACE_NAMESPACE = "http://www.rutebanken.org/ns/avi";
-    private static final String NSR_AUTHORITY_ID = "NSR";
 
     private static final String WORK_DAYS_DISPLAY_NAME = "Ukedager (mandag til fredag)";
     private static final String SATURDAY_DISPLAY_NAME = "Helgdag (lørdag)";
@@ -45,11 +41,6 @@ public class ScheduledFlightToNetexConverter {
     private static final String WORK_DAYS_LABEL = "weekday";
     private static final String SATURDAY_LABEL = "saturday";
     private static final String SUNDAY_LABEL = "sunday";
-
-    private static final String DEFAULT_ZONE_ID = "UTC";
-    private static final String DEFAULT_LANGUAGE = "no";
-    private static final int DEFAULT_START_INCLUSIVE = 1111111;
-    private static final int DEFAULT_END_EXCLUSIVE = 8888888;
 
     private static final HashMap<DayOfWeek, DayOfWeekEnumeration> dayOfWeekMap = new HashMap<>();
 
@@ -69,6 +60,7 @@ public class ScheduledFlightToNetexConverter {
     @Autowired
     private NetexStaticDataSet netexStaticDataSet;
 
+    // TODO move to autoconfiguration class
     @Bean
     public ObjectFactory objectFactory() {
         return new ObjectFactory();
@@ -675,7 +667,7 @@ public class ScheduledFlightToNetexConverter {
         return objectFactory().createCodespace()
                 .withId(avinorDataSet.getName().toLowerCase())
                 .withXmlns(AVINOR_AUTHORITY_ID)
-                .withXmlnsUrl(AVINOR_CODESPACE_NAMESPACE);
+                .withXmlnsUrl(AVINOR_XMLNS_URL);
                 //.withXmlnsUrl(avinorDataSet.getUrl());
     }
 
