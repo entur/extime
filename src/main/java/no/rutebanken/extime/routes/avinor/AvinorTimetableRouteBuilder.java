@@ -29,10 +29,9 @@ import static org.apache.camel.component.stax.StAXBuilder.stax;
 @Component
 public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRouteBuilder {
 
-    private static final Long PROVIDER_ID = 21L;
-
     public static final String HEADER_TIMETABLE_SMALL_AIRPORT_RANGE = "TimetableSmallAirportRange";
     public static final String HEADER_TIMETABLE_LARGE_AIRPORT_RANGE = "TimetableLargeAirportRange";
+    public static final String HEADER_MESSAGE_CORRELATION_ID = "RutebankenCorrelationId";
 
     static final String HEADER_TIMETABLE_STOP_VISIT_TYPE = "TimetableStopVisitType";
     static final String HEADER_LOWER_RANGE_ENDPOINT = "LowerRangeEndpoint";
@@ -40,7 +39,6 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
     static final String HEADER_STOPOVER_FLIGHT_ORIGINAL_BODY = "StopoverFlightOriginalBody";
 
     private static final String HEADER_MESSAGE_PROVIDER_ID = "RutebankenProviderId";
-    private static final String HEADER_MESSAGE_CORRELATION_ID = "RutebankenCorrelationId";
     private static final String HEADER_MESSAGE_FILE_HANDLE = "RutebankenFileHandle";
     private static final String HEADER_MESSAGE_FILE_NAME = "RutebankenFileName";
 
@@ -258,13 +256,13 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .to("file:{{netex.compressed.output.path}}")
                 .log(LoggingLevel.INFO, this.getClass().getName(), "Done compressing all files to zip archive : ${header.CamelFileName}")
 
+                .process(exchange -> exchange.getIn().setHeader(HEADER_MESSAGE_CORRELATION_ID, UUID.randomUUID().toString()))
                 .bean(AvinorTimetableUtils.class, "uploadBlobToStorage").id("UploadZipToBlobStore")
                 .log(LoggingLevel.INFO, this.getClass().getName(), "Done storage upload of file : ${header.CamelFileName}")
 
-                .setHeader(HEADER_MESSAGE_PROVIDER_ID, constant(PROVIDER_ID))
+                .setHeader(HEADER_MESSAGE_PROVIDER_ID, simple("${properties:blobstore.gcs.provider.id}", Long.class))
                 .setHeader(HEADER_MESSAGE_FILE_HANDLE, simple("${properties:blobstore.gcs.blob.path}${header.CamelFileName}"))
                 .setHeader(HEADER_MESSAGE_FILE_NAME, simple("${header.CamelFileName}"))
-                .process(exchange -> exchange.getIn().setHeader(HEADER_MESSAGE_CORRELATION_ID, UUID.randomUUID().toString()))
                 .setBody(constant(null))
 
                 .log(LoggingLevel.INFO, this.getClass().getName(), "Notifying marduk queue about NeTEx export")

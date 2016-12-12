@@ -9,12 +9,12 @@ import no.rutebanken.extime.model.ServiceType;
 import no.rutebanken.extime.model.StopVisitType;
 import org.apache.camel.Exchange;
 import org.apache.camel.Header;
-import org.apache.camel.language.Simple;
 import org.apache.commons.lang3.EnumUtils;
 import org.rutebanken.helper.gcp.BlobStoreHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -28,13 +28,28 @@ import java.util.Arrays;
 import java.util.List;
 
 import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.HEADER_EXTIME_HTTP_URI;
+import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEADER_MESSAGE_CORRELATION_ID;
 
+@Component
 public class AvinorTimetableUtils {
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    @Autowired
-    private Storage storage;
+    @Value("${blobstore.gcs.credential.path}")
+    private String credentialPath;
+
+    @Value("${blobstore.gcs.bucket.name}")
+    private String bucketName;
+
+    @Value("${blobstore.gcs.blob.path}")
+    private String blobPath;
+
+    @Value("${blobstore.gcs.project.id}")
+    private String projectId;
+
+    @Value("${blobstore.gcs.provider.id}")
+    private String providerId;
+
 
     public String useHttp4Client(@Header(HEADER_EXTIME_HTTP_URI) String httpUri) {
         return httpUri.replace("http", "http4");
@@ -73,23 +88,28 @@ public class AvinorTimetableUtils {
         return filteredFlights;
     }
 
-    public void uploadBlobToStorage(@Simple(value = "${properties:blobstore.gcs.bucket.name}") String bucketName,
-                                    @Simple(value = "${properties:blobstore.gcs.blob.path}") String blobPath,
-                                    @Header(Exchange.FILE_NAME) String compressedFileName,
-                                    @Header(Exchange.FILE_NAME_PRODUCED) String compressedFilePath) throws Exception {
+    public void uploadBlobToStorage(@Header(Exchange.FILE_NAME) String compressedFileName,
+                                    @Header(Exchange.FILE_NAME_PRODUCED) String compressedFilePath,
+                                    @Header(HEADER_MESSAGE_CORRELATION_ID) String correlationId) throws Exception {
+        try {
+            Path filePath = Paths.get(compressedFilePath);
+            logger.info("Placing file '{}' from provider with id '{}' and correlation id '{}' in blob store.",
+                    compressedFileName, providerId, correlationId);
 
-        Path filePath = Paths.get(compressedFilePath);
-        logger.info("Placing file '{}' from provider 'avinor' in blob store.", filePath);
+            String blobIdName = blobPath + compressedFileName;
+            logger.info("Created blob : {}", blobIdName);
 
-        String blobIdName = blobPath + compressedFileName;
-        logger.info("Created blob : {}", blobIdName);
+            logger.info("Created blob : {}", blobIdName);
+            Storage storage = BlobStoreHelper.getStorage(credentialPath, projectId);
 
-        try (InputStream inputStream = Files.newInputStream(filePath)) {
-            BlobStoreHelper.uploadBlob(storage, bucketName, blobIdName, inputStream, true);
-            logger.info("Stored blob with name '{}' and size '{}' in bucket '{}'", filePath.getFileName().toString(), Files.size(filePath), bucketName);
+            try (InputStream inputStream = Files.newInputStream(filePath)) {
+                BlobStoreHelper.uploadBlob(storage, bucketName, blobIdName, inputStream, false);
+                logger.info("Stored blob with name '{}' and size '{}' in bucket '{}'", filePath.getFileName().toString(), Files.size(filePath), bucketName);
+            }
+        } catch (RuntimeException e) {
+            logger.warn("Failed to put file '{}' in blobstore", compressedFileName, e);
         }
     }
-
 
     public static boolean isValidFlight(StopVisitType stopVisitType, Flight newFlight) {
         if (!isScheduledPassengerFlight(newFlight)) {

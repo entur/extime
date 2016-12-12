@@ -231,21 +231,6 @@
             <artifactId>hibernate-validator</artifactId>
             <version>5.2.4.Final</version>
         </dependency>
-        <dependency>
-            <groupId>com.google.cloud</groupId>
-            <artifactId>google-cloud-storage</artifactId>
-            <version>0.3.0</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>javax.servlet</groupId>
-                    <artifactId>servlet-api</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>io.netty</groupId>
-                    <artifactId>netty-codec-http2</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
 
         <!-- transitive dependency of camel-cache, remove when able authenticate with nexus again -->
         <dependency>
