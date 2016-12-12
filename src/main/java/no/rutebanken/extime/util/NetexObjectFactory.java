@@ -27,7 +27,7 @@ public class NetexObjectFactory {
     public JAXBElement<PublicationDeliveryStructure> createPublicationDeliveryStructureElement(
             OffsetDateTime publicationTimestamp, JAXBElement<CompositeFrame> compositeFrame, String description) {
 
-        ObjectFactory objectFactory = new ObjectFactory();
+        ObjectFactory objectFactory = new ObjectFactory(); // TODO remove and use injected factory instead
 
         NetexStaticDataSet.OrganisationDataSet avinorDataSet = netexStaticDataSet.getOrganisations().get(AVINOR_AUTHORITY_ID.toLowerCase());
 
@@ -47,7 +47,7 @@ public class NetexObjectFactory {
     public JAXBElement<CompositeFrame> createCompositeFrameElement(OffsetDateTime publicationTimestamp,
             List<Codespace> codespaces, Frames_RelStructure frames) {
 
-        ObjectFactory objectFactory = new ObjectFactory();
+        ObjectFactory objectFactory = new ObjectFactory(); // TODO remove and use injected factory instead
 
         Codespaces_RelStructure codespacesStruct = objectFactory.createCodespaces_RelStructure()
                 .withCodespaceRefOrCodespace(codespaces);
@@ -76,7 +76,7 @@ public class NetexObjectFactory {
     public JAXBElement<ResourceFrame> createResourceFrameElement(Collection<JAXBElement<Authority>> authorityElements,
             Collection<JAXBElement<Operator>> operatorElements) {
 
-        ObjectFactory objectFactory = new ObjectFactory();
+        ObjectFactory objectFactory = new ObjectFactory(); // TODO remove and use injected factory instead
 
         OrganisationsInFrame_RelStructure organisationsInFrame = objectFactory.createOrganisationsInFrame_RelStructure();
         organisationsInFrame.getOrganisation_().addAll(authorityElements);
@@ -91,6 +91,59 @@ public class NetexObjectFactory {
                 .withOrganisations(organisationsInFrame);
 
         return objectFactory.createResourceFrame(resourceFrame);
+    }
+
+    public JAXBElement<SiteFrame> createSiteFrameElement(List<StopPlace> stopPlaces) {
+
+        ObjectFactory objectFactory = new ObjectFactory(); // TODO remove and use injected factory instead
+
+        StopPlacesInFrame_RelStructure stopPlacesInFrameRelStructure = objectFactory.createStopPlacesInFrame_RelStructure()
+                .withStopPlace(stopPlaces);
+
+        String siteFrameId = NetexObjectIdCreator.createSiteFrameId(AVINOR_AUTHORITY_ID,
+                String.valueOf(NetexObjectIdCreator.generateRandomId(DEFAULT_START_INCLUSIVE, DEFAULT_END_EXCLUSIVE)));
+
+        SiteFrame siteFrame = objectFactory.createSiteFrame()
+                .withVersion(VERSION_ONE)
+                .withId(siteFrameId)
+                .withStopPlaces(stopPlacesInFrameRelStructure);
+
+        return objectFactory.createSiteFrame(siteFrame);
+    }
+
+    public JAXBElement<ServiceFrame> createCommonServiceFrameElement(List<ScheduledStopPoint> scheduledStopPoints,
+            List<JAXBElement<PassengerStopAssignment>> stopAssignmentElements) {
+
+        ObjectFactory objectFactory = new ObjectFactory(); // TODO remove and use injected factory instead
+
+        ScheduledStopPointsInFrame_RelStructure scheduledStopPointsInFrame = objectFactory.createScheduledStopPointsInFrame_RelStructure()
+                .withScheduledStopPoint(scheduledStopPoints);
+
+        StopAssignmentsInFrame_RelStructure stopAssignmentsInFrame = objectFactory.createStopAssignmentsInFrame_RelStructure();
+        stopAssignmentElements.forEach(stopAssignmentElement -> stopAssignmentsInFrame.getStopAssignment().add(stopAssignmentElement));
+
+        String serviceFrameId = NetexObjectIdCreator.createServiceFrameId(AVINOR_AUTHORITY_ID,
+                String.valueOf(NetexObjectIdCreator.generateRandomId(DEFAULT_START_INCLUSIVE, DEFAULT_END_EXCLUSIVE)));
+
+        ServiceFrame serviceFrame = objectFactory.createServiceFrame()
+                .withVersion(VERSION_ONE)
+                .withId(serviceFrameId)
+                .withScheduledStopPoints(scheduledStopPointsInFrame)
+                .withStopAssignments(stopAssignmentsInFrame);
+
+        return objectFactory.createServiceFrame(serviceFrame);
+    }
+
+    public Network createNetwork(OffsetDateTime publicationTimestamp, String airlineIata, String airlineName) {
+        ObjectFactory objectFactory = new ObjectFactory(); // TODO remove and use injected factory instead
+
+        String networkId = NetexObjectIdCreator.createNetworkId(AVINOR_AUTHORITY_ID, airlineIata);
+
+        return objectFactory.createNetwork()
+                .withVersion(VERSION_ONE)
+                .withChanged(publicationTimestamp)
+                .withId(networkId)
+                .withName(createMultilingualString(airlineName));
     }
 
     public JAXBElement<Authority> createNsrAuthorityElement() {
@@ -130,7 +183,7 @@ public class NetexObjectFactory {
     }
 
     public JAXBElement<Authority> createAuthorityElement(String authorityId, List<JAXBElement<?>> authorityRest) {
-        ObjectFactory objectFactory = new ObjectFactory();
+        ObjectFactory objectFactory = new ObjectFactory(); // TODO remove and use injected factory instead
 
         Authority authority = objectFactory.createAuthority()
                 .withVersion(VERSION_ONE)
@@ -158,7 +211,7 @@ public class NetexObjectFactory {
     }
 
     public JAXBElement<Operator> createOperatorElement(String operatorId, List<JAXBElement<?>> operatorRest) {
-        ObjectFactory objectFactory = new ObjectFactory();
+        ObjectFactory objectFactory = new ObjectFactory(); // TODO remove and use injected factory instead
 
         Operator operator = objectFactory.createOperator()
                 .withVersion(VERSION_ONE)
@@ -193,7 +246,7 @@ public class NetexObjectFactory {
     }
 
     public JAXBElement<ContactStructure> createContactStructure(String phone, String url) {
-        ObjectFactory objectFactory = new ObjectFactory();
+        ObjectFactory objectFactory = new ObjectFactory(); // TODO remove and use injected factory instead
 
         ContactStructure contactStructure = objectFactory.createContactStructure()
                 .withPhone(phone)
@@ -203,7 +256,7 @@ public class NetexObjectFactory {
     }
 
     public Codespace createCodespace(String id, String xmlnsUrl) {
-        ObjectFactory objectFactory = new ObjectFactory();
+        ObjectFactory objectFactory = new ObjectFactory(); // TODO remove and use injected factory instead
 
         return objectFactory.createCodespace()
                 .withId(id.toLowerCase())

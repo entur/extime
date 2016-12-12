@@ -4,6 +4,7 @@ import autovalue.shaded.com.google.common.common.collect.Lists;
 import no.avinor.flydata.xjc.model.scheduled.Flight;
 import no.rutebanken.extime.config.NetexStaticDataSet;
 import no.rutebanken.extime.model.AirlineDesignator;
+import no.rutebanken.extime.model.AirportIATA;
 import no.rutebanken.extime.util.NetexObjectFactory;
 import org.rutebanken.netex.model.*;
 import org.slf4j.Logger;
@@ -63,10 +64,40 @@ public class CommonDataToNetexConverter {
 
         JAXBElement<ResourceFrame> resourceFrameElement = netexObjectFactory.createResourceFrameElement(authorityElements, operatorElements);
 
-        // service frame
+        List<AirportIATA> airportIATAS = Lists.newArrayList(AirportIATA.values());
+        airportIATAS.sort(Comparator.comparing(Enum::name));
+
+        // site frame
+
+        List<StopPlace> stopPlaces = Lists.newArrayList();
+
+        for (AirportIATA airportIATA : airportIATAS) {
+            StopPlace stopPlace = netexCommonDataSet.getStopPlaceMap().get(airportIATA.name());
+            stopPlaces.add(stopPlace);
+        }
+
+        JAXBElement<SiteFrame> siteFrameElement = netexObjectFactory.createSiteFrameElement(stopPlaces);
+
+        // service frame element
+
+        List<ScheduledStopPoint> stopPoints = Lists.newArrayList();
+
+        for (AirportIATA airportIATA : airportIATAS) {
+            ScheduledStopPoint stopPoint = netexCommonDataSet.getStopPointMap().get(airportIATA.name());
+            stopPoints.add(stopPoint);
+        }
+        stopPoints.sort(Comparator.comparing(ScheduledStopPoint::getId));
+
+        List<PassengerStopAssignment> stopAssignments = Lists.newArrayList();
+
+
+        // TODO: come on, iterate the enum only once!!!
+
+        //netexObjectFactory.createCommonServiceFrameElement()
 
         Frames_RelStructure framesStruct = objectFactory.createFrames_RelStructure();
         framesStruct.getCommonFrame().add(resourceFrameElement);
+        framesStruct.getCommonFrame().add(siteFrameElement);
 
         JAXBElement<CompositeFrame> compositeFrameElement = netexObjectFactory
                 .createCompositeFrameElement(publicationTimestamp, codespaces, framesStruct);

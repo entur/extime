@@ -80,8 +80,11 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                     .log(LoggingLevel.DEBUG, this.getClass().getName(), "Flights fetched for ${header.ExtimeResourceCode}")
                 .end()
 
-                // alternative run, with static test data from file
+                // 1st alternative run, with static test data from file
                 //.bean(AvinorTimetableUtils.class, "generateStaticFlights") // TODO: remove when going beta
+
+                // 2nd alternative run, with live test data from feed dump
+                //.bean(AvinorTimetableUtils.class, "generateFlightsFromFeedDump") // TODO: remove when going beta
 
                 .log(LoggingLevel.INFO, this.getClass().getName(), "Converting to scheduled flights")
                 .bean(ScheduledFlightConverter.class, "convertToScheduledFlights").id("ConvertToScheduledFlightsBeanProcessor")

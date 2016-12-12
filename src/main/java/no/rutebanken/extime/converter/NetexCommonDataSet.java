@@ -20,6 +20,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static no.rutebanken.extime.Constants.*;
 
@@ -115,7 +116,7 @@ public class NetexCommonDataSet {
         int index = 1;
         for (AirportIATA airportIATA : airportIATAS) {
             ScheduledStopPoint scheduledStopPoint = stopPointMap.get(airportIATA.name());
-            ScheduledStopPointRefStructure scheduledStopPointRefStruc =
+            ScheduledStopPointRefStructure scheduledStopPointRefStruct =
                     NetexObjectFactory.createScheduledStopPointRefStructure(scheduledStopPoint.getId());
 
             StopPlace stopPlace = stopPlaceMap.get(airportIATA.name());
@@ -129,7 +130,7 @@ public class NetexCommonDataSet {
                     .withVersion(VERSION_ONE)
                     .withOrder(new BigInteger(Integer.toString(index)))
                     .withId(passengerStopAssignmentId)
-                    .withScheduledStopPointRef(scheduledStopPointRefStruc)
+                    .withScheduledStopPointRef(scheduledStopPointRefStruct)
                     .withStopPlaceRef(stopPlaceRefStruct);
             stopAssignmentMap.put(airportIATA.name(), stopAssignment);
             index++;
