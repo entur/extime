@@ -693,60 +693,46 @@ public class ScheduledFlightToNetexConverter {
     public Authority createAuthority() {
         OrganisationDataSet avinorDataSet = netexStaticDataSet.getOrganisations().get(AVINOR_AUTHORITY_ID.toLowerCase());
 
-        List<JAXBElement<?>> organisationRest = createOrganisationRest(
-                avinorDataSet.getCompanyNumber(),
-                avinorDataSet.getName(),
-                avinorDataSet.getLegalName(),
-                avinorDataSet.getPhone(),
-                avinorDataSet.getUrl(),
-                OrganisationTypeEnumeration.AUTHORITY
-        );
-
         String authorityId = NetexObjectIdCreator.createAuthorityId(AVINOR_AUTHORITY_ID, avinorDataSet.getName());
 
         return objectFactory().createAuthority()
                 .withVersion(VERSION_ONE)
                 .withId(authorityId)
-                .withRest(organisationRest);
+                .withCompanyNumber(avinorDataSet.getCompanyNumber())
+                .withName(new MultilingualString().withValue(avinorDataSet.getName()))
+                .withLegalName(new MultilingualString().withValue(avinorDataSet.getLegalName()))
+                .withContactDetails(new ContactStructure().withPhone(avinorDataSet.getPhone()).withUrl(avinorDataSet.getUrl()))
+                .withOrganisationType(OrganisationTypeEnumeration.AUTHORITY);
     }
 
     // TODO move to factory class
     public Operator createKnownOperator(String airlineIata, OrganisationDataSet organisationDataSet) {
-        List<JAXBElement<?>> operatorRest = createOrganisationRest(
-                organisationDataSet.getCompanyNumber(),
-                organisationDataSet.getName(),
-                organisationDataSet.getLegalName(),
-                organisationDataSet.getPhone(),
-                organisationDataSet.getUrl(),
-                OrganisationTypeEnumeration.OPERATOR
-        );
-
         String operatorId = NetexObjectIdCreator.createOperatorId(AVINOR_AUTHORITY_ID, airlineIata);
 
         return objectFactory().createOperator()
                 .withVersion(VERSION_ONE)
                 .withId(operatorId)
-                .withRest(operatorRest);
+                .withCompanyNumber(organisationDataSet.getCompanyNumber())
+                .withName(new MultilingualString().withValue(organisationDataSet.getName()))
+                .withLegalName(new MultilingualString().withValue(organisationDataSet.getLegalName()))
+                .withContactDetails(new ContactStructure().withPhone(organisationDataSet.getPhone()).withUrl(organisationDataSet.getUrl()))
+                .withCustomerServiceContactDetails(new ContactStructure().withPhone(organisationDataSet.getPhone()).withUrl(organisationDataSet.getUrl()))
+                .withOrganisationType(OrganisationTypeEnumeration.OPERATOR);
     }
 
     private Operator createUnknowOperator(String airlineIata) {
         //logUnknownOperator(airlineIata);
-
-        List<JAXBElement<?>> dummyOperatorRest = createOrganisationRest(
-                "999999999",
-                airlineIata,
-                airlineIata,
-                "0047 999 99 999",
-                String.format("http://%s.no/", airlineIata),
-                OrganisationTypeEnumeration.OPERATOR
-        );
-
         String operatorId = NetexObjectIdCreator.createOperatorId(AVINOR_AUTHORITY_ID, airlineIata);
 
         return objectFactory().createOperator()
                 .withVersion(VERSION_ONE)
                 .withId(operatorId)
-                .withRest(dummyOperatorRest);
+                .withCompanyNumber("999999999")
+                .withName(new MultilingualString().withValue(airlineIata))
+                .withLegalName(new MultilingualString().withValue(airlineIata))
+                .withContactDetails(new ContactStructure().withPhone("0047 99999999").withUrl(String.format("http://%s.no/", airlineIata)))
+                .withContactDetails(new ContactStructure().withPhone("0047 99999999").withUrl(String.format("http://%s.no/", airlineIata)))
+                .withOrganisationType(OrganisationTypeEnumeration.OPERATOR);
     }
 
     public void logUnknownOperator(String airlineIata) {
@@ -768,29 +754,6 @@ public class ScheduledFlightToNetexConverter {
         }
     }
 
-    // TODO move to factory class
-    public List<JAXBElement<?>> createOrganisationRest(String companyNumber, String name, String legalName,
-                                                       String phone, String url, OrganisationTypeEnumeration organisationType) {
-        JAXBElement<String> companyNumberStructure = objectFactory()
-                .createOrganisation_VersionStructureCompanyNumber(companyNumber);
-        JAXBElement<MultilingualString> nameStructure = objectFactory()
-                .createOrganisation_VersionStructureName(createMultilingualString(name));
-        JAXBElement<MultilingualString> legalNameStructure = objectFactory()
-                .createOrganisation_VersionStructureLegalName(createMultilingualString(legalName));
-        JAXBElement<ContactStructure> contactStructure = createContactStructure(phone, url);
-        JAXBElement<List<OrganisationTypeEnumeration>> organisationTypes = objectFactory()
-                .createOrganisation_VersionStructureOrganisationType(Collections.singletonList(organisationType));
-        return Lists.newArrayList(companyNumberStructure, nameStructure, legalNameStructure, contactStructure, organisationTypes);
-    }
-
-    // TODO move to factory class
-    public JAXBElement<ContactStructure> createContactStructure(String phone, String url) {
-        ContactStructure contactStructure = objectFactory().createContactStructure()
-                .withPhone(phone)
-                .withUrl(url);
-
-        return objectFactory().createOrganisation_VersionStructureContactDetails(contactStructure);
-    }
 
     private void cleanStopPointsFromTempValues(List<ScheduledStopPoint> scheduledStopPoints) {
         scheduledStopPoints.forEach(stopPoint -> stopPoint.setShortName(null));

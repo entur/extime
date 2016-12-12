@@ -1,22 +1,33 @@
 package no.rutebanken.extime.converter;
 
-import com.google.common.collect.Lists;
-import no.rutebanken.extime.AppTest;
-import no.rutebanken.extime.model.ScheduledDirectFlight;
+import java.math.BigInteger;
+import java.time.LocalDate;
+import java.time.OffsetTime;
+import java.util.List;
+
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.rutebanken.netex.model.*;
+import org.rutebanken.netex.model.Direction;
+import org.rutebanken.netex.model.DirectionRefStructure;
+import org.rutebanken.netex.model.DirectionTypeEnumeration;
+import org.rutebanken.netex.model.JourneyPattern;
+import org.rutebanken.netex.model.MultilingualString;
+import org.rutebanken.netex.model.ObjectFactory;
+import org.rutebanken.netex.model.PointOnRoute;
+import org.rutebanken.netex.model.PointsOnRoute_RelStructure;
+import org.rutebanken.netex.model.Route;
+import org.rutebanken.netex.model.RoutePointRefStructure;
+import org.rutebanken.netex.model.ScheduledStopPoint;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import javax.xml.bind.JAXBElement;
-import java.math.BigInteger;
-import java.time.LocalDate;
-import java.time.OffsetTime;
-import java.util.List;
+import com.google.common.collect.Lists;
+
+import no.rutebanken.extime.AppTest;
+import no.rutebanken.extime.model.ScheduledDirectFlight;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = {AppTest.class})
@@ -56,75 +67,6 @@ public class ScheduledFlightToNetexConverterTest {
                 .isEqualTo("TEST-STRING");
     }
 
-    @Test
-    public void testCreateOrganisationRest() {
-        String companyNumber = "999999999";
-        String name = "TEST-COMPANY";
-        String legalName = "TEST-LEGAL-NAME";
-        String phone = "0047 999 99 999";
-        String url = "http://test.no";
-        OrganisationTypeEnumeration organisationType = OrganisationTypeEnumeration.OPERATOR;
-
-        List<JAXBElement<?>> organisationRest = clazzUnderTest.createOrganisationRest(
-                companyNumber, name, legalName, phone, url, organisationType
-        );
-
-        Assertions.assertThat(organisationRest)
-                .isNotNull()
-                .isNotEmpty()
-                .hasSize(5);
-        Assertions.assertThat(organisationRest.get(0).getValue())
-                .isNotNull()
-                .isInstanceOf(String.class)
-                .isEqualTo(companyNumber);
-
-        Assertions.assertThat(organisationRest.get(1).getValue())
-                .isNotNull()
-                .isInstanceOf(MultilingualString.class);
-        Assertions.assertThat(((MultilingualString)organisationRest.get(1).getValue()).getValue())
-                .isNotNull()
-                .isNotEmpty()
-                .isEqualTo(name);
-
-        Assertions.assertThat(organisationRest.get(2).getValue())
-                .isNotNull()
-                .isInstanceOf(MultilingualString.class);
-        Assertions.assertThat(((MultilingualString)organisationRest.get(2).getValue()).getValue())
-                .isNotNull()
-                .isNotEmpty()
-                .isEqualTo(legalName);
-
-        Assertions.assertThat(organisationRest.get(3).getValue())
-                .isNotNull()
-                .isInstanceOf(ContactStructure.class);
-
-        Assertions.assertThat(organisationRest.get(4).getValue())
-                .isNotNull()
-                .isInstanceOf(List.class);
-        Assertions.assertThat(((List<OrganisationTypeEnumeration>)organisationRest.get(4).getValue()).get(0))
-                .isNotNull()
-                .isEqualTo(organisationType);
-    }
-
-    @Test
-    public void testCreateContactStructure() {
-        String phone = "0047 999 99 999";
-        String url = "http://test.no";
-
-        JAXBElement<ContactStructure> contactStructureElement = clazzUnderTest.createContactStructure(phone, url);
-
-        Assertions.assertThat(contactStructureElement.getValue())
-                .isNotNull()
-                .isInstanceOf(ContactStructure.class);
-        Assertions.assertThat(contactStructureElement.getValue().getPhone())
-                .isNotNull()
-                .isNotEmpty()
-                .isEqualTo(phone);
-        Assertions.assertThat(contactStructureElement.getValue().getUrl())
-                .isNotNull()
-                .isNotEmpty()
-                .isEqualTo(url);
-    }
 
     public ScheduledDirectFlight createScheduledDirectFlight(String airlineIATA, String flightId) {
         ScheduledDirectFlight directFlight = new ScheduledDirectFlight();
