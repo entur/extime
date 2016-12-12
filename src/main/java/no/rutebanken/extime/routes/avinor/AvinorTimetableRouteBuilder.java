@@ -48,6 +48,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
 
     private static final String PROPERTY_DIRECT_FLIGHT_ORIGINAL_BODY = "DirectFlightOriginalBody";
     private static final String PROPERTY_SCHEDULED_FLIGHT_ORIGINAL_BODY = "ScheduledFlightOriginalBody";
+    private static final String PROPERTY_SCHEDULED_FLIGHT_LIST_ORIGINAL_BODY = "ScheduledFlightListOriginalBody";
 
     static final String PROPERTY_STOPOVER_ORIGINAL_BODY = "StopoverOriginalBody";
 
@@ -88,15 +89,16 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
 
                 .log(LoggingLevel.INFO, this.getClass().getName(), "Converting to scheduled flights")
                 .bean(ScheduledFlightConverter.class, "convertToScheduledFlights").id("ConvertToScheduledFlightsBeanProcessor")
+                .setProperty(PROPERTY_SCHEDULED_FLIGHT_LIST_ORIGINAL_BODY, body())
 
-                // TODO enable to create common file
-                //.log(LoggingLevel.INFO, "Converting common aviation data to NeTEx")
-                //.to("direct:convertCommonDataToNetex")
+                .log(LoggingLevel.INFO, "Converting common aviation data to NeTEx")
+                .to("direct:convertCommonDataToNetex")
 
+                .setBody(simpleF("exchangeProperty[%s]", List.class, PROPERTY_SCHEDULED_FLIGHT_LIST_ORIGINAL_BODY))
                 .log(LoggingLevel.INFO, "Converting flights to NeTEx")
                 .to("direct:convertScheduledFlightsToNetex")
                 .log(LoggingLevel.INFO, "Compressing XML files and send to storage")
-                .to("controlbus:route?routeId=CompressAndSendToStorage&action=start")
+                //.to("controlbus:route?routeId=CompressAndSendToStorage&action=start")
         ;
 
         from("direct:fetchAndCacheAirportName")
@@ -196,7 +198,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .bean(CommonDataToNetexConverter.class, "convertToNetex").id("ConvertCommonDataToNetexProcessor")
                 .marshal(jaxbDataFormat)
                 //.log(LoggingLevel.DEBUG, this.getClass().getName(), "${body}")
-                .process(exchange -> exchange.getIn().setHeader(HEADER_FILE_NAME_GENERATED, UUID.randomUUID().toString())).id("GenerateCommonFileNameProcessor")
+                .process(exchange -> exchange.getIn().setHeader(HEADER_FILE_NAME_GENERATED, "_avinor_common_elements")).id("GenerateCommonFileNameProcessor")
                 .setHeader(Exchange.FILE_NAME, simpleF("${header.%s}.xml", HEADER_FILE_NAME_GENERATED))
                 .setHeader(Exchange.CONTENT_TYPE, constant("text/xml;charset=utf-8"))
                 .setHeader(Exchange.CHARSET_NAME, constant("utf-8"))

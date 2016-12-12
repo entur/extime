@@ -11,23 +11,22 @@ import java.math.BigInteger;
 import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 import static no.rutebanken.extime.Constants.*;
 
-// TODO autowire the object factory and make all methods none-static, also change tests, and remove method-local objectfactory-refs
 @Component(value = "netexObjectFactory")
 public class NetexObjectFactory {
 
-    private static ObjectFactory objectFactory = new ObjectFactory();
+    @Autowired
+    private ObjectFactory objectFactory;
 
     @Autowired
     private NetexStaticDataSet netexStaticDataSet;
 
     public JAXBElement<PublicationDeliveryStructure> createPublicationDeliveryStructureElement(
             OffsetDateTime publicationTimestamp, JAXBElement<CompositeFrame> compositeFrame, String description) {
-
-        ObjectFactory objectFactory = new ObjectFactory(); // TODO remove and use injected factory instead
 
         NetexStaticDataSet.OrganisationDataSet avinorDataSet = netexStaticDataSet.getOrganisations().get(AVINOR_AUTHORITY_ID.toLowerCase());
 
@@ -38,19 +37,16 @@ public class NetexObjectFactory {
                 .withVersion(NETEX_PROFILE_VERSION)
                 .withPublicationTimestamp(publicationTimestamp)
                 .withParticipantRef(avinorDataSet.getName())
-                //.withDescription(createMultilingualString(description))
+                //.withDescription(createMultilingualString(description)) // TODO find out if needed
                 .withDataObjects(dataObjects);
 
         return objectFactory.createPublicationDelivery(publicationDeliveryStructure);
     }
 
-    public JAXBElement<CompositeFrame> createCompositeFrameElement(OffsetDateTime publicationTimestamp,
-            List<Codespace> codespaces, Frames_RelStructure frames) {
-
-        ObjectFactory objectFactory = new ObjectFactory(); // TODO remove and use injected factory instead
+    public JAXBElement<CompositeFrame> createCompositeFrameElement(OffsetDateTime publicationTimestamp, Frames_RelStructure frames, Codespace... codespaces) {
 
         Codespaces_RelStructure codespacesStruct = objectFactory.createCodespaces_RelStructure()
-                .withCodespaceRefOrCodespace(codespaces);
+                .withCodespaceRefOrCodespace((Object[]) codespaces);
 
         LocaleStructure localeStructure = objectFactory.createLocaleStructure()
                 .withTimeZone(DEFAULT_ZONE_ID)
@@ -76,37 +72,41 @@ public class NetexObjectFactory {
     public JAXBElement<ResourceFrame> createResourceFrameElement(Collection<JAXBElement<Authority>> authorityElements,
             Collection<JAXBElement<Operator>> operatorElements) {
 
-        ObjectFactory objectFactory = new ObjectFactory(); // TODO remove and use injected factory instead
-
-        OrganisationsInFrame_RelStructure organisationsInFrame = objectFactory.createOrganisationsInFrame_RelStructure();
-        organisationsInFrame.getOrganisation_().addAll(authorityElements);
-        organisationsInFrame.getOrganisation_().addAll(operatorElements);
+        OrganisationsInFrame_RelStructure organisationsStruct = objectFactory.createOrganisationsInFrame_RelStructure();
 
         String resourceFrameId = NetexObjectIdCreator.createResourceFrameId(AVINOR_AUTHORITY_ID,
                 String.valueOf(NetexObjectIdCreator.generateRandomId(DEFAULT_START_INCLUSIVE, DEFAULT_END_EXCLUSIVE)));
 
         ResourceFrame resourceFrame = objectFactory.createResourceFrame()
                 .withVersion(VERSION_ONE)
-                .withId(resourceFrameId)
-                .withOrganisations(organisationsInFrame);
+                .withId(resourceFrameId);
+        resourceFrame.setOrganisations(organisationsStruct);
+
+        for (Iterator<JAXBElement<Authority>> iterator = authorityElements.iterator(); iterator.hasNext(); ) {
+            JAXBElement<Authority> authorityElement = iterator.next();
+            resourceFrame.getOrganisations().getOrganisation_().add(authorityElement);
+        }
+
+        for (Iterator<JAXBElement<Operator>> iterator = operatorElements.iterator(); iterator.hasNext(); ) {
+            JAXBElement<Operator> operatorElement = iterator.next();
+            resourceFrame.getOrganisations().getOrganisation_().add(operatorElement);
+        }
 
         return objectFactory.createResourceFrame(resourceFrame);
     }
 
     public JAXBElement<SiteFrame> createSiteFrameElement(List<StopPlace> stopPlaces) {
-
-        ObjectFactory objectFactory = new ObjectFactory(); // TODO remove and use injected factory instead
-
-        StopPlacesInFrame_RelStructure stopPlacesInFrameRelStructure = objectFactory.createStopPlacesInFrame_RelStructure()
-                .withStopPlace(stopPlaces);
+        StopPlacesInFrame_RelStructure stopPlacesStruct = objectFactory.createStopPlacesInFrame_RelStructure();
 
         String siteFrameId = NetexObjectIdCreator.createSiteFrameId(AVINOR_AUTHORITY_ID,
                 String.valueOf(NetexObjectIdCreator.generateRandomId(DEFAULT_START_INCLUSIVE, DEFAULT_END_EXCLUSIVE)));
 
         SiteFrame siteFrame = objectFactory.createSiteFrame()
                 .withVersion(VERSION_ONE)
-                .withId(siteFrameId)
-                .withStopPlaces(stopPlacesInFrameRelStructure);
+                .withId(siteFrameId);
+        siteFrame.setStopPlaces(stopPlacesStruct);
+
+        stopPlaces.forEach(stopPlace -> stopPlacesStruct.getStopPlace().add(stopPlace));
 
         return objectFactory.createSiteFrame(siteFrame);
     }
@@ -114,29 +114,25 @@ public class NetexObjectFactory {
     public JAXBElement<ServiceFrame> createCommonServiceFrameElement(List<ScheduledStopPoint> scheduledStopPoints,
             List<JAXBElement<PassengerStopAssignment>> stopAssignmentElements) {
 
-        ObjectFactory objectFactory = new ObjectFactory(); // TODO remove and use injected factory instead
-
-        ScheduledStopPointsInFrame_RelStructure scheduledStopPointsInFrame = objectFactory.createScheduledStopPointsInFrame_RelStructure()
-                .withScheduledStopPoint(scheduledStopPoints);
-
-        StopAssignmentsInFrame_RelStructure stopAssignmentsInFrame = objectFactory.createStopAssignmentsInFrame_RelStructure();
-        stopAssignmentElements.forEach(stopAssignmentElement -> stopAssignmentsInFrame.getStopAssignment().add(stopAssignmentElement));
+        ScheduledStopPointsInFrame_RelStructure scheduledStopPointsStruct = objectFactory.createScheduledStopPointsInFrame_RelStructure();
+        StopAssignmentsInFrame_RelStructure stopAssignmentsStruct = objectFactory.createStopAssignmentsInFrame_RelStructure();
 
         String serviceFrameId = NetexObjectIdCreator.createServiceFrameId(AVINOR_AUTHORITY_ID,
                 String.valueOf(NetexObjectIdCreator.generateRandomId(DEFAULT_START_INCLUSIVE, DEFAULT_END_EXCLUSIVE)));
 
         ServiceFrame serviceFrame = objectFactory.createServiceFrame()
                 .withVersion(VERSION_ONE)
-                .withId(serviceFrameId)
-                .withScheduledStopPoints(scheduledStopPointsInFrame)
-                .withStopAssignments(stopAssignmentsInFrame);
+                .withId(serviceFrameId);
+        serviceFrame.setScheduledStopPoints(scheduledStopPointsStruct);
+        serviceFrame.setStopAssignments(stopAssignmentsStruct);
+
+        scheduledStopPoints.forEach(stopPoint -> scheduledStopPointsStruct.getScheduledStopPoint().add(stopPoint));
+        stopAssignmentElements.forEach(stopAssignmentElement -> stopAssignmentsStruct.getStopAssignment().add(stopAssignmentElement));
 
         return objectFactory.createServiceFrame(serviceFrame);
     }
 
     public Network createNetwork(OffsetDateTime publicationTimestamp, String airlineIata, String airlineName) {
-        ObjectFactory objectFactory = new ObjectFactory(); // TODO remove and use injected factory instead
-
         String networkId = NetexObjectIdCreator.createNetworkId(AVINOR_AUTHORITY_ID, airlineIata);
 
         return objectFactory.createNetwork()
@@ -183,8 +179,6 @@ public class NetexObjectFactory {
     }
 
     public JAXBElement<Authority> createAuthorityElement(String authorityId, List<JAXBElement<?>> authorityRest) {
-        ObjectFactory objectFactory = new ObjectFactory(); // TODO remove and use injected factory instead
-
         Authority authority = objectFactory.createAuthority()
                 .withVersion(VERSION_ONE)
                 .withId(authorityId)
@@ -211,8 +205,6 @@ public class NetexObjectFactory {
     }
 
     public JAXBElement<Operator> createOperatorElement(String operatorId, List<JAXBElement<?>> operatorRest) {
-        ObjectFactory objectFactory = new ObjectFactory(); // TODO remove and use injected factory instead
-
         Operator operator = objectFactory.createOperator()
                 .withVersion(VERSION_ONE)
                 .withId(operatorId)
@@ -224,8 +216,6 @@ public class NetexObjectFactory {
 
     public List<JAXBElement<?>> createOrganisationRest(String companyNumber, String name, String legalName,
             String phone, String url, OrganisationTypeEnumeration organisationType) {
-
-        ObjectFactory objectFactory = new ObjectFactory();
 
         JAXBElement<String> companyNumberStructure = objectFactory
                 .createOrganisation_VersionStructureCompanyNumber(companyNumber);
@@ -246,18 +236,13 @@ public class NetexObjectFactory {
     }
 
     public JAXBElement<ContactStructure> createContactStructure(String phone, String url) {
-        ObjectFactory objectFactory = new ObjectFactory(); // TODO remove and use injected factory instead
-
         ContactStructure contactStructure = objectFactory.createContactStructure()
                 .withPhone(phone)
                 .withUrl(url);
-
         return objectFactory.createOrganisation_VersionStructureContactDetails(contactStructure);
     }
 
     public Codespace createCodespace(String id, String xmlnsUrl) {
-        ObjectFactory objectFactory = new ObjectFactory(); // TODO remove and use injected factory instead
-
         return objectFactory.createCodespace()
                 .withId(id.toLowerCase())
                 .withXmlns(id)
@@ -265,7 +250,7 @@ public class NetexObjectFactory {
     }
 
     // TODO consider the id generation to be moved to converter level instead, for more precise control, use a uniform way of doing it
-    public static PointOnRoute createPointOnRoute(String objectId, String stopPointId) {
+    public PointOnRoute createPointOnRoute(String objectId, String stopPointId) {
         String pointOnRouteId = NetexObjectIdCreator.createPointOnRouteId(AVINOR_AUTHORITY_ID, objectId);
         RoutePointRefStructure routePointRefStruct = createRoutePointRefStructure(stopPointId);
         JAXBElement<RoutePointRefStructure> routePointRefStructElement = objectFactory.createRoutePointRef(routePointRefStruct);
@@ -276,7 +261,7 @@ public class NetexObjectFactory {
                 .withPointRef(routePointRefStructElement);
     }
 
-    public static StopPointInJourneyPattern createStopPointInJourneyPattern(String objectId, BigInteger orderIndex, String stopPointId) {
+    public StopPointInJourneyPattern createStopPointInJourneyPattern(String objectId, BigInteger orderIndex, String stopPointId) {
         String stopPointInJourneyPatternId = NetexObjectIdCreator.createStopPointInJourneyPatternId(AVINOR_AUTHORITY_ID, objectId);
         ScheduledStopPointRefStructure stopPointRefStruct = createScheduledStopPointRefStructure(stopPointId);
         JAXBElement<ScheduledStopPointRefStructure> stopPointRefStructElement = objectFactory.createScheduledStopPointRef(stopPointRefStruct);
@@ -289,7 +274,7 @@ public class NetexObjectFactory {
     }
 
     // TODO find out how to best handle incoming departure and arrival times, disabled for now, caller responsible to set
-    public static TimetabledPassingTime createTimetabledPassingTime(String stopPointInJourneyPatternId) {
+    public TimetabledPassingTime createTimetabledPassingTime(String stopPointInJourneyPatternId) {
         StopPointInJourneyPatternRefStructure stopPointInJourneyPatternRefStruct =
                 createStopPointInJourneyPatternRefStructure(stopPointInJourneyPatternId);
 
@@ -300,55 +285,55 @@ public class NetexObjectFactory {
                 .withPointInJourneyPatternRef(stopPointInJourneyPatternRefStructElement);
     }
 
-    public static MultilingualString createMultilingualString(String value) {
+    public MultilingualString createMultilingualString(String value) {
         return objectFactory.createMultilingualString().withValue(value);
     }
 
     // reference structures creation
 
-    public static OperatorRefStructure createOperatorRefStructure(String operatorId) {
+    public OperatorRefStructure createOperatorRefStructure(String operatorId) {
         return objectFactory.createOperatorRefStructure()
                 .withVersion(VERSION_ONE)
                 .withRef(operatorId);
     }
 
-    public static RouteRefStructure createRouteRefStructure(String routeId) {
+    public RouteRefStructure createRouteRefStructure(String routeId) {
         return objectFactory.createRouteRefStructure()
                 .withVersion(VERSION_ONE)
                 .withRef(routeId);
     }
 
-    public static StopPlaceRefStructure createStopPlaceRefStructure(String stopPlaceId) {
+    public StopPlaceRefStructure createStopPlaceRefStructure(String stopPlaceId) {
         return objectFactory.createStopPlaceRefStructure()
                 .withVersion(VERSION_ONE)
                 .withRef(stopPlaceId);
     }
 
-    public static ScheduledStopPointRefStructure createScheduledStopPointRefStructure(String stopPointId) {
+    public ScheduledStopPointRefStructure createScheduledStopPointRefStructure(String stopPointId) {
         return objectFactory.createScheduledStopPointRefStructure()
                 .withVersion(VERSION_ONE)
                 .withRef(stopPointId);
     }
 
-    public static StopPointInJourneyPatternRefStructure createStopPointInJourneyPatternRefStructure(String stopPointInJourneyPatternId) {
+    public StopPointInJourneyPatternRefStructure createStopPointInJourneyPatternRefStructure(String stopPointInJourneyPatternId) {
         return objectFactory.createStopPointInJourneyPatternRefStructure()
                 .withVersion(VERSION_ONE)
                 .withRef(stopPointInJourneyPatternId);
     }
 
-    public static PointRefStructure createPointRefStructure(String stopPointId) {
+    public PointRefStructure createPointRefStructure(String stopPointId) {
         return objectFactory.createPointRefStructure()
                 .withVersion(VERSION_ONE)
                 .withRef(stopPointId);
     }
 
-    public static RoutePointRefStructure createRoutePointRefStructure(String stopPointId) {
+    public RoutePointRefStructure createRoutePointRefStructure(String stopPointId) {
         return objectFactory.createRoutePointRefStructure()
                 .withVersion(VERSION_ONE)
                 .withRef(stopPointId);
     }
 
-    public static DayTypeRefStructure createDayTypeRefStructure(String dayTypeId) {
+    public DayTypeRefStructure createDayTypeRefStructure(String dayTypeId) {
         return objectFactory.createDayTypeRefStructure()
                 .withVersion(VERSION_ONE)
                 .withRef(dayTypeId);

@@ -1,8 +1,6 @@
 package no.rutebanken.extime.converter;
 
 import autovalue.shaded.com.google.common.common.collect.Lists;
-import no.avinor.flydata.xjc.model.scheduled.Flight;
-import no.rutebanken.extime.config.NetexStaticDataSet;
 import no.rutebanken.extime.model.AirlineDesignator;
 import no.rutebanken.extime.model.AirportIATA;
 import no.rutebanken.extime.util.NetexObjectFactory;
@@ -23,6 +21,7 @@ import java.util.List;
 
 import static no.rutebanken.extime.Constants.*;
 
+// TODO write unit test for this component
 @Component(value = "commonDataToNetexConverter")
 public class CommonDataToNetexConverter {
 
@@ -37,17 +36,12 @@ public class CommonDataToNetexConverter {
     @Autowired
     private NetexCommonDataSet netexCommonDataSet;
 
-    @Autowired
-    private NetexStaticDataSet netexStaticDataSet;
-
     public JAXBElement<PublicationDeliveryStructure> convertToNetex() throws Exception {
+        logger.info("Converting common data to NeTEx");
         OffsetDateTime publicationTimestamp = OffsetDateTime.ofInstant(Instant.now(), ZoneId.of(DEFAULT_ZONE_ID));
 
         Codespace avinorCodespace = netexObjectFactory.createCodespace(AVINOR_AUTHORITY_ID, AVINOR_XMLNS_URL);
         Codespace nsrCodespace = netexObjectFactory.createCodespace(NSR_AUTHORITY_ID, NSR_XMLNS_URL);
-        List<Codespace> codespaces = Lists.newArrayList(avinorCodespace, nsrCodespace);
-
-        // resource frame
 
         // TODO consider separating authorities and operators in yaml configuration file for static data
         JAXBElement<Authority> avinorAuthorityElement = netexObjectFactory.createAvinorAuthorityElement();
@@ -62,45 +56,46 @@ public class CommonDataToNetexConverter {
             operatorElements.add(operatorElement);
         }
 
-        JAXBElement<ResourceFrame> resourceFrameElement = netexObjectFactory.createResourceFrameElement(authorityElements, operatorElements);
-
         List<AirportIATA> airportIATAS = Lists.newArrayList(AirportIATA.values());
         airportIATAS.sort(Comparator.comparing(Enum::name));
 
-        // site frame
-
         List<StopPlace> stopPlaces = Lists.newArrayList();
-
-        for (AirportIATA airportIATA : airportIATAS) {
-            StopPlace stopPlace = netexCommonDataSet.getStopPlaceMap().get(airportIATA.name());
-            stopPlaces.add(stopPlace);
-        }
-
-        JAXBElement<SiteFrame> siteFrameElement = netexObjectFactory.createSiteFrameElement(stopPlaces);
-
-        // service frame element
-
         List<ScheduledStopPoint> stopPoints = Lists.newArrayList();
+        List<JAXBElement<PassengerStopAssignment>> stopAssignmentElements = Lists.newArrayList();
 
         for (AirportIATA airportIATA : airportIATAS) {
-            ScheduledStopPoint stopPoint = netexCommonDataSet.getStopPointMap().get(airportIATA.name());
+            String airportIataName = airportIATA.name();
+
+            StopPlace stopPlace = netexCommonDataSet.getStopPlaceMap().get(airportIataName);
+            stopPlaces.add(stopPlace);
+
+            ScheduledStopPoint stopPoint = netexCommonDataSet.getStopPointMap().get(airportIataName);
             stopPoints.add(stopPoint);
+
+            PassengerStopAssignment stopAssignment = netexCommonDataSet.getStopAssignmentMap().get(airportIataName);
+            JAXBElement<PassengerStopAssignment> stopAssignmentElement = objectFactory.createPassengerStopAssignment(stopAssignment);
+            stopAssignmentElements.add(stopAssignmentElement);
         }
+
+        stopPlaces.sort(Comparator.comparing(StopPlace::getId));
+        logger.info("Retrieved and populated NeTEx structure with {} stop places", stopPlaces.size());
+
         stopPoints.sort(Comparator.comparing(ScheduledStopPoint::getId));
+        logger.info("Retrieved and populated NeTEx structure with {} stop points", stopPoints.size());
 
-        List<PassengerStopAssignment> stopAssignments = Lists.newArrayList();
-
-
-        // TODO: come on, iterate the enum only once!!!
-
-        //netexObjectFactory.createCommonServiceFrameElement()
+        JAXBElement<ResourceFrame> resourceFrameElement = netexObjectFactory.createResourceFrameElement(authorityElements, operatorElements);
+        JAXBElement<SiteFrame> siteFrameElement = netexObjectFactory.createSiteFrameElement(stopPlaces);
+        JAXBElement<ServiceFrame> serviceFrameElement = netexObjectFactory.createCommonServiceFrameElement(stopPoints, stopAssignmentElements);
 
         Frames_RelStructure framesStruct = objectFactory.createFrames_RelStructure();
         framesStruct.getCommonFrame().add(resourceFrameElement);
         framesStruct.getCommonFrame().add(siteFrameElement);
+        framesStruct.getCommonFrame().add(serviceFrameElement);
 
         JAXBElement<CompositeFrame> compositeFrameElement = netexObjectFactory
-                .createCompositeFrameElement(publicationTimestamp, codespaces, framesStruct);
+                .createCompositeFrameElement(publicationTimestamp, framesStruct, avinorCodespace, nsrCodespace);
+
+        logger.info("Done converting common data to NeTEx");
 
         return netexObjectFactory.createPublicationDeliveryStructureElement(publicationTimestamp, compositeFrameElement, "Description");
     }
