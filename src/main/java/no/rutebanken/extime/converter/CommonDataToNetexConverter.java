@@ -51,7 +51,7 @@ public class CommonDataToNetexConverter {
         List<JAXBElement<Operator>> operatorElements = new ArrayList<>(AirlineDesignator.values().length);
 
         for (AirlineDesignator designator : AirlineDesignator.values()) {
-            String designatorName = designator.name().toLowerCase();
+            String designatorName = designator.name().toUpperCase();
             JAXBElement<Operator> operatorElement = netexObjectFactory.createAirlineOperatorElement(designatorName);
             operatorElements.add(operatorElement);
         }

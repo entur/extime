@@ -161,7 +161,7 @@ public class NetexObjectFactory {
         NetexStaticDataSet.OrganisationDataSet nsrDataSet = netexStaticDataSet.getOrganisations()
                 .get(NSR_AUTHORITY_ID.toLowerCase());
 
-        String authorityId = NetexObjectIdCreator.createAuthorityId(NSR_AUTHORITY_ID, nsrDataSet.getName());
+        String authorityId = NetexObjectIdCreator.createAuthorityId(NSR_AUTHORITY_ID, NSR_AUTHORITY_ID);
 
         Authority authority = objectFactory.createAuthority()
                 .withVersion(VERSION_ONE)
