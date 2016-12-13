@@ -49,6 +49,14 @@ public class AvinorTimetableUtils {
                 .forEach(System.out::println);
     }
 
+    public List<Flight> generateFlightsFromFeedDump() throws Exception {
+        ArrayList<Flight> generatedFlights = Lists.newArrayList();
+        Flights flightStructure = generateObjectsFromXml("/xml/testdata/avinor-flights_20161210112449.xml", Flights.class);
+        List<Flight> flights = flightStructure.getFlight();
+        generatedFlights.addAll(flights);
+        return generatedFlights;
+    }
+
     public List<Flight> generateStaticFlights() throws Exception {
         AirportIATA[] airportIATAs = Arrays.stream(AirportIATA.values())
                 .filter(iata -> !iata.equals(AirportIATA.OSL))

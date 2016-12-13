@@ -61,7 +61,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
 
         JaxbDataFormat jaxbDataFormat = new JaxbDataFormat();
         jaxbDataFormat.setContextPath(PublicationDeliveryStructure.class.getPackage().getName());
-        jaxbDataFormat.setSchema("classpath:/xsd/NeTEx-XML-1.04beta/schema/xsd/NeTEx_publication.xsd"); // @TODO: use schema from netex-java-model instead
+        //jaxbDataFormat.setSchema("classpath:/xsd/NeTEx-XML-1.04beta/schema/xsd/NeTEx_publication.xsd"); // @TODO: use schema from netex-java-model instead
         //jaxbDataFormat.setNamespacePrefixRef(NAMESPACE_PREFIX_REF);
         jaxbDataFormat.setPrettyPrint(true);
         jaxbDataFormat.setEncoding("UTF-8");
@@ -69,6 +69,8 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
         // @todo: enable parallell processing when going into test/beta/prod
         from("{{avinor.timetable.scheduler.consumer}}")
                 .routeId("AvinorTimetableSchedulerStarter")
+
+/*
                 .process(new AirportIataProcessor()).id("TimetableAirportIATAProcessor")
                 .bean(DateUtils.class, "generateDateRanges").id("TimetableDateRangeProcessor")
 
@@ -80,12 +82,13 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                     .to("direct:fetchTimetableForAirport").id("FetchTimetableProcessor")
                     .log(LoggingLevel.DEBUG, this.getClass().getName(), "Flights fetched for ${header.ExtimeResourceCode}")
                 .end()
+*/
 
                 // 1st alternative run, with static test data from file
                 //.bean(AvinorTimetableUtils.class, "generateStaticFlights") // TODO: remove when going beta
 
                 // 2nd alternative run, with live test data from feed dump
-                //.bean(AvinorTimetableUtils.class, "generateFlightsFromFeedDump") // TODO: remove when going beta
+                .bean(AvinorTimetableUtils.class, "generateFlightsFromFeedDump") // TODO: remove when going beta
 
                 .log(LoggingLevel.INFO, this.getClass().getName(), "Converting to scheduled flights")
                 .bean(ScheduledFlightConverter.class, "convertToScheduledFlights").id("ConvertToScheduledFlightsBeanProcessor")
