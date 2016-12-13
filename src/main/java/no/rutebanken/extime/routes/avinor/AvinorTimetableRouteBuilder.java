@@ -246,7 +246,6 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                     .bean(ScheduledFlightToNetexConverter.class, "convertToNetex").id("ConvertFlightsToNetexProcessor")
                     .process(exchange -> exchange.getIn().setHeader(HEADER_FILE_NAME_GENERATED, generateFilename(exchange))).id("GenerateFileNameProcessor")
                     .marshal(jaxbDataFormat)
-                    .process(exchange -> exchange.getIn().setHeader(HEADER_FILE_NAME_GENERATED, UUID.randomUUID().toString())).id("GenerateFileNameProcessor")
                     .setHeader(Exchange.FILE_NAME, simpleF("${header.%s}.xml", HEADER_FILE_NAME_GENERATED))
                     .setHeader(Exchange.CONTENT_TYPE, constant("text/xml;charset=utf-8"))
                     .setHeader(Exchange.CHARSET_NAME, constant("utf-8"))
