@@ -3,28 +3,29 @@ package no.rutebanken.extime.util;
 public interface NetexObjectIdTypes {
 
     // frame id keys
-    public static final String COMPOSITE_FRAME_KEY = "CompositeFrame";
-    public static final String RESOURCE_FRAME_KEY = "ResourceFrame";
-    public static final String SITE_FRAME_KEY = "SiteFrame";
-    public static final String SERVICE_FRAME_KEY = "ServiceFrame";
-    public static final String SERVICE_CALENDAR_FRAME_KEY = "ServiceCalendarFrame";
-    public static final String TIMETABLE_FRAME_KEY = "TimetableFrame";
+    String COMPOSITE_FRAME_KEY = "CompositeFrame";
+    String RESOURCE_FRAME_KEY = "ResourceFrame";
+    String SITE_FRAME_KEY = "SiteFrame";
+    String SERVICE_FRAME_KEY = "ServiceFrame";
+    String SERVICE_CALENDAR_FRAME_KEY = "ServiceCalendarFrame";
+    String TIMETABLE_FRAME_KEY = "TimetableFrame";
 
     // entity id keys
-    public static final String AUTHORITY_KEY = "Authority";
-    public static final String OPERATOR_KEY = "Operator";
-    public static final String NETWORK_KEY = "Network";
-    public static final String LINE_KEY = "Line";
-    public static final String ROUTE_KEY = "Route";
-    public static final String STOP_PLACE_KEY = "StopPlace";
-    public static final String STOP_POINT_KEY = "ScheduledStopPoint";
-    public static final String POINT_PROJECTION_KEY = "PointProjection";
-    public static final String ROUTE_POINT_KEY = "RoutePoint";
-    public static final String POINT_ON_ROUTE_KEY = "PointOnRoute";
-    public static final String JOURNEY_PATTERN_KEY = "JourneyPattern";
-    public static final String STOP_POINT_IN_JOURNEY_PATTERN_KEY = "StopPointInJourneyPattern";
-    public static final String DAY_TYPE_KEY = "DayType";
-    public static final String AVAILABILITY_CONDITION_KEY = "AvailabilityCondition";
-    public static final String SERVICE_JOURNEY_KEY = "ServiceJourney";
+    String AUTHORITY_KEY = "Authority";
+    String OPERATOR_KEY = "Operator";
+    String NETWORK_KEY = "Network";
+    String LINE_KEY = "Line";
+    String ROUTE_KEY = "Route";
+    String STOP_PLACE_KEY = "StopPlace";
+    String STOP_POINT_KEY = "ScheduledStopPoint";
+    String POINT_PROJECTION_KEY = "PointProjection";
+    String ROUTE_POINT_KEY = "RoutePoint";
+    String POINT_ON_ROUTE_KEY = "PointOnRoute";
+    String JOURNEY_PATTERN_KEY = "JourneyPattern";
+    String STOP_POINT_IN_JOURNEY_PATTERN_KEY = "StopPointInJourneyPattern";
+    String DAY_TYPE_KEY = "DayType";
+    String AVAILABILITY_CONDITION_KEY = "AvailabilityCondition";
+    String SERVICE_JOURNEY_KEY = "ServiceJourney";
+    String PASSENGER_STOP_ASSIGNMENT_KEY = "PassengerStopAssignment";
 
 }

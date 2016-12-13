@@ -39,7 +39,7 @@ netex.compressed.file.prefix=avinor-netex_
 
 # Google Cloud Storage blobstore settings
 blobstore.gcs.bucket.name=marduk-exchange
-blobstore.gcs.blob.path=avi/
+blobstore.gcs.blob.path=inbound/received/avi/
 blobstore.gcs.credential.path=/etc/exchange/marduk-exchange-blobstore-credentials.json
 blobstore.gcs.project.id=carbon-1287
 
