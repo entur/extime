@@ -1,16 +1,21 @@
 package no.rutebanken.extime.routes.avinor;
 
-import com.google.common.collect.Lists;
-import no.avinor.flydata.xjc.model.airline.AirlineName;
-import no.avinor.flydata.xjc.model.airline.AirlineNames;
-import no.avinor.flydata.xjc.model.airport.AirportName;
-import no.avinor.flydata.xjc.model.airport.AirportNames;
-import no.avinor.flydata.xjc.model.scheduled.Flight;
-import no.rutebanken.extime.converter.ScheduledFlightConverter;
-import no.rutebanken.extime.converter.ScheduledFlightToNetexConverter;
-import no.rutebanken.extime.model.*;
-import no.rutebanken.extime.util.AvinorTimetableUtils;
-import no.rutebanken.extime.util.DateUtils;
+import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.HEADER_EXTIME_FETCH_RESOURCE_ENDPOINT;
+import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.HEADER_EXTIME_HTTP_URI;
+import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.HEADER_EXTIME_RESOURCE_CODE;
+import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.HEADER_EXTIME_URI_PARAMETERS;
+import static org.apache.camel.component.stax.StAXBuilder.stax;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import javax.xml.bind.JAXBElement;
+
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.Processor;
@@ -18,13 +23,29 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.converter.jaxb.JaxbDataFormat;
 import org.apache.camel.processor.aggregate.AggregationStrategy;
 import org.apache.camel.processor.aggregate.zipfile.ZipAggregationStrategy;
+import org.rutebanken.netex.model.CompositeFrame;
+import org.rutebanken.netex.model.Line;
 import org.rutebanken.netex.model.PublicationDeliveryStructure;
+import org.rutebanken.netex.model.ServiceFrame;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import com.google.common.collect.Lists;
 
-import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.*;
-import static org.apache.camel.component.stax.StAXBuilder.stax;
+import no.avinor.flydata.xjc.model.airline.AirlineName;
+import no.avinor.flydata.xjc.model.airline.AirlineNames;
+import no.avinor.flydata.xjc.model.airport.AirportName;
+import no.avinor.flydata.xjc.model.airport.AirportNames;
+import no.avinor.flydata.xjc.model.scheduled.Flight;
+import no.rutebanken.extime.converter.ScheduledFlightConverter;
+import no.rutebanken.extime.converter.ScheduledFlightToNetexConverter;
+import no.rutebanken.extime.model.AirportIATA;
+import no.rutebanken.extime.model.ScheduledDirectFlight;
+import no.rutebanken.extime.model.ScheduledFlight;
+import no.rutebanken.extime.model.ScheduledStopover;
+import no.rutebanken.extime.model.ScheduledStopoverFlight;
+import no.rutebanken.extime.model.StopVisitType;
+import no.rutebanken.extime.util.AvinorTimetableUtils;
+import no.rutebanken.extime.util.DateUtils;
 
 @Component
 public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRouteBuilder {
@@ -61,6 +82,9 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
         jaxbDataFormat.setPrettyPrint(true);
         jaxbDataFormat.setEncoding("UTF-8");
 
+        FilenameGenerator filenameGenerator = new FilenameGenerator();
+        
+        
         // @todo: enable parallell processing when going into test/beta/prod
         from("{{avinor.timetable.scheduler.consumer}}")
                 .routeId("AvinorTimetableSchedulerStarter")
@@ -196,9 +220,9 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                     .to("direct:enrichScheduledFlightWithAirportNames")
                     //.log(LoggingLevel.DEBUG, this.getClass().getName(), "Converting scheduled direct flight with id: ${body.airlineFlightId}")
                     .bean(ScheduledFlightToNetexConverter.class, "convertToNetex").id("ConvertFlightsToNetexProcessor")
+                    .process(exchange -> exchange.getIn().setHeader("FileNameGenerated", filenameGenerator.generateFilename(exchange))).id("GenerateFileNameProcessor")
                     .marshal(jaxbDataFormat)
                     //.log(LoggingLevel.DEBUG, this.getClass().getName(), "${body}")
-                    .process(exchange -> exchange.getIn().setHeader("FileNameGenerated", UUID.randomUUID().toString())).id("GenerateFileNameProcessor")
                     .setHeader(Exchange.FILE_NAME, simple("${header.FileNameGenerated}.xml"))
                     .setHeader(Exchange.CONTENT_TYPE, constant("text/xml;charset=utf-8"))
                     .setHeader(Exchange.CHARSET_NAME, constant("utf-8"))
@@ -429,5 +453,34 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
             original.getIn().setBody(originalBody);
             return original;
         }
+    }
+    
+    private class FilenameGenerator {
+    	public String generateFilename(Exchange exchange) {
+    		JAXBElement<PublicationDeliveryStructure> publicationDelivery = (JAXBElement<PublicationDeliveryStructure>) exchange.getIn().getBody();
+    		List<ServiceFrame> collect = publicationDelivery.getValue().getDataObjects().getCompositeFrameOrCommonFrame().stream()
+    				.map(e -> e.getValue())
+    				.filter(e -> e instanceof CompositeFrame)
+    				.map(e -> (CompositeFrame)e)
+    				.map(e -> e.getFrames().getCommonFrame())
+    				.map(e -> e.stream()
+    						.map(ex -> ex.getValue())
+    						.filter(ex -> ex instanceof ServiceFrame)
+    						.map(ex -> (ServiceFrame)ex)
+    						.collect(Collectors.toList())
+    					
+    				).flatMap(e -> e.stream())
+    				.collect(Collectors.toList());
+
+    		ServiceFrame sf = collect.get(0);
+    		String network = sf.getNetwork().getName().getValue();
+    		Line line = ((Line)sf.getLines().getLine_().get(0).getValue());
+    		String publicCode = line.getPublicCode();
+    		
+    		String filename = network+"-"+publicCode+"-"+line.getName().getValue().replace('/', '_');
+    		
+    		return filename;
+    	}
+    	
     }
 }
