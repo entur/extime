@@ -111,10 +111,10 @@ public class NetexCommonDataSet {
         for (AirportIATA airportIATA : airportIATAS) {
             ScheduledStopPoint scheduledStopPoint = stopPointMap.get(airportIATA.name());
             ScheduledStopPointRefStructure scheduledStopPointRefStruct =
-                    netexObjectFactory.createScheduledStopPointRefStructure(scheduledStopPoint.getId());
+                    netexObjectFactory.createScheduledStopPointRefStructure(scheduledStopPoint.getId(), Boolean.TRUE);
 
             StopPlace stopPlace = stopPlaceMap.get(airportIATA.name());
-            StopPlaceRefStructure stopPlaceRefStruct = netexObjectFactory.createStopPlaceRefStructure(stopPlace.getId());
+            StopPlaceRefStructure stopPlaceRefStruct = netexObjectFactory.createStopPlaceRefStructure(stopPlace.getId(), Boolean.TRUE);
             String stopPointIdSuffix = StringUtils.split(scheduledStopPoint.getId(), DEFAULT_ID_SEPARATOR)[2];
 
             String passengerStopAssignmentId = NetexObjectIdCreator.createPassengerStopAssignmentId(
@@ -140,7 +140,7 @@ public class NetexCommonDataSet {
         for (AirportIATA airportIATA : airportIATAS) {
             ScheduledStopPoint scheduledStopPoint = stopPointMap.get(airportIATA.name());
 
-            PointRefStructure pointRefStruct = netexObjectFactory.createPointRefStructure(scheduledStopPoint.getId());
+            PointRefStructure pointRefStruct = netexObjectFactory.createPointRefStructure(scheduledStopPoint.getId(), Boolean.TRUE);
 
             String stopPointIdSuffix = StringUtils.split(scheduledStopPoint.getId(), DEFAULT_ID_SEPARATOR)[2];
             String pointProjectionId = NetexObjectIdCreator.createPointProjectionId(AVINOR_AUTHORITY_ID, stopPointIdSuffix);

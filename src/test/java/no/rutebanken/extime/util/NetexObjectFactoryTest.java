@@ -103,7 +103,8 @@ public class NetexObjectFactoryTest {
 
     @Test
     public void createOperatorRefStructure() throws Exception {
-        OperatorRefStructure operatorRefStructure = netexObjectFactory.createOperatorRefStructure("AVI:Operator:WF");
+        // TODO also test the case where validation for references is disabled
+        OperatorRefStructure operatorRefStructure = netexObjectFactory.createOperatorRefStructure("AVI:Operator:WF", Boolean.TRUE);
 
         Assertions.assertThat(operatorRefStructure)
                 .isNotNull()
@@ -141,7 +142,8 @@ public class NetexObjectFactoryTest {
 
     @Test
     public void createStopPlaceRefStructure() throws Exception {
-        StopPlaceRefStructure stopPlaceRefStructure = netexObjectFactory.createStopPlaceRefStructure("AVI:StopPlace:TRD");
+        // TODO also test the case where validation for references is disabled
+        StopPlaceRefStructure stopPlaceRefStructure = netexObjectFactory.createStopPlaceRefStructure("AVI:StopPlace:TRD", Boolean.TRUE);
 
         Assertions.assertThat(stopPlaceRefStructure)
                 .isNotNull()
@@ -160,8 +162,9 @@ public class NetexObjectFactoryTest {
 
     @Test
     public void createScheduledStopPointRefStructure() throws Exception {
+        // TODO also test the case where validation for references is disabled
         ScheduledStopPointRefStructure scheduledStopPointRefStructure = netexObjectFactory
-                .createScheduledStopPointRefStructure("AVI:ScheduledStopPoint:77777771");
+                .createScheduledStopPointRefStructure("AVI:ScheduledStopPoint:77777771", Boolean.TRUE);
 
         Assertions.assertThat(scheduledStopPointRefStructure)
                 .isNotNull()
@@ -200,7 +203,8 @@ public class NetexObjectFactoryTest {
 
     @Test
     public void createPointRefStructure() throws Exception {
-        PointRefStructure pointRefStructure = netexObjectFactory.createPointRefStructure("AVI:ScheduledStopPoint:77777771");
+        // TODO also test the case where validation for references is disabled
+        PointRefStructure pointRefStructure = netexObjectFactory.createPointRefStructure("AVI:ScheduledStopPoint:77777771", Boolean.TRUE);
 
         Assertions.assertThat(pointRefStructure)
                 .isNotNull()

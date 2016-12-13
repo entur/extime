@@ -69,12 +69,10 @@ public class ScheduledFlightToNetexConverter {
 
     public JAXBElement<PublicationDeliveryStructure> convertToNetex(ScheduledFlight scheduledFlight) throws Exception {
         OffsetDateTime publicationTimestamp = OffsetDateTime.ofInstant(Instant.now(), ZoneId.of(DEFAULT_ZONE_ID));
-        //LocalDate dateOfOperation = scheduledFlight.getDateOfOperation();
 
         String routePath = String.format("%s-%s", scheduledFlight.getDepartureAirportName(), scheduledFlight.getArrivalAirportName());
         String flightId = scheduledFlight.getAirlineFlightId();
 
-        List<StopPlace> stopPlaces = createStopPlaces(scheduledFlight);
         List<ScheduledStopPoint> scheduledStopPoints = createScheduledStopPoints(scheduledFlight);
         List<RoutePoint> routePoints = createRoutePoints(scheduledFlight);
         List<PassengerStopAssignment> stopAssignments = createStopAssignments(scheduledStopPoints);
@@ -88,20 +86,16 @@ public class ScheduledFlightToNetexConverter {
         List<ServiceJourney> serviceJourneys = createServiceJourneyList(scheduledFlight, dayTypes, journeyPattern, line);
 
         Frames_RelStructure frames = objectFactory.createFrames_RelStructure();
-        frames.getCommonFrame().add(createResourceFrame(operator)); // TODO refactor and use netex object factory method
-
-        // probably not necessary since we are adding all stop places to the common file
-        //frames.getCommonFrame().add(createSiteFrame(stopPlaces)); // TODO refactor and use netex object factory method
 
         JAXBElement<ServiceFrame> serviceFrame = createServiceFrame(publicationTimestamp,
                 scheduledFlight.getAirlineName(), scheduledFlight.getAirlineIATA(), flightId, routePoints, route, line,
-                scheduledStopPoints, journeyPattern, stopAssignments); // TODO refactor and use netex object factory method
-        frames.getCommonFrame().add(serviceFrame);
+                journeyPattern); // TODO refactor and use netex object factory method
 
+        frames.getCommonFrame().add(serviceFrame);
         frames.getCommonFrame().add(createTimetableFrame(scheduledFlight.getAvailabilityPeriod(), serviceJourneys));
         frames.getCommonFrame().add(createServiceCalendarFrame(dayTypes));
 
-        //cleanStopPointsFromTempValues(scheduledStopPoints);
+        //cleanStopPointsFromTempValues(scheduledStopPoints); // TODO fix this to remove short names from stop points, or move to common converter
 
         JAXBElement<CompositeFrame> compositeFrame = createCompositeFrame(publicationTimestamp, flightId, frames); // TODO refactor and use netex object factory method
         PublicationDeliveryStructure publicationDeliveryStructure = createPublicationDeliveryStructure(publicationTimestamp, compositeFrame, flightId, routePath); // TODO refactor and use netex object factory method
@@ -147,6 +141,7 @@ public class ScheduledFlightToNetexConverter {
         return objectFactory.createCompositeFrame(compositeFrame);
     }
 
+    // TODO consider using this for 'unknown/new' operators
     public JAXBElement<ResourceFrame> createResourceFrame(Operator operator) {
         OrganisationsInFrame_RelStructure organisationsInFrame = objectFactory.createOrganisationsInFrame_RelStructure();
         organisationsInFrame.getOrganisation_().add(objectFactory.createAuthority(createAuthority()));
@@ -163,6 +158,7 @@ public class ScheduledFlightToNetexConverter {
         return objectFactory.createResourceFrame(resourceFrame);
     }
 
+    // TODO remove?
     public JAXBElement<SiteFrame> createSiteFrame(List<StopPlace> stopPlaces) {
         StopPlacesInFrame_RelStructure stopPlacesInFrameRelStructure = objectFactory.createStopPlacesInFrame_RelStructure()
                         .withStopPlace(stopPlaces);
@@ -179,8 +175,7 @@ public class ScheduledFlightToNetexConverter {
     }
 
     public JAXBElement<ServiceFrame> createServiceFrame(OffsetDateTime publicationTimestamp, String airlineName,
-            String airlineIata, String flightId, List<RoutePoint> routePoints, Route route, Line line,
-            List<ScheduledStopPoint> scheduledStopPoints, JourneyPattern journeyPattern, List<PassengerStopAssignment> stopAssignments) {
+            String airlineIata, String flightId, List<RoutePoint> routePoints, Route route, Line line, JourneyPattern journeyPattern) {
 
         String networkId = NetexObjectIdCreator.createNetworkId(AVINOR_AUTHORITY_ID, airlineIata);
 
@@ -189,7 +184,6 @@ public class ScheduledFlightToNetexConverter {
                 .withChanged(publicationTimestamp)
                 .withId(networkId)
                 .withName(createMultilingualString(airlineName));
-                //.withTransportOrganisationRef(organisationRefStructElement); // schema validation requires 'abstract' attribute set to false (not available in netex model)
 
         RoutePointsInFrame_RelStructure routePointsInFrame = objectFactory.createRoutePointsInFrame_RelStructure()
                 .withRoutePoint(routePoints);
@@ -200,14 +194,8 @@ public class ScheduledFlightToNetexConverter {
         LinesInFrame_RelStructure linesInFrame = objectFactory.createLinesInFrame_RelStructure();
         linesInFrame.getLine_().add(objectFactory.createLine(line));
 
-        ScheduledStopPointsInFrame_RelStructure scheduledStopPointsInFrame = objectFactory.createScheduledStopPointsInFrame_RelStructure()
-                .withScheduledStopPoint(scheduledStopPoints);
-
         JourneyPatternsInFrame_RelStructure journeyPatternsInFrame = objectFactory.createJourneyPatternsInFrame_RelStructure()
                 .withJourneyPattern_OrJourneyPatternView(objectFactory.createJourneyPattern(journeyPattern));
-
-        StopAssignmentsInFrame_RelStructure stopAssignmentsInFrame = objectFactory.createStopAssignmentsInFrame_RelStructure();
-        stopAssignments.forEach(stopAssignment -> stopAssignmentsInFrame.getStopAssignment().add(objectFactory.createPassengerStopAssignment(stopAssignment)));
 
         String serviceFrameId = NetexObjectIdCreator.createServiceFrameId(AVINOR_AUTHORITY_ID, flightId);
 
@@ -218,8 +206,6 @@ public class ScheduledFlightToNetexConverter {
                 .withRoutePoints(routePointsInFrame)
                 .withRoutes(routesInFrame)
                 .withLines(linesInFrame)
-                //.withScheduledStopPoints(scheduledStopPointsInFrame) // probably no need for inclusion, since all stop points are added to common structure
-                //.withStopAssignments(stopAssignmentsInFrame) // probably no need for inclusion, since all stop points are added to common structure
                 .withJourneyPatterns(journeyPatternsInFrame);
 
         return objectFactory.createServiceFrame(serviceFrame);
@@ -306,43 +292,9 @@ public class ScheduledFlightToNetexConverter {
                 .withProperties(propertiesOfDay);
     }
 
-    public List<StopPlace> createStopPlaces(ScheduledFlight scheduledFlight) throws Exception {
-        Map<String, StopPlace> stopPlaceMap = netexCommonDataSet.getStopPlaceMap();
-
-        if (scheduledFlight instanceof ScheduledDirectFlight) {
-
-            String departureAirportIATA = scheduledFlight.getDepartureAirportIATA();
-            String arrivalAirportIATA = scheduledFlight.getArrivalAirportIATA();
-
-            StopPlace departureStopPlace = stopPlaceMap.get(departureAirportIATA);
-            StopPlace arrivalStopPlace = stopPlaceMap.get(arrivalAirportIATA);
-
-            return Lists.newArrayList(departureStopPlace, arrivalStopPlace);
-
-        } else if (scheduledFlight instanceof ScheduledStopoverFlight) {
-
-            List<ScheduledStopover> scheduledStopovers = ((ScheduledStopoverFlight) scheduledFlight).getScheduledStopovers();
-            List<StopPlace> stopPlaces = new ArrayList<>();
-
-            Set<String> iataCodes = scheduledStopovers.stream()
-                    .map(ScheduledStopover::getAirportIATA)
-                    .collect(Collectors.toSet());
-
-            for (String iata : iataCodes) {
-                StopPlace stopPlace = stopPlaceMap.get(iata);
-                stopPlaces.add(stopPlace);
-            }
-
-            return stopPlaces;
-
-        } else {
-            throw new IllegalArgumentException("Illegal instance class: " + scheduledFlight.getClass().getName());
-        }
-    }
-
     public JAXBElement<AvailabilityCondition> createAvailabilityCondition(AvailabilityPeriod availabilityPeriod) {
-        // TODO generate objectId
-        String availabilityConditionId = NetexObjectIdCreator.createAvailabilityConditionId(AVINOR_AUTHORITY_ID, "1");
+        String availabilityConditionId = NetexObjectIdCreator.createAvailabilityConditionId(AVINOR_AUTHORITY_ID,
+                String.valueOf(NetexObjectIdCreator.generateRandomId(DEFAULT_START_INCLUSIVE, DEFAULT_END_EXCLUSIVE)));
 
         AvailabilityCondition availabilityCondition = objectFactory.createAvailabilityCondition()
                 .withVersion(VERSION_ONE)
@@ -531,7 +483,7 @@ public class ScheduledFlightToNetexConverter {
         RouteRefs_RelStructure routeRefs = objectFactory.createRouteRefs_RelStructure()
                 .withRouteRef(routeRefStructure);
 
-        OperatorRefStructure operatorRefStructure = netexObjectFactory.createOperatorRefStructure(operator.getId());
+        OperatorRefStructure operatorRefStructure = netexObjectFactory.createOperatorRefStructure(operator.getId(), Boolean.FALSE);
         String lineId = NetexObjectIdCreator.createLineId(AVINOR_AUTHORITY_ID, flightId);
 
         return objectFactory.createLine()
@@ -779,6 +731,7 @@ public class ScheduledFlightToNetexConverter {
     }
 
     // TODO move to factory class
+    // TODO also create a corresponding method for customer service structure
     public JAXBElement<ContactStructure> createContactStructure(String phone, String url) {
         ContactStructure contactStructure = objectFactory.createContactStructure()
                 .withPhone(phone)

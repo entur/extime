@@ -263,7 +263,7 @@ public class NetexObjectFactory {
 
     public StopPointInJourneyPattern createStopPointInJourneyPattern(String objectId, BigInteger orderIndex, String stopPointId) {
         String stopPointInJourneyPatternId = NetexObjectIdCreator.createStopPointInJourneyPatternId(AVINOR_AUTHORITY_ID, objectId);
-        ScheduledStopPointRefStructure stopPointRefStruct = createScheduledStopPointRefStructure(stopPointId);
+        ScheduledStopPointRefStructure stopPointRefStruct = createScheduledStopPointRefStructure(stopPointId, Boolean.FALSE);
         JAXBElement<ScheduledStopPointRefStructure> stopPointRefStructElement = objectFactory.createScheduledStopPointRef(stopPointRefStruct);
 
         return objectFactory.createStopPointInJourneyPattern()
@@ -291,10 +291,10 @@ public class NetexObjectFactory {
 
     // reference structures creation
 
-    public OperatorRefStructure createOperatorRefStructure(String operatorId) {
-        return objectFactory.createOperatorRefStructure()
-                .withVersion(VERSION_ONE)
+    public OperatorRefStructure createOperatorRefStructure(String operatorId, boolean withRefValidation) {
+        OperatorRefStructure operatorRefStruct = objectFactory.createOperatorRefStructure()
                 .withRef(operatorId);
+        return withRefValidation ? operatorRefStruct.withVersion(VERSION_ONE) : operatorRefStruct;
     }
 
     public RouteRefStructure createRouteRefStructure(String routeId) {
@@ -303,16 +303,16 @@ public class NetexObjectFactory {
                 .withRef(routeId);
     }
 
-    public StopPlaceRefStructure createStopPlaceRefStructure(String stopPlaceId) {
-        return objectFactory.createStopPlaceRefStructure()
-                .withVersion(VERSION_ONE)
+    public StopPlaceRefStructure createStopPlaceRefStructure(String stopPlaceId, boolean withRefValidation) {
+        StopPlaceRefStructure stopPlaceRefStruct = objectFactory.createStopPlaceRefStructure()
                 .withRef(stopPlaceId);
+        return withRefValidation ? stopPlaceRefStruct.withVersion(VERSION_ONE) : stopPlaceRefStruct;
     }
 
-    public ScheduledStopPointRefStructure createScheduledStopPointRefStructure(String stopPointId) {
-        return objectFactory.createScheduledStopPointRefStructure()
-                .withVersion(VERSION_ONE)
+    public ScheduledStopPointRefStructure createScheduledStopPointRefStructure(String stopPointId, boolean withRefValidation) {
+        ScheduledStopPointRefStructure scheduledStopPointRefStruct = objectFactory.createScheduledStopPointRefStructure()
                 .withRef(stopPointId);
+        return withRefValidation ? scheduledStopPointRefStruct.withVersion(VERSION_ONE) : scheduledStopPointRefStruct;
     }
 
     public StopPointInJourneyPatternRefStructure createStopPointInJourneyPatternRefStructure(String stopPointInJourneyPatternId) {
@@ -321,10 +321,10 @@ public class NetexObjectFactory {
                 .withRef(stopPointInJourneyPatternId);
     }
 
-    public PointRefStructure createPointRefStructure(String stopPointId) {
-        return objectFactory.createPointRefStructure()
-                .withVersion(VERSION_ONE)
+    public PointRefStructure createPointRefStructure(String stopPointId, boolean withRefValidation) {
+        PointRefStructure pointRefStruct = objectFactory.createPointRefStructure()
                 .withRef(stopPointId);
+        return withRefValidation ? pointRefStruct.withVersion(VERSION_ONE) : pointRefStruct;
     }
 
     public RoutePointRefStructure createRoutePointRefStructure(String stopPointId) {
