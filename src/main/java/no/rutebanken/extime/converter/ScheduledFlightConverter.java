@@ -29,6 +29,7 @@ import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static no.rutebanken.extime.Constants.DEFAULT_ZONE_ID;
 import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.HEADER_EXTIME_HTTP_URI;
 import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.HEADER_EXTIME_URI_PARAMETERS;
 
@@ -60,7 +61,7 @@ public class ScheduledFlightConverter {
 
         // TODO For now we create a separate from- and to date in converter, but this should actually
         //      come as input headers from previous date range generator, to be 100% sure these are always the same
-        LocalDate requestPeriodFromDate = LocalDate.now(ZoneId.of("UTC"));
+        LocalDate requestPeriodFromDate = LocalDate.now(ZoneId.of(DEFAULT_ZONE_ID));
         LocalDate requestPeriodToDate = requestPeriodFromDate.plusMonths(numberOfMonthsInPeriod);
 
         OffsetTime offsetMidnight = OffsetTime.parse("00:00:00Z").withOffsetSameLocal(ZoneOffset.UTC);

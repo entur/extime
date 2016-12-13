@@ -14,6 +14,7 @@ import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
 import java.util.List;
 
+import static no.rutebanken.extime.Constants.DEFAULT_ZONE_ID;
 import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEADER_TIMETABLE_LARGE_AIRPORT_RANGE;
 import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEADER_TIMETABLE_SMALL_AIRPORT_RANGE;
 
@@ -30,7 +31,7 @@ public class DateUtils {
     }
 
     public List<Range<LocalDate>> generateDateRanges(int numberOfDaysInRange) {
-        LocalDate rangeStartDate = LocalDate.now(ZoneId.of("UTC"));
+        LocalDate rangeStartDate = LocalDate.now(ZoneId.of(DEFAULT_ZONE_ID));
         List<Range<LocalDate>> dateRanges = Lists.newArrayList();
         LocalDate periodEndDate = rangeStartDate.plusMonths(numberOfMonthsInPeriod);
         while (!rangeStartDate.isAfter(periodEndDate)) {
