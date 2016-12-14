@@ -622,8 +622,7 @@ public class ScheduledFlightToNetexConverter {
         return objectFactory.createCodespace()
                 .withId(avinorDataSet.getName().toLowerCase())
                 .withXmlns(AVINOR_AUTHORITY_ID)
-                .withXmlnsUrl(AVINOR_XMLNS_URL);
-                //.withXmlnsUrl(avinorDataSet.getUrl());
+                .withXmlnsUrl(avinorDataSet.getUrl());
     }
 
     // TODO move to factory class

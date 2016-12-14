@@ -18,7 +18,7 @@ public final class Constants {
     public static final String NSR_AUTHORITY_ID = "NSR";
     public static final String AVINOR_AUTHORITY_ID = "AVI";
     public static final String NSR_XMLNS_URL = "http://www.rutebanken.org/ns/nsr";
-    public static final String AVINOR_XMLNS_URL = "http://www.rutebanken.org/ns/avi";
+    public static final String AVINOR_XMLNS_URL = "http://avinor.no/";
     public static final String DEFAULT_COORDINATE_SYSTEM = "WGS84";
     public static final String DEFAULT_ID_SEPARATOR = ":";
 
