@@ -73,12 +73,17 @@ public class ScheduledFlightToNetexConverter {
         String routePath = String.format("%s-%s", scheduledFlight.getDepartureAirportName(), scheduledFlight.getArrivalAirportName());
         String flightId = scheduledFlight.getAirlineFlightId();
 
-        List<RoutePoint> routePoints = createRoutePoints(scheduledFlight);
-        Route route = createRoute(flightId, routePath, scheduledFlight);
         Operator operator = resolveOperatorFromIATA(scheduledFlight.getAirlineIATA());
-        Line line = createLine(route, flightId, routePath, operator);
-        JourneyPattern journeyPattern = createJourneyPattern(route, scheduledFlight);
+        Line line = createLine(flightId, routePath, operator);
 
+        // TODO add support for multiple routes per line
+        List<RoutePoint> routePoints = createRoutePoints(scheduledFlight);
+        Route route = createRoute(flightId, routePath, scheduledFlight, line);
+        RouteRefStructure routeRefStructure = netexObjectFactory.createRouteRefStructure(route.getId());
+        RouteRefs_RelStructure routeRefStruct = objectFactory.createRouteRefs_RelStructure().withRouteRef(routeRefStructure);
+        line.setRoutes(routeRefStruct);
+
+        JourneyPattern journeyPattern = createJourneyPattern(route, scheduledFlight);
         List<DayType> dayTypes = createDayTypes(scheduledFlight.getWeekDaysPattern(), flightId);
         List<ServiceJourney> serviceJourneys = createServiceJourneyList(scheduledFlight, dayTypes, journeyPattern, line);
 
@@ -434,7 +439,7 @@ public class ScheduledFlightToNetexConverter {
         }
     }
 
-    public Route createRoute(String flightId, String routePath, ScheduledFlight scheduledFlight) {
+    public Route createRoute(String flightId, String routePath, ScheduledFlight scheduledFlight, Line line) {
         Map<String, RoutePoint> routePointMap = netexCommonDataSet.getRoutePointMap();
         PointsOnRoute_RelStructure pointsOnRoute = objectFactory.createPointsOnRoute_RelStructure();
 
@@ -470,19 +475,21 @@ public class ScheduledFlightToNetexConverter {
         // TODO find out what to use for route id
         String routeId = NetexObjectIdCreator.createRouteId(AVINOR_AUTHORITY_ID, flightId);
 
+        LineRefStructure lineRefStruct = objectFactory.createLineRefStructure()
+                .withVersion(VERSION_ONE)
+                .withRef(line.getId());
+        JAXBElement<LineRefStructure> lineRefStructElement = objectFactory.createLineRef(lineRefStruct);
+
         return objectFactory.createRoute()
                 .withVersion(VERSION_ONE)
                 .withId(routeId)
                 .withName(createMultilingualString(routePath))
+                .withLineRef(lineRefStructElement)
                 .withPointsInSequence(pointsOnRoute);
     }
 
     // TODO move to factory class
-    private Line createLine(Route route, String flightId, String routePath, Operator operator) {
-        RouteRefStructure routeRefStructure = netexObjectFactory.createRouteRefStructure(route.getId());
-        RouteRefs_RelStructure routeRefs = objectFactory.createRouteRefs_RelStructure()
-                .withRouteRef(routeRefStructure);
-
+    private Line createLine(String flightId, String routePath, Operator operator) {
         OperatorRefStructure operatorRefStructure = netexObjectFactory.createOperatorRefStructure(operator.getId(), Boolean.FALSE);
         String lineId = NetexObjectIdCreator.createLineId(AVINOR_AUTHORITY_ID, flightId);
 
@@ -492,8 +499,7 @@ public class ScheduledFlightToNetexConverter {
                 .withName(createMultilingualString(routePath))
                 .withTransportMode(AllVehicleModesOfTransportEnumeration.AIR)
                 .withPublicCode(flightId)
-                .withOperatorRef(operatorRefStructure)
-                .withRoutes(routeRefs);
+                .withOperatorRef(operatorRefStructure);
     }
 
     private List<ScheduledStopPoint> createScheduledStopPoints(ScheduledFlight scheduledFlight) throws IllegalArgumentException {
