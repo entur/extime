@@ -40,6 +40,7 @@ public class CommonDataToNetexConverter {
         logger.info("Converting common data to NeTEx");
         OffsetDateTime publicationTimestamp = OffsetDateTime.ofInstant(Instant.now(), ZoneId.of(DEFAULT_ZONE_ID));
 
+        // TODO read xmlns urls from configuration dataset instead
         Codespace avinorCodespace = netexObjectFactory.createCodespace(AVINOR_AUTHORITY_ID, AVINOR_XMLNS_URL);
         Codespace nsrCodespace = netexObjectFactory.createCodespace(NSR_AUTHORITY_ID, NSR_XMLNS_URL);
 
