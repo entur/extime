@@ -56,7 +56,7 @@ public class NetexCommonDataSet {
         airportIATAS.sort(Comparator.comparing(Enum::name));
 
         for (AirportIATA airportIATA : airportIATAS) {
-            String stopPlaceId = NetexObjectIdCreator.createStopPlaceId(AVINOR_AUTHORITY_ID, airportIATA.name().toUpperCase());
+            String stopPlaceId = NetexObjectIdCreator.createStopPlaceId(AVINOR_XMLNS, airportIATA.name().toUpperCase());
             StopPlaceDataSet stopPlaceDataSet = stopPlaceDataSets.get(airportIATA.name().toLowerCase());
 
             LocationStructure locationStruct = objectFactory.createLocationStructure()
@@ -88,7 +88,7 @@ public class NetexCommonDataSet {
 
         for (AirportIATA airportIATA : airportIATAS) {
             StopPlaceDataSet stopPlaceDataSet = stopPlaceDataSets.get(airportIATA.name().toLowerCase());
-            String stopPointId = NetexObjectIdCreator.createStopPointId(AVINOR_AUTHORITY_ID, airportIATA.name().toUpperCase());
+            String stopPointId = NetexObjectIdCreator.createStopPointId(AVINOR_XMLNS, airportIATA.name().toUpperCase());
 
             ScheduledStopPoint stopPoint = objectFactory.createScheduledStopPoint()
                     .withVersion(VERSION_ONE)
@@ -118,7 +118,7 @@ public class NetexCommonDataSet {
             String stopPointIdSuffix = StringUtils.split(scheduledStopPoint.getId(), DEFAULT_ID_SEPARATOR)[2];
 
             String passengerStopAssignmentId = NetexObjectIdCreator.createPassengerStopAssignmentId(
-                    AVINOR_AUTHORITY_ID, String.valueOf(stopPointIdSuffix));
+                    AVINOR_XMLNS, String.valueOf(stopPointIdSuffix));
 
             PassengerStopAssignment stopAssignment = objectFactory.createPassengerStopAssignment()
                     .withVersion(VERSION_ONE)
@@ -143,7 +143,7 @@ public class NetexCommonDataSet {
             PointRefStructure pointRefStruct = netexObjectFactory.createPointRefStructure(scheduledStopPoint.getId(), Boolean.TRUE);
 
             String stopPointIdSuffix = StringUtils.split(scheduledStopPoint.getId(), DEFAULT_ID_SEPARATOR)[2];
-            String pointProjectionId = NetexObjectIdCreator.createPointProjectionId(AVINOR_AUTHORITY_ID, stopPointIdSuffix);
+            String pointProjectionId = NetexObjectIdCreator.createPointProjectionId(AVINOR_XMLNS, stopPointIdSuffix);
 
             PointProjection pointProjection = objectFactory.createPointProjection()
                     .withVersion(VERSION_ONE)
@@ -153,7 +153,7 @@ public class NetexCommonDataSet {
             Projections_RelStructure projections = objectFactory.createProjections_RelStructure()
                     .withProjectionRefOrProjection(objectFactory.createPointProjection(pointProjection));
 
-            String routePointId = NetexObjectIdCreator.createRoutePointId(AVINOR_AUTHORITY_ID, stopPointIdSuffix);
+            String routePointId = NetexObjectIdCreator.createRoutePointId(AVINOR_XMLNS, stopPointIdSuffix);
 
             RoutePoint routePoint = objectFactory.createRoutePoint()
                     .withVersion(VERSION_ONE)

@@ -26,7 +26,7 @@ public class NetexObjectFactory {
     public JAXBElement<PublicationDeliveryStructure> createPublicationDeliveryStructureElement(
             OffsetDateTime publicationTimestamp, JAXBElement<CompositeFrame> compositeFrame, String description) {
 
-        NetexStaticDataSet.OrganisationDataSet avinorDataSet = netexStaticDataSet.getOrganisations().get(AVINOR_AUTHORITY_ID.toLowerCase());
+        NetexStaticDataSet.OrganisationDataSet avinorDataSet = netexStaticDataSet.getOrganisations().get(AVINOR_XMLNS.toLowerCase());
 
         PublicationDeliveryStructure.DataObjects dataObjects = objectFactory.createPublicationDeliveryStructureDataObjects();
         dataObjects.getCompositeFrameOrCommonFrame().add(compositeFrame);
@@ -53,7 +53,7 @@ public class NetexObjectFactory {
         VersionFrameDefaultsStructure versionFrameDefaultsStructure = objectFactory.createVersionFrameDefaultsStructure()
                 .withDefaultLocale(localeStructure);
 
-        String compositeFrameId = NetexObjectIdCreator.createCompositeFrameId(AVINOR_AUTHORITY_ID,
+        String compositeFrameId = NetexObjectIdCreator.createCompositeFrameId(AVINOR_XMLNS,
                 String.valueOf(NetexObjectIdCreator.generateRandomId(DEFAULT_START_INCLUSIVE, DEFAULT_END_EXCLUSIVE)));
 
         CompositeFrame compositeFrame = objectFactory.createCompositeFrame()
@@ -72,7 +72,7 @@ public class NetexObjectFactory {
 
         OrganisationsInFrame_RelStructure organisationsStruct = objectFactory.createOrganisationsInFrame_RelStructure();
 
-        String resourceFrameId = NetexObjectIdCreator.createResourceFrameId(AVINOR_AUTHORITY_ID,
+        String resourceFrameId = NetexObjectIdCreator.createResourceFrameId(AVINOR_XMLNS,
                 String.valueOf(NetexObjectIdCreator.generateRandomId(DEFAULT_START_INCLUSIVE, DEFAULT_END_EXCLUSIVE)));
 
         ResourceFrame resourceFrame = objectFactory.createResourceFrame()
@@ -96,7 +96,7 @@ public class NetexObjectFactory {
     public JAXBElement<SiteFrame> createSiteFrameElement(List<StopPlace> stopPlaces) {
         StopPlacesInFrame_RelStructure stopPlacesStruct = objectFactory.createStopPlacesInFrame_RelStructure();
 
-        String siteFrameId = NetexObjectIdCreator.createSiteFrameId(AVINOR_AUTHORITY_ID,
+        String siteFrameId = NetexObjectIdCreator.createSiteFrameId(AVINOR_XMLNS,
                 String.valueOf(NetexObjectIdCreator.generateRandomId(DEFAULT_START_INCLUSIVE, DEFAULT_END_EXCLUSIVE)));
 
         SiteFrame siteFrame = objectFactory.createSiteFrame()
@@ -115,7 +115,7 @@ public class NetexObjectFactory {
         ScheduledStopPointsInFrame_RelStructure scheduledStopPointsStruct = objectFactory.createScheduledStopPointsInFrame_RelStructure();
         StopAssignmentsInFrame_RelStructure stopAssignmentsStruct = objectFactory.createStopAssignmentsInFrame_RelStructure();
 
-        String serviceFrameId = NetexObjectIdCreator.createServiceFrameId(AVINOR_AUTHORITY_ID,
+        String serviceFrameId = NetexObjectIdCreator.createServiceFrameId(AVINOR_XMLNS,
                 String.valueOf(NetexObjectIdCreator.generateRandomId(DEFAULT_START_INCLUSIVE, DEFAULT_END_EXCLUSIVE)));
 
         ServiceFrame serviceFrame = objectFactory.createServiceFrame()
@@ -131,7 +131,7 @@ public class NetexObjectFactory {
     }
 
     public Network createNetwork(OffsetDateTime publicationTimestamp, String airlineIata, String airlineName) {
-        String networkId = NetexObjectIdCreator.createNetworkId(AVINOR_AUTHORITY_ID, airlineIata);
+        String networkId = NetexObjectIdCreator.createNetworkId(AVINOR_XMLNS, airlineIata);
 
         return objectFactory.createNetwork()
                 .withVersion(VERSION_ONE)
@@ -142,9 +142,9 @@ public class NetexObjectFactory {
 
     public JAXBElement<Authority> createAvinorAuthorityElement() {
         NetexStaticDataSet.OrganisationDataSet avinorDataSet = netexStaticDataSet.getOrganisations()
-                .get(AVINOR_AUTHORITY_ID.toLowerCase());
+                .get(AVINOR_XMLNS.toLowerCase());
 
-        String authorityId = NetexObjectIdCreator.createAuthorityId(AVINOR_AUTHORITY_ID, avinorDataSet.getName());
+        String authorityId = NetexObjectIdCreator.createAuthorityId(AVINOR_XMLNS, avinorDataSet.getName());
 
         Authority authority = objectFactory.createAuthority()
                 .withVersion(VERSION_ONE)
@@ -159,9 +159,9 @@ public class NetexObjectFactory {
 
     public JAXBElement<Authority> createNsrAuthorityElement() {
         NetexStaticDataSet.OrganisationDataSet nsrDataSet = netexStaticDataSet.getOrganisations()
-                .get(NSR_AUTHORITY_ID.toLowerCase());
+                .get(NSR_XMLNS.toLowerCase());
 
-        String authorityId = NetexObjectIdCreator.createAuthorityId(NSR_AUTHORITY_ID, NSR_AUTHORITY_ID);
+        String authorityId = NetexObjectIdCreator.createAuthorityId(NSR_XMLNS, NSR_XMLNS);
 
         Authority authority = objectFactory.createAuthority()
                 .withVersion(VERSION_ONE)
@@ -178,7 +178,7 @@ public class NetexObjectFactory {
         NetexStaticDataSet.OrganisationDataSet airlineDataSet = netexStaticDataSet.getOrganisations()
                 .get(airlineIata.toLowerCase());
 
-        String operatorId = NetexObjectIdCreator.createOperatorId(AVINOR_AUTHORITY_ID, airlineIata);
+        String operatorId = NetexObjectIdCreator.createOperatorId(AVINOR_XMLNS, airlineIata);
 
         Operator operator = objectFactory.createOperator()
                 .withVersion(VERSION_ONE)
@@ -208,7 +208,7 @@ public class NetexObjectFactory {
 
     // TODO consider the id generation to be moved to converter level instead, for more precise control, use a uniform way of doing it
     public PointOnRoute createPointOnRoute(String objectId, String stopPointId) {
-        String pointOnRouteId = NetexObjectIdCreator.createPointOnRouteId(AVINOR_AUTHORITY_ID, objectId);
+        String pointOnRouteId = NetexObjectIdCreator.createPointOnRouteId(AVINOR_XMLNS, objectId);
         RoutePointRefStructure routePointRefStruct = createRoutePointRefStructure(stopPointId);
         JAXBElement<RoutePointRefStructure> routePointRefStructElement = objectFactory.createRoutePointRef(routePointRefStruct);
 
@@ -219,7 +219,7 @@ public class NetexObjectFactory {
     }
 
     public StopPointInJourneyPattern createStopPointInJourneyPattern(String objectId, BigInteger orderIndex, String stopPointId) {
-        String stopPointInJourneyPatternId = NetexObjectIdCreator.createStopPointInJourneyPatternId(AVINOR_AUTHORITY_ID, objectId);
+        String stopPointInJourneyPatternId = NetexObjectIdCreator.createStopPointInJourneyPatternId(AVINOR_XMLNS, objectId);
         ScheduledStopPointRefStructure stopPointRefStruct = createScheduledStopPointRefStructure(stopPointId, Boolean.FALSE);
         JAXBElement<ScheduledStopPointRefStructure> stopPointRefStructElement = objectFactory.createScheduledStopPointRef(stopPointRefStruct);
 
