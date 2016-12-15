@@ -101,7 +101,7 @@ public class ScheduledFlightToNetexConverter {
 
     public PublicationDeliveryStructure createPublicationDeliveryStructure(OffsetDateTime publicationTimestamp,
             JAXBElement<CompositeFrame> compositeFrame, String flightId, String routePath) {
-        OrganisationDataSet avinorDataSet = netexStaticDataSet.getOrganisations().get(AVINOR_AUTHORITY_ID.toLowerCase());
+        OrganisationDataSet avinorDataSet = netexStaticDataSet.getOrganisations().get(AVINOR_XMLNS.toLowerCase());
 
         DataObjects dataObjects = objectFactory.createPublicationDeliveryStructureDataObjects();
         dataObjects.getCompositeFrameOrCommonFrame().add(compositeFrame);
@@ -125,7 +125,7 @@ public class ScheduledFlightToNetexConverter {
         VersionFrameDefaultsStructure versionFrameDefaultsStructure = objectFactory.createVersionFrameDefaultsStructure()
                 .withDefaultLocale(localeStructure);
 
-        String compositeFrameId = NetexObjectIdCreator.createCompositeFrameId(AVINOR_AUTHORITY_ID, flightId);
+        String compositeFrameId = NetexObjectIdCreator.createCompositeFrameId(AVINOR_XMLNS, flightId);
 
         CompositeFrame compositeFrame = objectFactory.createCompositeFrame()
                 .withVersion(VERSION_ONE)
@@ -147,7 +147,7 @@ public class ScheduledFlightToNetexConverter {
         // TODO find out how to add unknown operators
         //organisationsInFrame.getOrganisation_().add(netexObjectFactory.createAirlineOperatorElement(""));
 
-        String resourceFrameId = NetexObjectIdCreator.createResourceFrameId(AVINOR_AUTHORITY_ID,
+        String resourceFrameId = NetexObjectIdCreator.createResourceFrameId(AVINOR_XMLNS,
                 String.valueOf(NetexObjectIdCreator.generateRandomId(DEFAULT_START_INCLUSIVE, DEFAULT_END_EXCLUSIVE)));
 
         ResourceFrame resourceFrame = objectFactory.createResourceFrame()
@@ -163,7 +163,7 @@ public class ScheduledFlightToNetexConverter {
         StopPlacesInFrame_RelStructure stopPlacesInFrameRelStructure = objectFactory.createStopPlacesInFrame_RelStructure()
                         .withStopPlace(stopPlaces);
 
-        String siteFrameId = NetexObjectIdCreator.createSiteFrameId(AVINOR_AUTHORITY_ID,
+        String siteFrameId = NetexObjectIdCreator.createSiteFrameId(AVINOR_XMLNS,
                 String.valueOf(NetexObjectIdCreator.generateRandomId(DEFAULT_START_INCLUSIVE, DEFAULT_END_EXCLUSIVE)));
 
         SiteFrame siteFrame = objectFactory.createSiteFrame()
@@ -177,7 +177,7 @@ public class ScheduledFlightToNetexConverter {
     public JAXBElement<ServiceFrame> createServiceFrame(OffsetDateTime publicationTimestamp, String airlineName,
             String airlineIata, String flightId, List<RoutePoint> routePoints, Route route, Line line, JourneyPattern journeyPattern) {
 
-        String networkId = NetexObjectIdCreator.createNetworkId(AVINOR_AUTHORITY_ID, airlineIata);
+        String networkId = NetexObjectIdCreator.createNetworkId(AVINOR_XMLNS, airlineIata);
 
         Network network = objectFactory.createNetwork()
                 .withVersion(VERSION_ONE)
@@ -197,7 +197,7 @@ public class ScheduledFlightToNetexConverter {
         JourneyPatternsInFrame_RelStructure journeyPatternsInFrame = objectFactory.createJourneyPatternsInFrame_RelStructure()
                 .withJourneyPattern_OrJourneyPatternView(objectFactory.createJourneyPattern(journeyPattern));
 
-        String serviceFrameId = NetexObjectIdCreator.createServiceFrameId(AVINOR_AUTHORITY_ID, flightId);
+        String serviceFrameId = NetexObjectIdCreator.createServiceFrameId(AVINOR_XMLNS, flightId);
 
         ServiceFrame serviceFrame = objectFactory.createServiceFrame()
                 .withVersion(VERSION_ONE)
@@ -215,7 +215,7 @@ public class ScheduledFlightToNetexConverter {
         DayTypesInFrame_RelStructure dayTypesStructure = objectFactory.createDayTypesInFrame_RelStructure();
         dayTypes.forEach(dayType -> dayTypesStructure.getDayType_().add(objectFactory.createDayType(dayType)));
 
-        String serviceCalendarFrameId = NetexObjectIdCreator.createServiceCalendarFrameId(AVINOR_AUTHORITY_ID,
+        String serviceCalendarFrameId = NetexObjectIdCreator.createServiceCalendarFrameId(AVINOR_XMLNS,
                 String.valueOf(NetexObjectIdCreator.generateRandomId(DEFAULT_START_INCLUSIVE, DEFAULT_END_EXCLUSIVE)));
 
         ServiceCalendarFrame serviceCalendarFrame = objectFactory.createServiceCalendarFrame()
@@ -233,7 +233,7 @@ public class ScheduledFlightToNetexConverter {
         JourneysInFrame_RelStructure journeysInFrameRelStructure = objectFactory.createJourneysInFrame_RelStructure();
         journeysInFrameRelStructure.getDatedServiceJourneyOrDeadRunOrServiceJourney().addAll(serviceJourneys);
 
-        String timetableFrameId = NetexObjectIdCreator.createTimetableFrameId(AVINOR_AUTHORITY_ID,
+        String timetableFrameId = NetexObjectIdCreator.createTimetableFrameId(AVINOR_XMLNS,
                 String.valueOf(NetexObjectIdCreator.generateRandomId(DEFAULT_START_INCLUSIVE, DEFAULT_END_EXCLUSIVE)));
 
         TimetableFrame timetableFrame = objectFactory.createTimetableFrame()
@@ -283,7 +283,7 @@ public class ScheduledFlightToNetexConverter {
         PropertiesOfDay_RelStructure propertiesOfDay = objectFactory.createPropertiesOfDay_RelStructure()
                 .withPropertyOfDay(propertyOfDayWeekDays);
 
-        String dayTypeId = NetexObjectIdCreator.createDayTypeId(AVINOR_AUTHORITY_ID, String.format("%s_%s", flightId, objectId));
+        String dayTypeId = NetexObjectIdCreator.createDayTypeId(AVINOR_XMLNS, String.format("%s_%s", flightId, objectId));
 
         return objectFactory.createDayType()
                 .withVersion(VERSION_ONE)
@@ -293,7 +293,7 @@ public class ScheduledFlightToNetexConverter {
     }
 
     public JAXBElement<AvailabilityCondition> createAvailabilityCondition(AvailabilityPeriod availabilityPeriod) {
-        String availabilityConditionId = NetexObjectIdCreator.createAvailabilityConditionId(AVINOR_AUTHORITY_ID,
+        String availabilityConditionId = NetexObjectIdCreator.createAvailabilityConditionId(AVINOR_XMLNS,
                 String.valueOf(NetexObjectIdCreator.generateRandomId(DEFAULT_START_INCLUSIVE, DEFAULT_END_EXCLUSIVE)));
 
         AvailabilityCondition availabilityCondition = objectFactory.createAvailabilityCondition()
@@ -342,7 +342,7 @@ public class ScheduledFlightToNetexConverter {
                     .withRef(line.getId());
             JAXBElement<LineRefStructure> lineRefStructElement = objectFactory.createLineRef(lineRefStruct);
 
-            String serviceJourneyId = NetexObjectIdCreator.createServiceJourneyId(AVINOR_AUTHORITY_ID, scheduledFlight.getAirlineFlightId());
+            String serviceJourneyId = NetexObjectIdCreator.createServiceJourneyId(AVINOR_XMLNS, scheduledFlight.getAirlineFlightId());
 
             // TODO move to factory
             ServiceJourney serviceJourney = objectFactory.createServiceJourney()
@@ -384,7 +384,7 @@ public class ScheduledFlightToNetexConverter {
                     .withRef(line.getId());
             JAXBElement<LineRefStructure> lineRefStructElement = objectFactory.createLineRef(lineRefStruct);
 
-            String serviceJourneyId = NetexObjectIdCreator.createServiceJourneyId(AVINOR_AUTHORITY_ID, scheduledFlight.getAirlineFlightId());
+            String serviceJourneyId = NetexObjectIdCreator.createServiceJourneyId(AVINOR_XMLNS, scheduledFlight.getAirlineFlightId());
 
             // TODO move to factory
             ServiceJourney serviceJourney = objectFactory.createServiceJourney()
@@ -468,7 +468,7 @@ public class ScheduledFlightToNetexConverter {
         }
 
         // TODO find out what to use for route id
-        String routeId = NetexObjectIdCreator.createRouteId(AVINOR_AUTHORITY_ID, flightId);
+        String routeId = NetexObjectIdCreator.createRouteId(AVINOR_XMLNS, flightId);
 
         return objectFactory.createRoute()
                 .withVersion(VERSION_ONE)
@@ -484,7 +484,7 @@ public class ScheduledFlightToNetexConverter {
                 .withRouteRef(routeRefStructure);
 
         OperatorRefStructure operatorRefStructure = netexObjectFactory.createOperatorRefStructure(operator.getId(), Boolean.FALSE);
-        String lineId = NetexObjectIdCreator.createLineId(AVINOR_AUTHORITY_ID, flightId);
+        String lineId = NetexObjectIdCreator.createLineId(AVINOR_XMLNS, flightId);
 
         return objectFactory.createLine()
                 .withVersion(VERSION_ONE)
@@ -581,7 +581,7 @@ public class ScheduledFlightToNetexConverter {
                 .withRef(route.getId());
 
         int journeyPatternObjectId = NetexObjectIdCreator.generateRandomId(DEFAULT_START_INCLUSIVE, DEFAULT_END_EXCLUSIVE);
-        String journeyPatternId = NetexObjectIdCreator.createJourneyPatternId(AVINOR_AUTHORITY_ID, String.valueOf(journeyPatternObjectId));
+        String journeyPatternId = NetexObjectIdCreator.createJourneyPatternId(AVINOR_XMLNS, String.valueOf(journeyPatternObjectId));
 
         return objectFactory.createJourneyPattern()
                 .withVersion(VERSION_ONE)
@@ -617,27 +617,27 @@ public class ScheduledFlightToNetexConverter {
 
     // TODO move to factory class
     public Codespace avinorCodespace() {
-        OrganisationDataSet avinorDataSet = netexStaticDataSet.getOrganisations().get(AVINOR_AUTHORITY_ID.toLowerCase());
+        OrganisationDataSet avinorDataSet = netexStaticDataSet.getOrganisations().get(AVINOR_XMLNS.toLowerCase());
 
         return objectFactory.createCodespace()
                 .withId(avinorDataSet.getName().toLowerCase())
-                .withXmlns(AVINOR_AUTHORITY_ID)
+                .withXmlns(AVINOR_XMLNS)
                 .withXmlnsUrl(avinorDataSet.getUrl());
     }
 
     // TODO move to factory class
     public Codespace nsrCodespace() {
-        OrganisationDataSet nsrDataSet = netexStaticDataSet.getOrganisations().get(NSR_AUTHORITY_ID.toLowerCase());
+        OrganisationDataSet nsrDataSet = netexStaticDataSet.getOrganisations().get(NSR_XMLNS.toLowerCase());
 
         return objectFactory.createCodespace()
-                .withId(NSR_AUTHORITY_ID.toLowerCase())
-                .withXmlns(NSR_AUTHORITY_ID)
+                .withId(NSR_XMLNS.toLowerCase())
+                .withXmlns(NSR_XMLNS)
                 .withXmlnsUrl(nsrDataSet.getUrl());
     }
 
     // TODO move to factory class
     public Operator createKnownOperator(String airlineIata, OrganisationDataSet organisationDataSet) {
-        String operatorId = NetexObjectIdCreator.createOperatorId(AVINOR_AUTHORITY_ID, airlineIata);
+        String operatorId = NetexObjectIdCreator.createOperatorId(AVINOR_XMLNS, airlineIata);
 
         return objectFactory.createOperator()
                 .withVersion(VERSION_ONE)
@@ -652,7 +652,7 @@ public class ScheduledFlightToNetexConverter {
 
     private Operator createUnknowOperator(String airlineIata) {
         //logUnknownOperator(airlineIata);
-        String operatorId = NetexObjectIdCreator.createOperatorId(AVINOR_AUTHORITY_ID, airlineIata);
+        String operatorId = NetexObjectIdCreator.createOperatorId(AVINOR_XMLNS, airlineIata);
 
         return objectFactory.createOperator()
                 .withVersion(VERSION_ONE)

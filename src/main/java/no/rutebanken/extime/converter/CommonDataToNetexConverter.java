@@ -41,8 +41,8 @@ public class CommonDataToNetexConverter {
         OffsetDateTime publicationTimestamp = OffsetDateTime.ofInstant(Instant.now(), ZoneId.of(DEFAULT_ZONE_ID));
 
         // TODO read xmlns urls from configuration dataset instead
-        Codespace avinorCodespace = netexObjectFactory.createCodespace(AVINOR_AUTHORITY_ID, AVINOR_XMLNS_URL);
-        Codespace nsrCodespace = netexObjectFactory.createCodespace(NSR_AUTHORITY_ID, NSR_XMLNS_URL);
+        Codespace avinorCodespace = netexObjectFactory.createCodespace(AVINOR_XMLNS, AVINOR_XMLNSURL);
+        Codespace nsrCodespace = netexObjectFactory.createCodespace(NSR_XMLNS, NSR_XMLNSURL);
 
         // TODO consider separating authorities and operators in yaml configuration file for static data
         JAXBElement<Authority> avinorAuthorityElement = netexObjectFactory.createAvinorAuthorityElement();
