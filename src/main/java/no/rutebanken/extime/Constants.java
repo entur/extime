@@ -5,14 +5,12 @@ public final class Constants {
     private Constants() {}
 
     // common application constants
-
     public static final String DEFAULT_ZONE_ID = "UTC";
     public static final String DEFAULT_LANGUAGE = "no";
     public static final int DEFAULT_START_INCLUSIVE = 1111111;
     public static final int DEFAULT_END_EXCLUSIVE = 8888888;
 
     // netex specific constants
-
     public static final String NETEX_PROFILE_VERSION = "1.04:NO-NeTEx-networktimetable:1.0";
     public static final String VERSION_ONE = "1";
 
