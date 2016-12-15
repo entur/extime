@@ -502,6 +502,18 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
 		
 		String filename = network+"-"+publicCode+"-"+line.getName().getValue().replace('/', '_');
 		
-		return filename;
+		return rewriteNorwegianCharacters(filename);
     }
+	
+	public static String rewriteNorwegianCharacters(String s) {
+		s = s.replace("Å", "AA");
+		s = s.replace("Ø", "OE");
+		s = s.replace("Æ", "AE");
+		s = s.replace("å", "aa");
+		s = s.replace("ø", "oe");
+		s = s.replace("æ", "ae");
+		
+		
+		return s;
+	}
 }
