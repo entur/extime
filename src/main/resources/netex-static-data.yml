@@ -196,11 +196,6 @@ netex-data-sets:
       location:
         latitude: 68.44052
         longitude: 17.40815
-    ola:
-      name: Ørland Lufthavn
-      location:
-        latitude: 63.703955
-        longitude: 9.616490
     osl:
       name: Oslo Lufthavn
       location:
