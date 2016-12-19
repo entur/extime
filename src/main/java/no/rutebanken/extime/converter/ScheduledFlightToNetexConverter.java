@@ -69,6 +69,7 @@ public class ScheduledFlightToNetexConverter {
 
     public JAXBElement<PublicationDeliveryStructure> convertToNetex(ScheduledFlight scheduledFlight) throws Exception {
         OffsetDateTime publicationTimestamp = OffsetDateTime.ofInstant(Instant.now(), ZoneId.of(DEFAULT_ZONE_ID));
+        AvailabilityPeriod availabilityPeriod = scheduledFlight.getAvailabilityPeriod();
 
         String routePath = String.format("%s-%s", scheduledFlight.getDepartureAirportName(), scheduledFlight.getArrivalAirportName());
         String flightId = scheduledFlight.getAirlineFlightId();
@@ -89,17 +90,19 @@ public class ScheduledFlightToNetexConverter {
 
         Frames_RelStructure frames = objectFactory.createFrames_RelStructure();
 
-        JAXBElement<ServiceFrame> serviceFrame = createServiceFrame(publicationTimestamp,
-                scheduledFlight.getAirlineName(), scheduledFlight.getAirlineIATA(), flightId, routePoints, route, line,
-                journeyPattern); // TODO refactor and use netex object factory method
-
+        JAXBElement<ServiceFrame> serviceFrame = createServiceFrame(publicationTimestamp, scheduledFlight.getAirlineName(),
+                scheduledFlight.getAirlineIATA(), flightId, routePoints, route, line, journeyPattern);
         frames.getCommonFrame().add(serviceFrame);
-        frames.getCommonFrame().add(createTimetableFrame(scheduledFlight.getAvailabilityPeriod(), serviceJourneys));
-        frames.getCommonFrame().add(createServiceCalendarFrame(dayTypes));
+
+        JAXBElement<TimetableFrame> timetableFrame = createTimetableFrame(availabilityPeriod, serviceJourneys);
+        frames.getCommonFrame().add(timetableFrame);
+
+        JAXBElement<ServiceCalendarFrame> serviceCalendarFrame = createServiceCalendarFrame(availabilityPeriod, dayTypes);
+        frames.getCommonFrame().add(serviceCalendarFrame);
 
         //cleanStopPointsFromTempValues(scheduledStopPoints); // TODO fix this to remove short names from stop points, or move to common converter
 
-        JAXBElement<CompositeFrame> compositeFrame = createCompositeFrame(publicationTimestamp, flightId, frames); // TODO refactor and use netex object factory method
+        JAXBElement<CompositeFrame> compositeFrame = createCompositeFrame(publicationTimestamp, availabilityPeriod, flightId, frames); // TODO refactor and use netex object factory method
         PublicationDeliveryStructure publicationDeliveryStructure = createPublicationDeliveryStructure(publicationTimestamp, compositeFrame, flightId, routePath); // TODO refactor and use netex object factory method
         return objectFactory.createPublicationDelivery(publicationDeliveryStructure);
     }
@@ -119,7 +122,10 @@ public class ScheduledFlightToNetexConverter {
                 .withDataObjects(dataObjects);
     }
 
-    public JAXBElement<CompositeFrame> createCompositeFrame(OffsetDateTime publicationTimestamp, String flightId, Frames_RelStructure frames) {
+    public JAXBElement<CompositeFrame> createCompositeFrame(OffsetDateTime publicationTimestamp, AvailabilityPeriod availabilityPeriod, String flightId, Frames_RelStructure frames) {
+        ValidityConditions_RelStructure validityConditionsStruct = objectFactory.createValidityConditions_RelStructure()
+                .withValidityConditionRefOrValidBetweenOrValidityCondition_(createAvailabilityCondition(availabilityPeriod));
+
         Codespaces_RelStructure codespaces = objectFactory.createCodespaces_RelStructure()
                 .withCodespaceRefOrCodespace(Arrays.asList(avinorCodespace(), nsrCodespace()));
 
@@ -136,6 +142,7 @@ public class ScheduledFlightToNetexConverter {
                 .withVersion(VERSION_ONE)
                 .withCreated(publicationTimestamp)
                 .withId(compositeFrameId)
+                .withValidityConditions(validityConditionsStruct)
                 .withCodespaces(codespaces)
                 .withFrameDefaults(versionFrameDefaultsStructure)
                 .withFrames(frames);
@@ -216,7 +223,11 @@ public class ScheduledFlightToNetexConverter {
         return objectFactory.createServiceFrame(serviceFrame);
     }
 
-    public JAXBElement<ServiceCalendarFrame> createServiceCalendarFrame(List<DayType> dayTypes) {
+    // TODO implement operating period on calendar frame
+    public JAXBElement<ServiceCalendarFrame> createServiceCalendarFrame(AvailabilityPeriod availabilityPeriod, List<DayType> dayTypes) {
+        ValidityConditions_RelStructure validityConditionsStruct = objectFactory.createValidityConditions_RelStructure()
+                .withValidityConditionRefOrValidBetweenOrValidityCondition_(createAvailabilityCondition(availabilityPeriod));
+
         DayTypesInFrame_RelStructure dayTypesStructure = objectFactory.createDayTypesInFrame_RelStructure();
         dayTypes.forEach(dayType -> dayTypesStructure.getDayType_().add(objectFactory.createDayType(dayType)));
 
@@ -226,13 +237,14 @@ public class ScheduledFlightToNetexConverter {
         ServiceCalendarFrame serviceCalendarFrame = objectFactory.createServiceCalendarFrame()
                 .withVersion(VERSION_ONE)
                 .withId(serviceCalendarFrameId)
+                .withValidityConditions(validityConditionsStruct)
                 .withDayTypes(dayTypesStructure);
 
         return objectFactory.createServiceCalendarFrame(serviceCalendarFrame);
     }
 
     public JAXBElement<TimetableFrame> createTimetableFrame(AvailabilityPeriod availabilityPeriod, List<ServiceJourney> serviceJourneys) {
-        ValidityConditions_RelStructure validityConditionsRelStructure = objectFactory.createValidityConditions_RelStructure()
+        ValidityConditions_RelStructure validityConditionsStruct = objectFactory.createValidityConditions_RelStructure()
                 .withValidityConditionRefOrValidBetweenOrValidityCondition_(createAvailabilityCondition(availabilityPeriod));
 
         JourneysInFrame_RelStructure journeysInFrameRelStructure = objectFactory.createJourneysInFrame_RelStructure();
@@ -244,7 +256,7 @@ public class ScheduledFlightToNetexConverter {
         TimetableFrame timetableFrame = objectFactory.createTimetableFrame()
                 .withVersion(VERSION_ONE)
                 .withId(timetableFrameId)
-                .withValidityConditions(validityConditionsRelStructure)
+                .withValidityConditions(validityConditionsStruct)
                 .withVehicleJourneys(journeysInFrameRelStructure);
 
         return objectFactory.createTimetableFrame(timetableFrame);
