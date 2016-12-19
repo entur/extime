@@ -624,7 +624,7 @@ public class ScheduledFlightToNetexConverter {
     // TODO move to factory class
     public Codespace avinorCodespace() {
         return objectFactory.createCodespace()
-                .withId(NSR_XMLNS.toLowerCase())
+                .withId(AVINOR_XMLNS.toLowerCase())
                 .withXmlns(AVINOR_XMLNS)
                 .withXmlnsUrl(AVINOR_XMLNSURL);
     }
