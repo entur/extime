@@ -48,20 +48,6 @@ netex-data-sets:
       phone: 0047 725 22 790
       url: https://www.airnorway.no
       details:
-    ltr:
-      company-number:
-      name: Lufttransport
-      legal-name: LUFTTRANSPORT AS
-      phone: 0047 776 08 300
-      url: http://www.lufttransport.no
-      details:
-    os:
-      company-number:
-      name: Austrian Airlines
-      legal-name: AUSTRIAN AIRLINES
-      phone: 0047 815 21 052
-      url: https://www.austrian.com
-      details:
 
   # StopPlace types that, for now, corresponding directly to the actual airports. In future versions these can
   # be divided into actual gates at the airport, that will map directly to the Quay type in NeTEx.
@@ -210,6 +196,11 @@ netex-data-sets:
       location:
         latitude: 68.44052
         longitude: 17.40815
+    ola:
+      name: Ørland Lufthavn
+      location:
+        latitude: 63.703955
+        longitude: 9.616490
     osl:
       name: Oslo Lufthavn
       location:

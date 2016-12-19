@@ -635,22 +635,18 @@ public class ScheduledFlightToNetexConverter {
 
     // TODO move to factory class
     public Codespace avinorCodespace() {
-        OrganisationDataSet avinorDataSet = netexStaticDataSet.getOrganisations().get(AVINOR_XMLNS.toLowerCase());
-
         return objectFactory.createCodespace()
-                .withId(avinorDataSet.getName().toLowerCase())
+                .withId(NSR_XMLNS.toLowerCase())
                 .withXmlns(AVINOR_XMLNS)
-                .withXmlnsUrl(avinorDataSet.getUrl());
+                .withXmlnsUrl(AVINOR_XMLNSURL);
     }
 
     // TODO move to factory class
     public Codespace nsrCodespace() {
-        OrganisationDataSet nsrDataSet = netexStaticDataSet.getOrganisations().get(NSR_XMLNS.toLowerCase());
-
         return objectFactory.createCodespace()
                 .withId(NSR_XMLNS.toLowerCase())
                 .withXmlns(NSR_XMLNS)
-                .withXmlnsUrl(nsrDataSet.getUrl());
+                .withXmlnsUrl(NSR_XMLNSURL);
     }
 
     // TODO move to factory class
