@@ -6,13 +6,6 @@ netex-data-sets:
   # most often corresponding to aviation authorities and airlines
 
   organisations:
-    nsr:
-      company-number:
-      name: Nasjonal Stoppestedsregister
-      legal-name: NASJONAL STOPPESTEDSREGISTER
-      phone:
-      url: http://www.rutebanken.org/ns/nsr
-      details:
     avi:
       company-number: 985198292
       name: Avinor
