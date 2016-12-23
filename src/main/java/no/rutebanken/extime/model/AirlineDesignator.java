@@ -4,8 +4,8 @@ import java.util.EnumSet;
 
 public enum AirlineDesignator {
 
-    DY, SK, WF, M3;
+    DY, SK, WF, M3, LTR;
 
-    public static EnumSet<AirlineDesignator> commonDesignators = EnumSet.of(DY, SK, WF, M3);
+    public static EnumSet<AirlineDesignator> commonDesignators = EnumSet.of(DY, SK, WF, M3, LTR);
 
 }
