@@ -94,10 +94,10 @@ public class ScheduledFlightToNetexConverter {
                 scheduledFlight.getAirlineIATA(), flightId, routePoints, route, line, journeyPattern);
         frames.getCommonFrame().add(serviceFrame);
 
-        JAXBElement<TimetableFrame> timetableFrame = createTimetableFrame(availabilityPeriod, serviceJourneys);
+        JAXBElement<TimetableFrame> timetableFrame = createTimetableFrame(serviceJourneys);
         frames.getCommonFrame().add(timetableFrame);
 
-        JAXBElement<ServiceCalendarFrame> serviceCalendarFrame = createServiceCalendarFrame(availabilityPeriod, dayTypes);
+        JAXBElement<ServiceCalendarFrame> serviceCalendarFrame = createServiceCalendarFrame(dayTypes);
         frames.getCommonFrame().add(serviceCalendarFrame);
 
         //cleanStopPointsFromTempValues(scheduledStopPoints); // TODO fix this to remove short names from stop points, or move to common converter
@@ -224,10 +224,7 @@ public class ScheduledFlightToNetexConverter {
     }
 
     // TODO implement operating period on calendar frame
-    public JAXBElement<ServiceCalendarFrame> createServiceCalendarFrame(AvailabilityPeriod availabilityPeriod, List<DayType> dayTypes) {
-        ValidityConditions_RelStructure validityConditionsStruct = objectFactory.createValidityConditions_RelStructure()
-                .withValidityConditionRefOrValidBetweenOrValidityCondition_(createAvailabilityCondition(availabilityPeriod));
-
+    public JAXBElement<ServiceCalendarFrame> createServiceCalendarFrame(List<DayType> dayTypes) {
         DayTypesInFrame_RelStructure dayTypesStructure = objectFactory.createDayTypesInFrame_RelStructure();
         dayTypes.forEach(dayType -> dayTypesStructure.getDayType_().add(objectFactory.createDayType(dayType)));
 
@@ -237,15 +234,12 @@ public class ScheduledFlightToNetexConverter {
         ServiceCalendarFrame serviceCalendarFrame = objectFactory.createServiceCalendarFrame()
                 .withVersion(VERSION_ONE)
                 .withId(serviceCalendarFrameId)
-                .withValidityConditions(validityConditionsStruct)
                 .withDayTypes(dayTypesStructure);
 
         return objectFactory.createServiceCalendarFrame(serviceCalendarFrame);
     }
 
-    public JAXBElement<TimetableFrame> createTimetableFrame(AvailabilityPeriod availabilityPeriod, List<ServiceJourney> serviceJourneys) {
-        ValidityConditions_RelStructure validityConditionsStruct = objectFactory.createValidityConditions_RelStructure()
-                .withValidityConditionRefOrValidBetweenOrValidityCondition_(createAvailabilityCondition(availabilityPeriod));
+    public JAXBElement<TimetableFrame> createTimetableFrame(List<ServiceJourney> serviceJourneys) {
 
         JourneysInFrame_RelStructure journeysInFrameRelStructure = objectFactory.createJourneysInFrame_RelStructure();
         journeysInFrameRelStructure.getDatedServiceJourneyOrDeadRunOrServiceJourney().addAll(serviceJourneys);
@@ -256,7 +250,6 @@ public class ScheduledFlightToNetexConverter {
         TimetableFrame timetableFrame = objectFactory.createTimetableFrame()
                 .withVersion(VERSION_ONE)
                 .withId(timetableFrameId)
-                .withValidityConditions(validityConditionsStruct)
                 .withVehicleJourneys(journeysInFrameRelStructure);
 
         return objectFactory.createTimetableFrame(timetableFrame);
