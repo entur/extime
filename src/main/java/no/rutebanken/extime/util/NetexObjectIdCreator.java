@@ -59,6 +59,10 @@ public class NetexObjectIdCreator {
         return NetexObjectIdCreator.composeNetexObjectId(objectIdPrefix, NetexObjectIdTypes.STOP_PLACE_KEY, objectId);
     }
 
+    public static String createQuayId(String objectIdPrefix, String objectId) {
+        return NetexObjectIdCreator.composeNetexObjectId(objectIdPrefix, NetexObjectIdTypes.QUAY_KEY, objectId);
+    }
+
     public static String createStopPointId(String objectIdPrefix, String objectId) {
         return NetexObjectIdCreator.composeNetexObjectId(objectIdPrefix, NetexObjectIdTypes.STOP_POINT_KEY, objectId);
     }

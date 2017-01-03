@@ -38,6 +38,7 @@ public class NetexCommonDataSet {
     private NetexObjectFactory netexObjectFactory;
 
     private Map<String, StopPlace> stopPlaceMap = new HashMap<>();
+    private Map<String, Quay> quayMap = new HashMap<>();
     private Map<String, ScheduledStopPoint> stopPointMap = new HashMap<>();
     private Map<String, PassengerStopAssignment> stopAssignmentMap = new HashMap<>();
     private Map<String, RoutePoint> routePointMap = new HashMap<>();
@@ -57,6 +58,7 @@ public class NetexCommonDataSet {
 
         for (AirportIATA airportIATA : airportIATAS) {
             String stopPlaceId = NetexObjectIdCreator.createStopPlaceId(AVINOR_XMLNS, airportIATA.name().toUpperCase());
+            String quayId = NetexObjectIdCreator.createQuayId(AVINOR_XMLNS, airportIATA.name().toUpperCase());
             StopPlaceDataSet stopPlaceDataSet = stopPlaceDataSets.get(airportIATA.name().toLowerCase());
 
             LocationStructure locationStruct = objectFactory.createLocationStructure()
@@ -67,15 +69,24 @@ public class NetexCommonDataSet {
             SimplePoint_VersionStructure pointStruct = objectFactory.createSimplePoint_VersionStructure()
                     .withLocation(locationStruct);
 
+            Quay quay = objectFactory.createQuay()
+                    .withVersion(VERSION_ONE)
+                    .withId(quayId)
+                    .withCentroid(pointStruct);
+
+            Quays_RelStructure quayRefStruct = objectFactory.createQuays_RelStructure().withQuayRefOrQuay(quay);
+
             StopPlace stopPlace = objectFactory.createStopPlace()
                     .withVersion(VERSION_ONE)
                     .withId(stopPlaceId)
                     .withName(objectFactory.createMultilingualString().withValue(stopPlaceDataSet.getName()))
                     .withShortName(objectFactory.createMultilingualString().withValue(airportIATA.name()))
                     .withCentroid(pointStruct)
-                    .withStopPlaceType(StopTypeEnumeration.AIRPORT);
+                    .withStopPlaceType(StopTypeEnumeration.AIRPORT)
+                    .withQuays(quayRefStruct);
 
             stopPlaceMap.put(airportIATA.name(), stopPlace);
+            quayMap.put(airportIATA.name(), quay);
         }
 
         logger.info("map populated with {} stop places", stopPlaceMap.size());
@@ -113,8 +124,8 @@ public class NetexCommonDataSet {
             ScheduledStopPointRefStructure scheduledStopPointRefStruct =
                     netexObjectFactory.createScheduledStopPointRefStructure(scheduledStopPoint.getId(), Boolean.TRUE);
 
-            StopPlace stopPlace = stopPlaceMap.get(airportIATA.name());
-            StopPlaceRefStructure stopPlaceRefStruct = netexObjectFactory.createStopPlaceRefStructure(stopPlace.getId(), Boolean.TRUE);
+            QuayRefStructure quayRefStruct = netexObjectFactory.createQuayRefStructure(quayMap.get(airportIATA.name()).getId(), Boolean.TRUE);
+
             String stopPointIdSuffix = StringUtils.split(scheduledStopPoint.getId(), DEFAULT_ID_SEPARATOR)[2];
 
             String passengerStopAssignmentId = NetexObjectIdCreator.createPassengerStopAssignmentId(
@@ -125,7 +136,7 @@ public class NetexCommonDataSet {
                     .withOrder(new BigInteger(Integer.toString(index)))
                     .withId(passengerStopAssignmentId)
                     .withScheduledStopPointRef(scheduledStopPointRefStruct)
-                    .withStopPlaceRef(stopPlaceRefStruct);
+                    .withQuayRef(quayRefStruct);
             stopAssignmentMap.put(airportIATA.name(), stopAssignment);
             index++;
         }

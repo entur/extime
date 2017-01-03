@@ -266,6 +266,12 @@ public class NetexObjectFactory {
         return withRefValidation ? stopPlaceRefStruct.withVersion(VERSION_ONE) : stopPlaceRefStruct;
     }
 
+    public QuayRefStructure createQuayRefStructure(String quayId, boolean withRefValidation) {
+        QuayRefStructure quayRefStructure = objectFactory.createQuayRefStructure()
+                .withRef(quayId);
+        return withRefValidation ? quayRefStructure.withVersion(VERSION_ONE) : quayRefStructure;
+    }
+
     public ScheduledStopPointRefStructure createScheduledStopPointRefStructure(String stopPointId, boolean withRefValidation) {
         ScheduledStopPointRefStructure scheduledStopPointRefStruct = objectFactory.createScheduledStopPointRefStructure()
                 .withRef(stopPointId);
