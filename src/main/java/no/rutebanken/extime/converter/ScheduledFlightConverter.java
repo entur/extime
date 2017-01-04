@@ -26,6 +26,8 @@ import java.math.BigInteger;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -145,7 +147,15 @@ public class ScheduledFlightConverter {
             distinctFlights.add(scheduledFlight);
         }
 
-        return distinctFlights;
+        return distinctFlights.stream()
+                .filter(distinctByKey(ScheduledFlight::getAirlineFlightId))
+                .collect(Collectors.toList());
+        //return distinctFlights;
+    }
+
+    private <T> Predicate<T> distinctByKey(Function<? super T, Object> keyExtractor) {
+        Map<Object, Boolean> map = new ConcurrentHashMap<>();
+        return t -> map.putIfAbsent(keyExtractor.apply(t), Boolean.TRUE) == null;
     }
 
     private List<Flight> filterValidFlights(List<Flight> scheduledFlights) {
