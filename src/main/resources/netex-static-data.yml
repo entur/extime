@@ -48,13 +48,6 @@ netex-data-sets:
       phone: 0047 725 22 790
       url: https://www.airnorway.no
       details:
-    os:
-      company-number: 981400011
-      name: Austrian Airlines
-      legal-name: AUSTRIAN AIRLINES NORSK AVDELING AV UTENLANDSK FORETAK
-      phone: 0047 815 21 052
-      url: https://www.austrian.com/?sc_lang=no&cc=NO
-      details:
     ltr:
       company-number: 912 692 930
       name: LuftTransport

@@ -55,19 +55,6 @@ public class ScheduledFlightToNetexConverterTest {
                 .isNotNull();
     }
 
-    @Test
-    public void testCreateMultilingualString() {
-        MultilingualString multilingualString = clazzUnderTest.createMultilingualString("TEST-STRING");
-
-        Assertions.assertThat(multilingualString)
-                .isNotNull();
-        Assertions.assertThat(multilingualString.getValue())
-                .isNotNull()
-                .isNotEmpty()
-                .isEqualTo("TEST-STRING");
-    }
-
-
     public ScheduledDirectFlight createScheduledDirectFlight(String airlineIATA, String flightId) {
         ScheduledDirectFlight directFlight = new ScheduledDirectFlight();
         directFlight.setFlightId(BigInteger.ONE);

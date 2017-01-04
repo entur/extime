@@ -93,6 +93,21 @@ public class NetexObjectFactory {
         return objectFactory.createResourceFrame(resourceFrame);
     }
 
+    public JAXBElement<ResourceFrame> createResourceFrameElement(Operator operator) {
+        OrganisationsInFrame_RelStructure organisationsStruct = objectFactory.createOrganisationsInFrame_RelStructure();
+        organisationsStruct.getOrganisation_().add(createAirlineOperatorElement(operator));
+
+        String resourceFrameId = NetexObjectIdCreator.createResourceFrameId(AVINOR_XMLNS,
+                String.valueOf(NetexObjectIdCreator.generateRandomId(DEFAULT_START_INCLUSIVE, DEFAULT_END_EXCLUSIVE)));
+
+        ResourceFrame resourceFrame = objectFactory.createResourceFrame()
+                .withVersion(VERSION_ONE)
+                .withId(resourceFrameId);
+        resourceFrame.setOrganisations(organisationsStruct);
+
+        return objectFactory.createResourceFrame(resourceFrame);
+    }
+
     public JAXBElement<SiteFrame> createSiteFrameElement(List<StopPlace> stopPlaces) {
         StopPlacesInFrame_RelStructure stopPlacesStruct = objectFactory.createStopPlacesInFrame_RelStructure();
 
@@ -193,6 +208,22 @@ public class NetexObjectFactory {
         return objectFactory.createOperator(operator);
     }
 
+    public JAXBElement<Operator> createAirlineOperatorElement(Operator operator) {
+        return objectFactory.createOperator(operator);
+    }
+
+    public Operator createInfrequentAirlineOperatorElement(String airlineIata, String airlineName, String operatorId) {
+        return objectFactory.createOperator()
+                .withVersion(VERSION_ONE)
+                .withId(operatorId)
+                .withCompanyNumber("999999999")
+                .withName(createMultilingualString(airlineName.trim()))
+                .withLegalName(createMultilingualString((airlineName.trim().toUpperCase())))
+                .withContactDetails(createContactStructure("0047 99999999", String.format("http://%s.no/", airlineIata.toLowerCase())))
+                .withCustomerServiceContactDetails(createContactStructure("0047 99999999", String.format("http://%s.no/", airlineIata.toLowerCase())))
+                .withOrganisationType(OrganisationTypeEnumeration.OPERATOR);
+    }
+
     public ContactStructure createContactStructure(String phone, String url) {
         return objectFactory.createContactStructure()
                 .withPhone(phone)
@@ -204,6 +235,18 @@ public class NetexObjectFactory {
                 .withId(id.toLowerCase())
                 .withXmlns(id)
                 .withXmlnsUrl(xmlnsUrl);
+    }
+
+    public Line createLine(String flightId, String routePath, String operatorId) {
+        String lineId = NetexObjectIdCreator.createLineId(AVINOR_XMLNS, flightId);
+
+        return objectFactory.createLine()
+                .withVersion(VERSION_ONE)
+                .withId(lineId)
+                .withName(createMultilingualString(routePath))
+                .withTransportMode(AllVehicleModesOfTransportEnumeration.AIR)
+                .withPublicCode(flightId)
+                .withOperatorRef(createOperatorRefStructure(operatorId, Boolean.FALSE));
     }
 
     // TODO consider the id generation to be moved to converter level instead, for more precise control, use a uniform way of doing it
