@@ -48,7 +48,7 @@ public class DateUtils {
     }
 
     public String timestamp() {
-        return LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddhhmmss"));
+        return LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"));
     }
 
     public static class WorkDays {
