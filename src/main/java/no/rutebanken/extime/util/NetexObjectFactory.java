@@ -293,7 +293,8 @@ public class NetexObjectFactory {
 
     public OperatorRefStructure createOperatorRefStructure(String operatorId, boolean withRefValidation) {
         OperatorRefStructure operatorRefStruct = objectFactory.createOperatorRefStructure()
-                .withRef(operatorId);
+                .withRef(operatorId)
+                .withVersion(VERSION_ONE);
         return withRefValidation ? operatorRefStruct.withVersion(VERSION_ONE) : operatorRefStruct;
     }
 
