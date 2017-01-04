@@ -237,7 +237,7 @@ public class NetexObjectFactory {
                 .withXmlnsUrl(xmlnsUrl);
     }
 
-    public Line createLine(String flightId, String routePath, String operatorId) {
+    public Line createLine(String flightId, String routePath) {
         String lineId = NetexObjectIdCreator.createLineId(AVINOR_XMLNS, flightId);
 
         return objectFactory.createLine()
@@ -245,8 +245,7 @@ public class NetexObjectFactory {
                 .withId(lineId)
                 .withName(createMultilingualString(routePath))
                 .withTransportMode(AllVehicleModesOfTransportEnumeration.AIR)
-                .withPublicCode(flightId)
-                .withOperatorRef(createOperatorRefStructure(operatorId, Boolean.FALSE));
+                .withPublicCode(flightId);
     }
 
     // TODO consider the id generation to be moved to converter level instead, for more precise control, use a uniform way of doing it
@@ -293,8 +292,7 @@ public class NetexObjectFactory {
 
     public OperatorRefStructure createOperatorRefStructure(String operatorId, boolean withRefValidation) {
         OperatorRefStructure operatorRefStruct = objectFactory.createOperatorRefStructure()
-                .withRef(operatorId)
-                .withVersion(VERSION_ONE);
+                .withRef(operatorId);
         return withRefValidation ? operatorRefStruct.withVersion(VERSION_ONE) : operatorRefStruct;
     }
 

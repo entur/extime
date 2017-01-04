@@ -73,8 +73,13 @@ public class ScheduledFlightToNetexConverter {
         String airlineIata = scheduledFlight.getAirlineIATA();
         String operatorId = NetexObjectIdCreator.createOperatorId(AVINOR_XMLNS, airlineIata);
 
+        boolean isFrequentOperator = isCommonDesignator(airlineIata);
+
         // TODO add support for multiple routes per line
-        Line line = netexObjectFactory.createLine(flightId, routePath, operatorId);
+        Line line = netexObjectFactory.createLine(flightId, routePath);
+        line.setOperatorRef(isFrequentOperator ? netexObjectFactory.createOperatorRefStructure(operatorId, Boolean.FALSE) :
+                netexObjectFactory.createOperatorRefStructure(operatorId, Boolean.TRUE));
+
         List<RoutePoint> routePoints = createRoutePoints(scheduledFlight);
         Route route = createRoute(flightId, routePath, scheduledFlight, line);
         RouteRefStructure routeRefStructure = netexObjectFactory.createRouteRefStructure(route.getId());
@@ -87,7 +92,7 @@ public class ScheduledFlightToNetexConverter {
 
         Frames_RelStructure frames = objectFactory.createFrames_RelStructure();
 
-        if (!isCommonDesignator(airlineIata)) {
+        if (!isFrequentOperator) {
             logger.warn("Infrequent operator identified by id : {}", airlineIata);
             Operator operator = netexObjectFactory.createInfrequentAirlineOperatorElement(airlineIata, scheduledFlight.getAirlineName(), operatorId);
             JAXBElement<ResourceFrame> resourceFrameElement = netexObjectFactory.createResourceFrameElement(operator);
@@ -109,6 +114,12 @@ public class ScheduledFlightToNetexConverter {
         JAXBElement<CompositeFrame> compositeFrame = createCompositeFrame(publicationTimestamp, availabilityPeriod, flightId, frames); // TODO refactor and use netex object factory method
         PublicationDeliveryStructure publicationDeliveryStructure = createPublicationDeliveryStructure(publicationTimestamp, compositeFrame, flightId, routePath); // TODO refactor and use netex object factory method
         return objectFactory.createPublicationDelivery(publicationDeliveryStructure);
+    }
+
+    public OperatorRefStructure createOperatorRefStructure(String operatorId, boolean withRefValidation) {
+        OperatorRefStructure operatorRefStruct = objectFactory.createOperatorRefStructure()
+                .withRef(operatorId);
+        return withRefValidation ? operatorRefStruct.withVersion(VERSION_ONE) : operatorRefStruct;
     }
 
     public PublicationDeliveryStructure createPublicationDeliveryStructure(OffsetDateTime publicationTimestamp,
