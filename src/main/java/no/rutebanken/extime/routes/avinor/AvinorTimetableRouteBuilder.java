@@ -1,26 +1,18 @@
 package no.rutebanken.extime.routes.avinor;
 
-import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.HEADER_EXTIME_FETCH_RESOURCE_ENDPOINT;
-import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.HEADER_EXTIME_HTTP_URI;
-import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.HEADER_EXTIME_RESOURCE_CODE;
-import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.HEADER_EXTIME_URI_PARAMETERS;
-import static org.apache.camel.component.stax.StAXBuilder.stax;
-
-import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import javax.xml.bind.JAXBElement;
-
+import com.google.common.collect.Lists;
+import no.avinor.flydata.xjc.model.airline.AirlineName;
+import no.avinor.flydata.xjc.model.airline.AirlineNames;
+import no.avinor.flydata.xjc.model.airport.AirportName;
+import no.avinor.flydata.xjc.model.airport.AirportNames;
+import no.avinor.flydata.xjc.model.scheduled.Flight;
 import no.avinor.flydata.xjc.model.scheduled.Flights;
+import no.rutebanken.extime.converter.CommonDataToNetexConverter;
+import no.rutebanken.extime.converter.ScheduledFlightConverter;
+import no.rutebanken.extime.converter.ScheduledFlightToNetexConverter;
+import no.rutebanken.extime.model.*;
+import no.rutebanken.extime.util.AvinorTimetableUtils;
+import no.rutebanken.extime.util.DateUtils;
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.Processor;
@@ -34,24 +26,16 @@ import org.rutebanken.netex.model.PublicationDeliveryStructure;
 import org.rutebanken.netex.model.ServiceFrame;
 import org.springframework.stereotype.Component;
 
-import com.google.common.collect.Lists;
+import javax.xml.bind.JAXBElement;
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
+import java.util.stream.Collectors;
 
-import no.avinor.flydata.xjc.model.airline.AirlineName;
-import no.avinor.flydata.xjc.model.airline.AirlineNames;
-import no.avinor.flydata.xjc.model.airport.AirportName;
-import no.avinor.flydata.xjc.model.airport.AirportNames;
-import no.avinor.flydata.xjc.model.scheduled.Flight;
-import no.rutebanken.extime.converter.CommonDataToNetexConverter;
-import no.rutebanken.extime.converter.ScheduledFlightConverter;
-import no.rutebanken.extime.converter.ScheduledFlightToNetexConverter;
-import no.rutebanken.extime.model.AirportIATA;
-import no.rutebanken.extime.model.ScheduledDirectFlight;
-import no.rutebanken.extime.model.ScheduledFlight;
-import no.rutebanken.extime.model.ScheduledStopover;
-import no.rutebanken.extime.model.ScheduledStopoverFlight;
-import no.rutebanken.extime.model.StopVisitType;
-import no.rutebanken.extime.util.AvinorTimetableUtils;
-import no.rutebanken.extime.util.DateUtils;
+import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.*;
+import static org.apache.camel.component.stax.StAXBuilder.stax;
 
 @Component
 public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRouteBuilder {
@@ -107,6 +91,8 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                     .to("direct:fetchTimetableForAirport").id("FetchTimetableProcessor")
                     .log(LoggingLevel.DEBUG, this.getClass().getName(), "Flights fetched for ${header.ExtimeResourceCode}")
                 .end()
+
+                //.bean(AvinorTimetableUtils.class, "generateFlightsFromFeedDump")
 
                 .choice()
                     .when(simple("${properties:avinor.timetable.dump.enabled:false} == true"))
@@ -341,7 +327,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .setHeader(Exchange.FILE_NAME, simple("avinor-flights_${bean:dateUtils.timestamp()}.xml"))
                 .setHeader(Exchange.CONTENT_TYPE, constant("text/xml;charset=utf-8"))
                 .setHeader(Exchange.CHARSET_NAME, constant("utf-8"))
-                .to("file:{{avinor.dump.output.path}}")
+                .to("file:{{avinor.timetable.dump.output.path}}")
                 .log(LoggingLevel.INFO, "Successfully dumped all flights to file : ${header.CamelFileName}")
         ;
     }
