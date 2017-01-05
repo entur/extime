@@ -18,6 +18,9 @@ avinor.timetable.max.range=180
 avinor.timetable.min.range=60
 avinor.timetable.feed.endpoint=http://195.69.13.136/XmlFeedScheduled.asp
 
+avinor.timetable.dump.enabled=false
+avinor.timetable.dump.output.path=/deployments/data/dump
+
 # Avinor realtime scheduler settings
 avinor.realtime.scheduler.options=cron=0+0+3+*+*+?&trigger.timeZone=Europe/Oslo
 avinor.realtime.feed.endpoint=http://flydata.avinor.no/XmlFeed.asp
@@ -33,8 +36,8 @@ avinor.airport.feed.endpoint=http://flydata.avinor.no/airportNames.asp
 avinor.airline.feed.endpoint=http://flydata.avinor.no/airlineNames.asp
 
 # NeTEx generation settings
-netex.generated.output.path=/Users/swirzen/dev/git/extime/target/netex
-netex.compressed.output.path=/Users/swirzen/dev/git/extime/target/marduk
+netex.generated.output.path=/deployments/data/zip
+netex.compressed.output.path=/deployments/data/netex
 netex.compressed.file.prefix=avinor-netex_
 
 # Google Cloud Storage blobstore settings

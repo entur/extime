@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 
 import javax.xml.bind.JAXBElement;
 
+import no.avinor.flydata.xjc.model.scheduled.Flights;
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.Processor;
@@ -87,7 +88,10 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
         jaxbDataFormat.setPrettyPrint(true);
         jaxbDataFormat.setEncoding("UTF-8");
 
-        
+        JaxbDataFormat flightsJaxbDataFormat = new JaxbDataFormat();
+        flightsJaxbDataFormat.setContextPath(Flights.class.getPackage().getName());
+        jaxbDataFormat.setPrettyPrint(true);
+        jaxbDataFormat.setEncoding("UTF-8");
         
         from("{{avinor.timetable.scheduler.consumer}}")
                 .routeId("AvinorTimetableSchedulerStarter")
@@ -104,24 +108,22 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                     .log(LoggingLevel.DEBUG, this.getClass().getName(), "Flights fetched for ${header.ExtimeResourceCode}")
                 .end()
 
-                // 1st alternative run, with static test data from file
-                //.bean(AvinorTimetableUtils.class, "generateStaticFlights") // TODO make configurable
-
-                // 2nd alternative run, with live test data from feed dump
-                //.bean(AvinorTimetableUtils.class, "generateFlightsFromFeedDump") // TODO make configurable
-
-                .log(LoggingLevel.INFO, this.getClass().getName(), "Converting to scheduled flights")
-                .bean(ScheduledFlightConverter.class, "convertToScheduledFlights").id("ConvertToScheduledFlightsBeanProcessor")
-                .setProperty(PROPERTY_SCHEDULED_FLIGHT_LIST_ORIGINAL_BODY, body())
-
-                .log(LoggingLevel.INFO, "Converting common aviation data to NeTEx")
-                .to("direct:convertCommonDataToNetex")
-
-                .setBody(simpleF("exchangeProperty[%s]", List.class, PROPERTY_SCHEDULED_FLIGHT_LIST_ORIGINAL_BODY))
-                .log(LoggingLevel.INFO, "Converting flights to NeTEx")
-                .to("direct:convertScheduledFlightsToNetex")
-                .log(LoggingLevel.INFO, "Compressing XML files and send to storage")
-                .to("controlbus:route?routeId=CompressAndSendToStorage&action=start")
+                .choice()
+                    .when(simple("${properties:avinor.timetable.dump.enabled:false} == true"))
+                        .log(LoggingLevel.INFO, this.getClass().getName(), "Dumping data to file")
+                        .to("direct:dumpFetchedFlightsToFile")
+                    .otherwise()
+                        .log(LoggingLevel.INFO, this.getClass().getName(), "Converting to scheduled flights")
+                        .bean(ScheduledFlightConverter.class, "convertToScheduledFlights").id("ConvertToScheduledFlightsBeanProcessor")
+                        .setProperty(PROPERTY_SCHEDULED_FLIGHT_LIST_ORIGINAL_BODY, body())
+                        .log(LoggingLevel.INFO, "Converting common aviation data to NeTEx")
+                        .to("direct:convertCommonDataToNetex")
+                        .setBody(simpleF("exchangeProperty[%s]", List.class, PROPERTY_SCHEDULED_FLIGHT_LIST_ORIGINAL_BODY))
+                        .log(LoggingLevel.INFO, "Converting flights to NeTEx")
+                        .to("direct:convertScheduledFlightsToNetex")
+                        .log(LoggingLevel.INFO, "Compressing XML files and send to storage")
+                        .to("controlbus:route?routeId=CompressAndSendToStorage&action=start")
+                .end()
         ;
 
         from("direct:fetchAndCacheAirportName")
@@ -329,6 +331,18 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                     });
                     stop.start();
                 })
+        ;
+
+        from("direct:dumpFetchedFlightsToFile")
+                .autoStartup("{{avinor.timetable.dump.enabled}}")
+                .routeId("FetchedFlightsDumper")
+                .bean(AvinorTimetableUtils.class, "createFlightsElement")
+                .marshal(flightsJaxbDataFormat)
+                .setHeader(Exchange.FILE_NAME, simple("avinor-flights_${bean:dateUtils.timestamp()}.xml"))
+                .setHeader(Exchange.CONTENT_TYPE, constant("text/xml;charset=utf-8"))
+                .setHeader(Exchange.CHARSET_NAME, constant("utf-8"))
+                .to("file:{{avinor.dump.output.path}}")
+                .log(LoggingLevel.INFO, "Successfully dumped all flights to file : ${header.CamelFileName}")
         ;
     }
 
