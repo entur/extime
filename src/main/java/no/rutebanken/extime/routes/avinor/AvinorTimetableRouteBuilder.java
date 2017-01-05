@@ -232,7 +232,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .routeId("ScheduledFlightsToNetexConverter")
                 .log(LoggingLevel.INFO, this.getClass().getName(), "Converting scheduled flights to NeTEx")
 
-                .log(LoggingLevel.INFO, this.getClass().getName(), "Purging netex output path")
+                .log(LoggingLevel.INFO, this.getClass().getName(), "Purging netex output path : ${properties:netex.generated.output.path}")
                 .process(exchange -> Files.walk(Paths.get(exchange.getContext().resolvePropertyPlaceholders("{{netex.generated.output.path}}")))
                         .filter(Files::isRegularFile)
                         .map(Path::toFile)
