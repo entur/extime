@@ -6,6 +6,10 @@ import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.HEADER
 import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.HEADER_EXTIME_URI_PARAMETERS;
 import static org.apache.camel.component.stax.StAXBuilder.stax;
 
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -73,28 +77,25 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
 
     @Override
     public void configure() throws Exception {
-        // @todo: look over need for a superclass, and general error handling.
-        // @todo: consider moving all preprocessors inside routes instead, to make it clearer
         //super.configure();
         //getContext().setTracing(true);
 
         JaxbDataFormat jaxbDataFormat = new JaxbDataFormat();
         jaxbDataFormat.setContextPath(PublicationDeliveryStructure.class.getPackage().getName());
-        jaxbDataFormat.setSchema("classpath:/xsd/NeTEx-XML-1.04beta/schema/xsd/NeTEx_publication.xsd"); // @TODO: use schema from netex-java-model instead
+        jaxbDataFormat.setSchema("classpath:/xsd/NeTEx-XML-1.04beta/schema/xsd/NeTEx_publication.xsd"); // TODO use schema from netex-java-model instead
         //jaxbDataFormat.setNamespacePrefixRef(NAMESPACE_PREFIX_REF);
         jaxbDataFormat.setPrettyPrint(true);
         jaxbDataFormat.setEncoding("UTF-8");
 
         
         
-        // @todo: enable parallell processing when going into test/beta/prod
         from("{{avinor.timetable.scheduler.consumer}}")
                 .routeId("AvinorTimetableSchedulerStarter")
 
                 .process(new AirportIataProcessor()).id("TimetableAirportIATAProcessor")
                 .bean(DateUtils.class, "generateDateRanges").id("TimetableDateRangeProcessor")
 
-                .split(body(), new ScheduledFlightListAggregationStrategy())//.parallelProcessing()
+                .split(body(), new ScheduledFlightListAggregationStrategy())//.parallelProcessing() // TODO enable parallell processing
                     .log(LoggingLevel.DEBUG, this.getClass().getName(), "==========================================")
                     .log(LoggingLevel.DEBUG, this.getClass().getName(), "Processing airport with IATA code: ${body}")
                     .setHeader(HEADER_EXTIME_RESOURCE_CODE, simple("${body}"))
@@ -104,10 +105,10 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .end()
 
                 // 1st alternative run, with static test data from file
-                //.bean(AvinorTimetableUtils.class, "generateStaticFlights") // TODO: remove when going beta
+                //.bean(AvinorTimetableUtils.class, "generateStaticFlights") // TODO make configurable
 
                 // 2nd alternative run, with live test data from feed dump
-                //.bean(AvinorTimetableUtils.class, "generateFlightsFromFeedDump") // TODO: remove when going beta
+                //.bean(AvinorTimetableUtils.class, "generateFlightsFromFeedDump") // TODO make configurable
 
                 .log(LoggingLevel.INFO, this.getClass().getName(), "Converting to scheduled flights")
                 .bean(ScheduledFlightConverter.class, "convertToScheduledFlights").id("ConvertToScheduledFlightsBeanProcessor")
@@ -200,13 +201,13 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .end()
         ;
 
-        // @todo: fix some useful wiretapping feature in split
         from("direct:splitJoinIncomingFlightMessages")
                 .routeId("FlightSplitterJoiner")
                 .streamCaching()
 
                 .split(stax(Flight.class, false), new ScheduledAirportFlightsAggregationStrategy()).streaming()
                     .wireTap("mock:wireTapEndpoint").id("FlightSplitWireTap")
+                    // TODO add logging to wiretap
                     /*.log(LoggingLevel.DEBUG, this.getClass().getName(),
                             "Processing flight with id: ${body.airlineDesignator}${body.flightNumber}")
                          .id("FlightSplitLogProcessor")*/
@@ -231,15 +232,20 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .routeId("ScheduledFlightsToNetexConverter")
                 .log(LoggingLevel.INFO, this.getClass().getName(), "Converting scheduled flights to NeTEx")
 
-                .split(body())//.parallelProcessing()
+                .log(LoggingLevel.INFO, this.getClass().getName(), "Purging netex output path")
+                .process(exchange -> Files.walk(Paths.get(exchange.getContext().resolvePropertyPlaceholders("{{netex.generated.output.path}}")))
+                        .filter(Files::isRegularFile)
+                        .map(Path::toFile)
+                        .forEach(File::delete)
+                )
 
+                .split(body())//.parallelProcessing()
                     .process(exchange -> {
                         ScheduledFlight originalBody = exchange.getIn().getBody(ScheduledFlight.class);
                         exchange.setProperty(PROPERTY_SCHEDULED_FLIGHT_ORIGINAL_BODY, originalBody);
                         String enrichParameter = originalBody.getAirlineIATA();
                         exchange.getIn().setBody(enrichParameter);
                     }).id("AirlineIataPreEnrichProcessor")
-
                     .setHeader(HEADER_EXTIME_FETCH_RESOURCE_ENDPOINT, constant("direct:fetchAndCacheAirlineName"))
                     .enrich("direct:retrieveResource", new AirlineNameEnricherAggregationStrategy())
                     .to("direct:enrichScheduledFlightWithAirportNames")
@@ -289,8 +295,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .end()
         ;
 
-        // @TODO: write unit test for this route
-        from("file:{{netex.generated.output.path}}?delete=true&idempotent=true&antInclude=**/*.xml")
+        from("file:{{netex.generated.output.path}}?noop=true&idempotent=true&antInclude=**/*.xml")
                 .routeId("CompressAndSendToStorage")
                 .autoStartup(false)
 
