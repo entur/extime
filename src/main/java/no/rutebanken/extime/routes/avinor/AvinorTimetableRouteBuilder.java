@@ -87,8 +87,6 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
         jaxbDataFormat.setPrettyPrint(true);
         jaxbDataFormat.setEncoding("UTF-8");
 
-        
-        
         from("{{avinor.timetable.scheduler.consumer}}")
                 .routeId("AvinorTimetableSchedulerStarter")
 
@@ -113,6 +111,13 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .log(LoggingLevel.INFO, this.getClass().getName(), "Converting to scheduled flights")
                 .bean(ScheduledFlightConverter.class, "convertToScheduledFlights").id("ConvertToScheduledFlightsBeanProcessor")
                 .setProperty(PROPERTY_SCHEDULED_FLIGHT_LIST_ORIGINAL_BODY, body())
+
+                .log(LoggingLevel.INFO, this.getClass().getName(), "Purging netex output path : ${properties:netex.generated.output.path}")
+                .process(exchange -> Files.walk(Paths.get(exchange.getContext().resolvePropertyPlaceholders("{{netex.generated.output.path}}")))
+                        .filter(Files::isRegularFile)
+                        .map(Path::toFile)
+                        .forEach(File::delete)
+                )
 
                 .log(LoggingLevel.INFO, "Converting common aviation data to NeTEx")
                 .to("direct:convertCommonDataToNetex")
@@ -231,14 +236,6 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
         from("direct:convertScheduledFlightsToNetex")
                 .routeId("ScheduledFlightsToNetexConverter")
                 .log(LoggingLevel.INFO, this.getClass().getName(), "Converting scheduled flights to NeTEx")
-
-                .log(LoggingLevel.INFO, this.getClass().getName(), "Purging netex output path : ${properties:netex.generated.output.path}")
-                .process(exchange -> Files.walk(Paths.get(exchange.getContext().resolvePropertyPlaceholders("{{netex.generated.output.path}}")))
-                        .filter(Files::isRegularFile)
-                        .map(Path::toFile)
-                        .forEach(File::delete)
-                )
-
                 .split(body())//.parallelProcessing()
                     .process(exchange -> {
                         ScheduledFlight originalBody = exchange.getIn().getBody(ScheduledFlight.class);
