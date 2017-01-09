@@ -1,17 +1,31 @@
 package no.rutebanken.extime.model;
 
+import java.math.BigInteger;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.OffsetTime;
+import java.util.List;
 import java.util.Set;
 
 public abstract class ScheduledFlight {
 
+    private BigInteger flightId;
     private String airlineIATA;
     private String airlineName;
     private String airlineFlightId;
-    private AvailabilityPeriod availabilityPeriod;
+    private String departureAirportIATA;
+    private String arrivalAirportIATA;
+    private String departureAirportName;
+    private String arrivalAirportName;
+    private OffsetTime timeOfDeparture;
+    private OffsetTime timeOfArrival;
     private LocalDate dateOfOperation;
+    private String lineId;
+    private String routeId;
+    private List<ScheduledStopover> scheduledStopovers;
+
+    // properties marked for data set class
+    private AvailabilityPeriod availabilityPeriod;
     private Set<DayOfWeek> weekDaysPattern;
 
     public String getAirlineIATA() {

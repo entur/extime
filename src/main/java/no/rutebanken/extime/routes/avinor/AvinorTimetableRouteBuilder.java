@@ -80,6 +80,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
         from("{{avinor.timetable.scheduler.consumer}}")
                 .routeId("AvinorTimetableSchedulerStarter")
 
+/*
                 .process(new AirportIataProcessor()).id("TimetableAirportIATAProcessor")
                 .bean(DateUtils.class, "generateDateRanges").id("TimetableDateRangeProcessor")
 
@@ -91,8 +92,9 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                     .to("direct:fetchTimetableForAirport").id("FetchTimetableProcessor")
                     .log(LoggingLevel.DEBUG, this.getClass().getName(), "Flights fetched for ${header.ExtimeResourceCode}")
                 .end()
+*/
 
-                //.bean(AvinorTimetableUtils.class, "generateFlightsFromFeedDump")
+                .bean(AvinorTimetableUtils.class, "generateFlightsFromFeedDump")
 
                 .choice()
                     .when(simple("${properties:avinor.timetable.dump.enabled:false} == true"))
@@ -107,8 +109,8 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                         .setBody(simpleF("exchangeProperty[%s]", List.class, PROPERTY_SCHEDULED_FLIGHT_LIST_ORIGINAL_BODY))
                         .log(LoggingLevel.INFO, "Converting flights to NeTEx")
                         .to("direct:convertScheduledFlightsToNetex")
-                        .log(LoggingLevel.INFO, "Compressing XML files and send to storage")
-                        .to("controlbus:route?routeId=CompressAndSendToStorage&action=start")
+//                        .log(LoggingLevel.INFO, "Compressing XML files and send to storage")
+//                        .to("controlbus:route?routeId=CompressAndSendToStorage&action=start")
                 .end()
         ;
 

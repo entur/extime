@@ -73,7 +73,8 @@ public class ScheduledFlightConverter {
         // TODO check for codeshare flights here, use the infrequent designator enumset group, to only check international airlines
 
         // filter section
-        List<Flight> filteredFlights = filterValidFlights(scheduledFlights);
+        //List<Flight> filteredFlights = filterValidFlights(scheduledFlights);
+        List<Flight> filteredFlights = scheduledFlights;
 
         // conversion section
         Map<String, List<Flight>> flightsByDepartureAirport = filteredFlights.stream()
@@ -86,6 +87,8 @@ public class ScheduledFlightConverter {
         List<ScheduledStopoverFlight> scheduledStopoverFlights = Lists.newArrayList();
         List<ScheduledDirectFlight> scheduledDirectFlights = Lists.newArrayList();
         List<ScheduledFlight> distinctFlights = Lists.newArrayList();
+
+        List<ScheduledFlight> mergedFlights = Lists.newArrayList();
 
         for (Flight flight : filteredFlights) {
             List<Flight> connectingFlightLegs = findConnectingFlightLegs(flight, flightsByDepartureAirport, flightsByArrivalAirportIata, distinctFlightLegIds);
@@ -120,6 +123,33 @@ public class ScheduledFlightConverter {
                 throw new RuntimeException("Invalid flight");
             }
         }
+
+        mergedFlights.addAll(scheduledStopoverFlights);
+        mergedFlights.addAll(scheduledDirectFlights);
+
+        System.out.println("MERGED FLIGHTS");
+
+        Map<String, List<ScheduledFlight>> mergedCollect = mergedFlights.stream()
+                .sorted(Comparator.comparing(ScheduledFlight::getDateOfOperation))
+                .collect(Collectors.groupingBy(ScheduledFlight::getAirlineIATA));
+
+        System.out.println("GROUPED FLIGHTS BY AIRLINE/OPERATOR");
+
+        Set<String> distinctflightIds = mergedCollect.entrySet().stream()
+                .map(Map.Entry::getValue)
+                .map(flights -> flights.stream()
+                        .map(ScheduledFlight::getAirlineFlightId)
+                        .collect(Collectors.toList()))
+                .flatMap(Collection::stream)
+                .collect(Collectors.toSet());
+
+        System.out.println("REVERSED AND FOUND ALL UNIQUE/DISTINCT FLIGHT IDS");
+
+        List<ScheduledFlight> originalListCollect = mergedCollect.entrySet().stream()
+                .flatMap(entry -> entry.getValue().stream())
+                .collect(Collectors.toList());
+
+        System.out.println("BACK TO ORIGINAL LIST");
 
         Map<String, List<ScheduledStopoverFlight>> stopoverFlightsByFlightId = scheduledStopoverFlights.stream()
                 .sorted(Comparator.comparing(ScheduledStopoverFlight::getDateOfOperation))
@@ -156,6 +186,11 @@ public class ScheduledFlightConverter {
     private <T> Predicate<T> distinctByKey(Function<? super T, Object> keyExtractor) {
         Map<Object, Boolean> map = new ConcurrentHashMap<>();
         return t -> map.putIfAbsent(keyExtractor.apply(t), Boolean.TRUE) == null;
+    }
+
+    public static <T> Predicate<T> distinctByKeyNoParallel(Function<? super T, ?> keyExtractor) {
+        final Set<Object> seen = new HashSet<>();
+        return t -> seen.add(keyExtractor.apply(t));
     }
 
     private List<Flight> filterValidFlights(List<Flight> scheduledFlights) {
