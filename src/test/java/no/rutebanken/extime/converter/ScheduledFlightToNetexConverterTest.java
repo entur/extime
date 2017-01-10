@@ -1,33 +1,21 @@
 package no.rutebanken.extime.converter;
 
-import java.math.BigInteger;
-import java.time.LocalDate;
-import java.time.OffsetTime;
-import java.util.List;
-
+import com.google.common.collect.Lists;
+import no.rutebanken.extime.AppTest;
+import no.rutebanken.extime.model.ScheduledFlight;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.rutebanken.netex.model.Direction;
-import org.rutebanken.netex.model.DirectionRefStructure;
-import org.rutebanken.netex.model.DirectionTypeEnumeration;
-import org.rutebanken.netex.model.JourneyPattern;
-import org.rutebanken.netex.model.MultilingualString;
-import org.rutebanken.netex.model.ObjectFactory;
-import org.rutebanken.netex.model.PointOnRoute;
-import org.rutebanken.netex.model.PointsOnRoute_RelStructure;
-import org.rutebanken.netex.model.Route;
-import org.rutebanken.netex.model.RoutePointRefStructure;
-import org.rutebanken.netex.model.ScheduledStopPoint;
+import org.rutebanken.netex.model.*;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.google.common.collect.Lists;
-
-import no.rutebanken.extime.AppTest;
-import no.rutebanken.extime.model.ScheduledDirectFlight;
+import java.math.BigInteger;
+import java.time.LocalDate;
+import java.time.OffsetTime;
+import java.util.List;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = {AppTest.class})
@@ -55,8 +43,8 @@ public class ScheduledFlightToNetexConverterTest {
                 .isNotNull();
     }
 
-    public ScheduledDirectFlight createScheduledDirectFlight(String airlineIATA, String flightId) {
-        ScheduledDirectFlight directFlight = new ScheduledDirectFlight();
+    public ScheduledFlight createScheduledDirectFlight(String airlineIATA, String flightId) {
+        ScheduledFlight directFlight = new ScheduledFlight();
         directFlight.setFlightId(BigInteger.ONE);
         directFlight.setAirlineIATA(airlineIATA);
         directFlight.setAirlineFlightId(flightId);

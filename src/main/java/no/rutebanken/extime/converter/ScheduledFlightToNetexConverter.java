@@ -3,7 +3,10 @@ package no.rutebanken.extime.converter;
 import com.google.common.collect.Lists;
 import no.rutebanken.extime.config.NetexStaticDataSet;
 import no.rutebanken.extime.config.NetexStaticDataSet.OrganisationDataSet;
-import no.rutebanken.extime.model.*;
+import no.rutebanken.extime.model.AirlineDesignator;
+import no.rutebanken.extime.model.AvailabilityPeriod;
+import no.rutebanken.extime.model.ScheduledFlight;
+import no.rutebanken.extime.model.ScheduledStopover;
 import no.rutebanken.extime.util.DateUtils;
 import no.rutebanken.extime.util.NetexObjectFactory;
 import no.rutebanken.extime.util.NetexObjectIdCreator;
@@ -321,7 +324,8 @@ public class ScheduledFlightToNetexConverter {
             dayTypeStructure.getDayTypeRef().add(objectFactory.createDayTypeRef(dayTypeRefStruct));
         });
 
-        if (scheduledFlight instanceof ScheduledDirectFlight) {
+        // TODO swithc order of check (check for stopovers first)
+        if (!scheduledFlight.hasStopovers()) {
             TimetabledPassingTime departurePassingTime = netexObjectFactory.createTimetabledPassingTime(pointsInLinkSequence.get(0).getId());
             departurePassingTime.setDepartureTime(scheduledFlight.getTimeOfDeparture());
             passingTimesRelStructure.withTimetabledPassingTime(departurePassingTime);
@@ -352,8 +356,8 @@ public class ScheduledFlightToNetexConverter {
             serviceJourneyList.add(serviceJourney);
             return serviceJourneyList;
 
-        } else if (scheduledFlight instanceof ScheduledStopoverFlight) {
-            List<ScheduledStopover> scheduledStopovers = ((ScheduledStopoverFlight) scheduledFlight).getScheduledStopovers();
+        } else if (scheduledFlight.hasStopovers()) {
+            List<ScheduledStopover> scheduledStopovers = scheduledFlight.getScheduledStopovers();
             Iterator<ScheduledStopover> stopoverIterator = scheduledStopovers.iterator();
             Iterator<PointInLinkSequence_VersionedChildStructure> pointInLinkSequenceIterator = pointsInLinkSequence.iterator();
 
@@ -401,15 +405,15 @@ public class ScheduledFlightToNetexConverter {
     public List<RoutePoint> createRoutePoints(ScheduledFlight scheduledFlight) {
         Map<String, RoutePoint> routePointMap = netexCommonDataSet.getRoutePointMap();
 
-        if (scheduledFlight instanceof ScheduledDirectFlight) {
+        if (!scheduledFlight.hasStopovers()) {
 
             RoutePoint departureRoutePoint = routePointMap.get(scheduledFlight.getDepartureAirportIATA());
             RoutePoint arrivalRoutePoint = routePointMap.get(scheduledFlight.getArrivalAirportIATA());
             return Lists.newArrayList(departureRoutePoint, arrivalRoutePoint);
 
-        } else if (scheduledFlight instanceof ScheduledStopoverFlight) {
+        } else if (scheduledFlight.hasStopovers()) {
 
-            List<ScheduledStopover> scheduledStopovers = ((ScheduledStopoverFlight) scheduledFlight).getScheduledStopovers();
+            List<ScheduledStopover> scheduledStopovers = scheduledFlight.getScheduledStopovers();
             List<RoutePoint> routePoints = new ArrayList<>();
 
             Set<String> iataCodes = scheduledStopovers.stream()
@@ -432,7 +436,7 @@ public class ScheduledFlightToNetexConverter {
         Map<String, RoutePoint> routePointMap = netexCommonDataSet.getRoutePointMap();
         PointsOnRoute_RelStructure pointsOnRoute = objectFactory.createPointsOnRoute_RelStructure();
 
-        if (scheduledFlight instanceof ScheduledDirectFlight) {
+        if (!scheduledFlight.hasStopovers()) {
             String[] idSequence = NetexObjectIdCreator.generateIdSequence(DEFAULT_START_INCLUSIVE, DEFAULT_END_EXCLUSIVE, 2);
 
             RoutePoint departureRoutePoint = routePointMap.get(scheduledFlight.getDepartureAirportIATA());
@@ -447,8 +451,8 @@ public class ScheduledFlightToNetexConverter {
             pointsOnRoute.getPointOnRoute().add(departurePointOnRoute);
             pointsOnRoute.getPointOnRoute().add(arrivalPointOnRoute);
 
-        } else if (scheduledFlight instanceof ScheduledStopoverFlight) {
-            List<ScheduledStopover> scheduledStopovers = ((ScheduledStopoverFlight) scheduledFlight).getScheduledStopovers();
+        } else if (scheduledFlight.hasStopovers()) {
+            List<ScheduledStopover> scheduledStopovers = scheduledFlight.getScheduledStopovers();
             String[] idSequence = NetexObjectIdCreator.generateIdSequence(DEFAULT_START_INCLUSIVE, DEFAULT_END_EXCLUSIVE, scheduledStopovers.size());
 
             for (int i = 0; i < scheduledStopovers.size(); i++) {
@@ -481,7 +485,7 @@ public class ScheduledFlightToNetexConverter {
         Map<String, ScheduledStopPoint> stopPointMap = netexCommonDataSet.getStopPointMap();
         PointsInJourneyPattern_RelStructure pointsInJourneyPattern = objectFactory.createPointsInJourneyPattern_RelStructure();
 
-        if (scheduledFlight instanceof ScheduledDirectFlight) {
+        if (!scheduledFlight.hasStopovers()) {
             String[] idSequence = NetexObjectIdCreator.generateIdSequence(DEFAULT_START_INCLUSIVE, DEFAULT_END_EXCLUSIVE, 2);
 
             ScheduledStopPoint departureStopPoint = stopPointMap.get(scheduledFlight.getDepartureAirportIATA());
@@ -501,8 +505,8 @@ public class ScheduledFlightToNetexConverter {
             pointsInJourneyPattern.getPointInJourneyPatternOrStopPointInJourneyPatternOrTimingPointInJourneyPattern()
                     .add(arrivalStopPointInJourneyPattern);
 
-        } else if (scheduledFlight instanceof ScheduledStopoverFlight) {
-            List<ScheduledStopover> scheduledStopovers = ((ScheduledStopoverFlight) scheduledFlight).getScheduledStopovers();
+        } else if (scheduledFlight.hasStopovers()) {
+            List<ScheduledStopover> scheduledStopovers = scheduledFlight.getScheduledStopovers();
             String[] idSequence = NetexObjectIdCreator.generateIdSequence(DEFAULT_START_INCLUSIVE, DEFAULT_END_EXCLUSIVE, scheduledStopovers.size());
 
             for (int i = 0; i < scheduledStopovers.size(); i++) {

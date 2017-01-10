@@ -1,5 +1,7 @@
 package no.rutebanken.extime.converter;
 
+import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -30,6 +32,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static no.rutebanken.extime.Constants.DEFAULT_ZONE_ID;
 import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.HEADER_EXTIME_HTTP_URI;
@@ -41,6 +44,8 @@ public class ScheduledFlightConverter {
     private static final Logger logger = LoggerFactory.getLogger(ScheduledFlightConverter.class);
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+    private static final String EQUIVALENT_SYMBOL = "<=>";
 
     @Autowired
     private TypeConverter typeConverter;
@@ -84,11 +89,8 @@ public class ScheduledFlightConverter {
                 .collect(Collectors.groupingBy(Flight::getArrivalStation));
 
         Set<BigInteger> distinctFlightLegIds = Sets.newHashSet();
-        List<ScheduledStopoverFlight> scheduledStopoverFlights = Lists.newArrayList();
-        List<ScheduledDirectFlight> scheduledDirectFlights = Lists.newArrayList();
         List<ScheduledFlight> distinctFlights = Lists.newArrayList();
-
-        List<ScheduledFlight> mergedFlights = Lists.newArrayList();
+        List<ScheduledFlight> mergedScheduledFlights = Lists.newArrayList();
 
         for (Flight flight : filteredFlights) {
             List<Flight> connectingFlightLegs = findConnectingFlightLegs(flight, flightsByDepartureAirport, flightsByArrivalAirportIata, distinctFlightLegIds);
@@ -106,71 +108,41 @@ public class ScheduledFlightConverter {
             if (isMultiLegFlightRoute(connectingFlightLegs)) {
                 List<Triple<StopVisitType, String, OffsetTime>> stopovers = extractStopoversFromFlights(connectingFlightLegs);
                 List<ScheduledStopover> scheduledStopovers = createScheduledStopovers(stopovers);
-                ScheduledStopoverFlight scheduledStopoverFlight = createScheduledStopoverFlight(requestPeriodFromDateTime, requestPeriodToDateTime, flight, scheduledStopovers);
+                ScheduledFlight scheduledFlightWithStopovers = createScheduledFlightWithStopovers(requestPeriodFromDateTime, requestPeriodToDateTime, flight, scheduledStopovers);
 
-                if (scheduledStopoverFlight != null) {
-                    scheduledStopoverFlights.add(scheduledStopoverFlight);
+                if (scheduledFlightWithStopovers != null) {
+                    mergedScheduledFlights.add(scheduledFlightWithStopovers);
                 }
             } else if (isDirectFlightRoute(connectingFlightLegs)) {
-                ScheduledDirectFlight directFlight = convertToScheduledDirectFlight(flight, requestPeriodFromDateTime, requestPeriodToDateTime);
-                scheduledDirectFlights.add(directFlight);
+                ScheduledFlight directFlight = convertToScheduledFlight(flight, requestPeriodFromDateTime, requestPeriodToDateTime);
+                mergedScheduledFlights.add(directFlight);
             } else {
                 logger.error("Flight with unique id: {}, and flightId: {} is NOT a valid flight",
                         flight.getId(),
                         flight.getAirlineDesignator(),
                         flight.getFlightNumber());
-                // @todo: throw a more specific exception type here
                 throw new RuntimeException("Invalid flight");
             }
         }
 
-        mergedFlights.addAll(scheduledStopoverFlights);
-        mergedFlights.addAll(scheduledDirectFlights);
+        // group by airline iata and unique lines
+        Map<String, Map<String, List<ScheduledFlight>>> flightsByAirlineAndLine = mergedScheduledFlights.stream()
+                .collect(Collectors.groupingBy(ScheduledFlight::getAirlineIATA, Collectors.groupingBy(ScheduledFlight::getOperatingLine)));
 
-        System.out.println("MERGED FLIGHTS");
-
-        Map<String, List<ScheduledFlight>> mergedCollect = mergedFlights.stream()
-                .sorted(Comparator.comparing(ScheduledFlight::getDateOfOperation))
-                .collect(Collectors.groupingBy(ScheduledFlight::getAirlineIATA));
-
-        System.out.println("GROUPED FLIGHTS BY AIRLINE/OPERATOR");
-
-        Set<String> distinctflightIds = mergedCollect.entrySet().stream()
-                .map(Map.Entry::getValue)
-                .map(flights -> flights.stream()
-                        .map(ScheduledFlight::getAirlineFlightId)
-                        .collect(Collectors.toList()))
-                .flatMap(Collection::stream)
-                .collect(Collectors.toSet());
-
-        System.out.println("REVERSED AND FOUND ALL UNIQUE/DISTINCT FLIGHT IDS");
-
-        List<ScheduledFlight> originalListCollect = mergedCollect.entrySet().stream()
-                .flatMap(entry -> entry.getValue().stream())
-                .collect(Collectors.toList());
-
-        System.out.println("BACK TO ORIGINAL LIST");
-
-        Map<String, List<ScheduledStopoverFlight>> stopoverFlightsByFlightId = scheduledStopoverFlights.stream()
-                .sorted(Comparator.comparing(ScheduledStopoverFlight::getDateOfOperation))
-                .collect(Collectors.groupingBy(ScheduledStopoverFlight::getAirlineFlightId));
-
-        Map<String, List<ScheduledDirectFlight>> directFlightsByFlightId = scheduledDirectFlights.stream()
-                .sorted(Comparator.comparing(ScheduledDirectFlight::getDateOfOperation))
-                .collect(Collectors.groupingBy(ScheduledDirectFlight::getAirlineFlightId));
-
-        for (Map.Entry<String, List<ScheduledStopoverFlight>> entry : stopoverFlightsByFlightId.entrySet()) {
-            String flightId = entry.getKey();
-            List<ScheduledStopoverFlight> flights = entry.getValue();
-            Set<DayOfWeek> daysOfWeek = findJourneyPatterns(flightId, flights);
-            ScheduledFlight scheduledFlight = flights.get(0);
-            scheduledFlight.setWeekDaysPattern(daysOfWeek);
-            distinctFlights.add(scheduledFlight);
+        // find and merge all flights belonging to equivalent lines, and update map
+        for (Map.Entry<String, Map<String, List<ScheduledFlight>>> entry : flightsByAirlineAndLine.entrySet()) {
+            Map<String, List<ScheduledFlight>> lineIdFlightsMap = entry.getValue();
+            Map<String, List<ScheduledFlight>> mergedLineFlights = findAndMergeEquivalentLineFlights(lineIdFlightsMap);
+            flightsByAirlineAndLine.replace(entry.getKey(), mergedLineFlights);
         }
 
-        for (Map.Entry<String, List<ScheduledDirectFlight>> entry : directFlightsByFlightId.entrySet()) {
+        Map<String, List<ScheduledFlight>> scheduledFlightsByFlightId = mergedScheduledFlights.stream()
+                .sorted(Comparator.comparing(ScheduledFlight::getDateOfOperation))
+                .collect(Collectors.groupingBy(ScheduledFlight::getAirlineFlightId));
+
+        for (Map.Entry<String, List<ScheduledFlight>> entry : scheduledFlightsByFlightId.entrySet()) {
             String flightId = entry.getKey();
-            List<ScheduledDirectFlight> flights = entry.getValue();
+            List<ScheduledFlight> flights = entry.getValue();
             Set<DayOfWeek> daysOfWeek = findJourneyPatterns(flightId, flights);
             ScheduledFlight scheduledFlight = flights.get(0);
             scheduledFlight.setWeekDaysPattern(daysOfWeek);
@@ -183,14 +155,52 @@ public class ScheduledFlightConverter {
         //return distinctFlights;
     }
 
+    private Map<String, List<ScheduledFlight>> findAndMergeEquivalentLineFlights(Map<String, List<ScheduledFlight>> flightsByUniqueLineId) {
+        Set<String> lineIds = new HashSet<>();
+        Map<String, List<ScheduledFlight>> mergedFlightsByLine = new HashMap<>();
+
+        for (String lineId : flightsByUniqueLineId.keySet()) {
+            if (!lineIds.contains(lineId)) {
+                List<ScheduledFlight> lineFlights = flightsByUniqueLineId.get(lineId);
+                String oppositeLineId = getOppositeLineId(lineId);
+                String lineIdMergedKey = lineId + EQUIVALENT_SYMBOL + oppositeLineId;
+
+                if (!lineId.equals(oppositeLineId)) {
+                    if (flightsByUniqueLineId.containsKey(oppositeLineId)) {
+                        List<ScheduledFlight> oppositeLineFlights = flightsByUniqueLineId.get(oppositeLineId);
+
+                        List<ScheduledFlight> mergedFlights = Stream.of(lineFlights, oppositeLineFlights)
+                                .flatMap(Collection::stream)
+                                .collect(Collectors.toList());
+
+                        mergedFlightsByLine.put(lineIdMergedKey, mergedFlights);
+                        lineIds.addAll(Arrays.asList(lineId, oppositeLineId));
+                    } else {
+                        mergedFlightsByLine.put(lineId + EQUIVALENT_SYMBOL + lineId, lineFlights);
+                        lineIds.add(lineId);
+                    }
+                } else {
+                    mergedFlightsByLine.put(lineIdMergedKey, lineFlights);
+                    lineIds.add(lineId);
+                }
+            }
+        }
+
+        return mergedFlightsByLine;
+    }
+
+    private String getOppositeLineId(String lineId) {
+        List<String> lineAirportIatas = Splitter.on("-")
+                .trimResults()
+                .omitEmptyStrings()
+                .limit(2)
+                .splitToList(lineId);
+        return Joiner.on("-").skipNulls().join(Lists.reverse(lineAirportIatas));
+    }
+
     private <T> Predicate<T> distinctByKey(Function<? super T, Object> keyExtractor) {
         Map<Object, Boolean> map = new ConcurrentHashMap<>();
         return t -> map.putIfAbsent(keyExtractor.apply(t), Boolean.TRUE) == null;
-    }
-
-    public static <T> Predicate<T> distinctByKeyNoParallel(Function<? super T, ?> keyExtractor) {
-        final Set<Object> seen = new HashSet<>();
-        return t -> seen.add(keyExtractor.apply(t));
     }
 
     private List<Flight> filterValidFlights(List<Flight> scheduledFlights) {
@@ -299,18 +309,18 @@ public class ScheduledFlightConverter {
         return multiLegFlights;
     }
 
-    public ScheduledStopoverFlight createScheduledStopoverFlight(OffsetDateTime requestPeriodFromDateTime, OffsetDateTime requestPeriodToDateTime,
-                                                                 Flight currentFlight, List<ScheduledStopover> scheduledStopovers) {
+    public ScheduledFlight createScheduledFlightWithStopovers(OffsetDateTime requestPeriodFromDateTime, OffsetDateTime requestPeriodToDateTime,
+                                                              Flight currentFlight, List<ScheduledStopover> scheduledStopovers) {
         if (CollectionUtils.isNotEmpty(scheduledStopovers)) {
-            ScheduledStopoverFlight scheduledStopoverFlight = new ScheduledStopoverFlight();
-            scheduledStopoverFlight.setAirlineFlightId(String.format("%s%s",
+            ScheduledFlight scheduledFlight = new ScheduledFlight();
+            scheduledFlight.setAirlineFlightId(String.format("%s%s",
                     currentFlight.getAirlineDesignator(), currentFlight.getFlightNumber()));
-            scheduledStopoverFlight.setAirlineIATA(currentFlight.getAirlineDesignator());
-            scheduledStopoverFlight.setAvailabilityPeriod(new AvailabilityPeriod(requestPeriodFromDateTime, requestPeriodToDateTime));
-            scheduledStopoverFlight.setDateOfOperation(currentFlight.getDateOfOperation());
-            scheduledStopoverFlight.getScheduledStopovers().addAll(scheduledStopovers);
+            scheduledFlight.setAirlineIATA(currentFlight.getAirlineDesignator());
+            scheduledFlight.setAvailabilityPeriod(new AvailabilityPeriod(requestPeriodFromDateTime, requestPeriodToDateTime));
+            scheduledFlight.setDateOfOperation(currentFlight.getDateOfOperation());
+            scheduledFlight.getScheduledStopovers().addAll(scheduledStopovers);
 
-            return scheduledStopoverFlight;
+            return scheduledFlight;
         }
 
         return null;
@@ -436,18 +446,18 @@ public class ScheduledFlightConverter {
         }
     }
 
-    public ScheduledDirectFlight convertToScheduledDirectFlight(Flight scheduledFlight, OffsetDateTime fromDateTime, OffsetDateTime toDateTime) {
-        ScheduledDirectFlight scheduledDirectFlight = new ScheduledDirectFlight();
-        scheduledDirectFlight.setFlightId(scheduledFlight.getId());
-        scheduledDirectFlight.setAirlineIATA(scheduledFlight.getAirlineDesignator());
-        scheduledDirectFlight.setAirlineFlightId(String.format("%s%s", scheduledFlight.getAirlineDesignator(), scheduledFlight.getFlightNumber()));
-        scheduledDirectFlight.setAvailabilityPeriod(new AvailabilityPeriod(fromDateTime, toDateTime));
-        scheduledDirectFlight.setDateOfOperation(scheduledFlight.getDateOfOperation());
-        scheduledDirectFlight.setDepartureAirportIATA(scheduledFlight.getDepartureStation());
-        scheduledDirectFlight.setArrivalAirportIATA(scheduledFlight.getArrivalStation());
-        scheduledDirectFlight.setTimeOfDeparture(scheduledFlight.getStd());
-        scheduledDirectFlight.setTimeOfArrival(scheduledFlight.getSta());
-        return scheduledDirectFlight;
+    public ScheduledFlight convertToScheduledFlight(Flight flight, OffsetDateTime fromDateTime, OffsetDateTime toDateTime) {
+        ScheduledFlight scheduledFlight = new ScheduledFlight();
+        scheduledFlight.setFlightId(flight.getId());
+        scheduledFlight.setAirlineIATA(flight.getAirlineDesignator());
+        scheduledFlight.setAirlineFlightId(String.format("%s%s", flight.getAirlineDesignator(), flight.getFlightNumber()));
+        scheduledFlight.setAvailabilityPeriod(new AvailabilityPeriod(fromDateTime, toDateTime));
+        scheduledFlight.setDateOfOperation(flight.getDateOfOperation());
+        scheduledFlight.setDepartureAirportIATA(flight.getDepartureStation());
+        scheduledFlight.setArrivalAirportIATA(flight.getArrivalStation());
+        scheduledFlight.setTimeOfDeparture(flight.getStd());
+        scheduledFlight.setTimeOfArrival(flight.getSta());
+        return scheduledFlight;
     }
 
 }

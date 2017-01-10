@@ -4,7 +4,10 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Range;
 import no.avinor.flydata.xjc.model.scheduled.Flight;
-import no.rutebanken.extime.model.*;
+import no.rutebanken.extime.model.AirportIATA;
+import no.rutebanken.extime.model.ScheduledFlight;
+import no.rutebanken.extime.model.ScheduledStopover;
+import no.rutebanken.extime.model.StopVisitType;
 import no.rutebanken.extime.util.DateUtils;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
@@ -377,7 +380,7 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
 
     @Test
     public void testEnrichScheduledStopoverFlightWithAirportNames() throws Exception {
-        ScheduledStopoverFlight scheduledStopoverFlight = createScheduledStopoverFlight(
+        ScheduledFlight scheduledStopoverFlight = createScheduledStopoverFlight(
                 "WF", "WF149", LocalDate.parse("2016-12-24"), createScheduledStopovers());
 
         context.getRouteDefinition("ScheduledStopoverFlightAirportNameEnricher").adviceWith(context, new AdviceWithRouteBuilder() {
@@ -401,7 +404,7 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         getMockEndpoint("mock:setEnrichParameter").expectedHeaderReceived(
                 HEADER_STOPOVER_FLIGHT_ORIGINAL_BODY, scheduledStopoverFlight);
 
-        ScheduledStopoverFlight resultBody = (ScheduledStopoverFlight)
+        ScheduledFlight resultBody = (ScheduledFlight)
                 enrichStopoverFlightTemplate.requestBody(scheduledStopoverFlight);
 
         assertMockEndpointsSatisfied();
@@ -448,7 +451,7 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
     }
 
     private ScheduledFlight createScheduledFlight(String airlineIATA, String airlineFlightId, LocalDate dateOfOperation) {
-        ScheduledDirectFlight scheduledFlight = new ScheduledDirectFlight();
+        ScheduledFlight scheduledFlight = new ScheduledFlight();
         scheduledFlight.setAirlineIATA(airlineIATA);
         scheduledFlight.setAirlineFlightId(airlineFlightId);
         scheduledFlight.setDateOfOperation(dateOfOperation);
@@ -461,9 +464,9 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         return scheduledFlight;
     }
 
-    private ScheduledStopoverFlight createScheduledStopoverFlight(String airlineIATA, String airlineFlightId,
+    private ScheduledFlight createScheduledStopoverFlight(String airlineIATA, String airlineFlightId,
                                                                   LocalDate dateOfOperation, List<ScheduledStopover> stopovers) {
-        ScheduledStopoverFlight stopoverFlight = new ScheduledStopoverFlight();
+        ScheduledFlight stopoverFlight = new ScheduledFlight();
         stopoverFlight.setAirlineIATA(airlineIATA);
         stopoverFlight.setAirlineFlightId(airlineFlightId);
         stopoverFlight.setDateOfOperation(dateOfOperation);

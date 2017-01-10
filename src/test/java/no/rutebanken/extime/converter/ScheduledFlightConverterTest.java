@@ -4,7 +4,10 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import no.avinor.flydata.xjc.model.scheduled.Flight;
 import no.avinor.flydata.xjc.model.scheduled.Flights;
-import no.rutebanken.extime.model.*;
+import no.rutebanken.extime.model.AirportIATA;
+import no.rutebanken.extime.model.FlightPredicate;
+import no.rutebanken.extime.model.ScheduledFlight;
+import no.rutebanken.extime.model.StopVisitType;
 import org.apache.commons.lang3.EnumUtils;
 import org.apache.commons.lang3.tuple.Triple;
 import org.assertj.core.api.Assertions;
@@ -62,13 +65,13 @@ public class ScheduledFlightConverterTest {
     @Test
     @Ignore
     public void convertStopoverFlights() throws Exception {
-        ScheduledStopoverFlight expectedWF148Flight = new ScheduledStopoverFlight();
+        ScheduledFlight expectedWF148Flight = new ScheduledFlight();
         expectedWF148Flight.setAirlineIATA("WF");
         expectedWF148Flight.setAirlineFlightId("WF148");
         expectedWF148Flight.setDateOfOperation(LocalDate.parse("2016-08-16"));
         expectedWF148Flight.setRouteString("BGO-SOG-HOV-OSL");
 
-        ScheduledFlight expectedWF149Flight = new ScheduledStopoverFlight();
+        ScheduledFlight expectedWF149Flight = new ScheduledFlight();
         expectedWF149Flight.setAirlineIATA("WF");
         expectedWF149Flight.setAirlineFlightId("WF149");
         expectedWF149Flight.setDateOfOperation(LocalDate.parse("2016-08-17"));
@@ -84,17 +87,17 @@ public class ScheduledFlightConverterTest {
         String[] fieldsToCompare = {"airlineIATA", "airlineFlightId", "dateOfOperation"};
 
         Assertions.assertThat(scheduledFlights.get(0))
-                .isExactlyInstanceOf(ScheduledStopoverFlight.class)
+                .isExactlyInstanceOf(ScheduledFlight.class)
                 .isEqualToComparingOnlyGivenFields(expectedWF148Flight, fieldsToCompare);
-        Assertions.assertThat(((ScheduledStopoverFlight) scheduledFlights.get(0)).getScheduledStopovers())
+        Assertions.assertThat(((ScheduledFlight) scheduledFlights.get(0)).getScheduledStopovers())
                 .isNotNull()
                 .isNotEmpty()
                 .hasSize(4);
 
         Assertions.assertThat(scheduledFlights.get(1))
-                .isExactlyInstanceOf(ScheduledStopoverFlight.class)
+                .isExactlyInstanceOf(ScheduledFlight.class)
                 .isEqualToComparingOnlyGivenFields(expectedWF149Flight, fieldsToCompare);
-        Assertions.assertThat(((ScheduledStopoverFlight) scheduledFlights.get(1)).getScheduledStopovers())
+        Assertions.assertThat(((ScheduledFlight) scheduledFlights.get(1)).getScheduledStopovers())
                 .isNotNull()
                 .isNotEmpty()
                 .hasSize(4);
@@ -136,11 +139,11 @@ public class ScheduledFlightConverterTest {
         Flight dummyFlight = createFlight(1L, "SK", "4455",
                 LocalDate.parse("2017-01-01"), "BGO", OffsetTime.MIN, "OSL", OffsetTime.MAX);
 
-        ScheduledDirectFlight directFlight = clazzUnderTest.convertToScheduledDirectFlight(dummyFlight, OffsetDateTime.MIN, OffsetDateTime.MAX);
+        ScheduledFlight directFlight = clazzUnderTest.convertToScheduledFlight(dummyFlight, OffsetDateTime.MIN, OffsetDateTime.MAX);
 
         Assertions.assertThat(directFlight)
                 .isNotNull()
-                .isInstanceOf(ScheduledDirectFlight.class);
+                .isInstanceOf(ScheduledFlight.class);
         Assertions.assertThat(directFlight.getFlightId())
                 .isNotNull()
                 .isEqualTo(dummyFlight.getId());
