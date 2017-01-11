@@ -12,9 +12,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
-import static java.util.stream.Collectors.collectingAndThen;
-import static java.util.stream.Collectors.toList;
+import static no.rutebanken.extime.Constants.DASH;
 
 public class ScheduledFlight {
 
@@ -29,23 +29,11 @@ public class ScheduledFlight {
     private OffsetTime timeOfDeparture;
     private OffsetTime timeOfArrival;
     private LocalDate dateOfOperation;
-    private String lineId;
-    private String routeId;
     private List<ScheduledStopover> scheduledStopovers;
-
-    private String routeString; // could also be implemented in separate getter or toString, like "OSL-HOV-SOG-BGO"
 
     // properties marked for data set class
     private AvailabilityPeriod availabilityPeriod;
     private Set<DayOfWeek> weekDaysPattern;
-
-    public String getRouteString() {
-        return routeString;
-    }
-
-    public void setRouteString(String routeString) {
-        this.routeString = routeString;
-    }
 
     public BigInteger getFlightId() {
         return flightId;
@@ -135,41 +123,11 @@ public class ScheduledFlight {
         this.dateOfOperation = dateOfOperation;
     }
 
-    public String getLineId() {
-        return lineId;
-    }
-
-    public void setLineId(String lineId) {
-        this.lineId = lineId;
-    }
-
-    public String getRouteId() {
-        return routeId;
-    }
-
-    public void setRouteId(String routeId) {
-        this.routeId = routeId;
-    }
-
     public List<ScheduledStopover> getScheduledStopovers() {
         if (scheduledStopovers == null) {
             scheduledStopovers = new ArrayList<>();
         }
         return this.scheduledStopovers;
-    }
-
-    public String getRoutePath() {
-        List<String> airportIATAs = scheduledStopovers.stream()
-                .map(ScheduledStopover::getAirportName)
-                .collect(collectingAndThen(toList(), Collections::unmodifiableList));
-        return Joiner.on("-").join(airportIATAs);
-    }
-
-    public String getOperatingLine() {
-        if (hasStopovers()) {
-            return this.scheduledStopovers.get(0).getAirportIATA() + "-" + this.scheduledStopovers.get(scheduledStopovers.size() - 1).getAirportIATA();
-        }
-        return this.getDepartureAirportIATA() + "-" + this.getArrivalAirportIATA();
     }
 
     public void setScheduledStopovers(List<ScheduledStopover> scheduledStopovers) {
@@ -196,6 +154,24 @@ public class ScheduledFlight {
         return this.scheduledStopovers != null && this.scheduledStopovers.size() > 0;
     }
 
+    public String getOperatingLine() {
+        Joiner joiner = Joiner.on(DASH).skipNulls();
+        return hasStopovers() ?
+                joiner.join(scheduledStopovers.get(0).getAirportIATA(), scheduledStopovers.get(scheduledStopovers.size() - 1).getAirportIATA()) :
+                joiner.join(departureAirportIATA, arrivalAirportIATA);
+    }
+
+    public String getRoutePattern() {
+        Joiner joiner = Joiner.on(DASH).skipNulls();
+        if (hasStopovers()) {
+            List<String> airportIatas = scheduledStopovers.stream()
+                    .map(ScheduledStopover::getAirportIATA)
+                    .collect(Collectors.toList());
+            return joiner.join(airportIatas);
+        }
+        return joiner.join(departureAirportIATA, arrivalAirportIATA);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -212,8 +188,6 @@ public class ScheduledFlight {
                 Objects.equal(timeOfDeparture, that.timeOfDeparture) &&
                 Objects.equal(timeOfArrival, that.timeOfArrival) &&
                 Objects.equal(dateOfOperation, that.dateOfOperation) &&
-                Objects.equal(lineId, that.lineId) &&
-                Objects.equal(routeId, that.routeId) &&
                 Objects.equal(scheduledStopovers, that.scheduledStopovers) &&
                 Objects.equal(availabilityPeriod, that.availabilityPeriod) &&
                 Objects.equal(weekDaysPattern, that.weekDaysPattern);
@@ -223,7 +197,7 @@ public class ScheduledFlight {
     public int hashCode() {
         return Objects.hashCode(flightId, airlineIATA, airlineName, airlineFlightId, departureAirportIATA,
                 arrivalAirportIATA, departureAirportName, arrivalAirportName, timeOfDeparture, timeOfArrival,
-                dateOfOperation, lineId, routeId, scheduledStopovers, availabilityPeriod, weekDaysPattern);
+                dateOfOperation, scheduledStopovers, availabilityPeriod, weekDaysPattern);
     }
 
     @Override
@@ -240,12 +214,9 @@ public class ScheduledFlight {
                 .add("timeOfDeparture", timeOfDeparture)
                 .add("timeOfArrival", timeOfArrival)
                 .add("dateOfOperation", dateOfOperation)
-                .add("lineId", lineId)
-                .add("routeId", routeId)
                 .add("scheduledStopovers", scheduledStopovers)
                 .add("availabilityPeriod", availabilityPeriod)
                 .add("weekDaysPattern", weekDaysPattern)
                 .toString();
     }
-
 }

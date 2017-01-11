@@ -69,7 +69,6 @@ public class ScheduledFlightConverterTest {
         expectedWF148Flight.setAirlineIATA("WF");
         expectedWF148Flight.setAirlineFlightId("WF148");
         expectedWF148Flight.setDateOfOperation(LocalDate.parse("2016-08-16"));
-        expectedWF148Flight.setRouteString("BGO-SOG-HOV-OSL");
 
         ScheduledFlight expectedWF149Flight = new ScheduledFlight();
         expectedWF149Flight.setAirlineIATA("WF");
@@ -89,7 +88,7 @@ public class ScheduledFlightConverterTest {
         Assertions.assertThat(scheduledFlights.get(0))
                 .isExactlyInstanceOf(ScheduledFlight.class)
                 .isEqualToComparingOnlyGivenFields(expectedWF148Flight, fieldsToCompare);
-        Assertions.assertThat(((ScheduledFlight) scheduledFlights.get(0)).getScheduledStopovers())
+        Assertions.assertThat(scheduledFlights.get(0).getScheduledStopovers())
                 .isNotNull()
                 .isNotEmpty()
                 .hasSize(4);
@@ -97,7 +96,7 @@ public class ScheduledFlightConverterTest {
         Assertions.assertThat(scheduledFlights.get(1))
                 .isExactlyInstanceOf(ScheduledFlight.class)
                 .isEqualToComparingOnlyGivenFields(expectedWF149Flight, fieldsToCompare);
-        Assertions.assertThat(((ScheduledFlight) scheduledFlights.get(1)).getScheduledStopovers())
+        Assertions.assertThat(scheduledFlights.get(1).getScheduledStopovers())
                 .isNotNull()
                 .isNotEmpty()
                 .hasSize(4);

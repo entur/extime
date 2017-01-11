@@ -5,10 +5,16 @@ public final class Constants {
     private Constants() {}
 
     // common application constants
+    public static final String DASH = "-";
+    public static final String EQUIVALENT_SYMBOL = "<=>";
     public static final String DEFAULT_ZONE_ID = "UTC";
     public static final String DEFAULT_LANGUAGE = "no";
     public static final int DEFAULT_START_INCLUSIVE = 1111111;
     public static final int DEFAULT_END_EXCLUSIVE = 8888888;
+
+    // date/period specific constants
+    public static final String DEFAULT_DATE_TIME_PATTERN = "yyyy-MM-dd";
+    public static final String OFFSET_MIDNIGHT_UTC = "00:00:00Z";
 
     // netex specific constants
     public static final String NETEX_PROFILE_VERSION = "1.04:NO-NeTEx-networktimetable:1.0";
