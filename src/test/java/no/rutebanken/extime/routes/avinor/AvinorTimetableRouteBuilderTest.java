@@ -89,7 +89,7 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
                 interceptSendToEndpoint("mock:fetchTimetable").process(exchange -> {
                     exchange.getIn().setBody(createDummyFlights());
                 });
-                weaveById("ConvertToScheduledFlightsBeanProcessor").replace().to("mock:convertToScheduledFlights");
+                weaveById("ConvertToLineDataSetsBeanProcessor").replace().to("mock:convertToScheduledFlights");
                 mockEndpointsAndSkip("direct:convertScheduledFlightsToNetex");
             }
         });
@@ -338,11 +338,11 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
     @Test
     @Ignore
     public void testConvertScheduledFlightsToNetex() throws Exception {
-        context.getRouteDefinition("ScheduledFlightsToNetexConverter").adviceWith(context, new AdviceWithRouteBuilder() {
+        context.getRouteDefinition("LineDataSetsToNetexConverter").adviceWith(context, new AdviceWithRouteBuilder() {
             @Override
             public void configure() throws Exception {
                 weaveById("AirlineIataPreEnrichProcessor").replace().to("mock:airlineIataPreProcess");
-                weaveById("ConvertFlightsToNetexProcessor").replace().to("mock:convertToNetex");
+                weaveById("ConvertLineDataSetsToNetexProcessor").replace().to("mock:convertToNetex");
                 interceptSendToEndpoint("mock:convertToNetex").process(exchange -> exchange.getIn().setBody(createPublicationDeliveryElement()));
                 weaveById("GenerateFileNameProcessor").replace().to("mock:generateFileName");
                 interceptSendToEndpoint("mock:generateFileName").process(

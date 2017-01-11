@@ -58,8 +58,8 @@ public class ScheduledFlightConverterTest {
                 }
             }
         }
-        List<ScheduledFlight> scheduledFlights = clazzUnderTest.convertToScheduledFlights(finalList);
-        Assertions.assertThat(scheduledFlights).isNotNull();
+        //List<ScheduledFlight> scheduledFlights = clazzUnderTest.convertToLineCentricDataSets(finalList);
+        //Assertions.assertThat(scheduledFlights).isNotNull();
     }
 
     @Test
@@ -76,8 +76,9 @@ public class ScheduledFlightConverterTest {
         expectedWF149Flight.setDateOfOperation(LocalDate.parse("2016-08-17"));
 
         Flights flights = generateObjectsFromXml("/xml/wf148-wf149.xml", Flights.class);
-        List<ScheduledFlight> scheduledFlights = clazzUnderTest.convertToScheduledFlights(flights.getFlight());
+        //List<ScheduledFlight> scheduledFlights = clazzUnderTest.convertToLineCentricDataSets(flights.getFlight());
 
+/*
         Assertions.assertThat(scheduledFlights)
                 .isNotNull()
                 .isNotEmpty()
@@ -100,6 +101,7 @@ public class ScheduledFlightConverterTest {
                 .isNotNull()
                 .isNotEmpty()
                 .hasSize(4);
+*/
     }
 
     @Test

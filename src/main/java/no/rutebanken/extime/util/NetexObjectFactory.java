@@ -237,13 +237,13 @@ public class NetexObjectFactory {
                 .withXmlnsUrl(xmlnsUrl);
     }
 
-    public Line createLine(String flightId, String routePath) {
+    public Line createLine(String flightId, String lineDesignation) {
         String lineId = NetexObjectIdCreator.createLineId(AVINOR_XMLNS, flightId);
 
         return objectFactory.createLine()
                 .withVersion(VERSION_ONE)
                 .withId(lineId)
-                .withName(createMultilingualString(routePath))
+                .withName(createMultilingualString(lineDesignation))
                 .withTransportMode(AllVehicleModesOfTransportEnumeration.AIR)
                 .withPublicCode(flightId);
     }

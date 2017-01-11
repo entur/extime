@@ -7,6 +7,8 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import no.avinor.flydata.xjc.model.scheduled.Flight;
 import no.avinor.flydata.xjc.model.scheduled.Flights;
+import no.rutebanken.extime.config.NetexStaticDataSet;
+import no.rutebanken.extime.config.NetexStaticDataSet.StopPlaceDataSet;
 import no.rutebanken.extime.model.*;
 import no.rutebanken.extime.util.AvinorTimetableUtils;
 import org.apache.camel.Endpoint;
@@ -23,6 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.time.*;
@@ -46,6 +49,9 @@ public class ScheduledFlightConverter {
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern(DEFAULT_DATE_TIME_PATTERN);
 
     @Autowired
+    private NetexStaticDataSet netexStaticDataSet;
+
+    @Autowired
     private TypeConverter typeConverter;
 
     @Autowired
@@ -62,10 +68,17 @@ public class ScheduledFlightConverter {
 
     private String uriParametersFormat = "airport=%s&direction=%s&designator=%s&number=%s&PeriodFrom=%sZ&PeriodTo=%sZ";
 
-    public List<ScheduledFlight> convertToScheduledFlights(List<Flight> scheduledFlights) {
+    private Map<String, StopPlaceDataSet> stopPlaceDataSets;
+
+    @PostConstruct
+    public void init() {
+        stopPlaceDataSets = netexStaticDataSet.getStopPlaces();
+    }
+
+    public List<FlightLineDataSet> convertToLineCentricDataSets(List<Flight> scheduledFlights) {
 
         // TODO For now we create a separate from- and to date in converter, but this should actually
-        //      come as input headers from previous date range generator, to be 100% sure these are always the same
+        // TODO come as input headers from previous date range generator, to be 100% sure these are always the same
         LocalDate requestPeriodFromDate = LocalDate.now(ZoneId.of(DEFAULT_ZONE_ID));
         LocalDate requestPeriodToDate = requestPeriodFromDate.plusMonths(numberOfMonthsInPeriod);
 
@@ -74,12 +87,9 @@ public class ScheduledFlightConverter {
         OffsetDateTime requestPeriodToDateTime = requestPeriodToDate.atTime(offsetMidnight);
 
         // TODO check for codeshare flights here, use the infrequent designator enumset group, to only check international airlines
-
-        // filter section
         //List<Flight> filteredFlights = filterValidFlights(scheduledFlights);
         List<Flight> filteredFlights = scheduledFlights;
 
-        // conversion section
         Map<String, List<Flight>> flightsByDepartureAirport = filteredFlights.stream()
                 .collect(Collectors.groupingBy(Flight::getDepartureStation));
 
@@ -87,22 +97,14 @@ public class ScheduledFlightConverter {
                 .collect(Collectors.groupingBy(Flight::getArrivalStation));
 
         Set<BigInteger> distinctFlightLegIds = Sets.newHashSet();
-        List<ScheduledFlight> distinctFlights = Lists.newArrayList();
         List<ScheduledFlight> mergedScheduledFlights = Lists.newArrayList();
 
         for (Flight flight : filteredFlights) {
             List<Flight> connectingFlightLegs = findConnectingFlightLegs(flight, flightsByDepartureAirport, flightsByArrivalAirportIata, distinctFlightLegIds);
 
             if (CollectionUtils.isEmpty(connectingFlightLegs)) {
-/*
-                logger.debug("Flight with unique id: {}, and flightId: {} is part of multi leg flight, and already processed, skipping...",
-                        flight.getId(),
-                        flight.getAirlineDesignator(),
-                        flight.getFlightNumber());
-*/
                 continue;
             }
-
             if (isMultiLegFlightRoute(connectingFlightLegs)) {
                 List<Triple<StopVisitType, String, OffsetTime>> stopovers = extractStopoversFromFlights(connectingFlightLegs);
                 List<ScheduledStopover> scheduledStopovers = createScheduledStopovers(stopovers);
@@ -123,6 +125,8 @@ public class ScheduledFlightConverter {
             }
         }
 
+        List<FlightLineDataSet> flightLineDataSets = new ArrayList<>();
+
         // group by airline iata and unique lines
         Map<String, Map<String, List<ScheduledFlight>>> flightsByAirlineAndLine = mergedScheduledFlights.stream()
                 .collect(Collectors.groupingBy(ScheduledFlight::getAirlineIATA,
@@ -130,135 +134,166 @@ public class ScheduledFlightConverter {
 
         // find and merge all flights belonging to equivalent lines, and update map
         for (Map.Entry<String, Map<String, List<ScheduledFlight>>> entry : flightsByAirlineAndLine.entrySet()) {
-            Map<String, List<ScheduledFlight>> lineIdFlightsMap = entry.getValue();
-            Map<String, List<ScheduledFlight>> mergedLineFlights = findAndMergeFlightsByEquivalentLines(lineIdFlightsMap);
-            flightsByAirlineAndLine.replace(entry.getKey(), mergedLineFlights);
-        }
+            String airlineIata = entry.getKey();
+            Map<String, List<ScheduledFlight>> flightsByLineDesignation = entry.getValue();
+            Map<String, List<ScheduledFlight>> mergedFlightsByLineDesignation = findAndMergeFlightsByEquivalentLines(flightsByLineDesignation);
 
-        System.out.println("WHAT DO WE HAVE HERE?");
-
-        // TODO consider merging this with above iteration, when getting the merged map
-        Map<String, List<ScheduledFlight>> wideroeLines = flightsByAirlineAndLine.get("WF");
-        for (Map.Entry<String, List<ScheduledFlight>> lineEntry : wideroeLines.entrySet()) {
-            if (lineEntry.getKey().equals("OSL-BGO<=>BGO-OSL")) {
-                FlightLineDataSet flightLineDataSet = convertToFlightLineDataSet(requestPeriodFromDateTime, requestPeriodToDateTime, lineEntry);
+            for (Map.Entry<String, List<ScheduledFlight>> lineEntry : mergedFlightsByLineDesignation.entrySet()) {
+                FlightLineDataSet flightLineDataSet = populateFlightLineDataSet(requestPeriodFromDateTime, requestPeriodToDateTime, airlineIata, lineEntry);
+                flightLineDataSets.add(flightLineDataSet);
             }
         }
 
-        for (Map.Entry<String, Map<String, List<ScheduledFlight>>> entry : flightsByAirlineAndLine.entrySet()) {
-            Map<String, List<ScheduledFlight>> lineIdFlightsMap = entry.getValue();
-            //analyzeLines(lineIdFlightsMap);
-        }
-
-        Map<String, List<ScheduledFlight>> scheduledFlightsByFlightId = mergedScheduledFlights.stream()
-                .sorted(Comparator.comparing(ScheduledFlight::getDateOfOperation))
-                .collect(Collectors.groupingBy(ScheduledFlight::getAirlineFlightId));
-
-        for (Map.Entry<String, List<ScheduledFlight>> entry : scheduledFlightsByFlightId.entrySet()) {
-            String flightId = entry.getKey();
-            List<ScheduledFlight> flights = entry.getValue();
-            Set<DayOfWeek> daysOfWeek = findJourneyPatterns(flightId, flights);
-            ScheduledFlight scheduledFlight = flights.get(0);
-            scheduledFlight.setWeekDaysPattern(daysOfWeek);
-            distinctFlights.add(scheduledFlight);
-        }
-
-        return distinctFlights.stream()
-                .filter(distinctByKey(ScheduledFlight::getAirlineFlightId))
-                .collect(Collectors.toList());
-        //return distinctFlights;
+        return flightLineDataSets;
     }
 
-    private FlightLineDataSet convertToFlightLineDataSet(OffsetDateTime requestPeriodFromDateTime,
-                                                         OffsetDateTime requestPeriodToDateTime,
-                                                         Map.Entry<String, List<ScheduledFlight>> flightsByLineEntry) {
+    private FlightLineDataSet populateFlightLineDataSet(OffsetDateTime requestPeriodFromDateTime,
+                                                        OffsetDateTime requestPeriodToDateTime,
+                                                        String airlineIata,
+                                                        Map.Entry<String, List<ScheduledFlight>> flightsByLineEntry) {
 
-        String lineId = flightsByLineEntry.getKey();
-        List<ScheduledFlight> flights = flightsByLineEntry.getValue();
         FlightLineDataSet flightLineDataSet = new FlightLineDataSet();
+        flightLineDataSet.setAirlineIata(airlineIata);
 
-        // pre 1. set availability period
+        // TODO generate line id based on: 1. large airports first 2. no requirements
+        String lineDesignation = flightsByLineEntry.getKey();
+        flightLineDataSet.setLineDesignation(lineDesignation);
+        String lineName = getLineNameFromDesignation(lineDesignation);
+        flightLineDataSet.setLineName(lineName);
+
+        List<ScheduledFlight> flights = flightsByLineEntry.getValue();
 
         AvailabilityPeriod availabilityPeriod = new AvailabilityPeriod(requestPeriodFromDateTime, requestPeriodToDateTime);
         flightLineDataSet.setAvailabilityPeriod(availabilityPeriod);
-
-        // 1. find unique route patterns, every unique route maps to a journey pattern one-to-one for flights
 
         // get all unique route patterns for the current line
         Set<String> uniqueRoutePatterns = flights.stream()
                 .map(ScheduledFlight::getRoutePattern)
                 .collect(Collectors.toSet());
-
-        // 2. add routes to dataset
-
         flightLineDataSet.setRoutePatterns(uniqueRoutePatterns);
-
-        // 3. find journey patterns? same as routes...?
-        // 4. add journey patterns to dataset
-
         flightLineDataSet.setJourneyPatterns(uniqueRoutePatterns);
 
-        // 5. find the actual journeys per route pattern first, implemented/realized in flights, e.g. WF149
-
         // TODO consider having a separate object wrapper; RoutePattern, holding the pattern string and other useful properties
+        // a routeId could have the following format: "WF:OSL-BGO:OSL-SOG-BGO"
 
         Map<String, Map<String, List<ScheduledFlight>>> journeysByRouteAndFlightId = flights.stream()
                 .collect(Collectors.groupingBy(ScheduledFlight::getRoutePattern,
                         Collectors.groupingBy(ScheduledFlight::getAirlineFlightId)));
 
-        // 6. add journeys to dataset
+        // TODO consider sorting all internally grouped flights by operating day
+        // .sorted(Comparator.comparing(ScheduledFlight::getDateOfOperation))
 
         flightLineDataSet.setRouteJourneys(journeysByRouteAndFlightId);
 
-        // 7. find day/period patterns for each journey
-
-        // 8. add the day/period patterns to dataset, and also add referentials
+        // TODO find day/period patterns for each journey
 
         return flightLineDataSet;
     }
 
-    private Map<String, List<ScheduledFlight>> findAndMergeFlightsByEquivalentLines(Map<String, List<ScheduledFlight>> flightsByUniqueLineId) {
-        Set<String> lineIds = new HashSet<>();
-        Map<String, List<ScheduledFlight>> mergedFlightsByLine = new HashMap<>();
+    private String getLineNameFromDesignation(String lineDesignation) {
+        List<String> airportIatas = Splitter.on(DASH)
+                .trimResults()
+                .omitEmptyStrings()
+                .limit(2)
+                .splitToList(lineDesignation);
 
-        for (String lineId : flightsByUniqueLineId.keySet()) {
-            if (!lineIds.contains(lineId)) {
-                List<ScheduledFlight> lineFlights = flightsByUniqueLineId.get(lineId);
-                Joiner joiner = Joiner.on(EQUIVALENT_SYMBOL).skipNulls();
-                String oppositeLineId = getOppositeLineId(lineId);
-                String lineIdMergedKey = joiner.join(lineId, oppositeLineId);
+        String firstAirportName = stopPlaceDataSets.get(airportIatas.get(0).toLowerCase()).getShortName();
+        String secondAirportName = stopPlaceDataSets.get(airportIatas.get(1).toLowerCase()).getShortName();
 
-                if (!lineId.equals(oppositeLineId)) {
-                    if (flightsByUniqueLineId.containsKey(oppositeLineId)) {
-                        List<ScheduledFlight> oppositeLineFlights = flightsByUniqueLineId.get(oppositeLineId);
+        return Joiner.on(DASH).skipNulls().join(firstAirportName, secondAirportName);
+    }
+
+    private Map<String, List<ScheduledFlight>> findAndMergeFlightsByEquivalentLines(Map<String, List<ScheduledFlight>> flightsByLineDesignation) {
+        Set<String> lineDesignations = new HashSet<>();
+        Map<String, List<ScheduledFlight>> mergedFlightsByLineDesignation = new HashMap<>();
+
+        for (String lineDesignation : flightsByLineDesignation.keySet()) {
+            if (!lineDesignations.contains(lineDesignation)) {
+                List<ScheduledFlight> lineFlights = flightsByLineDesignation.get(lineDesignation);
+                String oppositeLineDesignation = getOppositeLineDesignation(lineDesignation);
+                String mostSignificantLineDesignation = findMostSignificantLineDesignation(lineDesignation);
+
+                if (!lineDesignation.equals(oppositeLineDesignation)) {
+                    if (flightsByLineDesignation.containsKey(oppositeLineDesignation)) {
+                        List<ScheduledFlight> oppositeLineFlights = flightsByLineDesignation.get(oppositeLineDesignation);
 
                         List<ScheduledFlight> mergedFlights = Stream.of(lineFlights, oppositeLineFlights)
                                 .flatMap(Collection::stream)
                                 .collect(Collectors.toList());
 
-                        mergedFlightsByLine.put(lineIdMergedKey, mergedFlights);
-                        lineIds.addAll(Arrays.asList(lineId, oppositeLineId));
+                        mergedFlightsByLineDesignation.put(mostSignificantLineDesignation, mergedFlights);
+                        lineDesignations.addAll(Arrays.asList(lineDesignation, oppositeLineDesignation));
                     } else {
-                        mergedFlightsByLine.put(joiner.join(lineId, lineId), lineFlights);
-                        lineIds.add(lineId);
+                        mergedFlightsByLineDesignation.put(mostSignificantLineDesignation, lineFlights);
+                        lineDesignations.add(lineDesignation);
                     }
                 } else {
-                    mergedFlightsByLine.put(lineIdMergedKey, lineFlights);
-                    lineIds.add(lineId);
+                    mergedFlightsByLineDesignation.put(mostSignificantLineDesignation, lineFlights);
+                    lineDesignations.add(lineDesignation);
                 }
             }
         }
 
-        return mergedFlightsByLine;
+        return mergedFlightsByLineDesignation;
     }
 
-    private String getOppositeLineId(String lineId) {
+    private String getOppositeLineDesignation(String lineDesignation) {
         List<String> lineAirportIatas = Splitter.on(DASH)
                 .trimResults()
                 .omitEmptyStrings()
                 .limit(2)
-                .splitToList(lineId);
+                .splitToList(lineDesignation);
         return Joiner.on(DASH).skipNulls().join(Lists.reverse(lineAirportIatas));
+    }
+
+    private String findMostSignificantLineDesignation(String lineDesignation) {
+        List<AirportWithSize> airportsWithSize = new ArrayList<>(2);
+
+        List<String> lineAirportIatas = Splitter.on(DASH)
+                .trimResults()
+                .omitEmptyStrings()
+                .limit(2)
+                .splitToList(lineDesignation);
+
+        lineAirportIatas.forEach(iata -> {
+            AirportWithSize airportWithSize = getAirportWithSize(iata);
+            airportsWithSize.add(airportWithSize);
+        });
+
+        AirportIATA largestAirport = findLargestAirport(airportsWithSize);
+
+        return largestAirport.name().equals(lineAirportIatas.get(0)) ? lineDesignation :
+                Joiner.on(DASH).skipNulls().join(Lists.reverse(lineAirportIatas));
+    }
+
+    private AirportWithSize getAirportWithSize(String airportIataCode) {
+        boolean validEnum = EnumUtils.isValidEnum(AirportIATA.class, airportIataCode);
+
+        if (validEnum) {
+            AirportIATA airportIata = AirportIATA.valueOf(airportIataCode);
+            if (AirportIATA.LARGE_SIZED_AIRPORTS.contains(airportIata)) {
+                return new AirportWithSize(airportIata, 3);
+            } else if (AirportIATA.MEDIUM_SIZED_AIRPORTS.contains(airportIata))  {
+                return new AirportWithSize(airportIata, 2);
+            } else {
+                return new AirportWithSize(airportIata, 1);
+            }
+        } else {
+            logger.error("Invalid iata code : {}", airportIataCode);
+            throw new RuntimeException("Invalid iata code");
+        }
+    }
+
+    private AirportIATA findLargestAirport(List<AirportWithSize> airportWithSizeList) {
+        AirportWithSize airportWithSize1 = airportWithSizeList.get(0);
+        AirportWithSize airportWithSize2 = airportWithSizeList.get(1);
+
+        if (airportWithSize1.getSize() > airportWithSize2.getSize()) {
+            return airportWithSize1.getAirportIata();
+        } else if (airportWithSize1.getSize() < airportWithSize2.getSize()) {
+            return airportWithSize2.getAirportIata();
+        }
+        return airportWithSize1.getAirportIata();
     }
 
     private <T> Predicate<T> distinctByKey(Function<? super T, Object> keyExtractor) {
@@ -526,6 +561,32 @@ public class ScheduledFlightConverter {
         scheduledFlight.setTimeOfDeparture(flight.getStd());
         scheduledFlight.setTimeOfArrival(flight.getSta());
         return scheduledFlight;
+    }
+
+    private class AirportWithSize {
+        AirportIATA airportIata;
+        int size;
+
+        public AirportWithSize(AirportIATA airportIata, int size) {
+            this.airportIata = airportIata;
+            this.size = size;
+        }
+
+        public AirportIATA getAirportIata() {
+            return airportIata;
+        }
+
+        public void setAirportIata(AirportIATA airportIata) {
+            this.airportIata = airportIata;
+        }
+
+        public int getSize() {
+            return size;
+        }
+
+        public void setSize(int size) {
+            this.size = size;
+        }
     }
 
 }

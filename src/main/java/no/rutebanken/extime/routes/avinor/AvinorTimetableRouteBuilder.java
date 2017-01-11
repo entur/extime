@@ -10,10 +10,7 @@ import no.avinor.flydata.xjc.model.scheduled.Flights;
 import no.rutebanken.extime.converter.CommonDataToNetexConverter;
 import no.rutebanken.extime.converter.ScheduledFlightConverter;
 import no.rutebanken.extime.converter.ScheduledFlightToNetexConverter;
-import no.rutebanken.extime.model.AirportIATA;
-import no.rutebanken.extime.model.ScheduledFlight;
-import no.rutebanken.extime.model.ScheduledStopover;
-import no.rutebanken.extime.model.StopVisitType;
+import no.rutebanken.extime.model.*;
 import no.rutebanken.extime.util.AvinorTimetableUtils;
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
@@ -57,8 +54,12 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
     private static final String HEADER_MESSAGE_FILE_NAME = "RutebankenFileName";
 
     private static final String PROPERTY_DIRECT_FLIGHT_ORIGINAL_BODY = "DirectFlightOriginalBody";
-    private static final String PROPERTY_SCHEDULED_FLIGHT_ORIGINAL_BODY = "ScheduledFlightOriginalBody";
-    private static final String PROPERTY_SCHEDULED_FLIGHT_LIST_ORIGINAL_BODY = "ScheduledFlightListOriginalBody";
+
+    //private static final String PROPERTY_SCHEDULED_FLIGHT_ORIGINAL_BODY = "ScheduledFlightOriginalBody";
+    private static final String PROPERTY_LINE_DATASET_ORIGINAL_BODY = "LineDataSetOriginalBody";
+
+    //private static final String PROPERTY_SCHEDULED_FLIGHT_LIST_ORIGINAL_BODY = "ScheduledFlightListOriginalBody";
+    private static final String PROPERTY_LINE_DATASETS_LIST_ORIGINAL_BODY = "LineDataSetsListOriginalBody";
 
     static final String PROPERTY_STOPOVER_ORIGINAL_BODY = "StopoverOriginalBody";
 
@@ -102,14 +103,16 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                         .log(LoggingLevel.INFO, this.getClass().getName(), "Dumping data to file")
                         .to("direct:dumpFetchedFlightsToFile")
                     .otherwise()
-                        .log(LoggingLevel.INFO, this.getClass().getName(), "Converting to scheduled flights")
-                        .bean(ScheduledFlightConverter.class, "convertToScheduledFlights").id("ConvertToScheduledFlightsBeanProcessor")
-                        .setProperty(PROPERTY_SCHEDULED_FLIGHT_LIST_ORIGINAL_BODY, body())
+                        .log(LoggingLevel.INFO, this.getClass().getName(), "Converting to line centric flight data sets")
+                        .bean(ScheduledFlightConverter.class, "convertToLineCentricDataSets").id("ConvertToLineDataSetsBeanProcessor")
+                        //.setProperty(PROPERTY_SCHEDULED_FLIGHT_LIST_ORIGINAL_BODY, body())
+                        .setProperty(PROPERTY_LINE_DATASETS_LIST_ORIGINAL_BODY, body())
                         .log(LoggingLevel.INFO, "Converting common aviation data to NeTEx")
                         .to("direct:convertCommonDataToNetex")
-                        .setBody(simpleF("exchangeProperty[%s]", List.class, PROPERTY_SCHEDULED_FLIGHT_LIST_ORIGINAL_BODY))
+                        .setBody(simpleF("exchangeProperty[%s]", List.class, PROPERTY_LINE_DATASETS_LIST_ORIGINAL_BODY))
                         .log(LoggingLevel.INFO, "Converting flights to NeTEx")
-                        .to("direct:convertScheduledFlightsToNetex")
+                        //.to("direct:convertScheduledFlightsToNetex")
+                        .to("direct:convertLineDataSetsToNetex")
 //                        .log(LoggingLevel.INFO, "Compressing XML files and send to storage")
 //                        .to("controlbus:route?routeId=CompressAndSendToStorage&action=start")
                 .end()
@@ -219,9 +222,11 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .to("file:{{netex.generated.output.path}}")
         ;
 
-        from("direct:convertScheduledFlightsToNetex")
-                .routeId("ScheduledFlightsToNetexConverter")
-                .log(LoggingLevel.INFO, this.getClass().getName(), "Converting scheduled flights to NeTEx")
+        from("direct:convertLineDataSetsToNetex")
+        //from("direct:convertScheduledFlightsToNetex")
+                //.routeId("ScheduledFlightsToNetexConverter")
+                .routeId("LineDataSetsToNetexConverter")
+                .log(LoggingLevel.INFO, this.getClass().getName(), "Converting line centric data sets to NeTEx")
 
                 .log(LoggingLevel.INFO, this.getClass().getName(), "Purging netex output path : ${properties:netex.generated.output.path}")
                 .process(exchange -> Files.walk(Paths.get(exchange.getContext().resolvePropertyPlaceholders("{{netex.generated.output.path}}")))
@@ -231,16 +236,29 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 )
 
                 .split(body())//.parallelProcessing()
+/*
                     .process(exchange -> {
                         ScheduledFlight originalBody = exchange.getIn().getBody(ScheduledFlight.class);
                         exchange.setProperty(PROPERTY_SCHEDULED_FLIGHT_ORIGINAL_BODY, originalBody);
                         String enrichParameter = originalBody.getAirlineIATA();
                         exchange.getIn().setBody(enrichParameter);
                     }).id("AirlineIataPreEnrichProcessor")
+*/
+
+                    .process(exchange -> {
+                        FlightLineDataSet originalBody = exchange.getIn().getBody(FlightLineDataSet.class);
+                        //exchange.setProperty(PROPERTY_SCHEDULED_FLIGHT_ORIGINAL_BODY, originalBody);
+                        exchange.setProperty(PROPERTY_LINE_DATASET_ORIGINAL_BODY, originalBody);
+                        String enrichParameter = originalBody.getAirlineIata();
+                        exchange.getIn().setBody(enrichParameter);
+                    }).id("AirlineIataPreEnrichProcessor")
+
                     .setHeader(HEADER_EXTIME_FETCH_RESOURCE_ENDPOINT, constant("direct:fetchAndCacheAirlineName"))
                     .enrich("direct:retrieveResource", new AirlineNameEnricherAggregationStrategy())
-                    .to("direct:enrichScheduledFlightWithAirportNames")
-                    .bean(ScheduledFlightToNetexConverter.class, "convertToNetex").id("ConvertFlightsToNetexProcessor")
+
+                    //.to("direct:enrichScheduledFlightWithAirportNames")
+
+                    .bean(ScheduledFlightToNetexConverter.class, "convertToNetex").id("ConvertLineDataSetsToNetexProcessor")
                     .process(exchange -> exchange.getIn().setHeader(HEADER_FILE_NAME_GENERATED, generateFilename(exchange))).id("GenerateFileNameProcessor")
                     .marshal(jaxbDataFormat)
                     .setHeader(Exchange.FILE_NAME, simpleF("${header.%s}.xml", HEADER_FILE_NAME_GENERATED))
@@ -250,6 +268,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .end()
         ;
 
+/*
         // @TODO: write unit test for this route
         from("direct:enrichScheduledFlightWithAirportNames")
                 .routeId("ScheduledFlightAirportNameEnricher")
@@ -285,6 +304,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                     .enrich("direct:retrieveResource", new StopoverIataEnricherAggregationStrategy())
                 .end()
         ;
+*/
 
         from("file:{{netex.generated.output.path}}?noop=true&idempotent=true&antInclude=**/*.xml")
                 .routeId("CompressAndSendToStorage")
@@ -474,6 +494,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
         }
     }
 
+/*
     private class AirlineNameEnricherAggregationStrategy implements AggregationStrategy {
         @Override
         public Exchange aggregate(Exchange original, Exchange resource) {
@@ -485,7 +506,18 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
             return original;
         }
     }
-    
+*/
+    private class AirlineNameEnricherAggregationStrategy implements AggregationStrategy {
+        @Override
+        public Exchange aggregate(Exchange original, Exchange resource) {
+            FlightLineDataSet originalBody = original.getProperty(PROPERTY_LINE_DATASET_ORIGINAL_BODY, FlightLineDataSet.class);
+            String resourceResponse = resource.getIn().getBody(String.class);
+            originalBody.setAirlineName(resourceResponse);
+            original.getIn().setBody(originalBody);
+            return original;
+        }
+    }
+
 	public static String generateFilename(Exchange exchange) {
 		@SuppressWarnings("unchecked")
 		JAXBElement<PublicationDeliveryStructure> publicationDelivery = (JAXBElement<PublicationDeliveryStructure>) exchange.getIn().getBody();

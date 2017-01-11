@@ -3,10 +3,7 @@ package no.rutebanken.extime.converter;
 import com.google.common.collect.Lists;
 import no.rutebanken.extime.config.NetexStaticDataSet;
 import no.rutebanken.extime.config.NetexStaticDataSet.OrganisationDataSet;
-import no.rutebanken.extime.model.AirlineDesignator;
-import no.rutebanken.extime.model.AvailabilityPeriod;
-import no.rutebanken.extime.model.ScheduledFlight;
-import no.rutebanken.extime.model.ScheduledStopover;
+import no.rutebanken.extime.model.*;
 import no.rutebanken.extime.util.DateUtils;
 import no.rutebanken.extime.util.NetexObjectFactory;
 import no.rutebanken.extime.util.NetexObjectIdCreator;
@@ -66,20 +63,21 @@ public class ScheduledFlightToNetexConverter {
     @Autowired
     private NetexObjectFactory netexObjectFactory;
 
-
-    public JAXBElement<PublicationDeliveryStructure> convertToNetex(ScheduledFlight scheduledFlight) throws Exception {
+    public JAXBElement<PublicationDeliveryStructure> convertToNetex(FlightLineDataSet lineDataSet) throws Exception {
+/*
         OffsetDateTime publicationTimestamp = OffsetDateTime.ofInstant(Instant.now(), ZoneId.of(DEFAULT_ZONE_ID));
-        AvailabilityPeriod availabilityPeriod = scheduledFlight.getAvailabilityPeriod();
+        AvailabilityPeriod availabilityPeriod = lineDataSet.getAvailabilityPeriod();
+
+        String airlineIata = lineDataSet.getAirlineIata();
 
         String routePath = String.format("%s-%s", scheduledFlight.getDepartureAirportName(), scheduledFlight.getArrivalAirportName());
         String flightId = scheduledFlight.getAirlineFlightId();
-        String airlineIata = scheduledFlight.getAirlineIATA();
-        String operatorId = NetexObjectIdCreator.createOperatorId(AVINOR_XMLNS, airlineIata);
 
+        String operatorId = NetexObjectIdCreator.createOperatorId(AVINOR_XMLNS, airlineIata);
         boolean isFrequentOperator = isCommonDesignator(airlineIata);
 
-        // TODO add support for multiple routes per line
-        Line line = netexObjectFactory.createLine(flightId, routePath);
+        // TODO add support for finding the most significant line when generating the main line id/name (property: lineId in class: FlightLineDataSet)
+        Line line = netexObjectFactory.createLine(flightId, lineDataSet.getLineDesignation());
         line.setOperatorRef(isFrequentOperator ? netexObjectFactory.createOperatorRefStructure(operatorId, Boolean.FALSE) :
                 netexObjectFactory.createOperatorRefStructure(operatorId, Boolean.TRUE));
 
@@ -117,6 +115,8 @@ public class ScheduledFlightToNetexConverter {
         JAXBElement<CompositeFrame> compositeFrame = createCompositeFrame(publicationTimestamp, availabilityPeriod, flightId, frames); // TODO refactor and use netex object factory method
         PublicationDeliveryStructure publicationDeliveryStructure = createPublicationDeliveryStructure(publicationTimestamp, compositeFrame, flightId, routePath); // TODO refactor and use netex object factory method
         return objectFactory.createPublicationDelivery(publicationDeliveryStructure);
+*/
+return null;
     }
 
     public OperatorRefStructure createOperatorRefStructure(String operatorId, boolean withRefValidation) {
