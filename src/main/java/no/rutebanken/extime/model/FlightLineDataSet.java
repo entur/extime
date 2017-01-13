@@ -5,7 +5,6 @@ import com.google.common.base.Objects;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class FlightLineDataSet {
 
@@ -14,41 +13,8 @@ public class FlightLineDataSet {
     private String lineDesignation;
     private String lineName;
     private AvailabilityPeriod availabilityPeriod;
-    private Set<String> routePatterns;
-    private Set<String> journeyPatterns;
+    private List<FlightRoute> flightRoutes;
     private Map<String, Map<String, List<ScheduledFlight>>> routeJourneys;
-
-    public AvailabilityPeriod getAvailabilityPeriod() {
-        return availabilityPeriod;
-    }
-
-    public void setAvailabilityPeriod(AvailabilityPeriod availabilityPeriod) {
-        this.availabilityPeriod = availabilityPeriod;
-    }
-
-    public Set<String> getRoutePatterns() {
-        return routePatterns;
-    }
-
-    public void setRoutePatterns(Set<String> routePatterns) {
-        this.routePatterns = routePatterns;
-    }
-
-    public Set<String> getJourneyPatterns() {
-        return journeyPatterns;
-    }
-
-    public void setJourneyPatterns(Set<String> journeyPatterns) {
-        this.journeyPatterns = journeyPatterns;
-    }
-
-    public Map<String, Map<String, List<ScheduledFlight>>> getRouteJourneys() {
-        return routeJourneys;
-    }
-
-    public void setRouteJourneys(Map<String, Map<String, List<ScheduledFlight>>> routeJourneys) {
-        this.routeJourneys = routeJourneys;
-    }
 
     public String getAirlineIata() {
         return airlineIata;
@@ -82,6 +48,30 @@ public class FlightLineDataSet {
         this.lineName = lineName;
     }
 
+    public AvailabilityPeriod getAvailabilityPeriod() {
+        return availabilityPeriod;
+    }
+
+    public void setAvailabilityPeriod(AvailabilityPeriod availabilityPeriod) {
+        this.availabilityPeriod = availabilityPeriod;
+    }
+
+    public List<FlightRoute> getFlightRoutes() {
+        return flightRoutes;
+    }
+
+    public void setFlightRoutes(List<FlightRoute> flightRoutes) {
+        this.flightRoutes = flightRoutes;
+    }
+
+    public Map<String, Map<String, List<ScheduledFlight>>> getRouteJourneys() {
+        return routeJourneys;
+    }
+
+    public void setRouteJourneys(Map<String, Map<String, List<ScheduledFlight>>> routeJourneys) {
+        this.routeJourneys = routeJourneys;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -92,14 +82,13 @@ public class FlightLineDataSet {
                 Objects.equal(lineDesignation, that.lineDesignation) &&
                 Objects.equal(lineName, that.lineName) &&
                 Objects.equal(availabilityPeriod, that.availabilityPeriod) &&
-                Objects.equal(routePatterns, that.routePatterns) &&
-                Objects.equal(journeyPatterns, that.journeyPatterns) &&
+                Objects.equal(flightRoutes, that.flightRoutes) &&
                 Objects.equal(routeJourneys, that.routeJourneys);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(airlineIata, airlineName, lineDesignation, lineName, availabilityPeriod, routePatterns, journeyPatterns, routeJourneys);
+        return Objects.hashCode(airlineIata, airlineName, lineDesignation, lineName, availabilityPeriod, flightRoutes, routeJourneys);
     }
 
     @Override
@@ -110,8 +99,7 @@ public class FlightLineDataSet {
                 .add("lineDesignation", lineDesignation)
                 .add("lineName", lineName)
                 .add("availabilityPeriod", availabilityPeriod)
-                .add("routePatterns", routePatterns)
-                .add("journeyPatterns", journeyPatterns)
+                .add("flightRoutes", flightRoutes)
                 .add("routeJourneys", routeJourneys)
                 .toString();
     }

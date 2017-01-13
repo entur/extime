@@ -1,5 +1,6 @@
 package no.rutebanken.extime.converter;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import no.rutebanken.extime.config.NetexStaticDataSet;
 import no.rutebanken.extime.config.NetexStaticDataSet.OrganisationDataSet;
@@ -64,59 +65,67 @@ public class ScheduledFlightToNetexConverter {
     private NetexObjectFactory netexObjectFactory;
 
     public JAXBElement<PublicationDeliveryStructure> convertToNetex(FlightLineDataSet lineDataSet) throws Exception {
-/*
         OffsetDateTime publicationTimestamp = OffsetDateTime.ofInstant(Instant.now(), ZoneId.of(DEFAULT_ZONE_ID));
         AvailabilityPeriod availabilityPeriod = lineDataSet.getAvailabilityPeriod();
 
         String airlineIata = lineDataSet.getAirlineIata();
-
-        String routePath = String.format("%s-%s", scheduledFlight.getDepartureAirportName(), scheduledFlight.getArrivalAirportName());
-        String flightId = scheduledFlight.getAirlineFlightId();
+        //String flightId = scheduledFlight.getAirlineFlightId();
+        String flightId = "";
 
         String operatorId = NetexObjectIdCreator.createOperatorId(AVINOR_XMLNS, airlineIata);
         boolean isFrequentOperator = isCommonDesignator(airlineIata);
 
-        // TODO add support for finding the most significant line when generating the main line id/name (property: lineId in class: FlightLineDataSet)
-        Line line = netexObjectFactory.createLine(flightId, lineDataSet.getLineDesignation());
+        Line line = netexObjectFactory.createLine(lineDataSet.getAirlineIata(), lineDataSet.getLineDesignation(), lineDataSet.getLineName());
         line.setOperatorRef(isFrequentOperator ? netexObjectFactory.createOperatorRefStructure(operatorId, Boolean.FALSE) :
                 netexObjectFactory.createOperatorRefStructure(operatorId, Boolean.TRUE));
 
-        List<RoutePoint> routePoints = createRoutePoints(scheduledFlight);
-        Route route = createRoute(flightId, routePath, scheduledFlight, line);
-        RouteRefStructure routeRefStructure = netexObjectFactory.createRouteRefStructure(route.getId());
-        RouteRefs_RelStructure routeRefStruct = objectFactory.createRouteRefs_RelStructure().withRouteRef(routeRefStructure);
+        //List<RoutePoint> routePoints = createRoutePoints(scheduledFlight);
+        List<RoutePoint> routePoints = createRoutePoints(lineDataSet.getFlightRoutes());
+
+        //Route route = createRoute(flightId, routePath, scheduledFlight, line);
+        List<Route> routes = createRoutes(line, lineDataSet.getFlightRoutes());
+
+        //RouteRefStructure routeRefStructure = netexObjectFactory.createRouteRefStructure(route.getId());
+        List<RouteRefStructure> routeRefStructures = netexObjectFactory.createRouteRefStructures(routes);
+
+        //RouteRefs_RelStructure routeRefStruct = objectFactory.createRouteRefs_RelStructure().withRouteRef(routeRefStructure);
+        RouteRefs_RelStructure routeRefStruct = objectFactory.createRouteRefs_RelStructure().withRouteRef(routeRefStructures);
         line.setRoutes(routeRefStruct);
 
-        JourneyPattern journeyPattern = createJourneyPattern(route, scheduledFlight);
-        List<DayType> dayTypes = createDayTypes(scheduledFlight.getWeekDaysPattern(), flightId);
-        List<ServiceJourney> serviceJourneys = createServiceJourneyList(scheduledFlight, dayTypes, journeyPattern, line);
+        //JourneyPattern journeyPattern = createJourneyPattern(route, scheduledFlight);
+        List<JourneyPattern> journeyPatterns = createJourneyPatterns(routes);
+        //List<DayType> dayTypes = createDayTypes(scheduledFlight.getWeekDaysPattern(), flightId);
+        //List<ServiceJourney> serviceJourneys = createServiceJourneyList(scheduledFlight, dayTypes, journeyPattern, line);
+        List<ServiceJourney> serviceJourneys = createServiceJourneys(line, journeyPatterns, lineDataSet.getRouteJourneys());
 
         Frames_RelStructure frames = objectFactory.createFrames_RelStructure();
 
         if (!isFrequentOperator) {
             logger.warn("Infrequent operator identified by id : {}", airlineIata);
-            Operator operator = netexObjectFactory.createInfrequentAirlineOperatorElement(airlineIata, scheduledFlight.getAirlineName(), operatorId);
+            Operator operator = netexObjectFactory.createInfrequentAirlineOperatorElement(airlineIata, lineDataSet.getAirlineName(), operatorId);
             JAXBElement<ResourceFrame> resourceFrameElement = netexObjectFactory.createResourceFrameElement(operator);
             frames.getCommonFrame().add(resourceFrameElement);
         }
 
-        JAXBElement<ServiceFrame> serviceFrame = createServiceFrame(publicationTimestamp, scheduledFlight.getAirlineName(),
-                scheduledFlight.getAirlineIATA(), flightId, routePoints, route, line, journeyPattern);
+        JAXBElement<ServiceFrame> serviceFrame = createServiceFrame(publicationTimestamp, lineDataSet.getAirlineName(),
+                lineDataSet.getAirlineIata(), flightId, routePoints, routes, line, journeyPatterns);
         frames.getCommonFrame().add(serviceFrame);
 
         JAXBElement<TimetableFrame> timetableFrame = createTimetableFrame(serviceJourneys);
         frames.getCommonFrame().add(timetableFrame);
 
-        JAXBElement<ServiceCalendarFrame> serviceCalendarFrame = createServiceCalendarFrame(dayTypes);
-        frames.getCommonFrame().add(serviceCalendarFrame);
+        //JAXBElement<ServiceCalendarFrame> serviceCalendarFrame = createServiceCalendarFrame(dayTypes);
+        //frames.getCommonFrame().add(serviceCalendarFrame);
 
         //cleanStopPointsFromTempValues(scheduledStopPoints); // TODO fix this to remove short names from stop points, or move to common converter
 
-        JAXBElement<CompositeFrame> compositeFrame = createCompositeFrame(publicationTimestamp, availabilityPeriod, flightId, frames); // TODO refactor and use netex object factory method
-        PublicationDeliveryStructure publicationDeliveryStructure = createPublicationDeliveryStructure(publicationTimestamp, compositeFrame, flightId, routePath); // TODO refactor and use netex object factory method
+        JAXBElement<CompositeFrame> compositeFrame = createCompositeFrame(publicationTimestamp, availabilityPeriod,
+                lineDataSet.getAirlineIata(), lineDataSet.getLineDesignation(), frames);
+
+        PublicationDeliveryStructure publicationDeliveryStructure = createPublicationDeliveryStructure(
+                publicationTimestamp, compositeFrame, lineDataSet.getLineName());
+
         return objectFactory.createPublicationDelivery(publicationDeliveryStructure);
-*/
-return null;
     }
 
     public OperatorRefStructure createOperatorRefStructure(String operatorId, boolean withRefValidation) {
@@ -126,13 +135,13 @@ return null;
     }
 
     public PublicationDeliveryStructure createPublicationDeliveryStructure(OffsetDateTime publicationTimestamp,
-            JAXBElement<CompositeFrame> compositeFrame, String flightId, String routePath) {
+            JAXBElement<CompositeFrame> compositeFrame, String lineName) {
         OrganisationDataSet avinorDataSet = netexStaticDataSet.getOrganisations().get(AVINOR_XMLNS.toLowerCase());
 
         DataObjects dataObjects = objectFactory.createPublicationDeliveryStructureDataObjects();
         dataObjects.getCompositeFrameOrCommonFrame().add(compositeFrame);
 
-        MultilingualString description = netexObjectFactory.createMultilingualString(String.format("Flight %s : %s", flightId, routePath));
+        MultilingualString description = netexObjectFactory.createMultilingualString(String.format("Line: %s", lineName));
 
         return objectFactory.createPublicationDeliveryStructure()
                 .withVersion(NETEX_PROFILE_VERSION)
@@ -142,7 +151,9 @@ return null;
                 .withDataObjects(dataObjects);
     }
 
-    public JAXBElement<CompositeFrame> createCompositeFrame(OffsetDateTime publicationTimestamp, AvailabilityPeriod availabilityPeriod, String flightId, Frames_RelStructure frames) {
+    public JAXBElement<CompositeFrame> createCompositeFrame(OffsetDateTime publicationTimestamp,
+            AvailabilityPeriod availabilityPeriod, String airlineIata, String lineDesignation, Frames_RelStructure frames) {
+
         ValidityConditions_RelStructure validityConditionsStruct = objectFactory.createValidityConditions_RelStructure()
                 .withValidityConditionRefOrValidBetweenOrValidityCondition_(createAvailabilityCondition(availabilityPeriod));
 
@@ -159,7 +170,8 @@ return null;
         VersionFrameDefaultsStructure versionFrameDefaultsStructure = objectFactory.createVersionFrameDefaultsStructure()
                 .withDefaultLocale(localeStructure);
 
-        String compositeFrameId = NetexObjectIdCreator.createCompositeFrameId(AVINOR_XMLNS, flightId);
+        String compositeFrameId = NetexObjectIdCreator.createCompositeFrameId(
+                AVINOR_XMLNS, Joiner.on(DASH).skipNulls().join(airlineIata, lineDesignation));
 
         CompositeFrame compositeFrame = objectFactory.createCompositeFrame()
                 .withVersion(VERSION_ONE)
@@ -174,7 +186,7 @@ return null;
     }
 
     public JAXBElement<ServiceFrame> createServiceFrame(OffsetDateTime publicationTimestamp, String airlineName,
-            String airlineIata, String flightId, List<RoutePoint> routePoints, Route route, Line line, JourneyPattern journeyPattern) {
+            String airlineIata, String flightId, List<RoutePoint> routePoints, List<Route> routes, Line line, List<JourneyPattern> journeyPatterns) {
 
         String networkId = NetexObjectIdCreator.createNetworkId(AVINOR_XMLNS, airlineIata);
 
@@ -188,13 +200,19 @@ return null;
                 .withRoutePoint(routePoints);
 
         RoutesInFrame_RelStructure routesInFrame = objectFactory.createRoutesInFrame_RelStructure();
-        routesInFrame.getRoute_().add(objectFactory.createRoute(route));
+        for (Route route : routes) {
+            JAXBElement<Route> routeElement = objectFactory.createRoute(route);
+            routesInFrame.getRoute_().add(routeElement);
+        }
 
         LinesInFrame_RelStructure linesInFrame = objectFactory.createLinesInFrame_RelStructure();
         linesInFrame.getLine_().add(objectFactory.createLine(line));
 
-        JourneyPatternsInFrame_RelStructure journeyPatternsInFrame = objectFactory.createJourneyPatternsInFrame_RelStructure()
-                .withJourneyPattern_OrJourneyPatternView(objectFactory.createJourneyPattern(journeyPattern));
+        JourneyPatternsInFrame_RelStructure journeyPatternsInFrame = objectFactory.createJourneyPatternsInFrame_RelStructure();
+        for (JourneyPattern journeyPattern : journeyPatterns) {
+            JAXBElement<JourneyPattern> journeyPatternElement = objectFactory.createJourneyPattern(journeyPattern);
+            journeyPatternsInFrame.getJourneyPattern_OrJourneyPatternView().add(journeyPatternElement);
+        }
 
         String serviceFrameId = NetexObjectIdCreator.createServiceFrameId(AVINOR_XMLNS, flightId);
 
@@ -432,6 +450,17 @@ return null;
         }
     }
 
+    public List<RoutePoint> createRoutePoints(List<FlightRoute> flightRoutes) {
+        Map<String, RoutePoint> routePointMap = netexCommonDataSet.getRoutePointMap();
+
+        return flightRoutes.stream()
+                .flatMap(flightRoute -> flightRoute.getRoutePointsInSequence().stream())
+                .distinct()
+                .sorted(Comparator.comparing(iata -> iata))
+                .map(routePointMap::get)
+                .collect(Collectors.toList());
+    }
+
     public Route createRoute(String flightId, String routePath, ScheduledFlight scheduledFlight, Line line) {
         Map<String, RoutePoint> routePointMap = netexCommonDataSet.getRoutePointMap();
         PointsOnRoute_RelStructure pointsOnRoute = objectFactory.createPointsOnRoute_RelStructure();
@@ -479,6 +508,41 @@ return null;
                 .withName(netexObjectFactory.createMultilingualString(routePath))
                 .withLineRef(lineRefStructElement)
                 .withPointsInSequence(pointsOnRoute);
+    }
+
+    private List<Route> createRoutes(Line line, List<FlightRoute> flightRoutes) {
+        Map<String, RoutePoint> routePointMap = netexCommonDataSet.getRoutePointMap();
+        PointsOnRoute_RelStructure pointsOnRoute = objectFactory.createPointsOnRoute_RelStructure();
+        List<Route> routes = Lists.newArrayList();
+
+        for (FlightRoute flightRoute : flightRoutes) {
+            List<String> routePointsInSequence = flightRoute.getRoutePointsInSequence();
+            String[] idSequence = NetexObjectIdCreator.generateIdSequence(DEFAULT_START_INCLUSIVE, DEFAULT_END_EXCLUSIVE, routePointsInSequence.size());
+
+            for (int i = 0; i < routePointsInSequence.size(); i++) {
+                RoutePoint routePoint = routePointMap.get(routePointsInSequence.get(i));
+                PointOnRoute pointOnRoute = netexObjectFactory.createPointOnRoute(idSequence[i], routePoint.getId());
+                pointsOnRoute.getPointOnRoute().add(pointOnRoute);
+            }
+
+            String routeId = NetexObjectIdCreator.createRouteId(AVINOR_XMLNS, flightRoute.getRouteDesignation());
+
+            LineRefStructure lineRefStruct = objectFactory.createLineRefStructure()
+                    .withVersion(VERSION_ONE)
+                    .withRef(line.getId());
+            JAXBElement<LineRefStructure> lineRefStructElement = objectFactory.createLineRef(lineRefStruct);
+
+            Route route = objectFactory.createRoute()
+                    .withVersion(VERSION_ONE)
+                    .withId(routeId)
+                    .withName(netexObjectFactory.createMultilingualString(flightRoute.getRouteName()))
+                    .withLineRef(lineRefStructElement)
+                    .withPointsInSequence(pointsOnRoute);
+            routes.add(route);
+        }
+
+        routes.sort(Comparator.comparing(Route::getId));
+        return routes;
     }
 
     public JourneyPattern createJourneyPattern(Route route, ScheduledFlight scheduledFlight) {
@@ -544,6 +608,166 @@ return null;
                 .withId(journeyPatternId)
                 .withRouteRef(routeRefStructure)
                 .withPointsInSequence(pointsInJourneyPattern);
+    }
+
+    public List<JourneyPattern> createJourneyPatterns(List<Route> routes) {
+        Map<String, ScheduledStopPoint> stopPointMap = netexCommonDataSet.getStopPointMap();
+        PointsInJourneyPattern_RelStructure pointsInJourneyPattern = objectFactory.createPointsInJourneyPattern_RelStructure();
+        List<JourneyPattern> journeyPatterns = Lists.newArrayList();
+
+        for (Route route : routes) {
+            List<PointOnRoute> pointsOnRoute = route.getPointsInSequence().getPointOnRoute();
+            String[] idSequence = NetexObjectIdCreator.generateIdSequence(DEFAULT_START_INCLUSIVE, DEFAULT_END_EXCLUSIVE, pointsOnRoute.size());
+
+            for (int i = 0; i < pointsOnRoute.size(); i++) {
+                ScheduledStopPoint scheduledStopPoint = stopPointMap.get(pointsOnRoute.get(i));
+
+                StopPointInJourneyPattern stopPointInJourneyPattern = netexObjectFactory.createStopPointInJourneyPattern(
+                        idSequence[i], BigInteger.valueOf(i + 1), scheduledStopPoint.getId());
+
+                if (i == 0) {
+                    stopPointInJourneyPattern.setForAlighting(false);
+                }
+
+                if (i == pointsOnRoute.size() - 1) {
+                    stopPointInJourneyPattern.setForBoarding(false);
+                }
+
+                pointsInJourneyPattern.getPointInJourneyPatternOrStopPointInJourneyPatternOrTimingPointInJourneyPattern().add(stopPointInJourneyPattern);
+            }
+
+            RouteRefStructure routeRefStructure = objectFactory.createRouteRefStructure()
+                    .withVersion(VERSION_ONE)
+                    .withRef(route.getId());
+
+            int journeyPatternObjectId = NetexObjectIdCreator.generateRandomId(DEFAULT_START_INCLUSIVE, DEFAULT_END_EXCLUSIVE);
+            String journeyPatternId = NetexObjectIdCreator.createJourneyPatternId(AVINOR_XMLNS, String.valueOf(journeyPatternObjectId));
+
+            JourneyPattern journeyPattern = objectFactory.createJourneyPattern()
+                    .withVersion(VERSION_ONE)
+                    .withId(journeyPatternId)
+                    .withRouteRef(routeRefStructure)
+                    .withPointsInSequence(pointsInJourneyPattern);
+            journeyPatterns.add(journeyPattern);
+        }
+
+        journeyPatterns.sort(Comparator.comparing(JourneyPattern::getId));
+        return journeyPatterns;
+    }
+
+    public List<ServiceJourney> createServiceJourneys(Line line, List<JourneyPattern> journeyPatterns, Map<String, Map<String, List<ScheduledFlight>>> routeJourneys) throws IllegalArgumentException {
+
+        List<ServiceJourney> serviceJourneyList = new ArrayList<>();
+
+        for (Map.Entry<String, Map<String, List<ScheduledFlight>>> entry : routeJourneys.entrySet()) {
+            String routeDesignation = entry.getKey();
+            Map<String, List<ScheduledFlight>> flightsById = entry.getValue();
+
+            for (Map.Entry<String, List<ScheduledFlight>> subEntry : flightsById.entrySet()) {
+                String flightId = subEntry.getKey();
+                List<ScheduledFlight> flights = subEntry.getValue();
+
+                for (ScheduledFlight flight : flights) {
+
+                }
+            }
+        }
+
+/*
+        PointsInJourneyPattern_RelStructure pointsInSequence = journeyPattern.getPointsInSequence();
+        List<PointInLinkSequence_VersionedChildStructure> pointsInLinkSequence = pointsInSequence
+                .getPointInJourneyPatternOrStopPointInJourneyPatternOrTimingPointInJourneyPattern();
+
+        JourneyPatternRefStructure journeyPatternRefStructure = objectFactory.createJourneyPatternRefStructure()
+                .withVersion(VERSION_ONE)
+                .withRef(journeyPattern.getId());
+        JAXBElement<JourneyPatternRefStructure> journeyPatternRefStructureElement = objectFactory.createJourneyPatternRef(journeyPatternRefStructure);
+
+        DayTypeRefs_RelStructure dayTypeStructure = objectFactory.createDayTypeRefs_RelStructure();
+
+        dayTypes.forEach(dayType -> {
+            DayTypeRefStructure dayTypeRefStruct = netexObjectFactory.createDayTypeRefStructure(dayType.getId());
+            dayTypeStructure.getDayTypeRef().add(objectFactory.createDayTypeRef(dayTypeRefStruct));
+        });
+
+        // TODO swithc order of check (check for stopovers first)
+        if (!scheduledFlight.hasStopovers()) {
+            TimetabledPassingTime departurePassingTime = netexObjectFactory.createTimetabledPassingTime(pointsInLinkSequence.get(0).getId());
+            departurePassingTime.setDepartureTime(scheduledFlight.getTimeOfDeparture());
+            passingTimesRelStructure.withTimetabledPassingTime(departurePassingTime);
+
+            TimetabledPassingTime arrivalPassingTime = netexObjectFactory.createTimetabledPassingTime(pointsInLinkSequence.get(1).getId());
+            arrivalPassingTime.setArrivalTime(scheduledFlight.getTimeOfArrival());
+            passingTimesRelStructure.withTimetabledPassingTime(arrivalPassingTime);
+
+            // TODO move to factory
+            LineRefStructure lineRefStruct = objectFactory.createLineRefStructure()
+                    .withVersion(VERSION_ONE)
+                    .withRef(line.getId());
+            JAXBElement<LineRefStructure> lineRefStructElement = objectFactory.createLineRef(lineRefStruct);
+
+            String serviceJourneyId = NetexObjectIdCreator.createServiceJourneyId(AVINOR_XMLNS, scheduledFlight.getAirlineFlightId());
+
+            // TODO move to factory
+            ServiceJourney serviceJourney = objectFactory.createServiceJourney()
+                    .withVersion(VERSION_ONE)
+                    .withId(serviceJourneyId)
+                    .withPublicCode(scheduledFlight.getAirlineFlightId())
+                    .withDepartureTime(scheduledFlight.getTimeOfDeparture())
+                    .withDayTypes(dayTypeStructure)
+                    .withJourneyPatternRef(journeyPatternRefStructureElement)
+                    .withLineRef(lineRefStructElement)
+                    .withPassingTimes(passingTimesRelStructure);
+
+            serviceJourneyList.add(serviceJourney);
+            return serviceJourneyList;
+
+        } else if (scheduledFlight.hasStopovers()) {
+            List<ScheduledStopover> scheduledStopovers = scheduledFlight.getScheduledStopovers();
+            Iterator<ScheduledStopover> stopoverIterator = scheduledStopovers.iterator();
+            Iterator<PointInLinkSequence_VersionedChildStructure> pointInLinkSequenceIterator = pointsInLinkSequence.iterator();
+
+            while (stopoverIterator.hasNext() && pointInLinkSequenceIterator.hasNext()) {
+                ScheduledStopover scheduledStopover = stopoverIterator.next();
+                PointInLinkSequence_VersionedChildStructure pointInLinkSequence = pointInLinkSequenceIterator.next();
+                TimetabledPassingTime passingTime = netexObjectFactory.createTimetabledPassingTime(pointInLinkSequence.getId());
+
+                if (scheduledStopover.getArrivalTime() != null) {
+                    passingTime.setArrivalTime(scheduledStopover.getArrivalTime());
+                }
+                if (scheduledStopover.getDepartureTime() != null) {
+                    passingTime.setDepartureTime(scheduledStopover.getDepartureTime());
+                }
+
+                passingTimesRelStructure.withTimetabledPassingTime(passingTime);
+            }
+
+            // TODO move to factory
+            LineRefStructure lineRefStruct = objectFactory.createLineRefStructure()
+                    .withVersion(VERSION_ONE)
+                    .withRef(line.getId());
+            JAXBElement<LineRefStructure> lineRefStructElement = objectFactory.createLineRef(lineRefStruct);
+
+            String serviceJourneyId = NetexObjectIdCreator.createServiceJourneyId(AVINOR_XMLNS, scheduledFlight.getAirlineFlightId());
+
+            // TODO move to factory
+            ServiceJourney serviceJourney = objectFactory.createServiceJourney()
+                    .withVersion(VERSION_ONE)
+                    .withId(serviceJourneyId)
+                    .withPublicCode(scheduledFlight.getAirlineFlightId())
+                    .withDepartureTime(scheduledStopovers.get(0).getDepartureTime())
+                    .withDayTypes(dayTypeStructure)
+                    .withJourneyPatternRef(journeyPatternRefStructureElement)
+                    .withLineRef(lineRefStructElement)
+                    .withPassingTimes(passingTimesRelStructure);
+
+            serviceJourneyList.add(serviceJourney);
+            return serviceJourneyList;
+        } else {
+            throw new IllegalArgumentException("Illegal instance class: " + scheduledFlight.getClass().getName());
+        }
+*/
+        return null;
     }
 
     private void cleanStopPointsFromTempValues(List<ScheduledStopPoint> scheduledStopPoints) {

@@ -166,15 +166,13 @@ public class ScheduledFlightConverter {
         AvailabilityPeriod availabilityPeriod = new AvailabilityPeriod(requestPeriodFromDateTime, requestPeriodToDateTime);
         flightLineDataSet.setAvailabilityPeriod(availabilityPeriod);
 
-        // get all unique route patterns for the current line
-        Set<String> uniqueRoutePatterns = flights.stream()
-                .map(ScheduledFlight::getRoutePattern)
-                .collect(Collectors.toSet());
-        flightLineDataSet.setRoutePatterns(uniqueRoutePatterns);
-        flightLineDataSet.setJourneyPatterns(uniqueRoutePatterns);
+        List<FlightRoute> flightRoutes = flights.stream()
+                .map(flight -> new FlightRoute(flight.getRoutePattern(), getRouteNameFromDesignation(flight.getRoutePattern())))
+                .collect(Collectors.toList());
+        flightLineDataSet.setFlightRoutes(flightRoutes);
 
-        // TODO consider having a separate object wrapper; RoutePattern, holding the pattern string and other useful properties
-        // a routeId could have the following format: "WF:OSL-BGO:OSL-SOG-BGO"
+        //flightLineDataSet.setRoutePatterns(uniqueRoutePatterns);
+        //flightLineDataSet.setJourneyPatterns(uniqueRoutePatterns);
 
         Map<String, Map<String, List<ScheduledFlight>>> journeysByRouteAndFlightId = flights.stream()
                 .collect(Collectors.groupingBy(ScheduledFlight::getRoutePattern,
@@ -201,6 +199,17 @@ public class ScheduledFlightConverter {
         String secondAirportName = stopPlaceDataSets.get(airportIatas.get(1).toLowerCase()).getShortName();
 
         return Joiner.on(DASH).skipNulls().join(firstAirportName, secondAirportName);
+    }
+
+    private String getRouteNameFromDesignation(String routeDesignation) {
+        List<String> airportNames = Splitter.on(DASH)
+                .trimResults()
+                .omitEmptyStrings()
+                .splitToList(routeDesignation).stream()
+                    .map(String::toLowerCase)
+                    .map(iata -> stopPlaceDataSets.get(iata).getShortName())
+                    .collect(Collectors.toList());
+        return Joiner.on(DASH).skipNulls().join(airportNames);
     }
 
     private Map<String, List<ScheduledFlight>> findAndMergeFlightsByEquivalentLines(Map<String, List<ScheduledFlight>> flightsByLineDesignation) {

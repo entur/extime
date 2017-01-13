@@ -11,6 +11,8 @@ import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static no.rutebanken.extime.Constants.*;
 
@@ -237,15 +239,15 @@ public class NetexObjectFactory {
                 .withXmlnsUrl(xmlnsUrl);
     }
 
-    public Line createLine(String flightId, String lineDesignation) {
-        String lineId = NetexObjectIdCreator.createLineId(AVINOR_XMLNS, flightId);
+    public Line createLine(String airlineIata, String lineDesignation, String lineName) {
+        String lineId = NetexObjectIdCreator.createLineId(AVINOR_XMLNS, new String[] {airlineIata, lineDesignation});
 
         return objectFactory.createLine()
                 .withVersion(VERSION_ONE)
                 .withId(lineId)
-                .withName(createMultilingualString(lineDesignation))
+                .withName(createMultilingualString(lineName))
                 .withTransportMode(AllVehicleModesOfTransportEnumeration.AIR)
-                .withPublicCode(flightId);
+                .withPublicCode(lineDesignation);
     }
 
     // TODO consider the id generation to be moved to converter level instead, for more precise control, use a uniform way of doing it
@@ -300,6 +302,14 @@ public class NetexObjectFactory {
         return objectFactory.createRouteRefStructure()
                 .withVersion(VERSION_ONE)
                 .withRef(routeId);
+    }
+
+    public List<RouteRefStructure> createRouteRefStructures(List<Route> routes) {
+        return routes.stream()
+                .map(Route::getId)
+                .collect(Collectors.toSet()).stream()
+                .map(routeId -> objectFactory.createRouteRefStructure().withVersion(VERSION_ONE).withRef(routeId))
+                .collect(Collectors.toList());
     }
 
     public StopPlaceRefStructure createStopPlaceRefStructure(String stopPlaceId, boolean withRefValidation) {

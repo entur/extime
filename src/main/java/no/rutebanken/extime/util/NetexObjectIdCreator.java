@@ -5,6 +5,8 @@ import org.apache.commons.lang3.RandomUtils;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static no.rutebanken.extime.Constants.DASH;
+
 public class NetexObjectIdCreator {
 
     // frame structure ids
@@ -47,7 +49,8 @@ public class NetexObjectIdCreator {
         return NetexObjectIdCreator.composeNetexObjectId(objectIdPrefix, NetexObjectIdTypes.NETWORK_KEY, objectId);
     }
 
-    public static String createLineId(String objectIdPrefix, String objectId) {
+    public static String createLineId(String objectIdPrefix, Object[] parts) {
+        String objectId = Joiner.on(DASH).skipNulls().join(parts);
         return NetexObjectIdCreator.composeNetexObjectId(objectIdPrefix, NetexObjectIdTypes.LINE_KEY, objectId);
     }
 

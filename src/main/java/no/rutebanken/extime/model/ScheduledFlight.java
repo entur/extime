@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 
 import static no.rutebanken.extime.Constants.DASH;
 
+// TODO do cleanup in this class, and remove fields no more needed, that are moved to FlightLineDataSet
 public class ScheduledFlight {
 
     private BigInteger flightId;
