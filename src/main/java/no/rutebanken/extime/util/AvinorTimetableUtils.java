@@ -78,7 +78,7 @@ public class AvinorTimetableUtils {
 
     public List<Flight> generateFlightsFromFeedDump() throws Exception {
         ArrayList<Flight> generatedFlights = Lists.newArrayList();
-        Flights flightStructure = generateObjectsFromXml("/xml/testdata/avinor-flights_20170110-123602.xml", Flights.class);
+        Flights flightStructure = generateObjectsFromXml("/xml/testdata/avinor-flights_20170118-203723.xml", Flights.class);
         List<Flight> flights = flightStructure.getFlight();
         generatedFlights.addAll(flights);
         return generatedFlights;

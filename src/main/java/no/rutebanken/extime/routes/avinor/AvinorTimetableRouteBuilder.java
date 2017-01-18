@@ -12,6 +12,7 @@ import no.rutebanken.extime.converter.ScheduledFlightConverter;
 import no.rutebanken.extime.converter.ScheduledFlightToNetexConverter;
 import no.rutebanken.extime.model.*;
 import no.rutebanken.extime.util.AvinorTimetableUtils;
+import no.rutebanken.extime.util.DateUtils;
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.Processor;
@@ -259,12 +260,15 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                     //.to("direct:enrichScheduledFlightWithAirportNames")
 
                     .bean(ScheduledFlightToNetexConverter.class, "convertToNetex").id("ConvertLineDataSetsToNetexProcessor")
+                    .log(LoggingLevel.INFO, this.getClass().getName(), "NeTEx conversion for line done")
                     .process(exchange -> exchange.getIn().setHeader(HEADER_FILE_NAME_GENERATED, generateFilename(exchange))).id("GenerateFileNameProcessor")
                     .marshal(jaxbDataFormat)
+                    .log(LoggingLevel.INFO, this.getClass().getName(), "JAXB schema validation and marshalling done for line")
                     .setHeader(Exchange.FILE_NAME, simpleF("${header.%s}.xml", HEADER_FILE_NAME_GENERATED))
                     .setHeader(Exchange.CONTENT_TYPE, constant("text/xml;charset=utf-8"))
                     .setHeader(Exchange.CHARSET_NAME, constant("utf-8"))
                     .to("file:{{netex.generated.output.path}}")
+                    .log(LoggingLevel.INFO, this.getClass().getName(), "NeTEx file created for line")
                 .end()
         ;
 

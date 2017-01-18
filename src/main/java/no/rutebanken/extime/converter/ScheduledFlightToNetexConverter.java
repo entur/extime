@@ -71,11 +71,7 @@ public class ScheduledFlightToNetexConverter {
     public JAXBElement<PublicationDeliveryStructure> convertToNetex(FlightLineDataSet lineDataSet) throws Exception {
         OffsetDateTime publicationTimestamp = OffsetDateTime.ofInstant(Instant.now(), ZoneId.of(DEFAULT_ZONE_ID));
         AvailabilityPeriod availabilityPeriod = lineDataSet.getAvailabilityPeriod();
-
         String airlineIata = lineDataSet.getAirlineIata();
-
-        // TODO what to do with this id?
-        String flightId = "";
 
         String operatorId = NetexObjectIdCreator.createOperatorId(AVINOR_XMLNS, airlineIata);
         boolean isFrequentOperator = isCommonDesignator(airlineIata);
@@ -103,7 +99,7 @@ public class ScheduledFlightToNetexConverter {
         }
 
         JAXBElement<ServiceFrame> serviceFrame = createServiceFrame(publicationTimestamp, lineDataSet.getAirlineName(),
-                lineDataSet.getAirlineIata(), flightId, routePoints, routes, line, journeyPatterns);
+                lineDataSet.getAirlineIata(), routePoints, routes, line, journeyPatterns);
         frames.getCommonFrame().add(serviceFrame);
 
         JAXBElement<TimetableFrame> timetableFrame = createTimetableFrame(serviceJourneys);
@@ -182,7 +178,7 @@ public class ScheduledFlightToNetexConverter {
     }
 
     public JAXBElement<ServiceFrame> createServiceFrame(OffsetDateTime publicationTimestamp, String airlineName,
-            String airlineIata, String flightId, List<RoutePoint> routePoints, List<Route> routes, Line line, List<JourneyPattern> journeyPatterns) {
+            String airlineIata, List<RoutePoint> routePoints, List<Route> routes, Line line, List<JourneyPattern> journeyPatterns) {
 
         String networkId = NetexObjectIdCreator.createNetworkId(AVINOR_XMLNS, airlineIata);
 
@@ -210,7 +206,8 @@ public class ScheduledFlightToNetexConverter {
             journeyPatternsInFrame.getJourneyPattern_OrJourneyPatternView().add(journeyPatternElement);
         }
 
-        String serviceFrameId = NetexObjectIdCreator.createServiceFrameId(AVINOR_XMLNS, flightId);
+        String serviceFrameId = NetexObjectIdCreator.createTimetableFrameId(AVINOR_XMLNS,
+                String.valueOf(NetexObjectIdCreator.generateRandomId(DEFAULT_START_INCLUSIVE, DEFAULT_END_EXCLUSIVE)));
 
         ServiceFrame serviceFrame = objectFactory.createServiceFrame()
                 .withVersion(VERSION_ONE)
@@ -274,7 +271,6 @@ public class ScheduledFlightToNetexConverter {
     }
 
     public JAXBElement<TimetableFrame> createTimetableFrame(List<ServiceJourney> serviceJourneys) {
-
         JourneysInFrame_RelStructure journeysInFrameRelStructure = objectFactory.createJourneysInFrame_RelStructure();
         journeysInFrameRelStructure.getDatedServiceJourneyOrDeadRunOrServiceJourney().addAll(serviceJourneys);
 
@@ -541,7 +537,6 @@ public class ScheduledFlightToNetexConverter {
 
     private List<Route> createRoutes(Line line, List<FlightRoute> flightRoutes) {
         Map<String, RoutePoint> routePointMap = netexCommonDataSet.getRoutePointMap();
-        PointsOnRoute_RelStructure pointsOnRoute = objectFactory.createPointsOnRoute_RelStructure();
         List<Route> routes = Lists.newArrayList();
 
         if (!routeIdDesignationMap.isEmpty()) {
@@ -549,6 +544,7 @@ public class ScheduledFlightToNetexConverter {
         }
 
         for (FlightRoute flightRoute : flightRoutes) {
+            PointsOnRoute_RelStructure pointsOnRoute = objectFactory.createPointsOnRoute_RelStructure();
             List<String> routePointsInSequence = flightRoute.getRoutePointsInSequence();
             String[] idSequence = NetexObjectIdCreator.generateIdSequence(DEFAULT_START_INCLUSIVE, DEFAULT_END_EXCLUSIVE, routePointsInSequence.size());
 
@@ -649,7 +645,6 @@ public class ScheduledFlightToNetexConverter {
 
     public List<JourneyPattern> createJourneyPatterns(List<Route> routes) {
         Map<String, ScheduledStopPoint> stopPointMap = netexCommonDataSet.getStopPointMap();
-        PointsInJourneyPattern_RelStructure pointsInJourneyPattern = objectFactory.createPointsInJourneyPattern_RelStructure();
         List<JourneyPattern> journeyPatterns = Lists.newArrayList();
 
         if (!routeDesignationPatternMap.isEmpty()) {
@@ -657,6 +652,7 @@ public class ScheduledFlightToNetexConverter {
         }
 
         for (Route route : routes) {
+            PointsInJourneyPattern_RelStructure pointsInJourneyPattern = objectFactory.createPointsInJourneyPattern_RelStructure();
             List<PointOnRoute> pointsOnRoute = route.getPointsInSequence().getPointOnRoute();
             String[] idSequence = NetexObjectIdCreator.generateIdSequence(DEFAULT_START_INCLUSIVE, DEFAULT_END_EXCLUSIVE, pointsOnRoute.size());
 
@@ -793,7 +789,9 @@ public class ScheduledFlightToNetexConverter {
     }
 
     private ServiceJourney createServiceJourney(String lineId, String flightId, String journeyPatternId, TimetabledPassingTimes_RelStructure passingTimesRelStruct) {
-        String serviceJourneyId = NetexObjectIdCreator.createServiceJourneyId(AVINOR_XMLNS, flightId);
+        //String serviceJourneyId = NetexObjectIdCreator.createServiceJourneyId(AVINOR_XMLNS, flightId);
+        String serviceJourneyId = NetexObjectIdCreator.createServiceJourneyId(AVINOR_XMLNS,
+                String.valueOf(NetexObjectIdCreator.generateRandomId(DEFAULT_START_INCLUSIVE, DEFAULT_END_EXCLUSIVE)));
 
         TimetabledPassingTime departurePassingTime = passingTimesRelStruct.getTimetabledPassingTime().get(0);
         OffsetTime departureTime = departurePassingTime.getDepartureTime();
@@ -816,7 +814,7 @@ public class ScheduledFlightToNetexConverter {
                 .withId(serviceJourneyId)
                 .withPublicCode(flightId)
                 .withDepartureTime(departureTime)
-                .withDayTypes(dayTypeStructure)
+                //.withDayTypes(dayTypeStructure)
                 .withJourneyPatternRef(journeyPatternRefStructElement)
                 .withLineRef(lineRefStructElement)
                 .withPassingTimes(passingTimesRelStruct);
