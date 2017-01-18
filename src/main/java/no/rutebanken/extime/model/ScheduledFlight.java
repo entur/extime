@@ -1,5 +1,6 @@
 package no.rutebanken.extime.model;
 
+import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
@@ -15,6 +16,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static no.rutebanken.extime.Constants.DASH;
+import static no.rutebanken.extime.Constants.EMPTY;
 
 // TODO do cleanup in this class, and remove fields no more needed, that are moved to FlightLineDataSet
 public class ScheduledFlight {
@@ -171,6 +173,21 @@ public class ScheduledFlight {
             return joiner.join(airportIatas);
         }
         return joiner.join(departureAirportIATA, arrivalAirportIATA);
+    }
+
+    public String getStopTimesPattern() {
+        CharMatcher charMatcher = CharMatcher.anyOf(":Z");
+        Joiner dashJoiner = Joiner.on(DASH).skipNulls();
+
+        if (hasStopovers()) {
+            Joiner emptyJoiner = Joiner.on(EMPTY).skipNulls();
+            List<String> stopTimes = scheduledStopovers.stream()
+                    .map(stop -> emptyJoiner.join(stop.getArrivalTime(), stop.getDepartureTime()))
+                    .collect(Collectors.toList());
+            return charMatcher.removeFrom(dashJoiner.join(stopTimes));
+        }
+
+        return dashJoiner.join(timeOfDeparture, timeOfArrival);
     }
 
     @Override

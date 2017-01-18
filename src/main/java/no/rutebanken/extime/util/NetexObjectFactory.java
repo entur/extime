@@ -292,6 +292,12 @@ public class NetexObjectFactory {
 
     // reference structures creation
 
+    public LineRefStructure createLineRefStructure(String lineId) {
+        return objectFactory.createLineRefStructure()
+                .withVersion(VERSION_ONE)
+                .withRef(lineId);
+    }
+
     public OperatorRefStructure createOperatorRefStructure(String operatorId, boolean withRefValidation) {
         OperatorRefStructure operatorRefStruct = objectFactory.createOperatorRefStructure()
                 .withRef(operatorId);

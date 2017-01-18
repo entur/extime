@@ -31,7 +31,6 @@ import java.math.BigInteger;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -155,9 +154,9 @@ public class ScheduledFlightConverter {
         FlightLineDataSet flightLineDataSet = new FlightLineDataSet();
         flightLineDataSet.setAirlineIata(airlineIata);
 
-        // TODO generate line id based on: 1. large airports first 2. no requirements
         String lineDesignation = flightsByLineEntry.getKey();
         flightLineDataSet.setLineDesignation(lineDesignation);
+
         String lineName = getLineNameFromDesignation(lineDesignation);
         flightLineDataSet.setLineName(lineName);
 
@@ -168,11 +167,9 @@ public class ScheduledFlightConverter {
 
         List<FlightRoute> flightRoutes = flights.stream()
                 .map(flight -> new FlightRoute(flight.getRoutePattern(), getRouteNameFromDesignation(flight.getRoutePattern())))
+                .filter(distinctByKey(FlightRoute::getRouteDesignation))
                 .collect(Collectors.toList());
         flightLineDataSet.setFlightRoutes(flightRoutes);
-
-        //flightLineDataSet.setRoutePatterns(uniqueRoutePatterns);
-        //flightLineDataSet.setJourneyPatterns(uniqueRoutePatterns);
 
         Map<String, Map<String, List<ScheduledFlight>>> journeysByRouteAndFlightId = flights.stream()
                 .collect(Collectors.groupingBy(ScheduledFlight::getRoutePattern,
@@ -182,8 +179,6 @@ public class ScheduledFlightConverter {
         // .sorted(Comparator.comparing(ScheduledFlight::getDateOfOperation))
 
         flightLineDataSet.setRouteJourneys(journeysByRouteAndFlightId);
-
-        // TODO find day/period patterns for each journey
 
         return flightLineDataSet;
     }
@@ -305,12 +300,15 @@ public class ScheduledFlightConverter {
         return airportWithSize1.getAirportIata();
     }
 
+    // TODO consider supporting parallell mapping
+/*
     private <T> Predicate<T> distinctByKey(Function<? super T, Object> keyExtractor) {
         Map<Object, Boolean> map = new ConcurrentHashMap<>();
         return t -> map.putIfAbsent(keyExtractor.apply(t), Boolean.TRUE) == null;
     }
+*/
 
-    private <T> Predicate<T> distinctByKeyNoParallel(Function<? super T, ?> keyExtractor) {
+    private <T> Predicate<T> distinctByKey(Function<? super T, ?> keyExtractor) {
         Set<Object> seen = new HashSet<>();
         return t -> seen.add(keyExtractor.apply(t));
     }
@@ -421,12 +419,12 @@ public class ScheduledFlightConverter {
         return multiLegFlights;
     }
 
-    public ScheduledFlight createScheduledFlightWithStopovers(OffsetDateTime requestPeriodFromDateTime, OffsetDateTime requestPeriodToDateTime,
-                                                              Flight currentFlight, List<ScheduledStopover> scheduledStopovers) {
+    public ScheduledFlight createScheduledFlightWithStopovers(OffsetDateTime requestPeriodFromDateTime,
+            OffsetDateTime requestPeriodToDateTime, Flight currentFlight, List<ScheduledStopover> scheduledStopovers) {
+
         if (CollectionUtils.isNotEmpty(scheduledStopovers)) {
             ScheduledFlight scheduledFlight = new ScheduledFlight();
-            scheduledFlight.setAirlineFlightId(String.format("%s%s",
-                    currentFlight.getAirlineDesignator(), currentFlight.getFlightNumber()));
+            scheduledFlight.setAirlineFlightId(currentFlight.getAirlineDesignator() + currentFlight.getFlightNumber());
             scheduledFlight.setAirlineIATA(currentFlight.getAirlineDesignator());
             scheduledFlight.setAvailabilityPeriod(new AvailabilityPeriod(requestPeriodFromDateTime, requestPeriodToDateTime));
             scheduledFlight.setDateOfOperation(currentFlight.getDateOfOperation());
@@ -446,14 +444,6 @@ public class ScheduledFlightConverter {
         return CollectionUtils.isNotEmpty(flights) && flights.size() == 1;
     }
 
-    /**
-     * @todo: handle different departure times, i.e. on weekends (will be used as separate ServiceJourneys in netex)
-     *
-     * For example, flight WF149 between Oslo and Bergen, operates every work day (man-fri) with departure time 14:05
-     * but also one day at the weekend, sunday, with departure time at 14:00
-     *
-     * Also, one flight can operate with one route (i.e. OSL-HOV-SOG-BGO) some days, and another route (i.e. OSL-HOV-BGO) some other day, support!
-     */
     private Set<DayOfWeek> findJourneyPatterns(String flightId, List<? extends ScheduledFlight> flights) {
         SortedSet<DayOfWeek> daysOfWeek = new TreeSet<>();
         LocalDate periodStartDate = flights.get(0).getDateOfOperation();
@@ -472,10 +462,8 @@ public class ScheduledFlightConverter {
         return daysOfWeek;
     }
 
-    // TODO: We must take into consideration that it is possible to have multiple journey patterns or routes for a specific flight id
-    // like flight WF739 which can take the following route/journey pattern one day: BOO-OSY-TRD, and this route/journey pattern another day: BOO-MJF-OSY-TRD
     public List<Flight> findConnectingFlightLegs(Flight currentFlightLeg, Map<String, List<Flight>> flightsByDepartureAirportIata,
-                               Map<String, List<Flight>> flightsByArrivalAirportIata, Set<BigInteger> distinctFlightLegIds) {
+            Map<String, List<Flight>> flightsByArrivalAirportIata, Set<BigInteger> distinctFlightLegIds) {
 
         if (distinctFlightLegIds.contains(currentFlightLeg.getId())) {
             return Collections.emptyList();
@@ -562,7 +550,7 @@ public class ScheduledFlightConverter {
         ScheduledFlight scheduledFlight = new ScheduledFlight();
         scheduledFlight.setFlightId(flight.getId());
         scheduledFlight.setAirlineIATA(flight.getAirlineDesignator());
-        scheduledFlight.setAirlineFlightId(String.format("%s%s", flight.getAirlineDesignator(), flight.getFlightNumber()));
+        scheduledFlight.setAirlineFlightId(flight.getAirlineDesignator() + flight.getFlightNumber());
         scheduledFlight.setAvailabilityPeriod(new AvailabilityPeriod(fromDateTime, toDateTime));
         scheduledFlight.setDateOfOperation(flight.getDateOfOperation());
         scheduledFlight.setDepartureAirportIATA(flight.getDepartureStation());
