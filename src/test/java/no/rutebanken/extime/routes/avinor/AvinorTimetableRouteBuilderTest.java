@@ -27,10 +27,7 @@ import org.junit.Test;
 import org.rutebanken.netex.model.ObjectFactory;
 import org.rutebanken.netex.model.PublicationDeliveryStructure;
 
-import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
-import javax.xml.bind.JAXBException;
-import javax.xml.transform.stream.StreamSource;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.math.BigInteger;
@@ -378,45 +375,6 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         assertMockEndpointsSatisfied();
     }
 
-    @Test
-    public void testEnrichScheduledStopoverFlightWithAirportNames() throws Exception {
-        ScheduledFlight scheduledStopoverFlight = createScheduledStopoverFlight(
-                "WF", "WF149", LocalDate.parse("2016-12-24"), createScheduledStopovers());
-
-        context.getRouteDefinition("ScheduledStopoverFlightAirportNameEnricher").adviceWith(context, new AdviceWithRouteBuilder() {
-            @Override
-            public void configure() throws Exception {
-                weaveById("SetEnrichParameterForStopoverProcessor").replace().to("mock:setEnrichParameter");
-                interceptSendToEndpoint("mock:setEnrichParameter").process(exchange ->
-                        exchange.setProperty(PROPERTY_STOPOVER_ORIGINAL_BODY, new ScheduledStopover()));
-                mockEndpointsAndSkip("direct:retrieveResource");
-                interceptSendToEndpoint("mock:direct:retrieveResource").process(exchange ->
-                        exchange.getIn().setBody("TEST-NAME"));
-            }
-        });
-        context.start();
-
-        getMockEndpoint("mock:setEnrichParameter").expectedMessageCount(4);
-        getMockEndpoint("mock:setEnrichParameter").expectedHeaderReceived(
-                HEADER_STOPOVER_FLIGHT_ORIGINAL_BODY, scheduledStopoverFlight);
-
-        getMockEndpoint("mock:direct:retrieveResource").expectedMessageCount(4);
-        getMockEndpoint("mock:setEnrichParameter").expectedHeaderReceived(
-                HEADER_STOPOVER_FLIGHT_ORIGINAL_BODY, scheduledStopoverFlight);
-
-        ScheduledFlight resultBody = (ScheduledFlight)
-                enrichStopoverFlightTemplate.requestBody(scheduledStopoverFlight);
-
-        assertMockEndpointsSatisfied();
-
-        Assertions.assertThat(resultBody)
-                .isNotNull();
-        Assertions.assertThat(resultBody.getScheduledStopovers())
-                .isNotNull()
-                .isNotEmpty()
-                .hasSize(4);
-    }
-
     private Range<LocalDate> createRange(String lower, String upper) {
         return Range.closed(LocalDate.parse(lower), LocalDate.parse(upper));
     }
@@ -464,16 +422,6 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         return scheduledFlight;
     }
 
-    private ScheduledFlight createScheduledStopoverFlight(String airlineIATA, String airlineFlightId,
-                                                                  LocalDate dateOfOperation, List<ScheduledStopover> stopovers) {
-        ScheduledFlight stopoverFlight = new ScheduledFlight();
-        stopoverFlight.setAirlineIATA(airlineIATA);
-        stopoverFlight.setAirlineFlightId(airlineFlightId);
-        stopoverFlight.setDateOfOperation(dateOfOperation);
-        stopoverFlight.getScheduledStopovers().addAll(stopovers);
-        return stopoverFlight;
-    }
-
     private Flight createDummyFlight(long dummyId, String dummyDesignator, String dummyFlightNumber, LocalDate dummyDateOfOperation,
                                      String dummyDepartureStation, OffsetTime dummyDepartureTime, String dummyArrivalStation, OffsetTime dummyArrivalTime) {
         return new Flight() {{
@@ -505,12 +453,6 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
                 .withParticipantRef("AVI");
     }
 
-    // @todo: refactor! - duplicate in AvinorTimetableUtils (make static)
-    private <T> T generateObjectsFromXml(String resourceName, Class<T> clazz) throws JAXBException {
-        return JAXBContext.newInstance(clazz).createUnmarshaller().unmarshal(
-                new StreamSource(getClass().getResourceAsStream(resourceName)), clazz).getValue();
-    }
-
     @Override
     public JndiRegistry createRegistry() throws Exception {
         JndiRegistry jndiRegistry = new JndiRegistry(new JndiContext());
@@ -537,6 +479,8 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
                     put("netex.generated.output.path", "target/netex-mock");
                     put("netex.compressed.output.path", "target/marduk-mock");
                     put("queue.upload.destination.name", "MockMardukQueue");
+                    put("avinor.timetable.dump.enabled", "false");
+                    put("avinor.timetable.dump.output.path", "target/flights");
                 }};
                 return testProperties.get(key);
             }

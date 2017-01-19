@@ -10,8 +10,11 @@ import no.avinor.flydata.xjc.model.scheduled.Flights;
 import no.rutebanken.extime.converter.CommonDataToNetexConverter;
 import no.rutebanken.extime.converter.LineDataToNetexConverter;
 import no.rutebanken.extime.converter.ScheduledFlightConverter;
-import no.rutebanken.extime.model.*;
+import no.rutebanken.extime.model.AirportIATA;
+import no.rutebanken.extime.model.LineDataSet;
+import no.rutebanken.extime.model.StopVisitType;
 import no.rutebanken.extime.util.AvinorTimetableUtils;
+import no.rutebanken.extime.util.DateUtils;
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.Processor;
@@ -47,21 +50,14 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
     static final String HEADER_LOWER_RANGE_ENDPOINT = "LowerRangeEndpoint";
     static final String HEADER_UPPER_RANGE_ENDPOINT = "UpperRangeEndpoint";
     static final String HEADER_STOPOVER_FLIGHT_ORIGINAL_BODY = "StopoverFlightOriginalBody";
-    static final String HEADER_FILE_NAME_GENERATED = "FileNameGenerated";
+    static final String PROPERTY_STOPOVER_ORIGINAL_BODY = "StopoverOriginalBody";
 
+    private static final String HEADER_FILE_NAME_GENERATED = "FileNameGenerated";
     private static final String HEADER_MESSAGE_PROVIDER_ID = "RutebankenProviderId";
     private static final String HEADER_MESSAGE_FILE_HANDLE = "RutebankenFileHandle";
     private static final String HEADER_MESSAGE_FILE_NAME = "RutebankenFileName";
-
-    private static final String PROPERTY_DIRECT_FLIGHT_ORIGINAL_BODY = "DirectFlightOriginalBody";
-
-    //private static final String PROPERTY_SCHEDULED_FLIGHT_ORIGINAL_BODY = "ScheduledFlightOriginalBody";
     private static final String PROPERTY_LINE_DATASET_ORIGINAL_BODY = "LineDataSetOriginalBody";
-
-    //private static final String PROPERTY_SCHEDULED_FLIGHT_LIST_ORIGINAL_BODY = "ScheduledFlightListOriginalBody";
     private static final String PROPERTY_LINE_DATASETS_LIST_ORIGINAL_BODY = "LineDataSetsListOriginalBody";
-
-    static final String PROPERTY_STOPOVER_ORIGINAL_BODY = "StopoverOriginalBody";
 
     @Override
     public void configure() throws Exception {
@@ -83,7 +79,6 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
         from("{{avinor.timetable.scheduler.consumer}}")
                 .routeId("AvinorTimetableSchedulerStarter")
 
-/*
                 .process(new AirportIataProcessor()).id("TimetableAirportIATAProcessor")
                 .bean(DateUtils.class, "generateDateRanges").id("TimetableDateRangeProcessor")
                 .split(body(), new ScheduledFlightListAggregationStrategy())//.parallelProcessing() // TODO enable parallell processing
@@ -94,9 +89,8 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                     .to("direct:fetchTimetableForAirport").id("FetchTimetableProcessor")
                     .log(LoggingLevel.DEBUG, this.getClass().getName(), "Flights fetched for ${header.ExtimeResourceCode}")
                 .end()
-*/
 
-                .bean(AvinorTimetableUtils.class, "generateFlightsFromFeedDump")
+                //.bean(AvinorTimetableUtils.class, "generateFlightsFromFeedDump") // TODO create system property to enable this
 
                 .choice()
                     .when(simple("${properties:avinor.timetable.dump.enabled:false} == true"))
@@ -105,16 +99,14 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                     .otherwise()
                         .log(LoggingLevel.INFO, this.getClass().getName(), "Converting to line centric flight data sets")
                         .bean(ScheduledFlightConverter.class, "convertToLineCentricDataSets").id("ConvertToLineDataSetsBeanProcessor")
-                        //.setProperty(PROPERTY_SCHEDULED_FLIGHT_LIST_ORIGINAL_BODY, body())
                         .setProperty(PROPERTY_LINE_DATASETS_LIST_ORIGINAL_BODY, body())
                         .log(LoggingLevel.INFO, "Converting common aviation data to NeTEx")
                         .to("direct:convertCommonDataToNetex")
                         .setBody(simpleF("exchangeProperty[%s]", List.class, PROPERTY_LINE_DATASETS_LIST_ORIGINAL_BODY))
                         .log(LoggingLevel.INFO, "Converting flights to NeTEx")
-                        //.to("direct:convertScheduledFlightsToNetex")
                         .to("direct:convertLineDataSetsToNetex")
-//                        .log(LoggingLevel.INFO, "Compressing XML files and send to storage")
-//                        .to("controlbus:route?routeId=CompressAndSendToStorage&action=start")
+                        .log(LoggingLevel.INFO, "Compressing XML files and send to storage")
+                        .to("controlbus:route?routeId=CompressAndSendToStorage&action=start")
                 .end()
         ;
 
@@ -208,13 +200,12 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .end()
         ;
 
-        // TODO create unit test for this route
         from("direct:convertCommonDataToNetex")
                 .routeId("CommonDataToNetexConverter")
                 .log(LoggingLevel.INFO, this.getClass().getName(), "Converting common aviation data to NeTEx")
                 .bean(CommonDataToNetexConverter.class, "convertToNetex").id("ConvertCommonDataToNetexProcessor")
                 .marshal(jaxbDataFormat)
-                //.log(LoggingLevel.DEBUG, this.getClass().getName(), "${body}")
+                .log(LoggingLevel.DEBUG, this.getClass().getName(), "${body}")
                 .process(exchange -> exchange.getIn().setHeader(HEADER_FILE_NAME_GENERATED, "_avinor_common_elements")).id("GenerateCommonFileNameProcessor")
                 .setHeader(Exchange.FILE_NAME, simpleF("${header.%s}.xml", HEADER_FILE_NAME_GENERATED))
                 .setHeader(Exchange.CONTENT_TYPE, constant("text/xml;charset=utf-8"))
@@ -223,8 +214,6 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
         ;
 
         from("direct:convertLineDataSetsToNetex")
-        //from("direct:convertScheduledFlightsToNetex")
-                //.routeId("ScheduledFlightsToNetexConverter")
                 .routeId("LineDataSetsToNetexConverter")
                 .log(LoggingLevel.INFO, this.getClass().getName(), "Converting line centric data sets to NeTEx")
 
@@ -236,18 +225,8 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 )
 
                 .split(body())//.parallelProcessing()
-/*
-                    .process(exchange -> {
-                        ScheduledFlight originalBody = exchange.getIn().getBody(ScheduledFlight.class);
-                        exchange.setProperty(PROPERTY_SCHEDULED_FLIGHT_ORIGINAL_BODY, originalBody);
-                        String enrichParameter = originalBody.getAirlineIATA();
-                        exchange.getIn().setBody(enrichParameter);
-                    }).id("AirlineIataPreEnrichProcessor")
-*/
-
                     .process(exchange -> {
                         LineDataSet originalBody = exchange.getIn().getBody(LineDataSet.class);
-                        //exchange.setProperty(PROPERTY_SCHEDULED_FLIGHT_ORIGINAL_BODY, originalBody);
                         exchange.setProperty(PROPERTY_LINE_DATASET_ORIGINAL_BODY, originalBody);
                         String enrichParameter = originalBody.getAirlineIata();
                         exchange.getIn().setBody(enrichParameter);
@@ -255,59 +234,15 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
 
                     .setHeader(HEADER_EXTIME_FETCH_RESOURCE_ENDPOINT, constant("direct:fetchAndCacheAirlineName"))
                     .enrich("direct:retrieveResource", new AirlineNameEnricherAggregationStrategy())
-
-                    //.to("direct:enrichScheduledFlightWithAirportNames")
-
                     .bean(LineDataToNetexConverter.class, "convertToNetex").id("ConvertLineDataSetsToNetexProcessor")
-                    .log(LoggingLevel.INFO, this.getClass().getName(), "NeTEx conversion for line done")
                     .process(exchange -> exchange.getIn().setHeader(HEADER_FILE_NAME_GENERATED, generateFilename(exchange))).id("GenerateFileNameProcessor")
                     .marshal(jaxbDataFormat)
-                    .log(LoggingLevel.INFO, this.getClass().getName(), "JAXB schema validation and marshalling done for line")
                     .setHeader(Exchange.FILE_NAME, simpleF("${header.%s}.xml", HEADER_FILE_NAME_GENERATED))
                     .setHeader(Exchange.CONTENT_TYPE, constant("text/xml;charset=utf-8"))
                     .setHeader(Exchange.CHARSET_NAME, constant("utf-8"))
                     .to("file:{{netex.generated.output.path}}")
-                    .log(LoggingLevel.INFO, this.getClass().getName(), "NeTEx file created for line")
                 .end()
         ;
-
-/*
-        // @TODO: write unit test for this route
-        from("direct:enrichScheduledFlightWithAirportNames")
-                .routeId("ScheduledFlightAirportNameEnricher")
-                .setHeader(HEADER_EXTIME_FETCH_RESOURCE_ENDPOINT, constant("direct:fetchAndCacheAirportName"))
-
-                .choice()
-                    .when(body().isInstanceOf(ScheduledFlight.class))
-                        .process(new DepartureIataInitProcessor())
-                        .enrich("direct:retrieveResource", new DepartureIataEnricherAggregationStrategy())
-                        .process(new ArrivalIataInitProcessor())
-                        .enrich("direct:retrieveResource", new ArrivalIataEnricherAggregationStrategy())
-                    .when(body().isInstanceOf(ScheduledFlight.class))
-                        .to("direct:enrichScheduledStopoverFlightWithAirportNames")
-                    .otherwise()
-                        .throwException(new IllegalArgumentException("Illegal type argument"))
-                .end()
-        ;
-
-        from("direct:enrichScheduledStopoverFlightWithAirportNames")
-                .routeId("ScheduledStopoverFlightAirportNameEnricher")
-                .setHeader(HEADER_STOPOVER_FLIGHT_ORIGINAL_BODY, body())
-
-                .split(simple("${body.scheduledStopovers}"), new StopoverFlightAggregationStrategy())
-                    .log("Processing fragment [${property[CamelSplitIndex]}]:${body}")
-
-                    .process(exchange -> {
-                        ScheduledStopover originalBody = exchange.getIn().getBody(ScheduledStopover.class);
-                        exchange.setProperty(PROPERTY_STOPOVER_ORIGINAL_BODY, originalBody);
-                        String enrichParameter = originalBody.getAirportIATA();
-                        exchange.getIn().setBody(enrichParameter);
-                    }).id("SetEnrichParameterForStopoverProcessor")
-
-                    .enrich("direct:retrieveResource", new StopoverIataEnricherAggregationStrategy())
-                .end()
-        ;
-*/
 
         from("file:{{netex.generated.output.path}}?noop=true&idempotent=true&antInclude=**/*.xml")
                 .routeId("CompressAndSendToStorage")
@@ -430,86 +365,6 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
         }
     }
 
-    private class StopoverFlightAggregationStrategy implements AggregationStrategy {
-        @Override
-        public Exchange aggregate(Exchange oldExchange, Exchange newExchange) {
-            if (oldExchange == null) {
-                ScheduledFlight originalBody = newExchange.getIn().getHeader(
-                        HEADER_STOPOVER_FLIGHT_ORIGINAL_BODY, ScheduledFlight.class);
-                newExchange.getIn().setBody(originalBody);
-                return newExchange;
-            } else {
-                return oldExchange;
-            }
-        }
-    }
-
-    private class DepartureIataInitProcessor implements Processor {
-        @Override
-        public void process(Exchange exchange) throws Exception {
-            ScheduledFlight originalBody = exchange.getIn().getBody(ScheduledFlight.class);
-            exchange.setProperty(PROPERTY_DIRECT_FLIGHT_ORIGINAL_BODY, originalBody);
-            String enrichParameter = originalBody.getDepartureAirportIATA();
-            exchange.getIn().setBody(enrichParameter);
-        }
-    }
-
-    private class ArrivalIataInitProcessor implements Processor {
-        @Override
-        public void process(Exchange exchange) throws Exception {
-            ScheduledFlight originalBody = exchange.getIn().getBody(ScheduledFlight.class);
-            exchange.setProperty(PROPERTY_DIRECT_FLIGHT_ORIGINAL_BODY, originalBody);
-            String enrichParameter = originalBody.getArrivalAirportIATA();
-            exchange.getIn().setBody(enrichParameter);
-        }
-    }
-
-    private class DepartureIataEnricherAggregationStrategy implements AggregationStrategy {
-        public Exchange aggregate(Exchange original, Exchange resource) {
-            ScheduledFlight originalBody = original.getProperty(
-                    PROPERTY_DIRECT_FLIGHT_ORIGINAL_BODY, ScheduledFlight.class);
-            String resourceResponse = resource.getIn().getBody(String.class);
-            originalBody.setDepartureAirportName(resourceResponse);
-            original.getIn().setBody(originalBody);
-            return original;
-        }
-    }
-
-    private class ArrivalIataEnricherAggregationStrategy implements AggregationStrategy {
-        public Exchange aggregate(Exchange original, Exchange resource) {
-            ScheduledFlight originalBody = original.getProperty(
-                    PROPERTY_DIRECT_FLIGHT_ORIGINAL_BODY, ScheduledFlight.class);
-            String resourceResponse = resource.getIn().getBody(String.class);
-            originalBody.setArrivalAirportName(resourceResponse);
-            original.getIn().setBody(originalBody);
-            return original;
-        }
-    }
-
-    private class StopoverIataEnricherAggregationStrategy implements AggregationStrategy {
-        public Exchange aggregate(Exchange original, Exchange resource) {
-            ScheduledStopover originalBody = original.getProperty(
-                    PROPERTY_STOPOVER_ORIGINAL_BODY, ScheduledStopover.class);
-            String resourceResponse = resource.getIn().getBody(String.class);
-            originalBody.setAirportName(resourceResponse);
-            original.getIn().setBody(originalBody);
-            return original;
-        }
-    }
-
-/*
-    private class AirlineNameEnricherAggregationStrategy implements AggregationStrategy {
-        @Override
-        public Exchange aggregate(Exchange original, Exchange resource) {
-            ScheduledFlight originalBody = original.getProperty(
-                    PROPERTY_SCHEDULED_FLIGHT_ORIGINAL_BODY, ScheduledFlight.class);
-            String resourceResponse = resource.getIn().getBody(String.class);
-            originalBody.setAirlineName(resourceResponse);
-            original.getIn().setBody(originalBody);
-            return original;
-        }
-    }
-*/
     private class AirlineNameEnricherAggregationStrategy implements AggregationStrategy {
         @Override
         public Exchange aggregate(Exchange original, Exchange resource) {
@@ -521,42 +376,40 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
         }
     }
 
-	public static String generateFilename(Exchange exchange) {
-		@SuppressWarnings("unchecked")
-		JAXBElement<PublicationDeliveryStructure> publicationDelivery = (JAXBElement<PublicationDeliveryStructure>) exchange.getIn().getBody();
-		List<ServiceFrame> collect = publicationDelivery.getValue().getDataObjects().getCompositeFrameOrCommonFrame().stream()
-				.map(e -> e.getValue())
-				.filter(e -> e instanceof CompositeFrame)
-				.map(e -> (CompositeFrame)e)
-				.map(e -> e.getFrames().getCommonFrame())
-				.map(e -> e.stream()
-						.map(ex -> ex.getValue())
-						.filter(ex -> ex instanceof ServiceFrame)
-						.map(ex -> (ServiceFrame)ex)
-						.collect(Collectors.toList())
-					
-				).flatMap(e -> e.stream())
-				.collect(Collectors.toList());
+    private static String generateFilename(Exchange exchange) {
+        @SuppressWarnings("unchecked")
+        JAXBElement<PublicationDeliveryStructure> publicationDelivery = (JAXBElement<PublicationDeliveryStructure>) exchange.getIn().getBody();
 
-		ServiceFrame sf = collect.get(0);
-		String network = sf.getNetwork().getName().getValue();
-		Line line = ((Line)sf.getLines().getLine_().get(0).getValue());
-		String publicCode = line.getPublicCode();
-		
-		String filename = network+"-"+publicCode+"-"+line.getName().getValue().replace('/', '_');
-		
-		return rewriteNorwegianCharacters(filename);
+        List<ServiceFrame> collect = publicationDelivery.getValue().getDataObjects().getCompositeFrameOrCommonFrame().stream()
+                .map(JAXBElement::getValue)
+                .filter(e -> e instanceof CompositeFrame)
+                .map(e -> (CompositeFrame) e)
+                .map(e -> e.getFrames().getCommonFrame())
+                .map(e -> e.stream()
+                        .map(JAXBElement::getValue)
+                        .filter(ex -> ex instanceof ServiceFrame)
+                        .map(ex -> (ServiceFrame) ex)
+                        .collect(Collectors.toList()))
+                .flatMap(Collection::stream)
+                .collect(Collectors.toList());
+
+        ServiceFrame sf = collect.get(0);
+        String network = sf.getNetwork().getName().getValue();
+        Line line = ((Line) sf.getLines().getLine_().get(0).getValue());
+        String publicCode = line.getPublicCode();
+
+        String filename = network + "-" + publicCode + "-" + line.getName().getValue().replace('/', '_');
+
+        return rewriteNorwegianCharacters(filename);
     }
-	
-	public static String rewriteNorwegianCharacters(String s) {
-		s = s.replace("Å", "AA");
-		s = s.replace("Ø", "OE");
-		s = s.replace("Æ", "AE");
-		s = s.replace("å", "aa");
-		s = s.replace("ø", "oe");
-		s = s.replace("æ", "ae");
-		
-		
-		return s;
-	}
+
+    private static String rewriteNorwegianCharacters(String s) {
+        s = s.replace("Å", "AA");
+        s = s.replace("Ø", "OE");
+        s = s.replace("Æ", "AE");
+        s = s.replace("å", "aa");
+        s = s.replace("ø", "oe");
+        s = s.replace("æ", "ae");
+        return s;
+    }
 }
