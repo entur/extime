@@ -4,6 +4,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import no.rutebanken.extime.config.NetexStaticDataSet;
 import no.rutebanken.extime.model.AvailabilityPeriod;
+import no.rutebanken.extime.model.ScheduledFlight;
 import org.rutebanken.netex.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -284,8 +285,10 @@ public class NetexObjectFactory {
             dayTypesStruct.getDayType_().add(dayTypeElement);
         }
 
+        List<DayTypeAssignment> dayTypeAssignmentList = new ArrayList<>(dayTypeAssignments.values());
+        dayTypeAssignmentList.sort(Comparator.comparing(DayTypeAssignment::getOrder));
         DayTypeAssignmentsInFrame_RelStructure dayTypeAssignmentsStruct = objectFactory.createDayTypeAssignmentsInFrame_RelStructure();
-        dayTypeAssignments.values().forEach(dayTypeAssignment -> dayTypeAssignmentsStruct.getDayTypeAssignment().add(dayTypeAssignment));
+        dayTypeAssignmentList.forEach(dayTypeAssignment -> dayTypeAssignmentsStruct.getDayTypeAssignment().add(dayTypeAssignment));
 
         String serviceCalendarFrameId = NetexObjectIdCreator.createServiceCalendarFrameId(AVINOR_XMLNS,
                 String.valueOf(NetexObjectIdCreator.generateRandomId(DEFAULT_START_INCLUSIVE, DEFAULT_END_EXCLUSIVE)));

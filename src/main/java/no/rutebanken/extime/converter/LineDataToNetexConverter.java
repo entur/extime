@@ -280,7 +280,6 @@ public class LineDataToNetexConverter {
         for (int i = 0; i < journeyFlights.size(); i++) {
             LocalDate dateOfOperation = journeyFlights.get(i).getDateOfOperation();
 
-            // TODO generate the id based on the date of operation (See Hogia Calendars)
             String dayTypeIdSuffix = dateOfOperation.format(DateTimeFormatter.ofPattern("EEE_dd"));
             String dayTypeId = NetexObjectIdCreator.createDayTypeId(AVINOR_XMLNS, dayTypeIdSuffix);
 
@@ -289,9 +288,8 @@ public class LineDataToNetexConverter {
             JAXBElement<DayTypeRefStructure> dayTypeRefStructElement = objectFactory.createDayTypeRef(dayTypeRefStruct);
             dayTypeStructure.getDayTypeRef().add(dayTypeRefStructElement);
 
-            // TODO generate the id based on the date of operation (See Hogia Calendars)
             String assignmentIdSuffix = dateOfOperation.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-            DayTypeAssignment dayTypeAssignment = netexObjectFactory.createDayTypeAssignment(assignmentIdSuffix, i, dateOfOperation, dayTypeId);
+            DayTypeAssignment dayTypeAssignment = netexObjectFactory.createDayTypeAssignment(assignmentIdSuffix, i + 1, dateOfOperation, dayTypeId);
 
             dayTypes.put(dayTypeId, dayType);
             dayTypeAssignments.put(dayTypeAssignment.getId(), dayTypeAssignment);
