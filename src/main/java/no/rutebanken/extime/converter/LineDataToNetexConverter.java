@@ -93,6 +93,7 @@ public class LineDataToNetexConverter {
     }
 
     public List<RoutePoint> createRoutePoints(List<FlightRoute> flightRoutes) {
+        logger.debug("Creating route points");
         Map<String, RoutePoint> routePointMap = netexCommonDataSet.getRoutePointMap();
 
         return flightRoutes.stream()
@@ -104,6 +105,7 @@ public class LineDataToNetexConverter {
     }
 
     private List<Route> createRoutes(Line line, List<FlightRoute> flightRoutes) {
+        logger.debug("Creating routes");
         Map<String, RoutePoint> routePointMap = netexCommonDataSet.getRoutePointMap();
         List<Route> routes = Lists.newArrayList();
 
@@ -135,6 +137,7 @@ public class LineDataToNetexConverter {
     }
 
     public List<JourneyPattern> createJourneyPatterns(List<Route> routes) {
+        logger.debug("Creating journey patterns");
         Map<String, ScheduledStopPoint> stopPointMap = netexCommonDataSet.getStopPointMap();
         List<JourneyPattern> journeyPatterns = Lists.newArrayList();
 
@@ -185,6 +188,7 @@ public class LineDataToNetexConverter {
     }
 
     public List<ServiceJourney> createServiceJourneys(Line line, Map<String, Map<String, List<ScheduledFlight>>> routeJourneys) {
+        logger.debug("Creating service journeys");
         List<ServiceJourney> serviceJourneyList = new ArrayList<>();
 
         if (!dayTypes.isEmpty()) {
@@ -238,6 +242,7 @@ public class LineDataToNetexConverter {
     }
 
     private TimetabledPassingTimes_RelStructure aggregateJourneyPassingTimes(List<ScheduledFlight> journeyFlights, List<PointInLinkSequence_VersionedChildStructure> pointsInLinkSequence) {
+        logger.debug("Aggregating passing times");
         ScheduledFlight guidingFlight = journeyFlights.get(0);
         TimetabledPassingTimes_RelStructure passingTimesRelStructure = objectFactory.createTimetabledPassingTimes_RelStructure();
 
@@ -274,6 +279,7 @@ public class LineDataToNetexConverter {
     }
 
     private DayTypeRefs_RelStructure collectDayTypesAndAssignments(List<ScheduledFlight> journeyFlights) {
+        logger.debug("Collecting day types and assignments");
         DayTypeRefs_RelStructure dayTypeStructure = objectFactory.createDayTypeRefs_RelStructure();
         journeyFlights.sort(Comparator.comparing(ScheduledFlight::getDateOfOperation));
 

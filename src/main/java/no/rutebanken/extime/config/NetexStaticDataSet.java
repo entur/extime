@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
-@Component
+@Component("netexStaticDataSet")
 @ConfigurationProperties(prefix = "netex-data-sets", locations = "classpath:netex-static-data.yml")
 public class NetexStaticDataSet {
 

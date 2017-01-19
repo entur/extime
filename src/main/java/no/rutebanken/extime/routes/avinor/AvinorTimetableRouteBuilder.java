@@ -49,8 +49,6 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
     static final String HEADER_TIMETABLE_STOP_VISIT_TYPE = "TimetableStopVisitType";
     static final String HEADER_LOWER_RANGE_ENDPOINT = "LowerRangeEndpoint";
     static final String HEADER_UPPER_RANGE_ENDPOINT = "UpperRangeEndpoint";
-    static final String HEADER_STOPOVER_FLIGHT_ORIGINAL_BODY = "StopoverFlightOriginalBody";
-    static final String PROPERTY_STOPOVER_ORIGINAL_BODY = "StopoverOriginalBody";
 
     private static final String HEADER_FILE_NAME_GENERATED = "FileNameGenerated";
     private static final String HEADER_MESSAGE_PROVIDER_ID = "RutebankenProviderId";
