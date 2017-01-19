@@ -6,7 +6,7 @@ import com.google.common.base.Objects;
 import java.util.List;
 import java.util.Map;
 
-public class FlightLineDataSet {
+public class LineDataSet {
 
     private String airlineIata;
     private String airlineName;
@@ -76,7 +76,7 @@ public class FlightLineDataSet {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        FlightLineDataSet that = (FlightLineDataSet) o;
+        LineDataSet that = (LineDataSet) o;
         return Objects.equal(airlineIata, that.airlineIata) &&
                 Objects.equal(airlineName, that.airlineName) &&
                 Objects.equal(lineDesignation, that.lineDesignation) &&

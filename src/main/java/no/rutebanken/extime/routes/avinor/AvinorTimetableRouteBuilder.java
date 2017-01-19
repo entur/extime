@@ -8,11 +8,10 @@ import no.avinor.flydata.xjc.model.airport.AirportNames;
 import no.avinor.flydata.xjc.model.scheduled.Flight;
 import no.avinor.flydata.xjc.model.scheduled.Flights;
 import no.rutebanken.extime.converter.CommonDataToNetexConverter;
+import no.rutebanken.extime.converter.LineDataToNetexConverter;
 import no.rutebanken.extime.converter.ScheduledFlightConverter;
-import no.rutebanken.extime.converter.ScheduledFlightToNetexConverter;
 import no.rutebanken.extime.model.*;
 import no.rutebanken.extime.util.AvinorTimetableUtils;
-import no.rutebanken.extime.util.DateUtils;
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.Processor;
@@ -247,7 +246,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
 */
 
                     .process(exchange -> {
-                        FlightLineDataSet originalBody = exchange.getIn().getBody(FlightLineDataSet.class);
+                        LineDataSet originalBody = exchange.getIn().getBody(LineDataSet.class);
                         //exchange.setProperty(PROPERTY_SCHEDULED_FLIGHT_ORIGINAL_BODY, originalBody);
                         exchange.setProperty(PROPERTY_LINE_DATASET_ORIGINAL_BODY, originalBody);
                         String enrichParameter = originalBody.getAirlineIata();
@@ -259,7 +258,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
 
                     //.to("direct:enrichScheduledFlightWithAirportNames")
 
-                    .bean(ScheduledFlightToNetexConverter.class, "convertToNetex").id("ConvertLineDataSetsToNetexProcessor")
+                    .bean(LineDataToNetexConverter.class, "convertToNetex").id("ConvertLineDataSetsToNetexProcessor")
                     .log(LoggingLevel.INFO, this.getClass().getName(), "NeTEx conversion for line done")
                     .process(exchange -> exchange.getIn().setHeader(HEADER_FILE_NAME_GENERATED, generateFilename(exchange))).id("GenerateFileNameProcessor")
                     .marshal(jaxbDataFormat)
@@ -514,7 +513,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
     private class AirlineNameEnricherAggregationStrategy implements AggregationStrategy {
         @Override
         public Exchange aggregate(Exchange original, Exchange resource) {
-            FlightLineDataSet originalBody = original.getProperty(PROPERTY_LINE_DATASET_ORIGINAL_BODY, FlightLineDataSet.class);
+            LineDataSet originalBody = original.getProperty(PROPERTY_LINE_DATASET_ORIGINAL_BODY, LineDataSet.class);
             String resourceResponse = resource.getIn().getBody(String.class);
             originalBody.setAirlineName(resourceResponse);
             original.getIn().setBody(originalBody);

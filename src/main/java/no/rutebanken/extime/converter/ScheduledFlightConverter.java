@@ -74,7 +74,7 @@ public class ScheduledFlightConverter {
         stopPlaceDataSets = netexStaticDataSet.getStopPlaces();
     }
 
-    public List<FlightLineDataSet> convertToLineCentricDataSets(List<Flight> scheduledFlights) {
+    public List<LineDataSet> convertToLineCentricDataSets(List<Flight> scheduledFlights) {
 
         // TODO For now we create a separate from- and to date in converter, but this should actually
         // TODO come as input headers from previous date range generator, to be 100% sure these are always the same
@@ -86,8 +86,8 @@ public class ScheduledFlightConverter {
         OffsetDateTime requestPeriodToDateTime = requestPeriodToDate.atTime(offsetMidnight);
 
         // TODO check for codeshare flights here, use the infrequent designator enumset group, to only check international airlines
-        //List<Flight> filteredFlights = filterValidFlights(scheduledFlights);
-        List<Flight> filteredFlights = scheduledFlights;
+        List<Flight> filteredFlights = filterValidFlights(scheduledFlights);
+        //List<Flight> filteredFlights = scheduledFlights;
 
         Map<String, List<Flight>> flightsByDepartureAirport = filteredFlights.stream()
                 .collect(Collectors.groupingBy(Flight::getDepartureStation));
@@ -124,7 +124,7 @@ public class ScheduledFlightConverter {
             }
         }
 
-        List<FlightLineDataSet> flightLineDataSets = new ArrayList<>();
+        List<LineDataSet> lineDataSets = new ArrayList<>();
 
         // group by airline iata and unique lines
         Map<String, Map<String, List<ScheduledFlight>>> flightsByAirlineAndLine = mergedScheduledFlights.stream()
@@ -138,38 +138,38 @@ public class ScheduledFlightConverter {
             Map<String, List<ScheduledFlight>> mergedFlightsByLineDesignation = findAndMergeFlightsByEquivalentLines(flightsByLineDesignation);
 
             for (Map.Entry<String, List<ScheduledFlight>> lineEntry : mergedFlightsByLineDesignation.entrySet()) {
-                FlightLineDataSet flightLineDataSet = populateFlightLineDataSet(requestPeriodFromDateTime, requestPeriodToDateTime, airlineIata, lineEntry);
-                flightLineDataSets.add(flightLineDataSet);
+                LineDataSet lineDataSet = populateFlightLineDataSet(requestPeriodFromDateTime, requestPeriodToDateTime, airlineIata, lineEntry);
+                lineDataSets.add(lineDataSet);
             }
         }
 
-        return flightLineDataSets;
+        return lineDataSets;
     }
 
-    private FlightLineDataSet populateFlightLineDataSet(OffsetDateTime requestPeriodFromDateTime,
-                                                        OffsetDateTime requestPeriodToDateTime,
-                                                        String airlineIata,
-                                                        Map.Entry<String, List<ScheduledFlight>> flightsByLineEntry) {
+    private LineDataSet populateFlightLineDataSet(OffsetDateTime requestPeriodFromDateTime,
+                                                  OffsetDateTime requestPeriodToDateTime,
+                                                  String airlineIata,
+                                                  Map.Entry<String, List<ScheduledFlight>> flightsByLineEntry) {
 
-        FlightLineDataSet flightLineDataSet = new FlightLineDataSet();
-        flightLineDataSet.setAirlineIata(airlineIata);
+        LineDataSet lineDataSet = new LineDataSet();
+        lineDataSet.setAirlineIata(airlineIata);
 
         String lineDesignation = flightsByLineEntry.getKey();
-        flightLineDataSet.setLineDesignation(lineDesignation);
+        lineDataSet.setLineDesignation(lineDesignation);
 
         String lineName = getLineNameFromDesignation(lineDesignation);
-        flightLineDataSet.setLineName(lineName);
+        lineDataSet.setLineName(lineName);
 
         List<ScheduledFlight> flights = flightsByLineEntry.getValue();
 
         AvailabilityPeriod availabilityPeriod = new AvailabilityPeriod(requestPeriodFromDateTime, requestPeriodToDateTime);
-        flightLineDataSet.setAvailabilityPeriod(availabilityPeriod);
+        lineDataSet.setAvailabilityPeriod(availabilityPeriod);
 
         List<FlightRoute> flightRoutes = flights.stream()
                 .map(flight -> new FlightRoute(flight.getRoutePattern(), getRouteNameFromDesignation(flight.getRoutePattern())))
                 .filter(distinctByKey(FlightRoute::getRouteDesignation))
                 .collect(Collectors.toList());
-        flightLineDataSet.setFlightRoutes(flightRoutes);
+        lineDataSet.setFlightRoutes(flightRoutes);
 
         Map<String, Map<String, List<ScheduledFlight>>> journeysByRouteAndFlightId = flights.stream()
                 .collect(Collectors.groupingBy(ScheduledFlight::getRoutePattern,
@@ -178,9 +178,9 @@ public class ScheduledFlightConverter {
         // TODO consider sorting all internally grouped flights by operating day
         // .sorted(Comparator.comparing(ScheduledFlight::getDateOfOperation))
 
-        flightLineDataSet.setRouteJourneys(journeysByRouteAndFlightId);
+        lineDataSet.setRouteJourneys(journeysByRouteAndFlightId);
 
-        return flightLineDataSet;
+        return lineDataSet;
     }
 
     private String getLineNameFromDesignation(String lineDesignation) {
@@ -426,7 +426,6 @@ public class ScheduledFlightConverter {
             ScheduledFlight scheduledFlight = new ScheduledFlight();
             scheduledFlight.setAirlineFlightId(currentFlight.getAirlineDesignator() + currentFlight.getFlightNumber());
             scheduledFlight.setAirlineIATA(currentFlight.getAirlineDesignator());
-            scheduledFlight.setAvailabilityPeriod(new AvailabilityPeriod(requestPeriodFromDateTime, requestPeriodToDateTime));
             scheduledFlight.setDateOfOperation(currentFlight.getDateOfOperation());
             scheduledFlight.getScheduledStopovers().addAll(scheduledStopovers);
 
@@ -551,7 +550,6 @@ public class ScheduledFlightConverter {
         scheduledFlight.setFlightId(flight.getId());
         scheduledFlight.setAirlineIATA(flight.getAirlineDesignator());
         scheduledFlight.setAirlineFlightId(flight.getAirlineDesignator() + flight.getFlightNumber());
-        scheduledFlight.setAvailabilityPeriod(new AvailabilityPeriod(fromDateTime, toDateTime));
         scheduledFlight.setDateOfOperation(flight.getDateOfOperation());
         scheduledFlight.setDepartureAirportIATA(flight.getDepartureStation());
         scheduledFlight.setArrivalAirportIATA(flight.getArrivalStation());

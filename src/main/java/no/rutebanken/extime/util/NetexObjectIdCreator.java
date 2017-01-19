@@ -94,6 +94,10 @@ public class NetexObjectIdCreator {
         return NetexObjectIdCreator.composeNetexObjectId(objectIdPrefix, NetexObjectIdTypes.DAY_TYPE_KEY, objectId);
     }
 
+    public static String createDayTypeAssignmentId(String objectIdPrefix, String objectId) {
+        return NetexObjectIdCreator.composeNetexObjectId(objectIdPrefix, NetexObjectIdTypes.DAY_TYPE_ASSIGNMENT_KEY, objectId);
+    }
+
     public static String createAvailabilityConditionId(String objectIdPrefix, String objectId) {
         return NetexObjectIdCreator.composeNetexObjectId(objectIdPrefix, NetexObjectIdTypes.AVAILABILITY_CONDITION_KEY, objectId);
     }

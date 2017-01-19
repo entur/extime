@@ -6,19 +6,15 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
 import java.math.BigInteger;
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.OffsetTime;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import static no.rutebanken.extime.Constants.DASH;
 import static no.rutebanken.extime.Constants.EMPTY;
 
-// TODO do cleanup in this class, and remove fields no more needed, that are moved to FlightLineDataSet
 public class ScheduledFlight {
 
     private BigInteger flightId;
@@ -33,10 +29,6 @@ public class ScheduledFlight {
     private OffsetTime timeOfArrival;
     private LocalDate dateOfOperation;
     private List<ScheduledStopover> scheduledStopovers;
-
-    // properties marked for data set class
-    private AvailabilityPeriod availabilityPeriod;
-    private Set<DayOfWeek> weekDaysPattern;
 
     public BigInteger getFlightId() {
         return flightId;
@@ -137,22 +129,6 @@ public class ScheduledFlight {
         this.scheduledStopovers = scheduledStopovers;
     }
 
-    public AvailabilityPeriod getAvailabilityPeriod() {
-        return availabilityPeriod;
-    }
-
-    public void setAvailabilityPeriod(AvailabilityPeriod availabilityPeriod) {
-        this.availabilityPeriod = availabilityPeriod;
-    }
-
-    public Set<DayOfWeek> getWeekDaysPattern() {
-        return weekDaysPattern;
-    }
-
-    public void setWeekDaysPattern(Set<DayOfWeek> weekDaysPattern) {
-        this.weekDaysPattern = weekDaysPattern;
-    }
-
     public boolean hasStopovers() {
         return this.scheduledStopovers != null && this.scheduledStopovers.size() > 0;
     }
@@ -206,16 +182,13 @@ public class ScheduledFlight {
                 Objects.equal(timeOfDeparture, that.timeOfDeparture) &&
                 Objects.equal(timeOfArrival, that.timeOfArrival) &&
                 Objects.equal(dateOfOperation, that.dateOfOperation) &&
-                Objects.equal(scheduledStopovers, that.scheduledStopovers) &&
-                Objects.equal(availabilityPeriod, that.availabilityPeriod) &&
-                Objects.equal(weekDaysPattern, that.weekDaysPattern);
+                Objects.equal(scheduledStopovers, that.scheduledStopovers);
     }
 
     @Override
     public int hashCode() {
         return Objects.hashCode(flightId, airlineIATA, airlineName, airlineFlightId, departureAirportIATA,
-                arrivalAirportIATA, departureAirportName, arrivalAirportName, timeOfDeparture, timeOfArrival,
-                dateOfOperation, scheduledStopovers, availabilityPeriod, weekDaysPattern);
+                arrivalAirportIATA, departureAirportName, arrivalAirportName, timeOfDeparture, timeOfArrival, dateOfOperation, scheduledStopovers);
     }
 
     @Override
@@ -233,8 +206,6 @@ public class ScheduledFlight {
                 .add("timeOfArrival", timeOfArrival)
                 .add("dateOfOperation", dateOfOperation)
                 .add("scheduledStopovers", scheduledStopovers)
-                .add("availabilityPeriod", availabilityPeriod)
-                .add("weekDaysPattern", weekDaysPattern)
                 .toString();
     }
 }

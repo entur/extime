@@ -1,36 +1,13 @@
 package no.rutebanken.extime.converter;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.Splitter;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import no.rutebanken.extime.config.NetexStaticDataSet;
-import no.rutebanken.extime.config.NetexStaticDataSet.OrganisationDataSet;
-import no.rutebanken.extime.model.*;
-import no.rutebanken.extime.util.DateUtils;
-import no.rutebanken.extime.util.NetexObjectFactory;
-import no.rutebanken.extime.util.NetexObjectIdCreator;
-import org.apache.commons.lang3.EnumUtils;
-import org.rutebanken.netex.model.*;
-import org.rutebanken.netex.model.PublicationDeliveryStructure.DataObjects;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import javax.xml.bind.JAXBElement;
-import java.math.BigInteger;
-import java.time.*;
-import java.util.*;
-import java.util.stream.Collectors;
-
-import static no.rutebanken.extime.Constants.*;
 
 // TODO rename this class to something more describing, like FlightLineToNetexConverter
 
 @Component(value = "scheduledFlightToNetexConverter")
 public class ScheduledFlightToNetexConverter {
 
+/*
     private static final Logger logger = LoggerFactory.getLogger(ScheduledFlightToNetexConverter.class);
 
     private static final String WORK_DAYS_DISPLAY_NAME = "Ukedager (mandag til fredag)";
@@ -45,6 +22,8 @@ public class ScheduledFlightToNetexConverter {
 
     private Map<String, String> routeIdDesignationMap = new HashMap<>();
     private Map<String, JourneyPattern> routeDesignationPatternMap = new HashMap<>();
+    private Map<String, DayType> dayTypes = new HashMap<>();
+    private Map<String, DayTypeAssignment> dayTypeAssignments = new HashMap<>();
 
     static {
         dayOfWeekMap.put(DayOfWeek.MONDAY, DayOfWeekEnumeration.MONDAY);
@@ -68,7 +47,7 @@ public class ScheduledFlightToNetexConverter {
     @Autowired
     private NetexObjectFactory netexObjectFactory;
 
-    public JAXBElement<PublicationDeliveryStructure> convertToNetex(FlightLineDataSet lineDataSet) throws Exception {
+    public JAXBElement<PublicationDeliveryStructure> convertToNetex(LineDataSet lineDataSet) throws Exception {
         OffsetDateTime publicationTimestamp = OffsetDateTime.ofInstant(Instant.now(), ZoneId.of(DEFAULT_ZONE_ID));
         AvailabilityPeriod availabilityPeriod = lineDataSet.getAvailabilityPeriod();
         String airlineIata = lineDataSet.getAirlineIata();
@@ -87,7 +66,7 @@ public class ScheduledFlightToNetexConverter {
         line.setRoutes(routeRefStruct);
 
         List<JourneyPattern> journeyPatterns = createJourneyPatterns(routes);
-        List<ServiceJourney> serviceJourneys = createServiceJourneys(line, journeyPatterns, lineDataSet.getRouteJourneys());
+        List<ServiceJourney> serviceJourneys = createServiceJourneys(line, lineDataSet.getRouteJourneys());
 
         Frames_RelStructure frames = objectFactory.createFrames_RelStructure();
 
@@ -238,26 +217,14 @@ public class ScheduledFlightToNetexConverter {
     }
 
     public JAXBElement<ServiceCalendarFrame> createServiceCalendarFrame() {
-        List<DayOfWeekEnumeration> daysOfWeek = Lists.newArrayList();
-        daysOfWeek.add(DayOfWeekEnumeration.SUNDAY);
-
-        PropertyOfDay propertyOfDayWeekDays = objectFactory.createPropertyOfDay();
-        propertyOfDayWeekDays.getDaysOfWeek().addAll(daysOfWeek);
-
-        PropertiesOfDay_RelStructure propertiesOfDay = objectFactory.createPropertiesOfDay_RelStructure()
-                .withPropertyOfDay(propertyOfDayWeekDays);
-
-        String dayTypeId = NetexObjectIdCreator.createDayTypeId(AVINOR_XMLNS, "WF:DayType:WF149:Su_14");
-
-        DayType dayType = objectFactory.createDayType()
-                .withVersion(VERSION_ONE)
-                .withId(dayTypeId)
-                .withName(netexObjectFactory.createMultilingualString("WF Generic DayType"))
-                .withProperties(propertiesOfDay);
-
         DayTypesInFrame_RelStructure dayTypesStruct = objectFactory.createDayTypesInFrame_RelStructure();
-        JAXBElement<DayType> dayTypeElement = objectFactory.createDayType(dayType);
-        dayTypesStruct.getDayType_().add(dayTypeElement);
+        for (DayType dayType : dayTypes.values()) {
+            JAXBElement<DayType> dayTypeElement = objectFactory.createDayType(dayType);
+            dayTypesStruct.getDayType_().add(dayTypeElement);
+        }
+
+        DayTypeAssignmentsInFrame_RelStructure dayTypeAssignmentsStruct = objectFactory.createDayTypeAssignmentsInFrame_RelStructure();
+        dayTypeAssignments.values().forEach(dayTypeAssignment -> dayTypeAssignmentsStruct.getDayTypeAssignment().add(dayTypeAssignment));
 
         String serviceCalendarFrameId = NetexObjectIdCreator.createServiceCalendarFrameId(AVINOR_XMLNS,
                 String.valueOf(NetexObjectIdCreator.generateRandomId(DEFAULT_START_INCLUSIVE, DEFAULT_END_EXCLUSIVE)));
@@ -265,7 +232,8 @@ public class ScheduledFlightToNetexConverter {
         ServiceCalendarFrame serviceCalendarFrame = objectFactory.createServiceCalendarFrame()
                 .withVersion(VERSION_ONE)
                 .withId(serviceCalendarFrameId)
-                .withDayTypes(dayTypesStruct);
+                .withDayTypes(dayTypesStruct)
+                .withDayTypeAssignments(dayTypeAssignmentsStruct);
 
         return objectFactory.createServiceCalendarFrame(serviceCalendarFrame);
     }
@@ -701,8 +669,15 @@ public class ScheduledFlightToNetexConverter {
         return journeyPatterns;
     }
 
-    public List<ServiceJourney> createServiceJourneys(Line line, List<JourneyPattern> journeyPatterns, Map<String, Map<String, List<ScheduledFlight>>> routeJourneys) throws IllegalArgumentException {
+    public List<ServiceJourney> createServiceJourneys(Line line, Map<String, Map<String, List<ScheduledFlight>>> routeJourneys) {
         List<ServiceJourney> serviceJourneyList = new ArrayList<>();
+
+        if (!dayTypes.isEmpty()) {
+            dayTypes.clear();
+        }
+        if (!dayTypeAssignments.isEmpty()) {
+            dayTypeAssignments.clear();
+        }
 
         for (Map.Entry<String, Map<String, List<ScheduledFlight>>> entry : routeJourneys.entrySet()) {
             String routeDesignation = entry.getKey();
@@ -739,8 +714,7 @@ public class ScheduledFlightToNetexConverter {
         for (Map.Entry<String, List<ScheduledFlight>> entry : flightsByStopTimes.entrySet()) {
             List<ScheduledFlight> journeyFlights = entry.getValue();
             TimetabledPassingTimes_RelStructure passingTimesRelStruct = aggregateJourneyPassingTimes(journeyFlights, pointsInLinkSequence);
-            //collectOperatingDays(journeyFlights);
-
+            DayTypeRefs_RelStructure dayTypeRefsStruct = collectDayTypesAndAssignments(journeyFlights);
             ServiceJourney serviceJourney = createServiceJourney(line.getId(), flightId, journeyPatternId, passingTimesRelStruct);
             serviceJourneys.add(serviceJourney);
         }
@@ -784,22 +758,48 @@ public class ScheduledFlightToNetexConverter {
         return passingTimesRelStructure;
     }
 
-    private void collectOperatingDays(List<ScheduledFlight> journeyFlights) {
+    private DayTypeRefs_RelStructure collectDayTypesAndAssignments(List<ScheduledFlight> journeyFlights) {
+        DayTypeRefs_RelStructure dayTypeStructure = objectFactory.createDayTypeRefs_RelStructure();
+        journeyFlights.sort(Comparator.comparing(ScheduledFlight::getDateOfOperation));
 
+        for (int i = 0; i < journeyFlights.size(); i++) {
+            LocalDate dateOfOperation = journeyFlights.get(i).getDateOfOperation();
+
+            // TODO generate the id based on the date of operation (See Hogia Calendars)
+            String dayTypeIdSuffix = dateOfOperation.format(DateTimeFormatter.ofPattern("EEE_dd"));
+            String dayTypeId = NetexObjectIdCreator.createDayTypeId(AVINOR_XMLNS, dayTypeIdSuffix);
+
+            DayType dayType = netexObjectFactory.createDayType(dayTypeId);
+            DayTypeRefStructure dayTypeRefStruct = netexObjectFactory.createDayTypeRefStructure(dayTypeId);
+            JAXBElement<DayTypeRefStructure> dayTypeRefStructElement = objectFactory.createDayTypeRef(dayTypeRefStruct);
+            dayTypeStructure.getDayTypeRef().add(dayTypeRefStructElement);
+
+            // TODO generate the id based on the date of operation (See Hogia Calendars)
+            String assignmentIdSuffix = dateOfOperation.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+            String dayTypeAssignmentId = NetexObjectIdCreator.createDayTypeAssignmentId(AVINOR_XMLNS, assignmentIdSuffix);
+
+            DayTypeAssignment dayTypeAssignment = objectFactory.createDayTypeAssignment()
+                    .withVersion(VERSION_ONE)
+                    .withId(dayTypeAssignmentId)
+                    .withOrder(BigInteger.valueOf(i))
+                    .withDate(dateOfOperation)
+                    .withDayTypeRef(dayTypeRefStructElement);
+
+            dayTypes.put(dayTypeId, dayType);
+            dayTypeAssignments.put(dayTypeAssignmentId, dayTypeAssignment);
+        }
+
+        return dayTypeStructure;
     }
 
-    private ServiceJourney createServiceJourney(String lineId, String flightId, String journeyPatternId, TimetabledPassingTimes_RelStructure passingTimesRelStruct) {
-        //String serviceJourneyId = NetexObjectIdCreator.createServiceJourneyId(AVINOR_XMLNS, flightId);
+    private ServiceJourney createServiceJourney(String lineId, String flightId, DayTypeRefs_RelStructure dayTypeRefsStruct,
+                                                String journeyPatternId, TimetabledPassingTimes_RelStructure passingTimesRelStruct) {
+
         String serviceJourneyId = NetexObjectIdCreator.createServiceJourneyId(AVINOR_XMLNS,
                 String.valueOf(NetexObjectIdCreator.generateRandomId(DEFAULT_START_INCLUSIVE, DEFAULT_END_EXCLUSIVE)));
 
         TimetabledPassingTime departurePassingTime = passingTimesRelStruct.getTimetabledPassingTime().get(0);
         OffsetTime departureTime = departurePassingTime.getDepartureTime();
-
-        DayTypeRefs_RelStructure dayTypeStructure = objectFactory.createDayTypeRefs_RelStructure();
-        DayTypeRefStructure dayTypeRefStruct = netexObjectFactory.createDayTypeRefStructure("WF:DayType:WF149:Su_14");
-        JAXBElement<DayTypeRefStructure> dayTypeRefStructElement = objectFactory.createDayTypeRef(dayTypeRefStruct);
-        dayTypeStructure.getDayTypeRef().add(dayTypeRefStructElement);
 
         JourneyPatternRefStructure journeyPatternRefStruct = objectFactory.createJourneyPatternRefStructure()
                 .withVersion(VERSION_ONE)
@@ -814,7 +814,7 @@ public class ScheduledFlightToNetexConverter {
                 .withId(serviceJourneyId)
                 .withPublicCode(flightId)
                 .withDepartureTime(departureTime)
-                //.withDayTypes(dayTypeStructure)
+                .withDayTypes(dayTypeRefsStruct)
                 .withJourneyPatternRef(journeyPatternRefStructElement)
                 .withLineRef(lineRefStructElement)
                 .withPassingTimes(passingTimesRelStruct);
@@ -831,5 +831,24 @@ public class ScheduledFlightToNetexConverter {
         }
         return false;
     }
+
+    private class DayTypeReferential {
+        private Map<String, DayType> dayTypes = new HashMap<>();
+        private Map<String, DayTypeAssignment> dayTypeAssignments = new HashMap<>();
+
+        public Map<String, DayType> getDayTypes() {
+            return dayTypes;
+        }
+
+        public Map<String, DayTypeAssignment> getDayTypeAssignments() {
+            return dayTypeAssignments;
+        }
+
+        public void clear() {
+            dayTypeAssignments.clear();
+            dayTypes.clear();
+        }
+    }
+*/
 
 }
