@@ -7,6 +7,7 @@ import no.rutebanken.extime.model.*;
 import no.rutebanken.extime.util.NetexObjectFactory;
 import no.rutebanken.extime.util.NetexObjectIdCreator;
 import org.apache.commons.lang3.EnumUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.rutebanken.netex.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +30,10 @@ import static no.rutebanken.extime.Constants.*;
 public class LineDataToNetexConverter {
     private static final Logger logger = LoggerFactory.getLogger(LineDataToNetexConverter.class);
 
+    private static final String AIRLINE_IATA = "airline_iata";
+    private static final String LINE_DESIGNATION = "line_designation";
+
+    private Map<String, String> localContext = new HashMap<>();
     private Map<String, String> routeIdDesignationMap = new HashMap<>();
     private Map<String, JourneyPattern> routeDesignationPatternMap = new HashMap<>();
     private Map<String, DayType> dayTypes = new HashMap<>();
@@ -44,6 +49,9 @@ public class LineDataToNetexConverter {
     private NetexObjectFactory netexObjectFactory;
 
     public JAXBElement<PublicationDeliveryStructure> convertToNetex(LineDataSet lineDataSet) throws Exception {
+        localContext.put(AIRLINE_IATA, lineDataSet.getAirlineIata());
+        localContext.put(LINE_DESIGNATION, lineDataSet.getLineDesignation());
+
         OffsetDateTime publicationTimestamp = OffsetDateTime.ofInstant(Instant.now(), ZoneId.of(DEFAULT_ZONE_ID));
         AvailabilityPeriod availabilityPeriod = lineDataSet.getAvailabilityPeriod();
         String airlineIata = lineDataSet.getAirlineIata();
@@ -286,19 +294,31 @@ public class LineDataToNetexConverter {
         for (int i = 0; i < journeyFlights.size(); i++) {
             LocalDate dateOfOperation = journeyFlights.get(i).getDateOfOperation();
 
-            String dayTypeIdSuffix = dateOfOperation.format(DateTimeFormatter.ofPattern("EEE_dd"));
+            String dayTypeIdSuffix = localContext.get(AIRLINE_IATA) + StringUtils.remove(localContext.get(LINE_DESIGNATION), DASH)
+                    + COLON + dateOfOperation.format(DateTimeFormatter.ofPattern("EEE_dd"));
+            //String dayTypeIdSuffix = dateOfOperation.format(DateTimeFormatter.ofPattern("EEE_dd"));
+
             String dayTypeId = NetexObjectIdCreator.createDayTypeId(AVINOR_XMLNS, dayTypeIdSuffix);
 
-            DayType dayType = netexObjectFactory.createDayType(dayTypeId);
+            DayType dayType;
+            if (!dayTypes.containsKey(dayTypeId)) {
+                dayType = netexObjectFactory.createDayType(dayTypeId);
+                dayTypes.put(dayTypeId, dayType);
+            }
+
             DayTypeRefStructure dayTypeRefStruct = netexObjectFactory.createDayTypeRefStructure(dayTypeId);
             JAXBElement<DayTypeRefStructure> dayTypeRefStructElement = objectFactory.createDayTypeRef(dayTypeRefStruct);
             dayTypeStructure.getDayTypeRef().add(dayTypeRefStructElement);
 
-            String assignmentIdSuffix = dateOfOperation.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-            DayTypeAssignment dayTypeAssignment = netexObjectFactory.createDayTypeAssignment(assignmentIdSuffix, i + 1, dateOfOperation, dayTypeId);
+            String assignmentIdSuffix = localContext.get(AIRLINE_IATA) + StringUtils.remove(localContext.get(LINE_DESIGNATION), DASH)
+                    + COLON + dateOfOperation.format(DateTimeFormatter.ofPattern("EEE_dd"));
+            //String assignmentIdSuffix = dateOfOperation.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
 
-            dayTypes.put(dayTypeId, dayType);
-            dayTypeAssignments.put(dayTypeAssignment.getId(), dayTypeAssignment);
+            DayTypeAssignment dayTypeAssignment;
+            if (!dayTypeAssignments.containsKey(dayTypeId)) {
+                dayTypeAssignment = netexObjectFactory.createDayTypeAssignment(assignmentIdSuffix, i + 1, dateOfOperation, dayTypeId);
+                dayTypeAssignments.put(dayTypeAssignment.getId(), dayTypeAssignment);
+            }
         }
 
         return dayTypeStructure;

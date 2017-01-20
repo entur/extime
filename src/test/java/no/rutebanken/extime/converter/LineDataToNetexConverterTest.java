@@ -168,7 +168,7 @@ public class LineDataToNetexConverterTest {
         //Assertions.assertThat(serviceJourneys.get(0).getJourneyPatternRef().getValue().getRef()).isEqualTo("AVI:JourneyPattern:OSL-BGO"); // TODO fix journey pattern id
         Assertions.assertThat(serviceJourneys.get(0).getPublicCode()).isEqualTo("DY602");
         Assertions.assertThat(serviceJourneys.get(0).getLineRef().getValue().getRef()).isEqualTo("AVI:Line:DY-OSL-BGO");
-        Assertions.assertThat(serviceJourneys.get(0).getDayTypes().getDayTypeRef().get(0).getValue().getRef()).isEqualTo("AVI:DayType:Mon_30");
+        Assertions.assertThat(serviceJourneys.get(0).getDayTypes().getDayTypeRef().get(0).getValue().getRef()).isEqualTo("AVI:DayType:DYOSLBGO:Mon_30");
 
         List<TimetabledPassingTime> departurePassingTimes = serviceJourneys.get(0).getPassingTimes().getTimetabledPassingTime();
         Assertions.assertThat(departurePassingTimes).hasSize(2);
@@ -182,7 +182,7 @@ public class LineDataToNetexConverterTest {
         //Assertions.assertThat(serviceJourneys.get(1).getJourneyPatternRef().getValue().getRef()).isEqualTo("AVI:JourneyPattern:OSL-BGO"); // TODO fix journey pattern id
         Assertions.assertThat(serviceJourneys.get(1).getPublicCode()).isEqualTo("DY633");
         Assertions.assertThat(serviceJourneys.get(1).getLineRef().getValue().getRef()).isEqualTo("AVI:Line:DY-OSL-BGO");
-        Assertions.assertThat(serviceJourneys.get(1).getDayTypes().getDayTypeRef().get(0).getValue().getRef()).isEqualTo("AVI:DayType:Tue_31");
+        Assertions.assertThat(serviceJourneys.get(1).getDayTypes().getDayTypeRef().get(0).getValue().getRef()).isEqualTo("AVI:DayType:DYOSLBGO:Tue_31");
 
         List<TimetabledPassingTime> arrivalPassingTimes = serviceJourneys.get(1).getPassingTimes().getTimetabledPassingTime();
         Assertions.assertThat(arrivalPassingTimes).hasSize(2);
@@ -203,16 +203,16 @@ public class LineDataToNetexConverterTest {
         Assertions.assertThat(dayTypes)
                 .hasSize(2)
                 .extracting("id")
-                .contains("AVI:DayType:Mon_30", "AVI:DayType:Tue_31");
-
-        LocalDate date = serviceCalendarFrame.getDayTypeAssignments().getDayTypeAssignment().get(0).getDate();
-        String ref = serviceCalendarFrame.getDayTypeAssignments().getDayTypeAssignment().get(0).getDayTypeRef().getValue().getRef();
+                .contains("AVI:DayType:DYOSLBGO:Mon_30", "AVI:DayType:DYOSLBGO:Tue_31");
 
         // check day type assignments
         Assertions.assertThat(serviceCalendarFrame.getDayTypeAssignments().getDayTypeAssignment())
                 .hasSize(2)
                 .extracting("date", "dayTypeRef.value.ref")
-                .contains(tuple(flight1DateOfOperation, "AVI:DayType:Mon_30"), tuple(flight2DateOfOperation, "AVI:DayType:Tue_31"));
+                .contains(
+                        tuple(flight1DateOfOperation, "AVI:DayType:DYOSLBGO:Mon_30"),
+                        tuple(flight2DateOfOperation, "AVI:DayType:DYOSLBGO:Tue_31")
+                );
     }
 
     private ScheduledFlight createScheduledDirectFlight(String airlineIATA, String airlineFlightId,
