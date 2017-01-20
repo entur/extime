@@ -1,5 +1,7 @@
 package no.rutebanken.extime.model;
 
+import java.util.EnumSet;
+
 public enum AirportIATA {
 
     AES, // Ålesund lufthavn
@@ -47,5 +49,10 @@ public enum AirportIATA {
     VAW, // Vardø lufthavn
     VDB, // Fagernes lufthamn
     VDS, // Vadsø lufthavn
-    VRY  // Værøy helikopterhavn
+    VRY;  // Værøy helikopterhavn
+
+    public static EnumSet<AirportIATA> LARGE_SIZED_AIRPORTS = EnumSet.of(OSL);
+    public static EnumSet<AirportIATA> MEDIUM_SIZED_AIRPORTS = EnumSet.of(BGO, BOO, SVG, TRD);
+    //public static EnumSet<AirportIATA> SMALL_SIZED_AIRPORTS = EnumSet.of("The rest of them...");
+
 }

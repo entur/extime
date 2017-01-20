@@ -4,6 +4,7 @@ import com.google.cloud.storage.Storage;
 import com.google.common.collect.Lists;
 import no.avinor.flydata.xjc.model.scheduled.Flight;
 import no.avinor.flydata.xjc.model.scheduled.Flights;
+import no.avinor.flydata.xjc.model.scheduled.ObjectFactory;
 import no.rutebanken.extime.model.AirportIATA;
 import no.rutebanken.extime.model.ServiceType;
 import no.rutebanken.extime.model.StopVisitType;
@@ -17,12 +18,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.transform.stream.StreamSource;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -64,9 +67,18 @@ public class AvinorTimetableUtils {
                 .forEach(System.out::println);
     }
 
+    public JAXBElement<Flights> createFlightsElement(List<Flight> flightList) {
+        ObjectFactory objectFactory = new ObjectFactory();
+        Flights flights = objectFactory.createFlights();
+        flights.setTime(OffsetDateTime.now());
+        flights.setAirport("OSL");
+        flightList.forEach(flight -> flights.getFlight().add(flight));
+        return objectFactory.createFlights(flights);
+    }
+
     public List<Flight> generateFlightsFromFeedDump() throws Exception {
         ArrayList<Flight> generatedFlights = Lists.newArrayList();
-        Flights flightStructure = generateObjectsFromXml("/xml/testdata/avinor-flights_20161210112449.xml", Flights.class);
+        Flights flightStructure = generateObjectsFromXml("/xml/testdata/avinor-flights_20170118-203723.xml", Flights.class);
         List<Flight> flights = flightStructure.getFlight();
         generatedFlights.addAll(flights);
         return generatedFlights;

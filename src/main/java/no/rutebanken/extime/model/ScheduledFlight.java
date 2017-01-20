@@ -1,18 +1,42 @@
 package no.rutebanken.extime.model;
 
-import java.time.DayOfWeek;
+import com.google.common.base.CharMatcher;
+import com.google.common.base.Joiner;
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
+
+import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.OffsetTime;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
-public abstract class ScheduledFlight {
+import static no.rutebanken.extime.Constants.DASH;
+import static no.rutebanken.extime.Constants.EMPTY;
 
+public class ScheduledFlight {
+
+    private BigInteger flightId;
     private String airlineIATA;
     private String airlineName;
     private String airlineFlightId;
-    private AvailabilityPeriod availabilityPeriod;
+    private String departureAirportIATA;
+    private String arrivalAirportIATA;
+    private String departureAirportName;
+    private String arrivalAirportName;
+    private OffsetTime timeOfDeparture;
+    private OffsetTime timeOfArrival;
     private LocalDate dateOfOperation;
-    private Set<DayOfWeek> weekDaysPattern;
+    private List<ScheduledStopover> scheduledStopovers;
+
+    public BigInteger getFlightId() {
+        return flightId;
+    }
+
+    public void setFlightId(BigInteger flightId) {
+        this.flightId = flightId;
+    }
 
     public String getAirlineIATA() {
         return airlineIATA;
@@ -38,6 +62,54 @@ public abstract class ScheduledFlight {
         this.airlineFlightId = airlineFlightId;
     }
 
+    public String getDepartureAirportIATA() {
+        return departureAirportIATA;
+    }
+
+    public void setDepartureAirportIATA(String departureAirportIATA) {
+        this.departureAirportIATA = departureAirportIATA;
+    }
+
+    public String getArrivalAirportIATA() {
+        return arrivalAirportIATA;
+    }
+
+    public void setArrivalAirportIATA(String arrivalAirportIATA) {
+        this.arrivalAirportIATA = arrivalAirportIATA;
+    }
+
+    public String getDepartureAirportName() {
+        return departureAirportName;
+    }
+
+    public void setDepartureAirportName(String departureAirportName) {
+        this.departureAirportName = departureAirportName;
+    }
+
+    public String getArrivalAirportName() {
+        return arrivalAirportName;
+    }
+
+    public void setArrivalAirportName(String arrivalAirportName) {
+        this.arrivalAirportName = arrivalAirportName;
+    }
+
+    public OffsetTime getTimeOfDeparture() {
+        return timeOfDeparture;
+    }
+
+    public void setTimeOfDeparture(OffsetTime timeOfDeparture) {
+        this.timeOfDeparture = timeOfDeparture;
+    }
+
+    public OffsetTime getTimeOfArrival() {
+        return timeOfArrival;
+    }
+
+    public void setTimeOfArrival(OffsetTime timeOfArrival) {
+        this.timeOfArrival = timeOfArrival;
+    }
+
     public LocalDate getDateOfOperation() {
         return dateOfOperation;
     }
@@ -46,71 +118,94 @@ public abstract class ScheduledFlight {
         this.dateOfOperation = dateOfOperation;
     }
 
-    public Set<DayOfWeek> getWeekDaysPattern() {
-        return weekDaysPattern;
+    public List<ScheduledStopover> getScheduledStopovers() {
+        if (scheduledStopovers == null) {
+            scheduledStopovers = new ArrayList<>();
+        }
+        return this.scheduledStopovers;
     }
 
-    public void setWeekDaysPattern(Set<DayOfWeek> weekDaysPattern) {
-        this.weekDaysPattern = weekDaysPattern;
+    public void setScheduledStopovers(List<ScheduledStopover> scheduledStopovers) {
+        this.scheduledStopovers = scheduledStopovers;
     }
 
-    public abstract String getDepartureAirportIATA();
-
-    public abstract String getArrivalAirportIATA();
-
-    public abstract String getDepartureAirportName();
-
-    public abstract String getArrivalAirportName();
-
-    public abstract OffsetTime getTimeOfDeparture();
-
-    public abstract OffsetTime getTimeOfArrival();
-
-    public AvailabilityPeriod getAvailabilityPeriod() {
-        return availabilityPeriod;
+    public boolean hasStopovers() {
+        return this.scheduledStopovers != null && this.scheduledStopovers.size() > 0;
     }
 
-    public void setAvailabilityPeriod(AvailabilityPeriod availabilityPeriod) {
-        this.availabilityPeriod = availabilityPeriod;
+    public String getOperatingLine() {
+        Joiner joiner = Joiner.on(DASH).skipNulls();
+        return hasStopovers() ?
+                joiner.join(scheduledStopovers.get(0).getAirportIATA(), scheduledStopovers.get(scheduledStopovers.size() - 1).getAirportIATA()) :
+                joiner.join(departureAirportIATA, arrivalAirportIATA);
+    }
+
+    public String getRoutePattern() {
+        Joiner joiner = Joiner.on(DASH).skipNulls();
+        if (hasStopovers()) {
+            List<String> airportIatas = scheduledStopovers.stream()
+                    .map(ScheduledStopover::getAirportIATA)
+                    .collect(Collectors.toList());
+            return joiner.join(airportIatas);
+        }
+        return joiner.join(departureAirportIATA, arrivalAirportIATA);
+    }
+
+    public String getStopTimesPattern() {
+        CharMatcher charMatcher = CharMatcher.anyOf(":Z");
+        Joiner dashJoiner = Joiner.on(DASH).skipNulls();
+
+        if (hasStopovers()) {
+            Joiner emptyJoiner = Joiner.on(EMPTY).skipNulls();
+            List<String> stopTimes = scheduledStopovers.stream()
+                    .map(stop -> emptyJoiner.join(stop.getArrivalTime(), stop.getDepartureTime()))
+                    .collect(Collectors.toList());
+            return charMatcher.removeFrom(dashJoiner.join(stopTimes));
+        }
+
+        return dashJoiner.join(timeOfDeparture, timeOfArrival);
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-
         ScheduledFlight that = (ScheduledFlight) o;
-
-        if (airlineIATA != null ? !airlineIATA.equals(that.airlineIATA) : that.airlineIATA != null) return false;
-        if (airlineName != null ? !airlineName.equals(that.airlineName) : that.airlineName != null) return false;
-        if (airlineFlightId != null ? !airlineFlightId.equals(that.airlineFlightId) : that.airlineFlightId != null)
-            return false;
-        if (dateOfOperation != null ? !dateOfOperation.equals(that.dateOfOperation) : that.dateOfOperation != null)
-            return false;
-        return weekDaysPattern != null ? weekDaysPattern.equals(that.weekDaysPattern) : that.weekDaysPattern == null;
-
+        return Objects.equal(flightId, that.flightId) &&
+                Objects.equal(airlineIATA, that.airlineIATA) &&
+                Objects.equal(airlineName, that.airlineName) &&
+                Objects.equal(airlineFlightId, that.airlineFlightId) &&
+                Objects.equal(departureAirportIATA, that.departureAirportIATA) &&
+                Objects.equal(arrivalAirportIATA, that.arrivalAirportIATA) &&
+                Objects.equal(departureAirportName, that.departureAirportName) &&
+                Objects.equal(arrivalAirportName, that.arrivalAirportName) &&
+                Objects.equal(timeOfDeparture, that.timeOfDeparture) &&
+                Objects.equal(timeOfArrival, that.timeOfArrival) &&
+                Objects.equal(dateOfOperation, that.dateOfOperation) &&
+                Objects.equal(scheduledStopovers, that.scheduledStopovers);
     }
 
     @Override
     public int hashCode() {
-        int result = airlineIATA != null ? airlineIATA.hashCode() : 0;
-        result = 31 * result + (airlineName != null ? airlineName.hashCode() : 0);
-        result = 31 * result + (airlineFlightId != null ? airlineFlightId.hashCode() : 0);
-        result = 31 * result + (dateOfOperation != null ? dateOfOperation.hashCode() : 0);
-        result = 31 * result + (weekDaysPattern != null ? weekDaysPattern.hashCode() : 0);
-        return result;
+        return Objects.hashCode(flightId, airlineIATA, airlineName, airlineFlightId, departureAirportIATA,
+                arrivalAirportIATA, departureAirportName, arrivalAirportName, timeOfDeparture, timeOfArrival, dateOfOperation, scheduledStopovers);
     }
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("ScheduledFlight{");
-        sb.append("airlineIATA='").append(airlineIATA).append('\'');
-        sb.append(", airlineName='").append(airlineName).append('\'');
-        sb.append(", airlineFlightId='").append(airlineFlightId).append('\'');
-        sb.append(", dateOfOperation=").append(dateOfOperation);
-        sb.append(", weekDaysPattern=").append(weekDaysPattern);
-        sb.append('}');
-        return sb.toString();
+        return MoreObjects.toStringHelper(this)
+                .add("flightId", flightId)
+                .add("airlineIATA", airlineIATA)
+                .add("airlineName", airlineName)
+                .add("airlineFlightId", airlineFlightId)
+                .add("departureAirportIATA", departureAirportIATA)
+                .add("arrivalAirportIATA", arrivalAirportIATA)
+                .add("departureAirportName", departureAirportName)
+                .add("arrivalAirportName", arrivalAirportName)
+                .add("timeOfDeparture", timeOfDeparture)
+                .add("timeOfArrival", timeOfArrival)
+                .add("dateOfOperation", dateOfOperation)
+                .add("scheduledStopovers", scheduledStopovers)
+                .toString();
     }
-
 }

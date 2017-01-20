@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
-@Component
+@Component("netexStaticDataSet")
 @ConfigurationProperties(prefix = "netex-data-sets", locations = "classpath:netex-static-data.yml")
 public class NetexStaticDataSet {
 
@@ -106,6 +106,7 @@ public class NetexStaticDataSet {
     public static class StopPlaceDataSet {
 
         private String name;
+        private String shortName;
         private LocationDataSet location;
 
         public String getName() {
@@ -124,10 +125,19 @@ public class NetexStaticDataSet {
             this.location = location;
         }
 
+        public String getShortName() {
+            return shortName;
+        }
+
+        public void setShortName(String shortName) {
+            this.shortName = shortName;
+        }
+
         @Override
         public String toString() {
             return MoreObjects.toStringHelper(this)
                     .add("name", name)
+                    .add("shortName", shortName)
                     .add("location", location)
                     .toString();
         }

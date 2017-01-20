@@ -3,7 +3,7 @@
   <if condition='property("env").contains("dev")'>
       <then>
           <include resource="org/springframework/boot/logging/logback/base.xml" />
-          <logger name="org.rutebanken" level="DEBUB"/>
+          <logger name="org.rutebanken" level="DEBUG"/>
           <root level="INFO">
               <appender-ref ref="CONSOLE"/>
           </root>

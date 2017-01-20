@@ -65,236 +65,283 @@ netex-data-sets:
   stop-places:
     aes:
       name: Ålesund Lufthavn
+      short-name: Ålesund
       location:
         latitude: 62.558612       
         longitude: 6.115269
     alf:
       name: Alta Lufthavn
+      short-name: Alta
       location:
         latitude: 69.978438
         longitude: 23.347020
     anx:
       name: Andøya Lufthavn
+      short-name: Andenes
       location:
         latitude: 69.310583
         longitude: 16.123909
     bdu:
       name: Bardufoss Lufthavn
+      short-name: Bardufoss
       location:
         latitude: 69.059446
         longitude: 18.538795
     bgo:
       name: Bergen Lufthavn
+      short-name: Bergen
       location:
         latitude: 60.289055
         longitude: 5.228074
     bjf:
       name: Båtsfjord Lufthavn
+      short-name: Båtsfjord
       location:
         latitude: 70.602507
         longitude: 29.692773
     bnn:
       name: Brønnøysund Lufthavn
+      short-name: Brønnøysund
       location:
         latitude: 65.459800
         longitude: 12.209051
     boo:
       name: Bodø Lufthavn
+      short-name: Bodø
       location:
         latitude: 67.272656
         longitude: 14.367526
     bvg:
       name: Berlevåg Lufthavn
+      short-name: Berlevåg
       location:
         latitude: 70.869958
         longitude: 29.029888
     eve:
       name: Harstad/Narvik Lufthavn
+      short-name: Harstad/Narvik
       location:
         latitude: 68.490412 
         longitude: 16.687364
     fde:
       name: Førde Lufthamn
+      short-name: Førde
       location:
         latitude: 61.391174 
         longitude: 5.764381
     fro:
       name: Florø Lufthamn
+      short-name: Florø
       location:
         latitude: 61.585834
         longitude: 5.024494
     haa:
       name: Hasvik Lufthavn
+      short-name: Hasvik
       location:
         latitude:  70.486451
         longitude: 22.146949
     hau:
       name: Haugesund Lufthavn
+      short-name: Haugesund
       location:
         latitude: 59.344379
         longitude: 5.217039
     hft:
       name: Hammerfest Lufthavn
+      short-name: Hammerfest
       location:
         latitude: 70.679787
         longitude: 23.674852
     hov:
       name: Ørsta-Volda Lufthamn
+      short-name: Ørsta/Volda
       location:
         latitude: 62.180063
         longitude: 6.079831
     hvg:
       name: Honningsvåg Lufthavn
+      short-name: Honningsvåg
       location:
         latitude: 71.008747
         longitude: 25.979659
     kkn:
       name: Kirkenes Lufthavn
+      short-name: Kirkenes
       location:
         latitude: 69.723940
         longitude: 29.890999
     krs:
       name: Kristiansand Lufthavn
+      short-name: Kristiansand
       location:
         latitude: 58.202589
         longitude: 8.074475
     ksu:
       name: Kristiansund Lufthavn
+      short-name: Kristiansund
       location:
         latitude: 63.113959
         longitude: 7.825808
     lkl:
       name: Lakselv Lufthavn
+      short-name: Lakselv
       location:
         latitude: 70.066249
         longitude: 24.982287
     lkn:
       name: Leknes Lufthavn
+      short-name: Leknes
       location:
         latitude: 68.153554 
         longitude: 13.614409
     lyr:
       name: Svalbard Lufthavn
+      short-name: Longyearbyen
       location:
         latitude: 78.246804
         longitude: 15.493326
     meh:
       name: Mehamn Lufthavn
+      short-name: Mehamn
       location:
         latitude: 71.027598
         longitude: 27.829237
     mjf:
       name: Mosjøen Lufthavn
+      short-name: Mosjøen
       location:
         latitude: 65.784477
         longitude: 13.217036
     mol:
       name: Molde Lufthavn
+      short-name: Molde
       location:
         latitude: 62.746489 
         longitude: 7.260955
     mqn:
       name: Mo i Rana Lufthavn
+      short-name: Mo i Rana
       location:
         latitude: 66.364769 
         longitude: 14.302811
     nvk:
       name: Narvik Lufthavn
+      short-name: Narvik
       location:
         latitude: 68.435938
         longitude: 17.388101
     ola:
       name: Ørland Lufthavn
+      short-name: Ørland
       location:
         latitude: 63.700070
         longitude: 9.616936
     osl:
       name: Oslo Lufthavn
+      short-name: Oslo
       location:
         latitude: 60.193460
         longitude: 11.099289
     osy:
       name: Namsos Lufthavn
+      short-name: Namsos
       location:
         latitude: 64.472456
         longitude: 11.570914
     ret:
       name: Røst Lufthavn
+      short-name: Røst
       location:
         latitude: 67.527456
         longitude: 12.105909
     rrs:
       name: Røros Lufthavn
+      short-name: Røros
       location:
         latitude: 62.576951
         longitude: 11.352887
     rvk:
       name: Rørvik Lufthavn
+      short-name: Rørvik
       location:
         latitude: 64.839405
         longitude: 11.144920
     sdn:
       name: Sandane Lufthamn
+      short-name: Sandane
       location:
         latitude: 61.829132
         longitude: 6.107743
     skn:
       name: Stokmarknes Lufthavn
+      short-name: Stokmarknes
       location:
         latitude: 68.579518 
         longitude: 15.031755
     sog:
       name: Sogndal Lufthamn
+      short-name: Sogndal
       location:
         latitude: 61.157552 
         longitude: 7.137626
     soj:
       name: Sørkjosen Lufthavn
+      short-name: Sørkjosen
       location:
         latitude: 69.785507 
         longitude: 20.957729
     ssj:
       name: Sandnessjøen Lufthavn
+      short-name: Sandnessjøen
       location:
         latitude: 65.960171
         longitude: 12.476371
     svg:
       name: Stavanger Lufthavn
+      short-name: Stavanger
       location:
         latitude: 58.882237 
         longitude: 5.629675
     svj:
       name: Svolvær Lufthavn
+      short-name: Svolvær
       location:
         latitude: 68.245156 
         longitude: 14.666773
     tos:
       name: Tromsø Lufthavn
+      short-name: Tromsø
       location:
         latitude: 69.679648
         longitude: 18.907161
     trd:
       name: Trondheim Lufthavn
+      short-name: Trondheim
       location:
         latitude: 63.454194 
         longitude: 10.917965
     vaw:
       name: Vardø Lufthavn
+      short-name: Vardø
       location:
         latitude: 70.356312
         longitude: 31.040454
     vdb:
       name: Fagernes Lufthamn
+      short-name: Fagernes
       location:
         latitude: 61.006721
         longitude: 9.294491
     vds:
       name: Vadsø Lufthavn
+      short-name: Vadsø
       location:
         latitude: 70.064130
         longitude: 29.839741
     vry:
       name: Værøy Helikopterhavn
+      short-name: Værøy
       location:
         latitude: 67.654925
         longitude: 12.725583
