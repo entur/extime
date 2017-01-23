@@ -98,12 +98,6 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                         .log(LoggingLevel.INFO, this.getClass().getName(), "Converting to line centric flight data sets")
                         .bean(ScheduledFlightConverter.class, "convertToLineCentricDataSets").id("ConvertToLineDataSetsBeanProcessor")
                         .setProperty(PROPERTY_LINE_DATASETS_LIST_ORIGINAL_BODY, body())
-                        .log(LoggingLevel.INFO, this.getClass().getName(), "Cleaning NeTEx output directory : ${properties:netex.generated.output.path}")
-                        .process(exchange -> Files.list(Paths.get(exchange.getContext().resolvePropertyPlaceholders("{{netex.generated.output.path}}")))
-                                .filter(Files::isRegularFile)
-                                .map(Path::toFile)
-                                .forEach(File::delete)
-                        ).id("CleanNetexOutputPathProcessor")
                         .log(LoggingLevel.INFO, "Converting common aviation data to NeTEx")
                         .to("direct:convertCommonDataToNetex")
                         .setBody(simpleF("exchangeProperty[%s]", List.class, PROPERTY_LINE_DATASETS_LIST_ORIGINAL_BODY))
@@ -207,6 +201,12 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
 
         from("direct:convertCommonDataToNetex")
                 .routeId("CommonDataToNetexConverter")
+                .log(LoggingLevel.INFO, this.getClass().getName(), "Cleaning NeTEx output directory : ${properties:netex.generated.output.path}")
+                .process(exchange -> Files.list(Paths.get(exchange.getContext().resolvePropertyPlaceholders("{{netex.generated.output.path}}")))
+                        .filter(Files::isRegularFile)
+                        .map(Path::toFile)
+                        .forEach(File::delete)
+                ).id("CleanNetexOutputPathProcessor")
                 .log(LoggingLevel.INFO, this.getClass().getName(), "Converting common aviation data to NeTEx")
                 .bean(CommonDataToNetexConverter.class, "convertToNetex").id("ConvertCommonDataToNetexProcessor")
                 .marshal(jaxbDataFormat)
@@ -278,16 +278,20 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
 
         from("direct:compressNetexAndSendToStorage")
                 .routeId("CompressNetexAndSendToStorage")
+
                 .setHeader(Exchange.FILE_NAME, simple("avinor-netex_${bean:dateUtils.timestamp()}.zip"))
                 .bean(AvinorTimetableUtils.class, "compressNetexFiles")
                 .log(LoggingLevel.INFO, this.getClass().getName(), "Done compressing all files to zip archive : ${header.CamelFileName}")
+
                 .process(exchange -> exchange.getIn().setHeader(HEADER_MESSAGE_CORRELATION_ID, UUID.randomUUID().toString()))
                 .bean(AvinorTimetableUtils.class, "uploadBlobToStorage").id("UploadZipToBlobStore")
                 .log(LoggingLevel.INFO, this.getClass().getName(), "Done storage upload of file : ${header.CamelFileName}")
+
                 .setHeader(HEADER_MESSAGE_PROVIDER_ID, simple("${properties:blobstore.gcs.provider.id}", Long.class))
                 .setHeader(HEADER_MESSAGE_FILE_HANDLE, simple("${properties:blobstore.gcs.blob.path}${header.CamelFileName}"))
                 .setHeader(HEADER_MESSAGE_FILE_NAME, simple("${header.CamelFileName}"))
                 .setBody(constant(null))
+
                 .log(LoggingLevel.INFO, this.getClass().getName(), "Notifying marduk queue about NeTEx export")
                 .to("activemq:queue:{{queue.upload.destination.name}}?exchangePattern=InOnly")
         ;

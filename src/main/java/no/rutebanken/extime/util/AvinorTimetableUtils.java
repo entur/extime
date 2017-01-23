@@ -144,7 +144,7 @@ public class AvinorTimetableUtils {
         }
     }
 
-    public void compressNetexFiles(@Header(Exchange.FILE_NAME) String compressedFileName) throws Exception {
+    public void compressNetexFiles(Exchange exchange, @Header(Exchange.FILE_NAME) String compressedFileName) throws Exception {
         Path netexOutputPath = Paths.get(generatedOutputPath);
         Path zipOutputPath = Paths.get(compressedOutputPath);
         Path zipOutputFilePath = Paths.get(zipOutputPath.toString(), compressedFileName);
@@ -168,6 +168,8 @@ public class AvinorTimetableUtils {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
+        exchange.getIn().setHeader(Exchange.FILE_NAME_PRODUCED, zipOutputFilePath.toAbsolutePath());
     }
 
     public void uploadBlobToStorage(@Header(Exchange.FILE_NAME) String compressedFileName,
