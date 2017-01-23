@@ -295,7 +295,7 @@ public class LineDataToNetexConverter {
             LocalDate dateOfOperation = journeyFlights.get(i).getDateOfOperation();
 
             String dayTypeIdSuffix = localContext.get(AIRLINE_IATA) + StringUtils.remove(localContext.get(LINE_DESIGNATION), DASH)
-                    + COLON + dateOfOperation.format(DateTimeFormatter.ofPattern("EEE_dd"));
+                    + DASH + dateOfOperation.format(DateTimeFormatter.ofPattern("EEE_dd"));
             //String dayTypeIdSuffix = dateOfOperation.format(DateTimeFormatter.ofPattern("EEE_dd"));
 
             String dayTypeId = NetexObjectIdCreator.createDayTypeId(AVINOR_XMLNS, dayTypeIdSuffix);
@@ -311,7 +311,7 @@ public class LineDataToNetexConverter {
             dayTypeStructure.getDayTypeRef().add(dayTypeRefStructElement);
 
             String assignmentIdSuffix = localContext.get(AIRLINE_IATA) + StringUtils.remove(localContext.get(LINE_DESIGNATION), DASH)
-                    + COLON + dateOfOperation.format(DateTimeFormatter.ofPattern("EEE_dd"));
+                    + DASH + dateOfOperation.format(DateTimeFormatter.ofPattern("EEE_dd"));
             //String assignmentIdSuffix = dateOfOperation.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
 
             DayTypeAssignment dayTypeAssignment;
