@@ -7,6 +7,7 @@ public final class Constants {
     // common application constants
     public static final String EMPTY = "";
     public static final String DASH = "-";
+    public static final String UNDERSCORE = "_";
     public static final String COLON = ":";
     public static final String DEFAULT_ZONE_ID = "UTC";
     public static final String DEFAULT_LANGUAGE = "no";

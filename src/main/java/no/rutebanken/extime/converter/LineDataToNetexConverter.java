@@ -1,5 +1,6 @@
 package no.rutebanken.extime.converter;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -130,7 +131,8 @@ public class LineDataToNetexConverter {
                 pointsOnRoute.getPointOnRoute().add(pointOnRoute);
             }
 
-            Route route = netexObjectFactory.createRoute(line.getId(), flightRoute.getRouteDesignation(), flightRoute.getRouteName(), pointsOnRoute);
+            String objectId = Joiner.on(UNDERSCORE).skipNulls().join(localContext.get(AIRLINE_IATA), flightRoute.getRouteDesignation());
+            Route route = netexObjectFactory.createRoute(line.getId(), objectId, flightRoute.getRouteName(), pointsOnRoute);
             routes.add(route);
 
             if (!routeIdDesignationMap.containsKey(route.getId())) {
