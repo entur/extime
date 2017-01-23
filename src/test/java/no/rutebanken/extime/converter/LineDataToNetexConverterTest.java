@@ -125,7 +125,7 @@ public class LineDataToNetexConverterTest {
         Assertions.assertThat(line.getRoutes().getRouteRef())
                 .hasSize(2)
                 .extracting("ref")
-                .contains("AVI:Route:OSL-BGO", "AVI:Route:BGO-OSL");
+                .contains("AVI:Route:DY_OSL-BGO", "AVI:Route:DY_BGO-OSL");
 
         // check routes
         List<JAXBElement<? extends LinkSequence_VersionStructure>> routeElements = serviceFrame.getRoutes().getRoute_();
@@ -138,7 +138,7 @@ public class LineDataToNetexConverterTest {
         Assertions.assertThat(routes)
                 .hasSize(2)
                 .extracting("id", "name.value", "lineRef.value.ref")
-                .contains(tuple("AVI:Route:OSL-BGO", "Oslo-Bergen", "AVI:Line:DY-OSL-BGO"), tuple("AVI:Route:BGO-OSL", "Bergen-Oslo", "AVI:Line:DY-OSL-BGO"));
+                .contains(tuple("AVI:Route:DY_OSL-BGO", "Oslo-Bergen", "AVI:Line:DY-OSL-BGO"), tuple("AVI:Route:DY_BGO-OSL", "Bergen-Oslo", "AVI:Line:DY-OSL-BGO"));
 
         // check journey patterns
         List<JAXBElement<?>> journeyPatternElements = serviceFrame.getJourneyPatterns().getJourneyPattern_OrJourneyPatternView();
@@ -151,7 +151,7 @@ public class LineDataToNetexConverterTest {
         Assertions.assertThat(journeyPatterns)
                 .hasSize(2)
                 .extracting("routeRef.ref")
-                .contains("AVI:Route:OSL-BGO", "AVI:Route:BGO-OSL");
+                .contains("AVI:Route:DY_OSL-BGO", "AVI:Route:DY_BGO-OSL");
 
         journeyPatterns.forEach(journeyPattern -> Assertions.assertThat(journeyPattern.getPointsInSequence()
                 .getPointInJourneyPatternOrStopPointInJourneyPatternOrTimingPointInJourneyPattern()).hasSize(2));
