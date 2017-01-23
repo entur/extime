@@ -98,13 +98,20 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                         .log(LoggingLevel.INFO, this.getClass().getName(), "Converting to line centric flight data sets")
                         .bean(ScheduledFlightConverter.class, "convertToLineCentricDataSets").id("ConvertToLineDataSetsBeanProcessor")
                         .setProperty(PROPERTY_LINE_DATASETS_LIST_ORIGINAL_BODY, body())
+                        .log(LoggingLevel.INFO, this.getClass().getName(), "Cleaning NeTEx output directory : ${properties:netex.generated.output.path}")
+                        .process(exchange -> Files.list(Paths.get(exchange.getContext().resolvePropertyPlaceholders("{{netex.generated.output.path}}")))
+                                .filter(Files::isRegularFile)
+                                .map(Path::toFile)
+                                .forEach(File::delete)
+                        ).id("CleanNetexOutputPathProcessor")
                         .log(LoggingLevel.INFO, "Converting common aviation data to NeTEx")
                         .to("direct:convertCommonDataToNetex")
                         .setBody(simpleF("exchangeProperty[%s]", List.class, PROPERTY_LINE_DATASETS_LIST_ORIGINAL_BODY))
-                        .log(LoggingLevel.INFO, "Converting flights to NeTEx")
+                        .log(LoggingLevel.INFO, "Converting line data to NeTEx")
                         .to("direct:convertLineDataSetsToNetex")
                         .log(LoggingLevel.INFO, "Compressing XML files and send to storage")
-                        .to("controlbus:route?routeId=CompressAndSendToStorage&action=start")
+                        //.to("controlbus:route?routeId=CompressAndSendToStorage&action=start")
+                        .to("direct:compressNetexAndSendToStorage")
                 .end()
         ;
 
@@ -214,14 +221,6 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
         from("direct:convertLineDataSetsToNetex")
                 .routeId("LineDataSetsToNetexConverter")
                 .log(LoggingLevel.INFO, this.getClass().getName(), "Converting line centric data sets to NeTEx")
-
-                .log(LoggingLevel.INFO, this.getClass().getName(), "Purging netex output path : ${properties:netex.generated.output.path}")
-                .process(exchange -> Files.walk(Paths.get(exchange.getContext().resolvePropertyPlaceholders("{{netex.generated.output.path}}")))
-                        .filter(Files::isRegularFile)
-                        .map(Path::toFile)
-                        .forEach(File::delete)
-                )
-
                 .split(body())//.parallelProcessing()
                     .process(exchange -> {
                         LineDataSet originalBody = exchange.getIn().getBody(LineDataSet.class);
@@ -229,7 +228,6 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                         String enrichParameter = originalBody.getAirlineIata();
                         exchange.getIn().setBody(enrichParameter);
                     }).id("AirlineIataPreEnrichProcessor")
-
                     .setHeader(HEADER_EXTIME_FETCH_RESOURCE_ENDPOINT, constant("direct:fetchAndCacheAirlineName"))
                     .enrich("direct:retrieveResource", new AirlineNameEnricherAggregationStrategy())
                     .bean(LineDataToNetexConverter.class, "convertToNetex").id("ConvertLineDataSetsToNetexProcessor")
@@ -256,7 +254,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .log(LoggingLevel.INFO, this.getClass().getName(), "Done compressing all files to zip archive : ${header.CamelFileName}")
 
                 .process(exchange -> exchange.getIn().setHeader(HEADER_MESSAGE_CORRELATION_ID, UUID.randomUUID().toString()))
-                .bean(AvinorTimetableUtils.class, "uploadBlobToStorage").id("UploadZipToBlobStore")
+                // .bean(AvinorTimetableUtils.class, "uploadBlobToStorage").id("UploadZipToBlobStore")
                 .log(LoggingLevel.INFO, this.getClass().getName(), "Done storage upload of file : ${header.CamelFileName}")
 
                 .setHeader(HEADER_MESSAGE_PROVIDER_ID, simple("${properties:blobstore.gcs.provider.id}", Long.class))
@@ -276,6 +274,22 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                     });
                     stop.start();
                 })
+        ;
+
+        from("direct:compressNetexAndSendToStorage")
+                .routeId("CompressNetexAndSendToStorage")
+                .setHeader(Exchange.FILE_NAME, simple("avinor-netex_${bean:dateUtils.timestamp()}.zip"))
+                .bean(AvinorTimetableUtils.class, "compressNetexFiles")
+                .log(LoggingLevel.INFO, this.getClass().getName(), "Done compressing all files to zip archive : ${header.CamelFileName}")
+                .process(exchange -> exchange.getIn().setHeader(HEADER_MESSAGE_CORRELATION_ID, UUID.randomUUID().toString()))
+                .bean(AvinorTimetableUtils.class, "uploadBlobToStorage").id("UploadZipToBlobStore")
+                .log(LoggingLevel.INFO, this.getClass().getName(), "Done storage upload of file : ${header.CamelFileName}")
+                .setHeader(HEADER_MESSAGE_PROVIDER_ID, simple("${properties:blobstore.gcs.provider.id}", Long.class))
+                .setHeader(HEADER_MESSAGE_FILE_HANDLE, simple("${properties:blobstore.gcs.blob.path}${header.CamelFileName}"))
+                .setHeader(HEADER_MESSAGE_FILE_NAME, simple("${header.CamelFileName}"))
+                .setBody(constant(null))
+                .log(LoggingLevel.INFO, this.getClass().getName(), "Notifying marduk queue about NeTEx export")
+                .to("activemq:queue:{{queue.upload.destination.name}}?exchangePattern=InOnly")
         ;
 
         from("direct:dumpFetchedFlightsToFile")

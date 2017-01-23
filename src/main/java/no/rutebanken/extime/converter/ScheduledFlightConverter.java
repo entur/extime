@@ -86,8 +86,8 @@ public class ScheduledFlightConverter {
         OffsetDateTime requestPeriodToDateTime = requestPeriodToDate.atTime(offsetMidnight);
 
         // TODO check for codeshare flights here, use the infrequent designator enumset group, to only check international airlines
-        List<Flight> filteredFlights = filterValidFlights(scheduledFlights);
-        //List<Flight> filteredFlights = scheduledFlights;
+        //List<Flight> filteredFlights = filterValidFlights(scheduledFlights);
+        List<Flight> filteredFlights = scheduledFlights;
 
         Map<String, List<Flight>> flightsByDepartureAirport = filteredFlights.stream()
                 .collect(Collectors.groupingBy(Flight::getDepartureStation));

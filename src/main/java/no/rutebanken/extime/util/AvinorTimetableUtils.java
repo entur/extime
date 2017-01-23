@@ -16,19 +16,22 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.zeroturnaround.zip.ZipUtil;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.transform.stream.StreamSource;
+import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.*;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.HEADER_EXTIME_HTTP_URI;
 import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEADER_MESSAGE_CORRELATION_ID;
@@ -37,6 +40,17 @@ import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEA
 public class AvinorTimetableUtils {
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
+
+    private static final String XML_GLOB = "glob:*.xml";
+
+    @Value("${netex.generated.output.path}")
+    private String generatedOutputPath;
+
+    @Value("${netex.compressed.output.path}")
+    private String compressedOutputPath;
+
+    @Value("${avinor.timetable.period.months}")
+    private int numberOfMonthsInPeriod;
 
     @Value("${blobstore.gcs.credential.path}")
     private String credentialPath;
@@ -106,6 +120,54 @@ public class AvinorTimetableUtils {
             }
         }
         return filteredFlights;
+    }
+
+    public void cleanNetexOutputPath() throws Exception {
+        Path netexOutputPath = Paths.get(generatedOutputPath);
+        PathMatcher matcher = netexOutputPath.getFileSystem().getPathMatcher(XML_GLOB);
+        Predicate<Path> isRegularFile = path -> Files.isRegularFile(path);
+
+        if (Files.exists(netexOutputPath) && Files.isDirectory(netexOutputPath)) {
+            try (Stream<Path> stream = Files.list(netexOutputPath)) {
+                stream.filter(isRegularFile.and(path -> matcher.matches(path.getFileName()))).forEach((path) -> {
+                    try {
+                        logger.info("Deleting '{}'", path.getFileName().toString());
+                        Files.delete(path);
+                    } catch (IOException e) {
+                        logger.info("Failed to delete '{}'", path.toAbsolutePath());
+                        throw new RuntimeException("File path delete error : " + path.getFileName().toString());
+                    }
+                });
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    public void compressNetexFiles(@Header(Exchange.FILE_NAME) String compressedFileName) throws Exception {
+        Path netexOutputPath = Paths.get(generatedOutputPath);
+        Path zipOutputPath = Paths.get(compressedOutputPath);
+        Path zipOutputFilePath = Paths.get(zipOutputPath.toString(), compressedFileName);
+        PathMatcher matcher = netexOutputPath.getFileSystem().getPathMatcher(XML_GLOB);
+        Predicate<Path> isRegularFile = path -> Files.isRegularFile(path, LinkOption.NOFOLLOW_LINKS);
+
+        if (!Files.exists(zipOutputPath)) {
+            try {
+                Files.createDirectory(zipOutputPath);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        try (Stream<Path> stream = Files.list(netexOutputPath)) {
+            File[] files = stream
+                    .filter(isRegularFile.and(path -> matcher.matches(path.getFileName())))
+                    .map(Path::toFile)
+                    .toArray(File[]::new);
+            ZipUtil.packEntries(files, zipOutputFilePath.toFile());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void uploadBlobToStorage(@Header(Exchange.FILE_NAME) String compressedFileName,

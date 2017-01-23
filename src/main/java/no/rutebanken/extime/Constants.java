@@ -8,7 +8,6 @@ public final class Constants {
     public static final String EMPTY = "";
     public static final String DASH = "-";
     public static final String COLON = ":";
-    public static final String EQUIVALENT_SYMBOL = "<=>";
     public static final String DEFAULT_ZONE_ID = "UTC";
     public static final String DEFAULT_LANGUAGE = "no";
     public static final int DEFAULT_START_INCLUSIVE = 1111111;
