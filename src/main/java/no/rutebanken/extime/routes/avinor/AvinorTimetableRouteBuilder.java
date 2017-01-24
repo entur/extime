@@ -22,6 +22,7 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.converter.jaxb.JaxbDataFormat;
 import org.apache.camel.processor.aggregate.AggregationStrategy;
 import org.apache.camel.processor.aggregate.zipfile.ZipAggregationStrategy;
+import org.apache.commons.lang3.StringUtils;
 import org.rutebanken.netex.model.CompositeFrame;
 import org.rutebanken.netex.model.Line;
 import org.rutebanken.netex.model.PublicationDeliveryStructure;
@@ -45,6 +46,8 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
     public static final String HEADER_TIMETABLE_SMALL_AIRPORT_RANGE = "TimetableSmallAirportRange";
     public static final String HEADER_TIMETABLE_LARGE_AIRPORT_RANGE = "TimetableLargeAirportRange";
     public static final String HEADER_MESSAGE_CORRELATION_ID = "RutebankenCorrelationId";
+    public static final String PROPERTY_STATIC_FLIGHTS_XML_FILE = "StaticFlightXmlFile";
+    public static final String PROPERTY_OFFLINE_MODE = "OfflineMode";
 
     static final String HEADER_TIMETABLE_STOP_VISIT_TYPE = "TimetableStopVisitType";
     static final String HEADER_LOWER_RANGE_ENDPOINT = "LowerRangeEndpoint";
@@ -73,40 +76,52 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
         flightsJaxbDataFormat.setContextPath(Flights.class.getPackage().getName());
         jaxbDataFormat.setPrettyPrint(true);
         jaxbDataFormat.setEncoding("UTF-8");
-        
+
         from("{{avinor.timetable.scheduler.consumer}}")
                 .routeId("AvinorTimetableSchedulerStarter")
+                .process(exchange -> {
+                    String staticDataFile = System.getProperty("avinor.timetable.dump.file");
+                    exchange.setProperty(PROPERTY_STATIC_FLIGHTS_XML_FILE, StringUtils.isNotEmpty(staticDataFile) ? staticDataFile : null);
+                })
+                .choice()
+                    .when(simple("${properties:avinor.timetable.dump.enabled:false} == true"))
+                        .to("direct:fetchFlights")
+                        .to("direct:dumpFetchedFlightsToFile")
+                    .when(simpleF("${exchangeProperty[%s]} != null", String.class, PROPERTY_STATIC_FLIGHTS_XML_FILE))
+                        .log(LoggingLevel.INFO, this.getClass().getName(), "Static run from XML file : ${exchangeProperty[StaticFlightXmlFile]}")
+                        .setProperty(PROPERTY_OFFLINE_MODE, simple("true", Boolean.class))
+                        .bean(AvinorTimetableUtils.class, "generateFlightsFromFeedDump")
+                        .to("direct:convertFlights")
+                    .otherwise()
+                        .setProperty(PROPERTY_OFFLINE_MODE, simple("false", Boolean.class))
+                        .to("direct:fetchFlights")
+                        .to("direct:convertFlights")
+                .end()
+        ;
 
+        from("direct:fetchFlights")
+                .routeId("FetchFlights")
+                .log(LoggingLevel.INFO, this.getClass().getName(), "Fetching data from feed")
                 .process(new AirportIataProcessor()).id("TimetableAirportIATAProcessor")
                 .bean(DateUtils.class, "generateDateRanges").id("TimetableDateRangeProcessor")
                 .split(body(), new ScheduledFlightListAggregationStrategy())//.parallelProcessing() // TODO enable parallell processing
                     .log(LoggingLevel.DEBUG, this.getClass().getName(), "==========================================")
                     .log(LoggingLevel.DEBUG, this.getClass().getName(), "Processing airport with IATA code: ${body}")
                     .setHeader(HEADER_EXTIME_RESOURCE_CODE, simple("${body}"))
-                    .to("direct:fetchAndCacheAirportName").id("FetchAirportNameProcessor")
                     .to("direct:fetchTimetableForAirport").id("FetchTimetableProcessor")
                     .log(LoggingLevel.DEBUG, this.getClass().getName(), "Flights fetched for ${header.ExtimeResourceCode}")
                 .end()
+        ;
 
-                //.bean(AvinorTimetableUtils.class, "generateFlightsFromFeedDump") // TODO create system property to enable this
-
-                .choice()
-                    .when(simple("${properties:avinor.timetable.dump.enabled:false} == true"))
-                        .log(LoggingLevel.INFO, this.getClass().getName(), "Dumping data to file")
-                        .to("direct:dumpFetchedFlightsToFile")
-                    .otherwise()
-                        .log(LoggingLevel.INFO, this.getClass().getName(), "Converting to line centric flight data sets")
-                        .bean(ScheduledFlightConverter.class, "convertToLineCentricDataSets").id("ConvertToLineDataSetsBeanProcessor")
-                        .setProperty(PROPERTY_LINE_DATASETS_LIST_ORIGINAL_BODY, body())
-                        .log(LoggingLevel.INFO, "Converting common aviation data to NeTEx")
-                        .to("direct:convertCommonDataToNetex")
-                        .setBody(simpleF("exchangeProperty[%s]", List.class, PROPERTY_LINE_DATASETS_LIST_ORIGINAL_BODY))
-                        .log(LoggingLevel.INFO, "Converting line data to NeTEx")
-                        .to("direct:convertLineDataSetsToNetex")
-                        .log(LoggingLevel.INFO, "Compressing XML files and send to storage")
-                        //.to("controlbus:route?routeId=CompressAndSendToStorage&action=start")
-                        .to("direct:compressNetexAndSendToStorage")
-                .end()
+        from("direct:convertFlights")
+                .routeId("ConvertFlights")
+                .log(LoggingLevel.INFO, this.getClass().getName(), "Converting to line centric flight data sets")
+                .bean(ScheduledFlightConverter.class, "convertToLineCentricDataSets").id("ConvertToLineDataSetsBeanProcessor")
+                .setProperty(PROPERTY_LINE_DATASETS_LIST_ORIGINAL_BODY, body())
+                .to("direct:convertCommonDataToNetex")
+                .setBody(simpleF("exchangeProperty[%s]", List.class, PROPERTY_LINE_DATASETS_LIST_ORIGINAL_BODY))
+                .to("direct:convertLineDataSetsToNetex")
+                .to("direct:compressNetexAndSendToStorage")
         ;
 
         from("direct:fetchAndCacheAirportName")
@@ -201,6 +216,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
 
         from("direct:convertCommonDataToNetex")
                 .routeId("CommonDataToNetexConverter")
+                .log(LoggingLevel.INFO, "Converting common line data to NeTEx")
                 .log(LoggingLevel.INFO, this.getClass().getName(), "Cleaning NeTEx output directory : ${properties:netex.generated.output.path}")
                 .process(exchange -> Files.list(Paths.get(exchange.getContext().resolvePropertyPlaceholders("{{netex.generated.output.path}}")))
                         .filter(Files::isRegularFile)
@@ -228,7 +244,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                         String enrichParameter = originalBody.getAirlineIata();
                         exchange.getIn().setBody(enrichParameter);
                     }).id("AirlineIataPreEnrichProcessor")
-                    .setHeader(HEADER_EXTIME_FETCH_RESOURCE_ENDPOINT, constant("direct:fetchAndCacheAirlineName"))
+                    .setHeader(HEADER_EXTIME_FETCH_RESOURCE_ENDPOINT, constant("direct:fetchAndCacheAirlineName")) // TODO add support for offline mode for this enricher
                     .enrich("direct:retrieveResource", new AirlineNameEnricherAggregationStrategy())
                     .bean(LineDataToNetexConverter.class, "convertToNetex").id("ConvertLineDataSetsToNetexProcessor")
                     .process(exchange -> exchange.getIn().setHeader(HEADER_FILE_NAME_GENERATED, generateFilename(exchange))).id("GenerateFileNameProcessor")
@@ -278,7 +294,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
 
         from("direct:compressNetexAndSendToStorage")
                 .routeId("CompressNetexAndSendToStorage")
-
+                .log(LoggingLevel.INFO, "Compressing XML files and send to storage")
                 .setHeader(Exchange.FILE_NAME, simple("avinor-netex_${bean:dateUtils.timestamp()}.zip"))
                 .bean(AvinorTimetableUtils.class, "compressNetexFiles")
                 .log(LoggingLevel.INFO, this.getClass().getName(), "Done compressing all files to zip archive : ${header.CamelFileName}")
@@ -299,13 +315,14 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
         from("direct:dumpFetchedFlightsToFile")
                 .autoStartup("{{avinor.timetable.dump.enabled}}")
                 .routeId("FetchedFlightsDumper")
+                .log(LoggingLevel.INFO, this.getClass().getName(), "Dumping fetched flights to file")
                 .bean(AvinorTimetableUtils.class, "createFlightsElement")
                 .marshal(flightsJaxbDataFormat)
                 .setHeader(Exchange.FILE_NAME, simple("avinor-flights_${bean:dateUtils.timestamp()}.xml"))
                 .setHeader(Exchange.CONTENT_TYPE, constant("text/xml;charset=utf-8"))
                 .setHeader(Exchange.CHARSET_NAME, constant("utf-8"))
                 .to("file:{{avinor.timetable.dump.output.path}}")
-                .log(LoggingLevel.INFO, "Successfully dumped all flights to file : ${header.CamelFileName}")
+                .log(LoggingLevel.INFO, "Successfully dumped all flights to file : ${header.CamelFileNameProduced}")
         ;
     }
 

@@ -9,6 +9,7 @@ import no.rutebanken.extime.model.AirportIATA;
 import no.rutebanken.extime.model.ServiceType;
 import no.rutebanken.extime.model.StopVisitType;
 import org.apache.camel.Exchange;
+import org.apache.camel.ExchangeProperty;
 import org.apache.camel.Header;
 import org.apache.commons.lang3.EnumUtils;
 import org.rutebanken.helper.gcp.BlobStoreHelper;
@@ -35,6 +36,7 @@ import java.util.stream.Stream;
 
 import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.HEADER_EXTIME_HTTP_URI;
 import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEADER_MESSAGE_CORRELATION_ID;
+import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.PROPERTY_STATIC_FLIGHTS_XML_FILE;
 
 @Component
 public class AvinorTimetableUtils {
@@ -90,9 +92,19 @@ public class AvinorTimetableUtils {
         return objectFactory.createFlights(flights);
     }
 
+/*
     public List<Flight> generateFlightsFromFeedDump() throws Exception {
         ArrayList<Flight> generatedFlights = Lists.newArrayList();
         Flights flightStructure = generateObjectsFromXml("/xml/testdata/avinor-flights_20170118-203723.xml", Flights.class);
+        List<Flight> flights = flightStructure.getFlight();
+        generatedFlights.addAll(flights);
+        return generatedFlights;
+    }
+*/
+
+    public List<Flight> generateFlightsFromFeedDump(@ExchangeProperty(PROPERTY_STATIC_FLIGHTS_XML_FILE) String xmlFile) throws Exception {
+        ArrayList<Flight> generatedFlights = Lists.newArrayList();
+        Flights flightStructure = generateObjectsFromXml(xmlFile, Flights.class);
         List<Flight> flights = flightStructure.getFlight();
         generatedFlights.addAll(flights);
         return generatedFlights;

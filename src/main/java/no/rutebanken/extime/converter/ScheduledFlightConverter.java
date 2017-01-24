@@ -11,10 +11,7 @@ import no.rutebanken.extime.config.NetexStaticDataSet;
 import no.rutebanken.extime.config.NetexStaticDataSet.StopPlaceDataSet;
 import no.rutebanken.extime.model.*;
 import no.rutebanken.extime.util.AvinorTimetableUtils;
-import org.apache.camel.Endpoint;
-import org.apache.camel.EndpointInject;
-import org.apache.camel.ProducerTemplate;
-import org.apache.camel.TypeConverter;
+import org.apache.camel.*;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.EnumUtils;
 import org.apache.commons.lang3.tuple.ImmutableTriple;
@@ -39,6 +36,7 @@ import java.util.stream.Stream;
 import static no.rutebanken.extime.Constants.*;
 import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.HEADER_EXTIME_HTTP_URI;
 import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.HEADER_EXTIME_URI_PARAMETERS;
+import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.PROPERTY_OFFLINE_MODE;
 
 @Component(value = "scheduledFlightConverter")
 public class ScheduledFlightConverter {
@@ -74,7 +72,7 @@ public class ScheduledFlightConverter {
         stopPlaceDataSets = netexStaticDataSet.getStopPlaces();
     }
 
-    public List<LineDataSet> convertToLineCentricDataSets(List<Flight> scheduledFlights) {
+    public List<LineDataSet> convertToLineCentricDataSets(@ExchangeProperty(PROPERTY_OFFLINE_MODE) Boolean offlineMode, List<Flight> scheduledFlights) {
 
         // TODO For now we create a separate from- and to date in converter, but this should actually
         // TODO come as input headers from previous date range generator, to be 100% sure these are always the same
@@ -86,8 +84,13 @@ public class ScheduledFlightConverter {
         OffsetDateTime requestPeriodToDateTime = requestPeriodToDate.atTime(offsetMidnight);
 
         // TODO check for codeshare flights here, use the infrequent designator enumset group, to only check international airlines
-        List<Flight> filteredFlights = filterValidFlights(scheduledFlights);
-        //List<Flight> filteredFlights = scheduledFlights;
+
+        List<Flight> filteredFlights;
+        if (offlineMode) {
+            filteredFlights = scheduledFlights;
+        } else {
+            filteredFlights = filterValidFlights(scheduledFlights);
+        }
 
         Map<String, List<Flight>> flightsByDepartureAirport = filteredFlights.stream()
                 .collect(Collectors.groupingBy(Flight::getDepartureStation));
