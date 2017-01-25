@@ -49,6 +49,9 @@ public class NetexObjectFactory {
         dayOfWeekMap.put(DayOfWeek.SUNDAY, DayOfWeekEnumeration.SUNDAY);
     }
 
+    private Map<String, Route> routes = new HashMap<>();
+    private Map<String, DestinationDisplay> destinationDisplays = new HashMap<>();
+
     public PublicationDeliveryStructure createPublicationDeliveryStructure(OffsetDateTime publicationTimestamp, JAXBElement<CompositeFrame> compositeFrame, String lineName) {
         NetexStaticDataSet.OrganisationDataSet avinorDataSet = netexStaticDataSet.getOrganisations().get(AVINOR_XMLNS.toLowerCase());
         PublicationDeliveryStructure.DataObjects dataObjects = objectFactory.createPublicationDeliveryStructureDataObjects();
@@ -220,7 +223,7 @@ public class NetexObjectFactory {
     }
 
     public JAXBElement<ServiceFrame> createServiceFrame(OffsetDateTime publicationTimestamp, String airlineName,
-            String airlineIata, List<RoutePoint> routePoints, List<Route> routes, Line line, List<JourneyPattern> journeyPatterns) {
+                                                        String airlineIata, List<RoutePoint> routePoints, List<Route> routes, Line line, List<DestinationDisplay> destinationDisplays, List<JourneyPattern> journeyPatterns) {
 
         String networkId = NetexObjectIdCreator.createNetworkId(AVINOR_XMLNS, airlineIata);
 
@@ -242,6 +245,9 @@ public class NetexObjectFactory {
         LinesInFrame_RelStructure linesInFrame = objectFactory.createLinesInFrame_RelStructure();
         linesInFrame.getLine_().add(objectFactory.createLine(line));
 
+        DestinationDisplaysInFrame_RelStructure destinationDisplayStruct = objectFactory.createDestinationDisplaysInFrame_RelStructure()
+                .withDestinationDisplay(destinationDisplays);
+
         JourneyPatternsInFrame_RelStructure journeyPatternsInFrame = objectFactory.createJourneyPatternsInFrame_RelStructure();
         for (JourneyPattern journeyPattern : journeyPatterns) {
             JAXBElement<JourneyPattern> journeyPatternElement = objectFactory.createJourneyPattern(journeyPattern);
@@ -258,6 +264,7 @@ public class NetexObjectFactory {
                 .withRoutePoints(routePointsInFrame)
                 .withRoutes(routesInFrame)
                 .withLines(linesInFrame)
+                .withDestinationDisplays(destinationDisplayStruct)
                 .withJourneyPatterns(journeyPatternsInFrame);
 
         return objectFactory.createServiceFrame(serviceFrame);
@@ -466,6 +473,44 @@ public class NetexObjectFactory {
                 .withScheduledStopPointRef(stopPointRefStructElement);
     }
 
+    public DestinationDisplay getDestinationDisplay(String objectId) {
+        if (destinationDisplays.containsKey(objectId)) {
+            return destinationDisplays.get(objectId);
+        } else {
+            throw new RuntimeException("Missing reference to destination display");
+        }
+    }
+
+    public DestinationDisplay createDestinationDisplay(String objectId) {
+        String destinationDisplayId = NetexObjectIdCreator.createDestinationDisplayId(AVINOR_XMLNS, objectId);
+
+        return objectFactory.createDestinationDisplay()
+                .withVersion(VERSION_ONE)
+                .withId(destinationDisplayId);
+    }
+
+    public DestinationDisplay getDestinationDisplay(String objectId, String frontText) {
+        return destinationDisplays.computeIfAbsent(objectId, s -> objectFactory.createDestinationDisplay()
+                .withVersion(VERSION_ONE)
+                .withId(NetexObjectIdCreator.createDestinationDisplayId(AVINOR_XMLNS, objectId))
+                .withFrontText(createMultilingualString(frontText)));
+    }
+
+    public DestinationDisplay createDestinationDisplay(String objectId, String frontText, boolean isStopDisplay) {
+        String destinationDisplayId = NetexObjectIdCreator.createDestinationDisplayId(AVINOR_XMLNS, objectId);
+
+        DestinationDisplay destinationDisplay = objectFactory.createDestinationDisplay()
+                .withVersion(VERSION_ONE)
+                .withId(destinationDisplayId)
+                .withFrontText(createMultilingualString(frontText));
+
+        if (isStopDisplay && !destinationDisplays.containsKey(destinationDisplayId)) {
+            destinationDisplays.put(destinationDisplayId, destinationDisplay);
+        }
+
+        return destinationDisplay;
+    }
+
     public ServiceJourney createServiceJourney(String lineId, String flightId, DayTypeRefs_RelStructure dayTypeRefsStruct,
             String journeyPatternId, TimetabledPassingTimes_RelStructure passingTimesRelStruct) {
 
@@ -645,6 +690,11 @@ public class NetexObjectFactory {
         return objectFactory.createDayTypeRefStructure()
                 .withVersion(VERSION_ONE)
                 .withRef(dayTypeId);
+    }
+
+    public void clearReferentials(){
+        routes.clear();
+        destinationDisplays.clear();
     }
 
 }

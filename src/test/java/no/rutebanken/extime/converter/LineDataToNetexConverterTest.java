@@ -2,10 +2,8 @@ package no.rutebanken.extime.converter;
 
 import com.google.common.collect.Lists;
 import no.rutebanken.extime.config.CamelRouteDisabler;
-import no.rutebanken.extime.model.AvailabilityPeriod;
-import no.rutebanken.extime.model.FlightRoute;
-import no.rutebanken.extime.model.LineDataSet;
-import no.rutebanken.extime.model.ScheduledFlight;
+import no.rutebanken.extime.fixtures.LineDataSetFixture;
+import no.rutebanken.extime.model.*;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -36,12 +34,7 @@ public class LineDataToNetexConverterTest {
 
     @Test
     public void testLineWithDirectRoutes() throws Exception {
-        LineDataSet lineDataSet = new LineDataSet();
-        lineDataSet.setAirlineIata("DY");
-        lineDataSet.setAirlineName("Norwegian");
-        lineDataSet.setLineDesignation("OSL-BGO");
-        lineDataSet.setLineName("Oslo-Bergen");
-
+        LineDataSet lineDataSet = LineDataSetFixture.createLineDataSet("DY", "Norwegian", "OSL-BGO", "Oslo-Bergen");
         LocalDate requestPeriodFromDate = LocalDate.parse("2017-01-30");
         LocalDate requestPeriodToDate = requestPeriodFromDate.plusDays(1);
 
@@ -156,6 +149,17 @@ public class LineDataToNetexConverterTest {
         journeyPatterns.forEach(journeyPattern -> Assertions.assertThat(journeyPattern.getPointsInSequence()
                 .getPointInJourneyPatternOrStopPointInJourneyPatternOrTimingPointInJourneyPattern()).hasSize(2));
 
+        // check destination displays
+        List<DestinationDisplay> destinationDisplay = serviceFrame.getDestinationDisplays().getDestinationDisplay();
+        Assertions.assertThat(destinationDisplay)
+                .hasSize(4)
+                .extracting("id")
+                .contains("AVI:DestinationDisplay:DY_OSL-BGO", "AVI:DestinationDisplay:DY_BGO-OSL", "AVI:DestinationDisplay:OSL", "AVI:DestinationDisplay:BGO");
+        Assertions.assertThat(destinationDisplay.get(0).getVias())
+                .isNull();
+        Assertions.assertThat(destinationDisplay.get(1).getVias())
+                .isNull();
+
         // check elements in timetable frame
         TimetableFrame timetableFrame = getFrames(TimetableFrame.class, frames).get(0);
 
@@ -215,6 +219,101 @@ public class LineDataToNetexConverterTest {
                 );
     }
 
+    @Test
+    public void testDestinationDisplaysWithVias() throws Exception {
+        LineDataSet lineDataSet = LineDataSetFixture.createLineDataSet("DY", "Norwegian", "OSL-BGO", "Oslo-Bergen");
+
+        String firstDateOfOperation = "2017-01-30";
+
+        LocalDate requestPeriodFromDate = LocalDate.parse(firstDateOfOperation);
+        LocalDate requestPeriodToDate = requestPeriodFromDate.plusDays(1);
+
+        OffsetTime offsetMidnight = OffsetTime.parse(OFFSET_MIDNIGHT_UTC).withOffsetSameLocal(ZoneOffset.UTC);
+        OffsetDateTime requestPeriodFromDateTime = requestPeriodFromDate.atTime(offsetMidnight);
+        OffsetDateTime requestPeriodToDateTime = requestPeriodToDate.atTime(offsetMidnight);
+
+        AvailabilityPeriod availabilityPeriod = new AvailabilityPeriod(requestPeriodFromDateTime, requestPeriodToDateTime);
+        lineDataSet.setAvailabilityPeriod(availabilityPeriod);
+
+        FlightRoute mainRoute = new FlightRoute("OSL-SOG-BGO", "Oslo-Sogndal-Bergen");
+        FlightRoute oppositeRoute = new FlightRoute("BGO-SOG-OSL", "Bergen-Sogndal-Oslo");
+        List<FlightRoute> flightRoutes = Arrays.asList(mainRoute, oppositeRoute);
+        lineDataSet.setFlightRoutes(flightRoutes);
+
+        Map<String, Map<String, List<ScheduledFlight>>> routeJourneys = new HashMap<>();
+
+        List<ScheduledStopover> flight1Stopovers = Lists.newArrayList(
+                createScheduledStopover("OSL", null, OffsetTime.parse("07:10:00Z")),
+                createScheduledStopover("SOG", OffsetTime.parse("07:50:00Z"), OffsetTime.parse("08:10:00Z")),
+                createScheduledStopover("BGO", OffsetTime.parse("09:00:00Z"), null)
+        );
+        ScheduledFlight scheduledFlight1 = new ScheduledFlight();
+        scheduledFlight1.setAirlineIATA("DY");
+        scheduledFlight1.setAirlineName("Norwegian");
+        scheduledFlight1.setAirlineFlightId("DY602");
+        scheduledFlight1.setDateOfOperation(LocalDate.parse(firstDateOfOperation));
+        scheduledFlight1.setScheduledStopovers(flight1Stopovers);
+        List<ScheduledFlight> routeOslSogBgoFlights = Lists.newArrayList(scheduledFlight1);
+
+        List<ScheduledStopover> flight2Stopovers = Lists.newArrayList(
+                createScheduledStopover("BGO", null, OffsetTime.parse("07:10:00Z")),
+                createScheduledStopover("SOG", OffsetTime.parse("07:50:00Z"), OffsetTime.parse("08:10:00Z")),
+                createScheduledStopover("OSL", OffsetTime.parse("09:00:00Z"), null)
+        );
+        ScheduledFlight scheduledFlight2 = new ScheduledFlight();
+        scheduledFlight2.setAirlineIATA("DY");
+        scheduledFlight2.setAirlineName("Norwegian");
+        scheduledFlight2.setAirlineFlightId("DY633");
+        scheduledFlight2.setDateOfOperation(LocalDate.parse(firstDateOfOperation));
+        scheduledFlight2.setScheduledStopovers(flight2Stopovers);
+        List<ScheduledFlight> routeBgoSogOslFlights = Lists.newArrayList(scheduledFlight2);
+
+        Map<String, List<ScheduledFlight>> dy602Flights = new HashMap<>();
+        dy602Flights.put("DY602", routeOslSogBgoFlights);
+        routeJourneys.put("OSL-SOG-BGO", dy602Flights);
+
+        Map<String, List<ScheduledFlight>> dy633Flights = new HashMap<>();
+        dy633Flights.put("DY633", routeBgoSogOslFlights);
+        routeJourneys.put("BGO-SOG-OSL", dy633Flights);
+
+        lineDataSet.setRouteJourneys(routeJourneys);
+
+        JAXBElement<PublicationDeliveryStructure> publicationDeliveryElement = netexConverter.convertToNetex(lineDataSet);
+        PublicationDeliveryStructure publicationDelivery = publicationDeliveryElement.getValue();
+
+        // check the resulting publication delivery
+        Assertions.assertThat(publicationDelivery)
+                .isNotNull();
+
+        List<JAXBElement<? extends Common_VersionFrameStructure>> dataObjectFrames = publicationDelivery.getDataObjects().getCompositeFrameOrCommonFrame();
+        CompositeFrame compositeFrame = getFrames(CompositeFrame.class, dataObjectFrames).get(0);
+        List<JAXBElement<? extends Common_VersionFrameStructure>> frames = compositeFrame.getFrames().getCommonFrame();
+
+        // check elements in service frame
+        ServiceFrame serviceFrame = getFrames(ServiceFrame.class, frames).get(0);
+
+        // check destination displays
+        List<DestinationDisplay> destinationDisplays = serviceFrame.getDestinationDisplays().getDestinationDisplay();
+        Assertions.assertThat(destinationDisplays)
+                .hasSize(5)
+                .extracting("id")
+                .contains("AVI:DestinationDisplay:DY_OSL-SOG-BGO", "AVI:DestinationDisplay:DY_BGO-SOG-OSL",
+                        "AVI:DestinationDisplay:OSL", "AVI:DestinationDisplay:SOG", "AVI:DestinationDisplay:BGO");
+
+        for (DestinationDisplay destinationDisplay : destinationDisplays) {
+            if (destinationDisplay.getId().equals("AVI:DestinationDisplay:DY_OSL-SOG-BGO")) {
+                Assertions.assertThat(destinationDisplay.getFrontText().getValue()).isEqualTo("Bergen");
+                Assertions.assertThat(destinationDisplay.getVias().getVia()).hasSize(1);
+                Assertions.assertThat(destinationDisplay.getVias().getVia().get(0).getDestinationDisplayRef().getRef()).isEqualTo("AVI:DestinationDisplay:SOG");
+            }
+            if (destinationDisplay.getId().equals("AVI:DestinationDisplay:DY_BGO-SOG-OSL")) {
+                Assertions.assertThat(destinationDisplay.getFrontText().getValue()).isEqualTo("Oslo");
+                Assertions.assertThat(destinationDisplay.getVias().getVia()).hasSize(1);
+                Assertions.assertThat(destinationDisplay.getVias().getVia().get(0).getDestinationDisplayRef().getRef()).isEqualTo("AVI:DestinationDisplay:SOG");
+            }
+        }
+    }
+
     private ScheduledFlight createScheduledDirectFlight(String airlineIATA, String airlineFlightId,
             LocalDate dateOfOperation, String departureAirportIata, String departureAirportName,
             String arrivalAirportIata, String arrivalAirportName, OffsetTime timeOfDeparture, OffsetTime timeOfArrival) {
@@ -230,6 +329,18 @@ public class LineDataToNetexConverterTest {
         scheduledFlight.setTimeOfDeparture(timeOfDeparture);
         scheduledFlight.setTimeOfArrival(timeOfArrival);
         return scheduledFlight;
+    }
+
+    private ScheduledStopover createScheduledStopover(String airportIata, OffsetTime arrivalTime, OffsetTime departureTime) {
+        ScheduledStopover scheduledStopover = new ScheduledStopover();
+        scheduledStopover.setAirportIATA(airportIata);
+        if (arrivalTime != null) {
+            scheduledStopover.setArrivalTime(arrivalTime);
+        }
+        if (departureTime != null) {
+            scheduledStopover.setDepartureTime(departureTime);
+        }
+        return scheduledStopover;
     }
 
     public <T> List<T> getFrames(Class<T> clazz, List<JAXBElement<? extends Common_VersionFrameStructure>> dataObjectFrames) {

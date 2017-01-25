@@ -4,6 +4,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import no.rutebanken.extime.config.NetexStaticDataSet;
 import no.rutebanken.extime.model.*;
 import no.rutebanken.extime.util.NetexObjectFactory;
 import no.rutebanken.extime.util.NetexObjectIdCreator;
@@ -26,6 +27,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static no.rutebanken.extime.Constants.*;
+import static no.rutebanken.extime.util.NetexObjectIdTypes.DESTINATION_DISPLAY;
 
 @Component(value = "lineDataToNetexConverter")
 public class LineDataToNetexConverter {
@@ -41,6 +43,9 @@ public class LineDataToNetexConverter {
     private Map<String, DayTypeAssignment> dayTypeAssignments = new HashMap<>();
 
     @Autowired
+    private NetexStaticDataSet netexStaticDataSet;
+
+    @Autowired
     private NetexCommonDataSet netexCommonDataSet;
 
     @Autowired
@@ -50,6 +55,14 @@ public class LineDataToNetexConverter {
     private NetexObjectFactory netexObjectFactory;
 
     public JAXBElement<PublicationDeliveryStructure> convertToNetex(LineDataSet lineDataSet) throws Exception {
+        if (netexObjectFactory != null) {
+            netexObjectFactory.clearReferentials();
+        }
+
+        // TODO find a better way to use this global referential context, put all objects that are needed for reuse here, like in chouette referential
+        // TODO see: NeptuneObjectFactory or general ObjectFactory in chouette
+        // TODO can we merge this behavior with our NetexObjectFactory instead?
+
         localContext.put(AIRLINE_IATA, lineDataSet.getAirlineIata());
         localContext.put(LINE_DESIGNATION, lineDataSet.getLineDesignation());
 
@@ -71,6 +84,9 @@ public class LineDataToNetexConverter {
         line.setRoutes(routeRefStruct);
 
         List<JourneyPattern> journeyPatterns = createJourneyPatterns(routes);
+        List<DestinationDisplay> destinationDisplaysForStops = createDestinationDisplaysForStopPoints(lineDataSet.getFlightRoutes());
+        List<DestinationDisplay> destinationDisplaysForPatterns = createDestinationDisplaysForPatterns(journeyPatterns);
+        List<DestinationDisplay> destinationDisplays = Lists.newArrayList(Iterables.concat(destinationDisplaysForPatterns, destinationDisplaysForStops));
         List<ServiceJourney> serviceJourneys = createServiceJourneys(line, lineDataSet.getRouteJourneys());
 
         Frames_RelStructure frames = objectFactory.createFrames_RelStructure();
@@ -83,7 +99,7 @@ public class LineDataToNetexConverter {
         }
 
         JAXBElement<ServiceFrame> serviceFrame = netexObjectFactory.createServiceFrame(publicationTimestamp,
-                lineDataSet.getAirlineName(), lineDataSet.getAirlineIata(), routePoints, routes, line, journeyPatterns);
+                lineDataSet.getAirlineName(), lineDataSet.getAirlineIata(), routePoints, routes, line, destinationDisplays, journeyPatterns);
         frames.getCommonFrame().add(serviceFrame);
 
         JAXBElement<TimetableFrame> timetableFrame = netexObjectFactory.createTimetableFrame(serviceJourneys);
@@ -176,10 +192,8 @@ public class LineDataToNetexConverter {
                 pointsInJourneyPattern.getPointInJourneyPatternOrStopPointInJourneyPatternOrTimingPointInJourneyPattern().add(stopPointInJourneyPattern);
             }
 
-            int journeyPatternObjectId = NetexObjectIdCreator.generateRandomId(DEFAULT_START_INCLUSIVE, DEFAULT_END_EXCLUSIVE);
-
-            JourneyPattern journeyPattern = netexObjectFactory.createJourneyPattern(
-                    String.valueOf(journeyPatternObjectId), route.getId(), pointsInJourneyPattern);
+            String objectId = Iterables.getLast(Splitter.on(COLON).trimResults().split(route.getId()));
+            JourneyPattern journeyPattern = netexObjectFactory.createJourneyPattern(objectId, route.getId(), pointsInJourneyPattern);
             journeyPatterns.add(journeyPattern);
 
             if (routeIdDesignationMap.containsKey(route.getId())) {
@@ -192,6 +206,68 @@ public class LineDataToNetexConverter {
 
         journeyPatterns.sort(Comparator.comparing(JourneyPattern::getId));
         return journeyPatterns;
+    }
+
+    public List<DestinationDisplay> createDestinationDisplaysForStopPoints(List<FlightRoute> flightRoutes) {
+        Map<String, NetexStaticDataSet.StopPlaceDataSet> stopPlaceDataSets = netexStaticDataSet.getStopPlaces();
+
+        return flightRoutes.stream()
+                .flatMap(flightRoute -> flightRoute.getRoutePointsInSequence().stream())
+                .distinct()
+                .sorted(Comparator.comparing(iata -> iata))
+                .map(iata -> netexObjectFactory.createDestinationDisplay(iata, stopPlaceDataSets.get(iata.toLowerCase()).getShortName(), true))
+                .collect(Collectors.toList());
+    }
+
+    public List<DestinationDisplay> createDestinationDisplaysForPatterns(List<JourneyPattern> journeyPatterns) {
+        Map<String, NetexStaticDataSet.StopPlaceDataSet> stopPlaceDataSets = netexStaticDataSet.getStopPlaces();
+        List<DestinationDisplay> destinationDisplays = Lists.newArrayList();
+
+        for (JourneyPattern journeyPattern : journeyPatterns) {
+
+            // get the id to set for the main destination display
+            String routeIdRef = journeyPattern.getRouteRef().getRef();
+            String objectId = Iterables.getLast(Splitter.on(COLON).trimResults().split(routeIdRef));
+            DestinationDisplay patternDestinationDisplay = netexObjectFactory.createDestinationDisplay(objectId);
+
+            // get the final destination from stop points sequence, to set as front text
+            List<PointInLinkSequence_VersionedChildStructure> pointsInLinkSequence = journeyPattern.getPointsInSequence()
+                    .getPointInJourneyPatternOrStopPointInJourneyPatternOrTimingPointInJourneyPattern();
+            PointInLinkSequence_VersionedChildStructure lastPointInSequence = pointsInLinkSequence.get(pointsInLinkSequence.size() - 1);
+            StopPointInJourneyPattern finalDestinationPoint = (StopPointInJourneyPattern) lastPointInSequence;
+
+            String finalDestinationPointId = finalDestinationPoint.getScheduledStopPointRef().getValue().getRef();
+            String finalStopAirportIata = Iterables.getLast(Splitter.on(COLON).trimResults().split(finalDestinationPointId));
+            String frontTextValue = stopPlaceDataSets.get(finalStopAirportIata.toLowerCase()).getShortName();
+            patternDestinationDisplay.setFrontText(netexObjectFactory.createMultilingualString(frontTextValue));
+
+            // check if needed to set vias
+            if (pointsInLinkSequence.size() > 2) {
+                Vias_RelStructure viasStruct = objectFactory.createVias_RelStructure();
+
+                for (int i = 0; i < pointsInLinkSequence.size(); i++) {
+
+                    if (i > 0 && i < pointsInLinkSequence.size() - 1) {
+                        StopPointInJourneyPattern stopPointInJourneyPattern = (StopPointInJourneyPattern) pointsInLinkSequence.get(i);
+                        String stopPointIdRef = stopPointInJourneyPattern.getScheduledStopPointRef().getValue().getRef();
+                        String stopAirportIata = Iterables.getLast(Splitter.on(COLON).trimResults().split(stopPointIdRef));
+                        String destinationDisplayIdRef = Joiner.on(COLON).skipNulls().join(AVINOR_XMLNS, DESTINATION_DISPLAY, stopAirportIata);
+                        DestinationDisplay destinationDisplay = netexObjectFactory.getDestinationDisplay(destinationDisplayIdRef);
+
+                        if (destinationDisplay != null) {
+                            DestinationDisplayRefStructure destinationDisplayRefStruct = objectFactory.createDestinationDisplayRefStructure();
+                            destinationDisplayRefStruct.setRef(destinationDisplay.getId());
+                            Via_VersionedChildStructure viaChildStruct = objectFactory.createVia_VersionedChildStructure();
+                            viaChildStruct.setDestinationDisplayRef(destinationDisplayRefStruct);
+                            viasStruct.getVia().add(viaChildStruct);
+                        }
+                    }
+                }
+                patternDestinationDisplay.setVias(viasStruct);
+            }
+            destinationDisplays.add(patternDestinationDisplay);
+        }
+        return destinationDisplays;
     }
 
     public List<ServiceJourney> createServiceJourneys(Line line, Map<String, Map<String, List<ScheduledFlight>>> routeJourneys) {
