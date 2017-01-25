@@ -264,6 +264,9 @@ public class LineDataToNetexConverter {
                     }
                 }
                 patternDestinationDisplay.setVias(viasStruct);
+                DestinationDisplayRefStructure destinationDisplayRefStruct = objectFactory.createDestinationDisplayRefStructure();
+                destinationDisplayRefStruct.setRef(patternDestinationDisplay.getId());
+                journeyPattern.setDestinationDisplayRef(destinationDisplayRefStruct);
             }
             destinationDisplays.add(patternDestinationDisplay);
         }

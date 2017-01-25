@@ -143,8 +143,8 @@ public class LineDataToNetexConverterTest {
 
         Assertions.assertThat(journeyPatterns)
                 .hasSize(2)
-                .extracting("routeRef.ref")
-                .contains("AVI:Route:DY_OSL-BGO", "AVI:Route:DY_BGO-OSL");
+                .extracting("id", "routeRef.ref")
+                .contains(tuple("AVI:JourneyPattern:DY_OSL-BGO", "AVI:Route:DY_OSL-BGO"), tuple("AVI:JourneyPattern:DY_BGO-OSL", "AVI:Route:DY_BGO-OSL"));
 
         journeyPatterns.forEach(journeyPattern -> Assertions.assertThat(journeyPattern.getPointsInSequence()
                 .getPointInJourneyPatternOrStopPointInJourneyPatternOrTimingPointInJourneyPattern()).hasSize(2));
@@ -289,8 +289,28 @@ public class LineDataToNetexConverterTest {
         CompositeFrame compositeFrame = getFrames(CompositeFrame.class, dataObjectFrames).get(0);
         List<JAXBElement<? extends Common_VersionFrameStructure>> frames = compositeFrame.getFrames().getCommonFrame();
 
-        // check elements in service frame
         ServiceFrame serviceFrame = getFrames(ServiceFrame.class, frames).get(0);
+
+        // check journey patterns for destination display reference
+        List<JAXBElement<?>> journeyPatternElements = serviceFrame.getJourneyPatterns().getJourneyPattern_OrJourneyPatternView();
+
+        List<JourneyPattern> journeyPatterns = journeyPatternElements.stream()
+                .map(JAXBElement::getValue)
+                .map(journeyPattern -> (JourneyPattern) journeyPattern)
+                .collect(Collectors.toList());
+
+        for (JourneyPattern journeyPattern : journeyPatterns) {
+            if (journeyPattern.getId().equals("AVI:JourneyPattern:DY_OSL-SOG-BGO")) {
+                DestinationDisplayRefStructure destinationDisplayRef = journeyPattern.getDestinationDisplayRef();
+                Assertions.assertThat(destinationDisplayRef).isNotNull();
+                Assertions.assertThat(destinationDisplayRef.getRef()).isEqualTo("AVI:DestinationDisplay:DY_OSL-SOG-BGO");
+            }
+            if (journeyPattern.getId().equals("AVI:JourneyPattern:DY_BGO-SOG-OSL")) {
+                DestinationDisplayRefStructure destinationDisplayRef = journeyPattern.getDestinationDisplayRef();
+                Assertions.assertThat(destinationDisplayRef).isNotNull();
+                Assertions.assertThat(destinationDisplayRef.getRef()).isEqualTo("AVI:DestinationDisplay:DY_BGO-SOG-OSL");
+            }
+        }
 
         // check destination displays
         List<DestinationDisplay> destinationDisplays = serviceFrame.getDestinationDisplays().getDestinationDisplay();
