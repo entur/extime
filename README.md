@@ -21,7 +21,7 @@ camel.springboot.name=extime
 
 avinor.airports.large=BGO,BOO,SVG,TRD
 
-avinor.timetable.scheduler.consumer=quartz2://fireNow=true&trigger.repeatCount=0
+avinor.timetable.scheduler.consumer=quartz2://avinorTimetableScheduler?fireNow=true&trigger.repeatCount=0
 avinor.timetable.period.months=1
 avinor.timetable.max.range=180
 avinor.timetable.min.range=60
@@ -30,7 +30,7 @@ avinor.timetable.feed.endpoint=http://195.69.13.136/XmlFeedScheduled.asp
 avinor.timetable.dump.enabled=false
 avinor.timetable.dump.output.path=$HOME/dev/git/extime/target/flights
 
-avinor.realtime.scheduler.options=quartz2://fireNow=true&trigger.repeatCount=0
+avinor.realtime.scheduler.options=quartz2://avinorRealtimeScheduler?fireNow=true&trigger.repeatCount=0
 avinor.realtime.feed.endpoint=http4://flydata.avinor.no/XmlFeed.asp
 avinor.realtime.departures.timefrom=0
 avinor.realtime.departures.timeto=72
