@@ -691,6 +691,12 @@ public class NetexObjectFactory {
                 .withRef(dayTypeId);
     }
 
+    public DestinationDisplayRefStructure createDestinationDisplayRefStructure(String destinationDisplayId) {
+        return objectFactory.createDestinationDisplayRefStructure()
+                .withVersion(VERSION_ONE)
+                .withRef(destinationDisplayId);
+    }
+
     public void clearReferentials(){
         routes.clear();
         destinationDisplays.clear();
