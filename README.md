@@ -21,7 +21,7 @@ camel.springboot.name=extime
 
 avinor.airports.large=BGO,BOO,SVG,TRD
 
-avinor.timetable.scheduler.consumer=fireNow=true&trigger.repeatCount=0
+avinor.timetable.scheduler.consumer=quartz2://fireNow=true&trigger.repeatCount=0
 avinor.timetable.period.months=1
 avinor.timetable.max.range=180
 avinor.timetable.min.range=60
