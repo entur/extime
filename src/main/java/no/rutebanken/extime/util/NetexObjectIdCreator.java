@@ -90,6 +90,10 @@ public class NetexObjectIdCreator {
         return NetexObjectIdCreator.composeNetexObjectId(objectIdPrefix, NetexObjectIdTypes.STOP_POINT_IN_JOURNEY_PATTERN_KEY, objectId);
     }
 
+    public static String createDestinationDisplayId(String objectIdPrefix, String objectId) {
+        return NetexObjectIdCreator.composeNetexObjectId(objectIdPrefix, NetexObjectIdTypes.DESTINATION_DISPLAY, objectId);
+    }
+
     public static String createDayTypeId(String objectIdPrefix, String objectId) {
         return NetexObjectIdCreator.composeNetexObjectId(objectIdPrefix, NetexObjectIdTypes.DAY_TYPE_KEY, objectId);
     }
