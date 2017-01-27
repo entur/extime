@@ -266,10 +266,10 @@ public class LineDataToNetexConverter {
                     }
                 }
                 patternDestinationDisplay.setVias(viasStruct);
-                DestinationDisplayRefStructure destinationDisplayRefStruct = netexObjectFactory.createDestinationDisplayRefStructure(patternDestinationDisplay.getId());
-                journeyPattern.setDestinationDisplayRef(destinationDisplayRefStruct);
             }
             destinationDisplays.add(patternDestinationDisplay);
+            DestinationDisplayRefStructure destinationDisplayRefStruct = netexObjectFactory.createDestinationDisplayRefStructure(patternDestinationDisplay.getId());
+            journeyPattern.setDestinationDisplayRef(destinationDisplayRefStruct);
         }
         return destinationDisplays;
     }

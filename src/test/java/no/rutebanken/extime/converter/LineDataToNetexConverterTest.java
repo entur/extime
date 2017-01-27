@@ -147,7 +147,7 @@ public class LineDataToNetexConverterTest {
     }
 
     @Test
-    public void testLineWithSimpleRoundTrip() throws Exception {
+    public void testLineWithRoundTripRoutes() throws Exception {
         List<Pair<String, Integer>> routeJourneyPairs = Lists.newArrayList(Pair.of("OSL-BGO", 1), Pair.of("BGO-OSL", 1));
         LineDataSet lineDataSet = LineDataSetFixture.createLineDataSet("DY", "OSL-BGO", routeJourneyPairs);
 
@@ -163,6 +163,62 @@ public class LineDataToNetexConverterTest {
         assertValidNetwork(serviceFrame.getNetwork(), lineDataSet.getAirlineIata());
         assertValidLine(line, lineDataSet);
         assertValidRoutes(serviceFrame.getRoutes(), lineDataSet, line);
+    }
+
+    @Test
+    public void testDestinationDisplaysNoVias() throws Exception {
+        List<Pair<String, Integer>> routeJourneyPairs = Lists.newArrayList(Pair.of("OSL-BGO", 1), Pair.of("BGO-OSL", 1));
+        LineDataSet lineDataSet = LineDataSetFixture.createLineDataSet("DY", "OSL-BGO", routeJourneyPairs);
+
+        JAXBElement<PublicationDeliveryStructure> publicationDeliveryElement = netexConverter.convertToNetex(lineDataSet);
+        PublicationDeliveryStructure publicationDelivery = publicationDeliveryElement.getValue();
+        assertValidPublicationDelivery(publicationDelivery, lineDataSet.getLineName());
+
+        List<JAXBElement<? extends Common_VersionFrameStructure>> dataObjectFrames = getDataObjectFrames(publicationDelivery);
+        ServiceFrame serviceFrame = getFrames(ServiceFrame.class, dataObjectFrames).get(0);
+
+        // check journey patterns for destination display reference
+        List<JAXBElement<?>> journeyPatternElements = serviceFrame.getJourneyPatterns().getJourneyPattern_OrJourneyPatternView();
+
+        List<JourneyPattern> journeyPatterns = journeyPatternElements.stream()
+                .map(JAXBElement::getValue)
+                .map(journeyPattern -> (JourneyPattern) journeyPattern)
+                .collect(Collectors.toList());
+
+        for (JourneyPattern journeyPattern : journeyPatterns) {
+            if (journeyPattern.getId().equals("AVI:JourneyPattern:DY_OSL-BGO")) {
+                DestinationDisplayRefStructure destinationDisplayRef = journeyPattern.getDestinationDisplayRef();
+                assertThat(destinationDisplayRef).isNotNull();
+                assertThat(destinationDisplayRef.getVersion()).isEqualTo(VERSION_ONE);
+                assertThat(destinationDisplayRef.getRef()).isEqualTo("AVI:DestinationDisplay:DY_OSL-BGO");
+            }
+            if (journeyPattern.getId().equals("AVI:JourneyPattern:DY_BGO-OSL")) {
+                DestinationDisplayRefStructure destinationDisplayRef = journeyPattern.getDestinationDisplayRef();
+                assertThat(destinationDisplayRef).isNotNull();
+                assertThat(destinationDisplayRef.getVersion()).isEqualTo(VERSION_ONE);
+                assertThat(destinationDisplayRef.getRef()).isEqualTo("AVI:DestinationDisplay:DY_BGO-OSL");
+            }
+        }
+
+        // check destination displays
+        List<DestinationDisplay> destinationDisplays = serviceFrame.getDestinationDisplays().getDestinationDisplay();
+
+        assertThat(destinationDisplays).extracting("version").contains(VERSION_ONE);
+
+        assertThat(destinationDisplays)
+                .hasSize(4)
+                .extracting("id")
+                .contains("AVI:DestinationDisplay:DY_OSL-BGO", "AVI:DestinationDisplay:DY_BGO-OSL",
+                        "AVI:DestinationDisplay:DYOSLBGO-OSL", "AVI:DestinationDisplay:DYOSLBGO-BGO");
+
+        for (DestinationDisplay destinationDisplay : destinationDisplays) {
+            if (destinationDisplay.getId().equals("AVI:DestinationDisplay:DY_OSL-BGO")) {
+                assertThat(destinationDisplay.getFrontText().getValue()).isEqualTo("Bergen");
+            }
+            if (destinationDisplay.getId().equals("AVI:DestinationDisplay:DY_BGO-OSL")) {
+                assertThat(destinationDisplay.getFrontText().getValue()).isEqualTo("Oslo");
+            }
+        }
     }
 
     @Test
