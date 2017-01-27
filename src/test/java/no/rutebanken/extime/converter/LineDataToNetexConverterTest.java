@@ -21,8 +21,7 @@ import java.time.ZoneOffset;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static no.rutebanken.extime.Constants.NETEX_PROFILE_VERSION;
-import static no.rutebanken.extime.Constants.OFFSET_MIDNIGHT_UTC;
+import static no.rutebanken.extime.Constants.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.groups.Tuple.tuple;
 
@@ -86,7 +85,7 @@ public class LineDataToNetexConverterTest {
         assertThat(destinationDisplay)
                 .hasSize(4)
                 .extracting("id")
-                .contains("AVI:DestinationDisplay:DY_OSL-BGO", "AVI:DestinationDisplay:DY_BGO-OSL", "AVI:DestinationDisplay:OSL", "AVI:DestinationDisplay:BGO");
+                .contains("AVI:DestinationDisplay:DY_OSL-BGO", "AVI:DestinationDisplay:DY_BGO-OSL", "AVI:DestinationDisplay:DYOSLBGO-OSL", "AVI:DestinationDisplay:DYOSLBGO-BGO");
         assertThat(destinationDisplay.get(0).getVias())
                 .isNull();
         assertThat(destinationDisplay.get(1).getVias())
@@ -250,33 +249,40 @@ public class LineDataToNetexConverterTest {
             if (journeyPattern.getId().equals("AVI:JourneyPattern:DY_OSL-SOG-BGO")) {
                 DestinationDisplayRefStructure destinationDisplayRef = journeyPattern.getDestinationDisplayRef();
                 assertThat(destinationDisplayRef).isNotNull();
+                assertThat(destinationDisplayRef.getVersion()).isEqualTo(VERSION_ONE);
                 assertThat(destinationDisplayRef.getRef()).isEqualTo("AVI:DestinationDisplay:DY_OSL-SOG-BGO");
             }
             if (journeyPattern.getId().equals("AVI:JourneyPattern:DY_BGO-SOG-OSL")) {
                 DestinationDisplayRefStructure destinationDisplayRef = journeyPattern.getDestinationDisplayRef();
                 assertThat(destinationDisplayRef).isNotNull();
+                assertThat(destinationDisplayRef.getVersion()).isEqualTo(VERSION_ONE);
                 assertThat(destinationDisplayRef.getRef()).isEqualTo("AVI:DestinationDisplay:DY_BGO-SOG-OSL");
             }
         }
 
         // check destination displays
         List<DestinationDisplay> destinationDisplays = serviceFrame.getDestinationDisplays().getDestinationDisplay();
+
+        assertThat(destinationDisplays).extracting("version").contains(VERSION_ONE);
+
         assertThat(destinationDisplays)
                 .hasSize(5)
                 .extracting("id")
                 .contains("AVI:DestinationDisplay:DY_OSL-SOG-BGO", "AVI:DestinationDisplay:DY_BGO-SOG-OSL",
-                        "AVI:DestinationDisplay:OSL", "AVI:DestinationDisplay:SOG", "AVI:DestinationDisplay:BGO");
+                        "AVI:DestinationDisplay:DYOSLBGO-OSL", "AVI:DestinationDisplay:DYOSLBGO-SOG", "AVI:DestinationDisplay:DYOSLBGO-BGO");
 
         for (DestinationDisplay destinationDisplay : destinationDisplays) {
             if (destinationDisplay.getId().equals("AVI:DestinationDisplay:DY_OSL-SOG-BGO")) {
                 assertThat(destinationDisplay.getFrontText().getValue()).isEqualTo("Bergen");
                 assertThat(destinationDisplay.getVias().getVia()).hasSize(1);
-                assertThat(destinationDisplay.getVias().getVia().get(0).getDestinationDisplayRef().getRef()).isEqualTo("AVI:DestinationDisplay:SOG");
+                assertThat(destinationDisplay.getVias().getVia().get(0).getDestinationDisplayRef().getVersion()).isEqualTo(VERSION_ONE);
+                assertThat(destinationDisplay.getVias().getVia().get(0).getDestinationDisplayRef().getRef()).isEqualTo("AVI:DestinationDisplay:DYOSLBGO-SOG");
             }
             if (destinationDisplay.getId().equals("AVI:DestinationDisplay:DY_BGO-SOG-OSL")) {
                 assertThat(destinationDisplay.getFrontText().getValue()).isEqualTo("Oslo");
                 assertThat(destinationDisplay.getVias().getVia()).hasSize(1);
-                assertThat(destinationDisplay.getVias().getVia().get(0).getDestinationDisplayRef().getRef()).isEqualTo("AVI:DestinationDisplay:SOG");
+                assertThat(destinationDisplay.getVias().getVia().get(0).getDestinationDisplayRef().getVersion()).isEqualTo(VERSION_ONE);
+                assertThat(destinationDisplay.getVias().getVia().get(0).getDestinationDisplayRef().getRef()).isEqualTo("AVI:DestinationDisplay:DYOSLBGO-SOG");
             }
         }
     }
