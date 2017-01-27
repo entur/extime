@@ -25,9 +25,11 @@ public class ScheduledFlight {
     private String arrivalAirportIATA;
     private String departureAirportName;
     private String arrivalAirportName;
+    private LocalDate dateOfOperation;
     private OffsetTime timeOfDeparture;
     private OffsetTime timeOfArrival;
-    private LocalDate dateOfOperation;
+    private String stopsDesignation;
+    private String timesDesignation;
     private List<ScheduledStopover> scheduledStopovers;
 
     public BigInteger getFlightId() {
@@ -94,6 +96,14 @@ public class ScheduledFlight {
         this.arrivalAirportName = arrivalAirportName;
     }
 
+    public LocalDate getDateOfOperation() {
+        return dateOfOperation;
+    }
+
+    public void setDateOfOperation(LocalDate dateOfOperation) {
+        this.dateOfOperation = dateOfOperation;
+    }
+
     public OffsetTime getTimeOfDeparture() {
         return timeOfDeparture;
     }
@@ -110,12 +120,20 @@ public class ScheduledFlight {
         this.timeOfArrival = timeOfArrival;
     }
 
-    public LocalDate getDateOfOperation() {
-        return dateOfOperation;
+    public String getStopsDesignation() {
+        return stopsDesignation;
     }
 
-    public void setDateOfOperation(LocalDate dateOfOperation) {
-        this.dateOfOperation = dateOfOperation;
+    public void setStopsDesignation(String stopsDesignation) {
+        this.stopsDesignation = stopsDesignation;
+    }
+
+    public String getTimesDesignation() {
+        return timesDesignation;
+    }
+
+    public void setTimesDesignation(String timesDesignation) {
+        this.timesDesignation = timesDesignation;
     }
 
     public List<ScheduledStopover> getScheduledStopovers() {
@@ -179,16 +197,19 @@ public class ScheduledFlight {
                 Objects.equal(arrivalAirportIATA, that.arrivalAirportIATA) &&
                 Objects.equal(departureAirportName, that.departureAirportName) &&
                 Objects.equal(arrivalAirportName, that.arrivalAirportName) &&
+                Objects.equal(dateOfOperation, that.dateOfOperation) &&
                 Objects.equal(timeOfDeparture, that.timeOfDeparture) &&
                 Objects.equal(timeOfArrival, that.timeOfArrival) &&
-                Objects.equal(dateOfOperation, that.dateOfOperation) &&
+                Objects.equal(stopsDesignation, that.stopsDesignation) &&
+                Objects.equal(timesDesignation, that.timesDesignation) &&
                 Objects.equal(scheduledStopovers, that.scheduledStopovers);
     }
 
     @Override
     public int hashCode() {
         return Objects.hashCode(flightId, airlineIATA, airlineName, airlineFlightId, departureAirportIATA,
-                arrivalAirportIATA, departureAirportName, arrivalAirportName, timeOfDeparture, timeOfArrival, dateOfOperation, scheduledStopovers);
+                arrivalAirportIATA, departureAirportName, arrivalAirportName, dateOfOperation, timeOfDeparture,
+                timeOfArrival, stopsDesignation, timesDesignation, scheduledStopovers);
     }
 
     @Override
@@ -202,9 +223,11 @@ public class ScheduledFlight {
                 .add("arrivalAirportIATA", arrivalAirportIATA)
                 .add("departureAirportName", departureAirportName)
                 .add("arrivalAirportName", arrivalAirportName)
+                .add("dateOfOperation", dateOfOperation)
                 .add("timeOfDeparture", timeOfDeparture)
                 .add("timeOfArrival", timeOfArrival)
-                .add("dateOfOperation", dateOfOperation)
+                .add("stopsDesignation", stopsDesignation)
+                .add("timesDesignation", timesDesignation)
                 .add("scheduledStopovers", scheduledStopovers)
                 .toString();
     }

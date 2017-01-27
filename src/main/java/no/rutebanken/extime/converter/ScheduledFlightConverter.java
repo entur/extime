@@ -110,13 +110,13 @@ public class ScheduledFlightConverter {
             if (isMultiLegFlightRoute(connectingFlightLegs)) {
                 List<Triple<StopVisitType, String, OffsetTime>> stopovers = extractStopoversFromFlights(connectingFlightLegs);
                 List<ScheduledStopover> scheduledStopovers = createScheduledStopovers(stopovers);
-                ScheduledFlight scheduledFlightWithStopovers = createScheduledFlightWithStopovers(requestPeriodFromDateTime, requestPeriodToDateTime, flight, scheduledStopovers);
+                ScheduledFlight scheduledFlightWithStopovers = createScheduledFlightWithStopovers(flight, scheduledStopovers);
 
                 if (scheduledFlightWithStopovers != null) {
                     mergedScheduledFlights.add(scheduledFlightWithStopovers);
                 }
             } else if (isDirectFlightRoute(connectingFlightLegs)) {
-                ScheduledFlight directFlight = convertToScheduledFlight(flight, requestPeriodFromDateTime, requestPeriodToDateTime);
+                ScheduledFlight directFlight = convertToScheduledFlight(flight, null);
                 mergedScheduledFlights.add(directFlight);
             } else {
                 logger.error("Flight with unique id: {}, and flightId: {} is NOT a valid flight",
@@ -128,6 +128,11 @@ public class ScheduledFlightConverter {
         }
 
         List<LineDataSet> lineDataSets = new ArrayList<>();
+
+        // TODO split up the following grouping which does not group correctly
+        for (ScheduledFlight scheduledFlight : mergedScheduledFlights) {
+            System.out.println(scheduledFlight);
+        }
 
         // group by airline iata and unique lines
         Map<String, Map<String, List<ScheduledFlight>>> flightsByAirlineAndLine = mergedScheduledFlights.stream()
@@ -422,46 +427,12 @@ public class ScheduledFlightConverter {
         return multiLegFlights;
     }
 
-    public ScheduledFlight createScheduledFlightWithStopovers(OffsetDateTime requestPeriodFromDateTime,
-            OffsetDateTime requestPeriodToDateTime, Flight currentFlight, List<ScheduledStopover> scheduledStopovers) {
-
-        if (CollectionUtils.isNotEmpty(scheduledStopovers)) {
-            ScheduledFlight scheduledFlight = new ScheduledFlight();
-            scheduledFlight.setAirlineFlightId(currentFlight.getAirlineDesignator() + currentFlight.getFlightNumber());
-            scheduledFlight.setAirlineIATA(currentFlight.getAirlineDesignator());
-            scheduledFlight.setDateOfOperation(currentFlight.getDateOfOperation());
-            scheduledFlight.getScheduledStopovers().addAll(scheduledStopovers);
-
-            return scheduledFlight;
-        }
-
-        return null;
-    }
-
     public boolean isMultiLegFlightRoute(List<Flight> flights) {
         return CollectionUtils.isNotEmpty(flights) && flights.size() > 1;
     }
 
     public boolean isDirectFlightRoute(List<Flight> flights) {
         return CollectionUtils.isNotEmpty(flights) && flights.size() == 1;
-    }
-
-    private Set<DayOfWeek> findJourneyPatterns(String flightId, List<? extends ScheduledFlight> flights) {
-        SortedSet<DayOfWeek> daysOfWeek = new TreeSet<>();
-        LocalDate periodStartDate = flights.get(0).getDateOfOperation();
-        LocalDate periodEndDate = periodStartDate.plusWeeks(1L);
-
-        for (ScheduledFlight flight : flights) {
-            if (flight.getDateOfOperation().isAfter(periodEndDate)) {
-                break;
-            } else {
-                LocalDate dateOfOperation = flight.getDateOfOperation();
-                DayOfWeek dayOfWeek = dateOfOperation.getDayOfWeek();
-                daysOfWeek.add(dayOfWeek);
-            }
-        }
-
-        return daysOfWeek;
     }
 
     public List<Flight> findConnectingFlightLegs(Flight currentFlightLeg, Map<String, List<Flight>> flightsByDepartureAirportIata,
@@ -548,16 +519,39 @@ public class ScheduledFlightConverter {
         }
     }
 
-    public ScheduledFlight convertToScheduledFlight(Flight flight, OffsetDateTime fromDateTime, OffsetDateTime toDateTime) {
+    public ScheduledFlight createScheduledFlightWithStopovers(Flight currentFlight, List<ScheduledStopover> scheduledStopovers) {
+        if (CollectionUtils.isNotEmpty(scheduledStopovers)) {
+            ScheduledFlight scheduledFlight = new ScheduledFlight();
+            scheduledFlight.setAirlineFlightId(currentFlight.getAirlineDesignator() + currentFlight.getFlightNumber());
+            scheduledFlight.setAirlineIATA(currentFlight.getAirlineDesignator());
+            scheduledFlight.setDateOfOperation(currentFlight.getDateOfOperation());
+            scheduledFlight.getScheduledStopovers().addAll(scheduledStopovers);
+
+            return scheduledFlight;
+        }
+
+        return null;
+    }
+
+    public ScheduledFlight convertToScheduledFlight(Flight flight, List<ScheduledStopover> scheduledStopovers) {
         ScheduledFlight scheduledFlight = new ScheduledFlight();
-        scheduledFlight.setFlightId(flight.getId());
         scheduledFlight.setAirlineIATA(flight.getAirlineDesignator());
         scheduledFlight.setAirlineFlightId(flight.getAirlineDesignator() + flight.getFlightNumber());
         scheduledFlight.setDateOfOperation(flight.getDateOfOperation());
-        scheduledFlight.setDepartureAirportIATA(flight.getDepartureStation());
-        scheduledFlight.setArrivalAirportIATA(flight.getArrivalStation());
-        scheduledFlight.setTimeOfDeparture(flight.getStd());
-        scheduledFlight.setTimeOfArrival(flight.getSta());
+
+        if (CollectionUtils.isNotEmpty(scheduledStopovers)) {
+            scheduledFlight.getScheduledStopovers().addAll(scheduledStopovers);
+        } else {
+            scheduledFlight.setFlightId(flight.getId());
+            scheduledFlight.setDepartureAirportIATA(flight.getDepartureStation());
+            scheduledFlight.setArrivalAirportIATA(flight.getArrivalStation());
+            scheduledFlight.setTimeOfDeparture(flight.getStd());
+            scheduledFlight.setTimeOfArrival(flight.getSta());
+        }
+
+        scheduledFlight.setStopsDesignation("");
+        scheduledFlight.setTimesDesignation("");
+
         return scheduledFlight;
     }
 
