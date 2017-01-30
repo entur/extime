@@ -20,7 +20,6 @@ import javax.xml.bind.JAXBException;
 import javax.xml.transform.stream.StreamSource;
 import java.math.BigInteger;
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.util.*;
 import java.util.function.Predicate;
@@ -140,7 +139,7 @@ public class ScheduledFlightConverterTest {
         Flight dummyFlight = createFlight(1L, "SK", "4455",
                 LocalDate.parse("2017-01-01"), "BGO", OffsetTime.MIN, "OSL", OffsetTime.MAX);
 
-        ScheduledFlight directFlight = clazzUnderTest.convertToScheduledFlight(dummyFlight, OffsetDateTime.MIN, OffsetDateTime.MAX);
+        ScheduledFlight directFlight = clazzUnderTest.convertToScheduledFlight(dummyFlight, null);
 
         Assertions.assertThat(directFlight)
                 .isNotNull()
@@ -528,11 +527,13 @@ public class ScheduledFlightConverterTest {
                         OffsetTime.parse("08:00:00Z"), "SOG", OffsetTime.parse("08:30:00Z"))
         );
 
-        Flight optionalFlight = clazzUnderTest.findOptionalConnectingFlightLeg(previousFlightPredicate, flightLegs);
+        Optional<Flight> optionalFlight = clazzUnderTest.findOptionalConnectingFlightLeg(previousFlightPredicate, flightLegs);
 
-        Assertions.assertThat(optionalFlight)
+        Assertions.assertThat(optionalFlight).isPresent();
+
+        optionalFlight.ifPresent(flight -> Assertions.assertThat(flight)
                 .isNotNull()
-                .isEqualTo(flightLegs.get(0));
+                .isEqualTo(flightLegs.get(0)));
     }
 
     @Test
@@ -546,10 +547,11 @@ public class ScheduledFlightConverterTest {
                         OffsetTime.parse("08:00:00Z"), "BGO", OffsetTime.parse("08:30:00Z"))
         );
 
-        Flight optionalFlight = clazzUnderTest.findOptionalConnectingFlightLeg(previousFlightPredicate, flightLegs);
+        Optional<Flight> optionalFlight = clazzUnderTest.findOptionalConnectingFlightLeg(previousFlightPredicate, flightLegs);
 
         Assertions.assertThat(optionalFlight)
-                .isNull();
+                .isNotNull()
+                .isEmpty();
     }
 
     private List<Flight> createDummyFlights() {
