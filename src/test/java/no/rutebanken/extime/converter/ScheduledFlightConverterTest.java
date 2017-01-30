@@ -527,11 +527,13 @@ public class ScheduledFlightConverterTest {
                         OffsetTime.parse("08:00:00Z"), "SOG", OffsetTime.parse("08:30:00Z"))
         );
 
-        Flight optionalFlight = clazzUnderTest.findOptionalConnectingFlightLeg(previousFlightPredicate, flightLegs);
+        Optional<Flight> optionalFlight = clazzUnderTest.findOptionalConnectingFlightLeg(previousFlightPredicate, flightLegs);
 
-        Assertions.assertThat(optionalFlight)
+        Assertions.assertThat(optionalFlight).isPresent();
+
+        optionalFlight.ifPresent(flight -> Assertions.assertThat(flight)
                 .isNotNull()
-                .isEqualTo(flightLegs.get(0));
+                .isEqualTo(flightLegs.get(0)));
     }
 
     @Test
@@ -545,10 +547,11 @@ public class ScheduledFlightConverterTest {
                         OffsetTime.parse("08:00:00Z"), "BGO", OffsetTime.parse("08:30:00Z"))
         );
 
-        Flight optionalFlight = clazzUnderTest.findOptionalConnectingFlightLeg(previousFlightPredicate, flightLegs);
+        Optional<Flight> optionalFlight = clazzUnderTest.findOptionalConnectingFlightLeg(previousFlightPredicate, flightLegs);
 
         Assertions.assertThat(optionalFlight)
-                .isNull();
+                .isNotNull()
+                .isEmpty();
     }
 
     private List<Flight> createDummyFlights() {

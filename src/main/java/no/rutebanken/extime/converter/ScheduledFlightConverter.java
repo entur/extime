@@ -451,12 +451,13 @@ public class ScheduledFlightConverter {
         String departureAirportIata = currentFlightLeg.getDepartureStation();
         List<Flight> flightLegsForIata = flightsByArrivalAirportIata.get(departureAirportIata);
         Predicate<Flight> flightPredicate = FlightPredicate.matchPreviousFlight(currentFlightLeg);
-        Flight optionalFlightLeg = findOptionalConnectingFlightLeg(flightPredicate, flightLegsForIata);
 
-        if (optionalFlightLeg != null) {
-            previousFlightLegs.add(optionalFlightLeg);
-            findPreviousFlightLegs(optionalFlightLeg, flightsByArrivalAirportIata, previousFlightLegs);
-        }
+        Optional<Flight> optionalFlightLeg = findOptionalConnectingFlightLeg(flightPredicate, flightLegsForIata);
+        optionalFlightLeg.ifPresent(flight -> {
+            Flight flightLeg = optionalFlightLeg.get();
+            previousFlightLegs.add(flightLeg);
+            findPreviousFlightLegs(flightLeg, flightsByArrivalAirportIata, previousFlightLegs);
+        });
 
         return previousFlightLegs;
     }
@@ -465,21 +466,21 @@ public class ScheduledFlightConverter {
         String arrivalAirportIata = currentFlightLeg.getArrivalStation();
         List<Flight> flightLegsForIata = flightsByDepartureAirportIata.get(arrivalAirportIata);
         Predicate<Flight> flightPredicate = FlightPredicate.matchNextFlight(currentFlightLeg);
-        Flight optionalFlightLeg = findOptionalConnectingFlightLeg(flightPredicate, flightLegsForIata);
 
-        if (optionalFlightLeg != null) {
-            nextFlightLegs.add(optionalFlightLeg);
-            findNextFlightLegs(optionalFlightLeg, flightsByDepartureAirportIata, nextFlightLegs);
-        }
+        Optional<Flight> optionalFlightLeg = findOptionalConnectingFlightLeg(flightPredicate, flightLegsForIata);
+        optionalFlightLeg.ifPresent(flight -> {
+            Flight flightLeg = optionalFlightLeg.get();
+            nextFlightLegs.add(flightLeg);
+            findNextFlightLegs(flightLeg, flightsByDepartureAirportIata, nextFlightLegs);
+        });
 
         return nextFlightLegs;
     }
 
-    public Flight findOptionalConnectingFlightLeg(Predicate<Flight> flightPredicate, List<Flight> flightLegs) {
-        Optional<Flight> optionalStopoverFlight = flightLegs.stream()
+    public Optional<Flight> findOptionalConnectingFlightLeg(Predicate<Flight> flightPredicate, List<Flight> flightLegs) {
+        return flightLegs.stream()
                 .filter(flightPredicate)
                 .findFirst();
-        return optionalStopoverFlight.orElse(null);
     }
 
     public List<Triple<StopVisitType, String, OffsetTime>> extractStopoversFromFlights(List<Flight> stopoverFlights) {
