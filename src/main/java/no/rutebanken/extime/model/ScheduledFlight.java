@@ -28,6 +28,7 @@ public class ScheduledFlight {
     private LocalDate dateOfOperation;
     private OffsetTime timeOfDeparture;
     private OffsetTime timeOfArrival;
+    private String lineDesignation;
     private String stopsDesignation;
     private String timesDesignation;
     private List<ScheduledStopover> scheduledStopovers;
@@ -120,6 +121,14 @@ public class ScheduledFlight {
         this.timeOfArrival = timeOfArrival;
     }
 
+    public String getLineDesignation() {
+        return lineDesignation;
+    }
+
+    public void setLineDesignation(String lineDesignation) {
+        this.lineDesignation = lineDesignation;
+    }
+
     public String getStopsDesignation() {
         return stopsDesignation;
     }
@@ -200,6 +209,7 @@ public class ScheduledFlight {
                 Objects.equal(dateOfOperation, that.dateOfOperation) &&
                 Objects.equal(timeOfDeparture, that.timeOfDeparture) &&
                 Objects.equal(timeOfArrival, that.timeOfArrival) &&
+                Objects.equal(lineDesignation, that.lineDesignation) &&
                 Objects.equal(stopsDesignation, that.stopsDesignation) &&
                 Objects.equal(timesDesignation, that.timesDesignation) &&
                 Objects.equal(scheduledStopovers, that.scheduledStopovers);
@@ -207,9 +217,7 @@ public class ScheduledFlight {
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(flightId, airlineIATA, airlineName, airlineFlightId, departureAirportIATA,
-                arrivalAirportIATA, departureAirportName, arrivalAirportName, dateOfOperation, timeOfDeparture,
-                timeOfArrival, stopsDesignation, timesDesignation, scheduledStopovers);
+        return Objects.hashCode(flightId, airlineIATA, airlineName, airlineFlightId, departureAirportIATA, arrivalAirportIATA, departureAirportName, arrivalAirportName, dateOfOperation, timeOfDeparture, timeOfArrival, lineDesignation, stopsDesignation, timesDesignation, scheduledStopovers);
     }
 
     @Override
@@ -226,6 +234,7 @@ public class ScheduledFlight {
                 .add("dateOfOperation", dateOfOperation)
                 .add("timeOfDeparture", timeOfDeparture)
                 .add("timeOfArrival", timeOfArrival)
+                .add("lineDesignation", lineDesignation)
                 .add("stopsDesignation", stopsDesignation)
                 .add("timesDesignation", timesDesignation)
                 .add("scheduledStopovers", scheduledStopovers)
