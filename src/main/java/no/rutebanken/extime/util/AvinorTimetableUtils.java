@@ -75,7 +75,6 @@ public class AvinorTimetableUtils {
     }
 
     public void findUniqueAirlines(List<Flight> flights) {
-        System.out.printf("%nUnique airline designators:%n");
         flights.stream()
                 .map(Flight::getAirlineDesignator)
                 .distinct()

@@ -1,13 +1,23 @@
 package no.rutebanken.extime.util;
 
 import no.avinor.flydata.xjc.model.scheduled.Flight;
+import no.rutebanken.extime.config.CamelRouteDisabler;
 import no.rutebanken.extime.model.StopVisitType;
 import org.assertj.core.api.Assertions;
-import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-@Ignore // TODO fix this to be able to run tests again (springify)
+@ActiveProfiles("test")
+@RunWith(SpringJUnit4ClassRunner.class)
+@SpringApplicationConfiguration(classes = {CamelRouteDisabler.class, AvinorTimetableUtils.class})
 public class AvinorTimetableUtilsTest {
+
+    @Autowired
+    private AvinorTimetableUtils avinorTimetableUtils;
 
     @Test
     public void testIsValidFlight() throws Exception {

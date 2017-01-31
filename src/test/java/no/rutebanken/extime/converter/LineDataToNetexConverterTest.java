@@ -5,7 +5,6 @@ import no.rutebanken.extime.config.CamelRouteDisabler;
 import no.rutebanken.extime.fixtures.LineDataSetFixture;
 import no.rutebanken.extime.model.FlightRoute;
 import no.rutebanken.extime.model.LineDataSet;
-import no.rutebanken.extime.model.ScheduledStopover;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -17,9 +16,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import javax.xml.bind.JAXBElement;
 import java.time.OffsetDateTime;
-import java.time.OffsetTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -36,101 +33,6 @@ public class LineDataToNetexConverterTest {
 
     @Autowired
     private LineDataToNetexConverter netexConverter;
-
-    @Test
-    public void testLineWithDirectRoutes() throws Exception {
-        LineDataSet lineDataSet = LineDataSetFixture.createLineDataSet(
-                "DY", "OSL-BGO", Arrays.asList(Pair.of("OSL-BGO", 1), Pair.of("BGO-OSL", 1)));
-
-        JAXBElement<PublicationDeliveryStructure> publicationDeliveryElement = netexConverter.convertToNetex(lineDataSet);
-        PublicationDeliveryStructure publicationDelivery = publicationDeliveryElement.getValue();
-        assertValidPublicationDelivery(publicationDelivery, lineDataSet.getLineName());
-
-        List<JAXBElement<? extends Common_VersionFrameStructure>> dataObjectFrames = getDataObjectFrames(publicationDelivery);
-        ServiceFrame serviceFrame = getFrames(ServiceFrame.class, dataObjectFrames).get(0);
-        TimetableFrame timetableFrame = getFrames(TimetableFrame.class, dataObjectFrames).get(0);
-        ServiceCalendarFrame serviceCalendarFrame = getFrames(ServiceCalendarFrame.class, dataObjectFrames).get(0);
-
-        Line line = (Line) serviceFrame.getLines().getLine_().get(0).getValue();
-
-        assertValidNetwork(serviceFrame.getNetwork(), lineDataSet.getAirlineIata());
-        assertValidLine(line, lineDataSet);
-        assertValidRoutes(serviceFrame.getRoutes(), lineDataSet, line);
-        assertValidJourneyPatterns(serviceFrame.getJourneyPatterns(), lineDataSet);
-
-/*
-        List<Object> validityConditions = compositeFrame.getValidityConditions().getValidityConditionRefOrValidBetweenOrValidityCondition_();
-        AvailabilityCondition availabilityCondition = (AvailabilityCondition) ((JAXBElement) validityConditions.get(0)).getValue();
-
-        assertThat(availabilityCondition.getFromDate()).isEqualTo(requestPeriodFromDateTime);
-        assertThat(availabilityCondition.getToDate()).isEqualTo(requestPeriodToDateTime);
-*/
-
-        // check destination displays
-        List<DestinationDisplay> destinationDisplay = serviceFrame.getDestinationDisplays().getDestinationDisplay();
-        assertThat(destinationDisplay)
-                .hasSize(4)
-                .extracting("id")
-                .contains("AVI:DestinationDisplay:DY_OSL-BGO", "AVI:DestinationDisplay:DY_BGO-OSL", "AVI:DestinationDisplay:DYOSLBGO-OSL", "AVI:DestinationDisplay:DYOSLBGO-BGO");
-        assertThat(destinationDisplay.get(0).getVias())
-                .isNull();
-        assertThat(destinationDisplay.get(1).getVias())
-                .isNull();
-
-        List<ServiceJourney> serviceJourneys = timetableFrame.getVehicleJourneys().getDatedServiceJourneyOrDeadRunOrServiceJourney().stream()
-                .map(journey -> (ServiceJourney) journey)
-                .collect(Collectors.toList());
-
-        // check first service journey
-        //Assertions.assertThat(serviceJourneys.get(0).getDepartureTime()).isEqualTo(flight1DepartureTime);
-        //Assertions.assertThat(serviceJourneys.get(0).getJourneyPatternRef().getValue().getRef()).isEqualTo("AVI:JourneyPattern:OSL-BGO"); // TODO fix journey pattern id
-        //Assertions.assertThat(serviceJourneys.get(0).getPublicCode()).isEqualTo("DY602"); // TODO we will probably know the flight ids
-        assertThat(serviceJourneys.get(0).getLineRef().getValue().getRef()).isEqualTo("AVI:Line:DY-OSL-BGO");
-        //Assertions.assertThat(serviceJourneys.get(0).getDayTypes().getDayTypeRef().get(0).getValue().getRef()).isEqualTo("AVI:DayType:DYOSLBGO-Mon_30"); // TODO consider if it is better to know the operating days before test
-
-        List<TimetabledPassingTime> departurePassingTimes = serviceJourneys.get(0).getPassingTimes().getTimetabledPassingTime();
-        assertThat(departurePassingTimes).hasSize(2);
-        //Assertions.assertThat(departurePassingTimes.get(0).getPointInJourneyPatternRef().getValue().getRef()).isEqualTo(""); // TODO fix journey pattern id
-        //Assertions.assertThat(departurePassingTimes.get(0).getDepartureTime()).isEqualTo(flight1DepartureTime);
-        //Assertions.assertThat(departurePassingTimes.get(1).getPointInJourneyPatternRef().getValue().getRef()).isEqualTo(""); // TODO fix journey pattern id
-        //Assertions.assertThat(departurePassingTimes.get(1).getArrivalTime()).isEqualTo(flight1ArrivalTime);
-
-        // check second service journey
-        //Assertions.assertThat(serviceJourneys.get(1).getDepartureTime()).isEqualTo(flight2DepartureTime);
-        //Assertions.assertThat(serviceJourneys.get(1).getJourneyPatternRef().getValue().getRef()).isEqualTo("AVI:JourneyPattern:OSL-BGO"); // TODO fix journey pattern id
-        //Assertions.assertThat(serviceJourneys.get(1).getPublicCode()).isEqualTo("DY633");  // TODO we will probably know the flight ids
-        assertThat(serviceJourneys.get(1).getLineRef().getValue().getRef()).isEqualTo("AVI:Line:DY-OSL-BGO");
-        //Assertions.assertThat(serviceJourneys.get(1).getDayTypes().getDayTypeRef().get(0).getValue().getRef()).isEqualTo("AVI:DayType:DYOSLBGO-Tue_31"); // TODO consider if it is better to know the operating days before test
-
-        List<TimetabledPassingTime> arrivalPassingTimes = serviceJourneys.get(1).getPassingTimes().getTimetabledPassingTime();
-        assertThat(arrivalPassingTimes).hasSize(2);
-        //Assertions.assertThat(departurePassingTimes.get(0).getPointInJourneyPatternRef().getValue().getRef()).isEqualTo(""); // TODO fix journey pattern id
-        //Assertions.assertThat(arrivalPassingTimes.get(0).getDepartureTime()).isEqualTo(flight2DepartureTime);
-        //Assertions.assertThat(departurePassingTimes.get(1).getPointInJourneyPatternRef().getValue().getRef()).isEqualTo(""); // TODO fix journey pattern id
-        //Assertions.assertThat(arrivalPassingTimes.get(1).getArrivalTime()).isEqualTo(flight2ArrivalTime);
-
-        // check day types
-        List<DayType> dayTypes = serviceCalendarFrame.getDayTypes().getDayType_().stream()
-                .map(JAXBElement::getValue)
-                .map(dayType -> (DayType) dayType)
-                .collect(Collectors.toList());
-
-        assertThat(dayTypes)
-                .hasSize(2);
-                //.extracting("id")
-                //.contains("AVI:DayType:DYOSLBGO-Mon_30", "AVI:DayType:DYOSLBGO-Tue_31"); // TODO consider if it is better to know the operating days before test
-
-        // check day type assignments
-/*
-        Assertions.assertThat(serviceCalendarFrame.getDayTypeAssignments().getDayTypeAssignment())
-                .hasSize(2)
-                .extracting("date", "dayTypeRef.value.ref")
-                .contains(
-                        tuple(flight1DateOfOperation, "AVI:DayType:DYOSLBGO-Mon_30"),
-                        tuple(flight2DateOfOperation, "AVI:DayType:DYOSLBGO-Tue_31")
-                );
-*/
-    }
 
     @Test
     public void testLineWithRoundTripRoutes() throws Exception {
@@ -341,18 +243,6 @@ public class LineDataToNetexConverterTest {
         journeyPatterns.forEach(journeyPattern -> assertThat(journeyPattern.getPointsInSequence()
                 .getPointInJourneyPatternOrStopPointInJourneyPatternOrTimingPointInJourneyPattern()).hasSize(2));
         */
-    }
-
-    private ScheduledStopover createScheduledStopover(String airportIata, OffsetTime arrivalTime, OffsetTime departureTime) {
-        ScheduledStopover scheduledStopover = new ScheduledStopover();
-        scheduledStopover.setAirportIATA(airportIata);
-        if (arrivalTime != null) {
-            scheduledStopover.setArrivalTime(arrivalTime);
-        }
-        if (departureTime != null) {
-            scheduledStopover.setDepartureTime(departureTime);
-        }
-        return scheduledStopover;
     }
 
     private List<JAXBElement<? extends Common_VersionFrameStructure>> getDataObjectFrames(PublicationDeliveryStructure publicationDelivery) {
