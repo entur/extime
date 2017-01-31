@@ -1,24 +1,28 @@
 package no.rutebanken.extime.util;
 
+import no.rutebanken.extime.config.CamelRouteDisabler;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.rutebanken.netex.model.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.math.BigInteger;
 
 import static no.rutebanken.extime.Constants.VERSION_ONE;
 
-@Ignore // TODO springify test
+@ActiveProfiles("test")
+@RunWith(SpringJUnit4ClassRunner.class)
+@SpringApplicationConfiguration(classes = {CamelRouteDisabler.class, NetexObjectFactory.class})
 public class NetexObjectFactoryTest {
 
+    @Autowired
     private NetexObjectFactory netexObjectFactory;
-
-    @Before
-    public void setUp() throws Exception {
-        netexObjectFactory = new NetexObjectFactory();
-    }
 
     @Test
     public void createPointOnRoute() throws Exception {
