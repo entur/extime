@@ -3,7 +3,9 @@ package no.rutebanken.extime.converter;
 import com.google.common.collect.Lists;
 import no.rutebanken.extime.config.CamelRouteDisabler;
 import no.rutebanken.extime.fixtures.LineDataSetFixture;
-import no.rutebanken.extime.model.*;
+import no.rutebanken.extime.model.FlightRoute;
+import no.rutebanken.extime.model.LineDataSet;
+import no.rutebanken.extime.model.ScheduledStopover;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -14,16 +16,17 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import javax.xml.bind.JAXBElement;
-import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
-import java.time.ZoneOffset;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
-import static no.rutebanken.extime.Constants.*;
+import static no.rutebanken.extime.Constants.NETEX_PROFILE_VERSION;
+import static no.rutebanken.extime.Constants.VERSION_ONE;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.groups.Tuple.tuple;
 
 @SuppressWarnings("unchecked")
 @ActiveProfiles("test")
@@ -53,32 +56,15 @@ public class LineDataToNetexConverterTest {
         assertValidNetwork(serviceFrame.getNetwork(), lineDataSet.getAirlineIata());
         assertValidLine(line, lineDataSet);
         assertValidRoutes(serviceFrame.getRoutes(), lineDataSet, line);
+        assertValidJourneyPatterns(serviceFrame.getJourneyPatterns(), lineDataSet);
 
 /*
         List<Object> validityConditions = compositeFrame.getValidityConditions().getValidityConditionRefOrValidBetweenOrValidityCondition_();
         AvailabilityCondition availabilityCondition = (AvailabilityCondition) ((JAXBElement) validityConditions.get(0)).getValue();
 
-        Assertions.assertThat(availabilityCondition.getFromDate())
-                .isEqualTo(requestPeriodFromDateTime);
-        Assertions.assertThat(availabilityCondition.getToDate())
-                .isEqualTo(requestPeriodToDateTime);
+        assertThat(availabilityCondition.getFromDate()).isEqualTo(requestPeriodFromDateTime);
+        assertThat(availabilityCondition.getToDate()).isEqualTo(requestPeriodToDateTime);
 */
-
-        // check journey patterns
-        List<JAXBElement<?>> journeyPatternElements = serviceFrame.getJourneyPatterns().getJourneyPattern_OrJourneyPatternView();
-
-        List<JourneyPattern> journeyPatterns = journeyPatternElements.stream()
-                .map(JAXBElement::getValue)
-                .map(journeyPattern -> (JourneyPattern) journeyPattern)
-                .collect(Collectors.toList());
-
-        assertThat(journeyPatterns)
-                .hasSize(2)
-                .extracting("id", "routeRef.ref")
-                .contains(tuple("AVI:JourneyPattern:DY_OSL-BGO", "AVI:Route:DY_OSL-BGO"), tuple("AVI:JourneyPattern:DY_BGO-OSL", "AVI:Route:DY_BGO-OSL"));
-
-        journeyPatterns.forEach(journeyPattern -> assertThat(journeyPattern.getPointsInSequence()
-                .getPointInJourneyPatternOrStopPointInJourneyPatternOrTimingPointInJourneyPattern()).hasSize(2));
 
         // check destination displays
         List<DestinationDisplay> destinationDisplay = serviceFrame.getDestinationDisplays().getDestinationDisplay();
@@ -166,6 +152,25 @@ public class LineDataToNetexConverterTest {
     }
 
     @Test
+    public void testLineWithStopoverRoutes() throws Exception {
+        List<Pair<String, Integer>> routeJourneyPairs = Lists.newArrayList(Pair.of("TRD-OSL-BGO-MOL-SOG", 1), Pair.of("SOG-MOL-BGO-OSL-TRD", 1));
+        LineDataSet lineDataSet = LineDataSetFixture.createLineDataSet("WF", "TRD-SOG", routeJourneyPairs);
+
+        JAXBElement<PublicationDeliveryStructure> publicationDeliveryElement = netexConverter.convertToNetex(lineDataSet);
+        PublicationDeliveryStructure publicationDelivery = publicationDeliveryElement.getValue();
+        assertValidPublicationDelivery(publicationDelivery, lineDataSet.getLineName());
+
+        List<JAXBElement<? extends Common_VersionFrameStructure>> dataObjectFrames = getDataObjectFrames(publicationDelivery);
+        ServiceFrame serviceFrame = getFrames(ServiceFrame.class, dataObjectFrames).get(0);
+
+        Line line = (Line) serviceFrame.getLines().getLine_().get(0).getValue();
+
+        assertValidNetwork(serviceFrame.getNetwork(), lineDataSet.getAirlineIata());
+        assertValidLine(line, lineDataSet);
+        assertValidRoutes(serviceFrame.getRoutes(), lineDataSet, line);
+    }
+
+    @Test
     public void testDestinationDisplaysNoVias() throws Exception {
         List<Pair<String, Integer>> routeJourneyPairs = Lists.newArrayList(Pair.of("OSL-BGO", 1), Pair.of("BGO-OSL", 1));
         LineDataSet lineDataSet = LineDataSetFixture.createLineDataSet("DY", "OSL-BGO", routeJourneyPairs);
@@ -178,27 +183,8 @@ public class LineDataToNetexConverterTest {
         ServiceFrame serviceFrame = getFrames(ServiceFrame.class, dataObjectFrames).get(0);
 
         // check journey patterns for destination display reference
-        List<JAXBElement<?>> journeyPatternElements = serviceFrame.getJourneyPatterns().getJourneyPattern_OrJourneyPatternView();
-
-        List<JourneyPattern> journeyPatterns = journeyPatternElements.stream()
-                .map(JAXBElement::getValue)
-                .map(journeyPattern -> (JourneyPattern) journeyPattern)
-                .collect(Collectors.toList());
-
-        for (JourneyPattern journeyPattern : journeyPatterns) {
-            if (journeyPattern.getId().equals("AVI:JourneyPattern:DY_OSL-BGO")) {
-                DestinationDisplayRefStructure destinationDisplayRef = journeyPattern.getDestinationDisplayRef();
-                assertThat(destinationDisplayRef).isNotNull();
-                assertThat(destinationDisplayRef.getVersion()).isEqualTo(VERSION_ONE);
-                assertThat(destinationDisplayRef.getRef()).isEqualTo("AVI:DestinationDisplay:DY_OSL-BGO");
-            }
-            if (journeyPattern.getId().equals("AVI:JourneyPattern:DY_BGO-OSL")) {
-                DestinationDisplayRefStructure destinationDisplayRef = journeyPattern.getDestinationDisplayRef();
-                assertThat(destinationDisplayRef).isNotNull();
-                assertThat(destinationDisplayRef.getVersion()).isEqualTo(VERSION_ONE);
-                assertThat(destinationDisplayRef.getRef()).isEqualTo("AVI:DestinationDisplay:DY_BGO-OSL");
-            }
-        }
+        JourneyPatternsInFrame_RelStructure journeyPatternStruct = serviceFrame.getJourneyPatterns();
+        assertValidJourneyPatterns(journeyPatternStruct, lineDataSet);
 
         // check destination displays
         List<DestinationDisplay> destinationDisplays = serviceFrame.getDestinationDisplays().getDestinationDisplay();
@@ -223,98 +209,19 @@ public class LineDataToNetexConverterTest {
 
     @Test
     public void testDestinationDisplaysWithVias() throws Exception {
-        LineDataSet lineDataSet = LineDataSetFixture.createBasicLineDataSet("DY", "OSL-BGO");
-
-        String firstDateOfOperation = "2017-01-30";
-
-        LocalDate requestPeriodFromDate = LocalDate.parse(firstDateOfOperation);
-        LocalDate requestPeriodToDate = requestPeriodFromDate.plusDays(1);
-
-        OffsetTime offsetMidnight = OffsetTime.parse(OFFSET_MIDNIGHT_UTC).withOffsetSameLocal(ZoneOffset.UTC);
-        OffsetDateTime requestPeriodFromDateTime = requestPeriodFromDate.atTime(offsetMidnight);
-        OffsetDateTime requestPeriodToDateTime = requestPeriodToDate.atTime(offsetMidnight);
-
-        AvailabilityPeriod availabilityPeriod = new AvailabilityPeriod(requestPeriodFromDateTime, requestPeriodToDateTime);
-        lineDataSet.setAvailabilityPeriod(availabilityPeriod);
-
-        FlightRoute mainRoute = new FlightRoute("OSL-SOG-BGO", "Oslo-Sogndal-Bergen");
-        FlightRoute oppositeRoute = new FlightRoute("BGO-SOG-OSL", "Bergen-Sogndal-Oslo");
-        List<FlightRoute> flightRoutes = Arrays.asList(mainRoute, oppositeRoute);
-        lineDataSet.setFlightRoutes(flightRoutes);
-
-        Map<String, Map<String, List<ScheduledFlight>>> routeJourneys = new HashMap<>();
-
-        List<ScheduledStopover> flight1Stopovers = Lists.newArrayList(
-                createScheduledStopover("OSL", null, OffsetTime.parse("07:10:00Z")),
-                createScheduledStopover("SOG", OffsetTime.parse("07:50:00Z"), OffsetTime.parse("08:10:00Z")),
-                createScheduledStopover("BGO", OffsetTime.parse("09:00:00Z"), null)
-        );
-        ScheduledFlight scheduledFlight1 = new ScheduledFlight();
-        scheduledFlight1.setAirlineIATA("DY");
-        scheduledFlight1.setAirlineName("Norwegian");
-        scheduledFlight1.setAirlineFlightId("DY602");
-        scheduledFlight1.setDateOfOperation(LocalDate.parse(firstDateOfOperation));
-        scheduledFlight1.setScheduledStopovers(flight1Stopovers);
-        List<ScheduledFlight> routeOslSogBgoFlights = Lists.newArrayList(scheduledFlight1);
-
-        List<ScheduledStopover> flight2Stopovers = Lists.newArrayList(
-                createScheduledStopover("BGO", null, OffsetTime.parse("07:10:00Z")),
-                createScheduledStopover("SOG", OffsetTime.parse("07:50:00Z"), OffsetTime.parse("08:10:00Z")),
-                createScheduledStopover("OSL", OffsetTime.parse("09:00:00Z"), null)
-        );
-        ScheduledFlight scheduledFlight2 = new ScheduledFlight();
-        scheduledFlight2.setAirlineIATA("DY");
-        scheduledFlight2.setAirlineName("Norwegian");
-        scheduledFlight2.setAirlineFlightId("DY633");
-        scheduledFlight2.setDateOfOperation(LocalDate.parse(firstDateOfOperation));
-        scheduledFlight2.setScheduledStopovers(flight2Stopovers);
-        List<ScheduledFlight> routeBgoSogOslFlights = Lists.newArrayList(scheduledFlight2);
-
-        Map<String, List<ScheduledFlight>> dy602Flights = new HashMap<>();
-        dy602Flights.put("DY602", routeOslSogBgoFlights);
-        routeJourneys.put("OSL-SOG-BGO", dy602Flights);
-
-        Map<String, List<ScheduledFlight>> dy633Flights = new HashMap<>();
-        dy633Flights.put("DY633", routeBgoSogOslFlights);
-        routeJourneys.put("BGO-SOG-OSL", dy633Flights);
-
-        lineDataSet.setRouteJourneys(routeJourneys);
+        List<Pair<String, Integer>> routeJourneyPairs = Lists.newArrayList(Pair.of("OSL-SOG-BGO", 1), Pair.of("BGO-SOG-OSL", 1));
+        LineDataSet lineDataSet = LineDataSetFixture.createLineDataSet("DY", "OSL-BGO", routeJourneyPairs);
 
         JAXBElement<PublicationDeliveryStructure> publicationDeliveryElement = netexConverter.convertToNetex(lineDataSet);
         PublicationDeliveryStructure publicationDelivery = publicationDeliveryElement.getValue();
+        assertValidPublicationDelivery(publicationDelivery, lineDataSet.getLineName());
 
-        // check the resulting publication delivery
-        assertThat(publicationDelivery)
-                .isNotNull();
-
-        List<JAXBElement<? extends Common_VersionFrameStructure>> dataObjectFrames = publicationDelivery.getDataObjects().getCompositeFrameOrCommonFrame();
-        CompositeFrame compositeFrame = getFrames(CompositeFrame.class, dataObjectFrames).get(0);
-        List<JAXBElement<? extends Common_VersionFrameStructure>> frames = compositeFrame.getFrames().getCommonFrame();
-
-        ServiceFrame serviceFrame = getFrames(ServiceFrame.class, frames).get(0);
+        List<JAXBElement<? extends Common_VersionFrameStructure>> dataObjectFrames = getDataObjectFrames(publicationDelivery);
+        ServiceFrame serviceFrame = getFrames(ServiceFrame.class, dataObjectFrames).get(0);
 
         // check journey patterns for destination display reference
-        List<JAXBElement<?>> journeyPatternElements = serviceFrame.getJourneyPatterns().getJourneyPattern_OrJourneyPatternView();
-
-        List<JourneyPattern> journeyPatterns = journeyPatternElements.stream()
-                .map(JAXBElement::getValue)
-                .map(journeyPattern -> (JourneyPattern) journeyPattern)
-                .collect(Collectors.toList());
-
-        for (JourneyPattern journeyPattern : journeyPatterns) {
-            if (journeyPattern.getId().equals("AVI:JourneyPattern:DY_OSL-SOG-BGO")) {
-                DestinationDisplayRefStructure destinationDisplayRef = journeyPattern.getDestinationDisplayRef();
-                assertThat(destinationDisplayRef).isNotNull();
-                assertThat(destinationDisplayRef.getVersion()).isEqualTo(VERSION_ONE);
-                assertThat(destinationDisplayRef.getRef()).isEqualTo("AVI:DestinationDisplay:DY_OSL-SOG-BGO");
-            }
-            if (journeyPattern.getId().equals("AVI:JourneyPattern:DY_BGO-SOG-OSL")) {
-                DestinationDisplayRefStructure destinationDisplayRef = journeyPattern.getDestinationDisplayRef();
-                assertThat(destinationDisplayRef).isNotNull();
-                assertThat(destinationDisplayRef.getVersion()).isEqualTo(VERSION_ONE);
-                assertThat(destinationDisplayRef.getRef()).isEqualTo("AVI:DestinationDisplay:DY_BGO-SOG-OSL");
-            }
-        }
+        JourneyPatternsInFrame_RelStructure journeyPatternStruct = serviceFrame.getJourneyPatterns();
+        assertValidJourneyPatterns(journeyPatternStruct, lineDataSet);
 
         // check destination displays
         List<DestinationDisplay> destinationDisplays = serviceFrame.getDestinationDisplays().getDestinationDisplay();
@@ -399,6 +306,41 @@ public class LineDataToNetexConverterTest {
         assertThat(routes).extracting("name.value").containsOnlyElementsOf(routeNames);
 
         assertThat(routes).extracting("lineRef.value.ref").contains(line.getId());
+    }
+
+    private void assertValidJourneyPatterns(JourneyPatternsInFrame_RelStructure journeyPatternStruct, LineDataSet lineDataSet) {
+        List<JAXBElement<?>> journeyPatternElements = journeyPatternStruct.getJourneyPattern_OrJourneyPatternView();
+
+        List<JourneyPattern> journeyPatterns = journeyPatternElements.stream()
+                .map(JAXBElement::getValue)
+                .map(journeyPattern -> (JourneyPattern) journeyPattern)
+                .collect(Collectors.toList());
+        assertThat(journeyPatterns).hasSize(lineDataSet.getFlightRoutes().size());
+
+        Set<String> journeyPatternIds = lineDataSet.getFlightRoutes().stream()
+                .map(FlightRoute::getRouteDesignation)
+                .map(designation -> String.format("AVI:JourneyPattern:%s_%s", lineDataSet.getAirlineIata(), designation))
+                .collect(Collectors.toSet());
+        assertThat(journeyPatterns).extracting(JourneyPattern::getId).containsOnlyElementsOf(journeyPatternIds);
+
+        Set<String> routeIdRefs = lineDataSet.getFlightRoutes().stream()
+                .map(FlightRoute::getRouteDesignation)
+                .map(designation -> String.format("AVI:Route:%s_%s", lineDataSet.getAirlineIata(), designation))
+                .collect(Collectors.toSet());
+        assertThat(journeyPatterns).extracting("routeRef.ref").containsOnlyElementsOf(routeIdRefs);
+
+        Set<String> destinationDisplayIdRefs = lineDataSet.getFlightRoutes().stream()
+                .map(FlightRoute::getRouteDesignation)
+                .map(designation -> String.format("AVI:DestinationDisplay:%s_%s", lineDataSet.getAirlineIata(), designation))
+                .collect(Collectors.toSet());
+        assertThat(journeyPatterns).extracting("destinationDisplayRef.ref").containsOnlyElementsOf(destinationDisplayIdRefs);
+        assertThat(journeyPatterns).extracting("destinationDisplayRef.version").contains(VERSION_ONE);
+
+        // TODO add assertions for points in sequence
+        /*
+        journeyPatterns.forEach(journeyPattern -> assertThat(journeyPattern.getPointsInSequence()
+                .getPointInJourneyPatternOrStopPointInJourneyPatternOrTimingPointInJourneyPattern()).hasSize(2));
+        */
     }
 
     private ScheduledStopover createScheduledStopover(String airportIata, OffsetTime arrivalTime, OffsetTime departureTime) {

@@ -26,7 +26,9 @@ public final class LineDataSetFixture {
         // init airports
         airports.put("OSL", "Oslo");
         airports.put("BGO", "Bergen");
+        airports.put("TRD", "Trondheim");
         airports.put("SOG", "Sogndal");
+        airports.put("MOL", "Molde");
 
         // init airlines
         airlines.put("DY", "Norwegian");
@@ -105,7 +107,26 @@ public final class LineDataSetFixture {
                     OffsetTime timeOfArrival = timeOfDeparture.plusHours(1);
                     scheduledFlight.setTimeOfArrival(timeOfArrival);
                 } else if (routeStops.size() > 2) {
-                    throw new RuntimeException("Unsupported operation");
+                    List<ScheduledStopover> stopovers = Lists.newArrayList();
+                    OffsetTime timeOfArrival = generateOffsetTime();
+                    OffsetTime timeOfDeparture;
+
+                    for (int j = 0; j < routeStops.size(); j++) {
+                        ScheduledStopover stopover = new ScheduledStopover();
+                        stopover.setAirportIATA(routeStops.get(j));
+
+                        if (j > 0) {
+                            stopover.setArrivalTime(timeOfArrival);
+                        }
+                        if (j < routeStops.size() - 1) {
+                            timeOfDeparture = timeOfArrival.plusHours(1);
+                            stopover.setDepartureTime(timeOfDeparture);
+                            timeOfArrival = timeOfDeparture.plusHours(1);
+                        }
+
+                        stopovers.add(stopover);
+                    }
+                    scheduledFlight.getScheduledStopovers().addAll(stopovers);
                 } else {
                     throw new RuntimeException("Illegal route designation : " + routeDesignation);
                 }
@@ -122,6 +143,44 @@ public final class LineDataSetFixture {
         lineDataSet.setRouteJourneys(routeJourneys);
         return lineDataSet;
     }
+
+/*
+    public ScheduledFlight convertToScheduledFlight(Flight flight, List<ScheduledStopover> scheduledStopovers) {
+        Joiner joiner = Joiner.on(DASH).skipNulls();
+
+        ScheduledFlight scheduledFlight = new ScheduledFlight();
+        scheduledFlight.setAirlineIATA(flight.getAirlineDesignator());
+        scheduledFlight.setAirlineFlightId(flight.getAirlineDesignator() + flight.getFlightNumber());
+        scheduledFlight.setDateOfOperation(flight.getDateOfOperation());
+
+        if (CollectionUtils.isNotEmpty(scheduledStopovers)) {
+            scheduledFlight.getScheduledStopovers().addAll(scheduledStopovers);
+            String departureAirportIata = scheduledStopovers.get(0).getAirportIATA();
+            String arrivalAirportIata = scheduledStopovers.get(scheduledStopovers.size() - 1).getAirportIATA();
+            String lineDesignation = joiner.join(departureAirportIata, arrivalAirportIata);
+            scheduledFlight.setLineDesignation(lineDesignation);
+
+            List<String> airportIatas = scheduledStopovers.stream()
+                    .map(ScheduledStopover::getAirportIATA)
+                    .collect(Collectors.toList());
+            scheduledFlight.setStopsDesignation(joiner.join(airportIatas));
+        } else {
+            scheduledFlight.setFlightId(flight.getId());
+            scheduledFlight.setDepartureAirportIATA(flight.getDepartureStation());
+            scheduledFlight.setArrivalAirportIATA(flight.getArrivalStation());
+            scheduledFlight.setTimeOfDeparture(flight.getStd());
+            scheduledFlight.setTimeOfArrival(flight.getSta());
+            String lineDesignation = joiner.join(scheduledFlight.getDepartureAirportIATA(), scheduledFlight.getArrivalAirportIATA());
+            scheduledFlight.setLineDesignation(lineDesignation);
+            scheduledFlight.setStopsDesignation(lineDesignation);
+        }
+
+        //scheduledFlight.setTimesDesignation("");
+
+        return scheduledFlight;
+    }
+*/
+
 
     public static LineDataSet createLineDataSetWithStopovers(String airlineIata, String lineDesignation, List<String> routeDesignations) {
         LineDataSet lineDataSet = LineDataSetFixture.createBasicLineDataSet(airlineIata, lineDesignation);
