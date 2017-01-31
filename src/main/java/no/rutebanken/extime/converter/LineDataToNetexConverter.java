@@ -59,10 +59,6 @@ public class LineDataToNetexConverter {
             netexObjectFactory.clearReferentials();
         }
 
-        // TODO find a better way to use this global referential context, put all objects that are needed for reuse here, like in chouette referential
-        // TODO see: NeptuneObjectFactory or general ObjectFactory in chouette
-        // TODO can we merge this behavior with our NetexObjectFactory instead?
-
         localContext.put(AIRLINE_IATA, lineDataSet.getAirlineIata());
         localContext.put(LINE_DESIGNATION, lineDataSet.getLineDesignation());
 
@@ -372,7 +368,6 @@ public class LineDataToNetexConverter {
 
             String dayTypeIdSuffix = localContext.get(AIRLINE_IATA) + StringUtils.remove(localContext.get(LINE_DESIGNATION), DASH)
                     + DASH + dateOfOperation.format(DateTimeFormatter.ofPattern("EEE_dd"));
-            //String dayTypeIdSuffix = dateOfOperation.format(DateTimeFormatter.ofPattern("EEE_dd"));
 
             String dayTypeId = NetexObjectIdCreator.createDayTypeId(AVINOR_XMLNS, dayTypeIdSuffix);
 
@@ -388,7 +383,6 @@ public class LineDataToNetexConverter {
 
             String assignmentIdSuffix = localContext.get(AIRLINE_IATA) + StringUtils.remove(localContext.get(LINE_DESIGNATION), DASH)
                     + DASH + dateOfOperation.format(DateTimeFormatter.ofPattern("EEE_dd"));
-            //String assignmentIdSuffix = dateOfOperation.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
 
             DayTypeAssignment dayTypeAssignment;
             if (!dayTypeAssignments.containsKey(dayTypeId)) {

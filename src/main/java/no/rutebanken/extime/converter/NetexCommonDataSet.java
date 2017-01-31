@@ -1,7 +1,6 @@
 package no.rutebanken.extime.converter;
 
 import com.google.common.collect.Lists;
-import no.rutebanken.extime.config.NetexConfig;
 import no.rutebanken.extime.config.NetexStaticDataSet;
 import no.rutebanken.extime.config.NetexStaticDataSet.StopPlaceDataSet;
 import no.rutebanken.extime.model.AirportIATA;
@@ -12,8 +11,6 @@ import org.rutebanken.netex.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.AutoConfigureAfter;
-import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Component;
 
@@ -26,8 +23,6 @@ import java.util.Map;
 
 import static no.rutebanken.extime.Constants.*;
 
-//@AutoConfigureAfter(value = {NetexConfig.class, NetexStaticDataSet.class})
-//@AutoConfigureBefore(value = {NetexConfig.class, NetexStaticDataSet.class})
 @Component(value = "netexCommonDataSet")
 @DependsOn("netexStaticDataSet")
 public class NetexCommonDataSet {
@@ -119,7 +114,6 @@ public class NetexCommonDataSet {
         logger.info("map populated with {} stop points", stopPointMap.size());
     }
 
-    // TODO find out how to handle and set the order attribute for stop assignments
     private void populateStopAssignmentMap() {
         List<AirportIATA> airportIATAS = Lists.newArrayList(AirportIATA.values());
         airportIATAS.sort(Comparator.comparing(Enum::name));

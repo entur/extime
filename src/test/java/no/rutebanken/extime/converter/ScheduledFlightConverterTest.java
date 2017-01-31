@@ -4,15 +4,11 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import no.avinor.flydata.xjc.model.scheduled.Flight;
 import no.avinor.flydata.xjc.model.scheduled.Flights;
-import no.rutebanken.extime.model.AirportIATA;
 import no.rutebanken.extime.model.FlightPredicate;
-import no.rutebanken.extime.model.ScheduledFlight;
 import no.rutebanken.extime.model.StopVisitType;
-import org.apache.commons.lang3.EnumUtils;
 import org.apache.commons.lang3.tuple.Triple;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import javax.xml.bind.JAXBContext;
@@ -32,75 +28,6 @@ public class ScheduledFlightConverterTest {
     @Before
     public void setUp() throws Exception {
         clazzUnderTest = new ScheduledFlightConverter();
-    }
-
-    @Test
-    @Ignore
-    public void convertFlights() throws Exception {
-        AirportIATA[] airportIATAs = Arrays.stream(AirportIATA.values())
-                .filter(iata -> !iata.equals(AirportIATA.OSL))
-                .toArray(AirportIATA[]::new);
-        ArrayList<Flight> masterFlights = Lists.newArrayList();
-        for (int i = 1; i <= 2; i++) {
-            for (AirportIATA airportIATA : airportIATAs) {
-                String resourceName = String.format("%s-%d.xml", airportIATA, i);
-                Flights flightStructure = generateObjectsFromXml(String.format("/xml/testdata/%s", resourceName), Flights.class);
-                List<Flight> flights = flightStructure.getFlight();
-                masterFlights.addAll(flights);
-            }
-        }
-        ArrayList<Flight> finalList = Lists.newArrayList();
-        for (Flight flight : masterFlights) {
-            for (StopVisitType stopVisitType : StopVisitType.values()) {
-                if (isValidFlight(stopVisitType, flight)) {
-                    finalList.add(flight);
-                }
-            }
-        }
-        //List<ScheduledFlight> scheduledFlights = clazzUnderTest.convertToLineCentricDataSets(finalList);
-        //Assertions.assertThat(scheduledFlights).isNotNull();
-    }
-
-    @Test
-    @Ignore
-    public void convertStopoverFlights() throws Exception {
-        ScheduledFlight expectedWF148Flight = new ScheduledFlight();
-        expectedWF148Flight.setAirlineIATA("WF");
-        expectedWF148Flight.setAirlineFlightId("WF148");
-        expectedWF148Flight.setDateOfOperation(LocalDate.parse("2016-08-16"));
-
-        ScheduledFlight expectedWF149Flight = new ScheduledFlight();
-        expectedWF149Flight.setAirlineIATA("WF");
-        expectedWF149Flight.setAirlineFlightId("WF149");
-        expectedWF149Flight.setDateOfOperation(LocalDate.parse("2016-08-17"));
-
-        Flights flights = generateObjectsFromXml("/xml/wf148-wf149.xml", Flights.class);
-        //List<ScheduledFlight> scheduledFlights = clazzUnderTest.convertToLineCentricDataSets(flights.getFlight());
-
-/*
-        Assertions.assertThat(scheduledFlights)
-                .isNotNull()
-                .isNotEmpty()
-                .hasSize(3);
-
-        String[] fieldsToCompare = {"airlineIATA", "airlineFlightId", "dateOfOperation"};
-
-        Assertions.assertThat(scheduledFlights.get(0))
-                .isExactlyInstanceOf(ScheduledFlight.class)
-                .isEqualToComparingOnlyGivenFields(expectedWF148Flight, fieldsToCompare);
-        Assertions.assertThat(scheduledFlights.get(0).getScheduledStopovers())
-                .isNotNull()
-                .isNotEmpty()
-                .hasSize(4);
-
-        Assertions.assertThat(scheduledFlights.get(1))
-                .isExactlyInstanceOf(ScheduledFlight.class)
-                .isEqualToComparingOnlyGivenFields(expectedWF149Flight, fieldsToCompare);
-        Assertions.assertThat(scheduledFlights.get(1).getScheduledStopovers())
-                .isNotNull()
-                .isNotEmpty()
-                .hasSize(4);
-*/
     }
 
     @Test
@@ -131,43 +58,6 @@ public class ScheduledFlightConverterTest {
                 .isEqualTo(StopVisitType.ARRIVAL);
         Assertions.assertThat(triples.get(5).getMiddle())
                 .isEqualTo("SVG");
-    }
-
-    @Test
-    @Ignore
-    public void convertFlightToScheduledDirectFlight() throws Exception {
-        Flight dummyFlight = createFlight(1L, "SK", "4455",
-                LocalDate.parse("2017-01-01"), "BGO", OffsetTime.MIN, "OSL", OffsetTime.MAX);
-
-        ScheduledFlight directFlight = clazzUnderTest.convertToScheduledFlight(dummyFlight, null);
-
-        Assertions.assertThat(directFlight)
-                .isNotNull()
-                .isInstanceOf(ScheduledFlight.class);
-        Assertions.assertThat(directFlight.getFlightId())
-                .isNotNull()
-                .isEqualTo(dummyFlight.getId());
-        Assertions.assertThat(directFlight.getAirlineIATA())
-                .isNotNull()
-                .isEqualTo(dummyFlight.getAirlineDesignator());
-        Assertions.assertThat(directFlight.getAirlineFlightId())
-                .isNotNull()
-                .isEqualTo(String.format("%s%s", dummyFlight.getAirlineDesignator(), dummyFlight.getFlightNumber()));
-        Assertions.assertThat(directFlight.getDateOfOperation())
-                .isNotNull()
-                .isEqualTo(dummyFlight.getDateOfOperation());
-        Assertions.assertThat(directFlight.getDepartureAirportIATA())
-                .isNotNull()
-                .isEqualTo(dummyFlight.getDepartureStation());
-        Assertions.assertThat(directFlight.getArrivalAirportIATA())
-                .isNotNull()
-                .isEqualTo(dummyFlight.getArrivalStation());
-        Assertions.assertThat(directFlight.getTimeOfDeparture())
-                .isNotNull()
-                .isEqualTo(dummyFlight.getStd());
-        Assertions.assertThat(directFlight.getTimeOfArrival())
-                .isNotNull()
-                .isEqualTo(dummyFlight.getSta());
     }
 
     @Test
@@ -220,14 +110,6 @@ public class ScheduledFlightConverterTest {
         boolean isDirectFlightRoute = clazzUnderTest.isDirectFlightRoute(flightLegs);
 
         Assertions.assertThat(isDirectFlightRoute).isFalse();
-    }
-
-    @Test
-    public void testCreateScheduledStopovers() throws Exception {
-    }
-
-    @Test
-    public void testCreateScheduledStopoverFlight() throws Exception {
     }
 
     @Test
@@ -576,29 +458,6 @@ public class ScheduledFlightConverterTest {
         return flight;
     }
 
-    // @todo: refactor! - duplicate in AvinorTimetableUtils (make static)
-    private boolean isValidFlight(StopVisitType stopVisitType, Flight newFlight) {
-        switch (stopVisitType) {
-            case ARRIVAL:
-                return AirportIATA.OSL.name().equalsIgnoreCase(newFlight.getDepartureStation());
-            case DEPARTURE:
-                return isDomesticFlight(newFlight);
-        }
-        return false;
-    }
-
-    // @todo: refactor! - duplicate in AvinorTimetableUtils (make static)
-    private boolean isDomesticFlight(Flight flight) {
-        return isValidDepartureAndArrival(flight.getDepartureStation(), flight.getArrivalStation());
-    }
-
-    // @todo: refactor! - duplicate in AvinorTimetableUtils (make static)
-    private boolean isValidDepartureAndArrival(String departureIATA, String arrivalIATA) {
-        return EnumUtils.isValidEnum(AirportIATA.class, departureIATA)
-                && EnumUtils.isValidEnum(AirportIATA.class, arrivalIATA);
-    }
-
-    // @todo: refactor! - duplicate in AvinorTimetableUtils (make static)
     private <T> T generateObjectsFromXml(String resourceName, Class<T> clazz) throws JAXBException {
         return JAXBContext.newInstance(clazz).createUnmarshaller().unmarshal(
                 new StreamSource(getClass().getResourceAsStream(resourceName)), clazz).getValue();

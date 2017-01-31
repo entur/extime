@@ -6,7 +6,6 @@ import com.google.common.collect.Range;
 import no.avinor.flydata.xjc.model.scheduled.Flight;
 import no.rutebanken.extime.model.AirportIATA;
 import no.rutebanken.extime.model.ScheduledFlight;
-import no.rutebanken.extime.model.ScheduledStopover;
 import no.rutebanken.extime.model.StopVisitType;
 import no.rutebanken.extime.util.DateUtils;
 import org.apache.camel.Exchange;
@@ -385,27 +384,6 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
                 createDummyFlight(2L, "DY", "6677", LocalDate.parse("2017-01-02"), "BGO", OffsetTime.MIN, "TRD", OffsetTime.MAX),
                 createDummyFlight(3L, "WF", "199", LocalDate.parse("2017-01-03"), "BGO", OffsetTime.MIN, "SVG", OffsetTime.MAX)
         );
-    }
-
-    private List<ScheduledStopover> createScheduledStopovers() {
-        return Lists.newArrayList(
-                createScheduledStopover("OSL", null, OffsetTime.parse("12:15:00Z")),
-                createScheduledStopover("HOV", OffsetTime.parse("12:45:00Z"), OffsetTime.parse("13:00:00Z")),
-                createScheduledStopover("SOG", OffsetTime.parse("13:30:00Z"), OffsetTime.parse("13:45:00Z")),
-                createScheduledStopover("BGO", OffsetTime.parse("14:15:00Z"), null)
-        );
-    }
-
-    private ScheduledStopover createScheduledStopover(String airportIata, OffsetTime arrivalTime, OffsetTime departureTime) {
-        ScheduledStopover scheduledStopover = new ScheduledStopover();
-        scheduledStopover.setAirportIATA(airportIata);
-        if (arrivalTime != null) {
-            scheduledStopover.setArrivalTime(arrivalTime);
-        }
-        if (departureTime != null) {
-            scheduledStopover.setDepartureTime(departureTime);
-        }
-        return scheduledStopover;
     }
 
     private ScheduledFlight createScheduledFlight(String airlineIATA, String airlineFlightId, LocalDate dateOfOperation) {

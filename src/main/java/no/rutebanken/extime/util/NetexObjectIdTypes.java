@@ -24,7 +24,7 @@ public interface NetexObjectIdTypes {
     String POINT_ON_ROUTE_KEY = "PointOnRoute";
     String JOURNEY_PATTERN_KEY = "JourneyPattern";
     String STOP_POINT_IN_JOURNEY_PATTERN_KEY = "StopPointInJourneyPattern";
-    public String DESTINATION_DISPLAY = "DestinationDisplay";
+    String DESTINATION_DISPLAY = "DestinationDisplay";
     String DAY_TYPE_KEY = "DayType";
     String DAY_TYPE_ASSIGNMENT_KEY = "DayTypeAssignment";
     String AVAILABILITY_CONDITION_KEY = "AvailabilityCondition";

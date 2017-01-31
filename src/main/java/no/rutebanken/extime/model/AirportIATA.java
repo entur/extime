@@ -53,6 +53,5 @@ public enum AirportIATA {
 
     public static EnumSet<AirportIATA> LARGE_SIZED_AIRPORTS = EnumSet.of(OSL);
     public static EnumSet<AirportIATA> MEDIUM_SIZED_AIRPORTS = EnumSet.of(BGO, BOO, SVG, TRD);
-    //public static EnumSet<AirportIATA> SMALL_SIZED_AIRPORTS = EnumSet.of("The rest of them...");
 
 }

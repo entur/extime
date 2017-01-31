@@ -1,13 +1,14 @@
 package no.rutebanken.extime.model;
 
 import no.avinor.flydata.xjc.model.scheduled.Flight;
-import org.assertj.core.api.Assertions;
 import org.junit.Test;
 
 import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.OffsetTime;
 import java.util.function.Predicate;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class FlightPredicateTest {
 
@@ -20,8 +21,7 @@ public class FlightPredicateTest {
                 OffsetTime.parse("07:00:00Z"), "BGO", OffsetTime.parse("07:30:00Z"));
 
         Predicate<Flight> predicate = FlightPredicate.matchPreviousFlight(flight1);
-        Assertions.assertThat(predicate.test(flight2))
-                .isTrue();
+        assertThat(predicate.test(flight2)).isTrue();
     }
 
     @Test
@@ -33,8 +33,7 @@ public class FlightPredicateTest {
                 OffsetTime.parse("08:00:00Z"), "SOG", OffsetTime.parse("08:30:00Z"));
 
         Predicate<Flight> predicate = FlightPredicate.matchNextFlight(flight1);
-        Assertions.assertThat(predicate.test(flight2))
-                .isTrue();
+        assertThat(predicate.test(flight2)).isTrue();
     }
 
     @Test
@@ -43,9 +42,9 @@ public class FlightPredicateTest {
                 OffsetTime.parse("08:00:00Z"), "OSL", OffsetTime.parse("08:30:00Z"));
         Flight flight2 = createFlight(1L, "SK", "4455", LocalDate.parse("2017-01-01"), "OSL",
                 OffsetTime.parse("09:00:00Z"), "TRD", OffsetTime.parse("09:30:00Z"));
+
         Predicate<Flight> predicate = FlightPredicate.matchPreviousFlightId(flight1);
-        Assertions.assertThat(predicate.test(flight2))
-                .isTrue();
+        assertThat(predicate.test(flight2)).isTrue();
     }
 
     @Test
@@ -54,9 +53,9 @@ public class FlightPredicateTest {
                 OffsetTime.parse("08:00:00Z"), "OSL", OffsetTime.parse("08:30:00Z"));
         Flight flight2 = createFlight(2L, "SK", "4455", LocalDate.parse("2017-01-01"), "OSL",
                 OffsetTime.parse("09:00:00Z"), "TRD", OffsetTime.parse("09:30:00Z"));
+
         Predicate<Flight> predicate = FlightPredicate.matchPreviousFlightId(flight1);
-        Assertions.assertThat(predicate.test(flight2))
-                .isFalse();
+        assertThat(predicate.test(flight2)).isFalse();
     }
 
     @Test
@@ -65,9 +64,9 @@ public class FlightPredicateTest {
                 OffsetTime.parse("08:00:00Z"), "OSL", OffsetTime.parse("08:30:00Z"));
         Flight flight2 = createFlight(2L, "SK", "4455", LocalDate.parse("2017-01-01"), "OSL",
                 OffsetTime.parse("09:00:00Z"), "TRD", OffsetTime.parse("09:30:00Z"));
+
         Predicate<Flight> predicate = FlightPredicate.matchNextFlightId(flight1);
-        Assertions.assertThat(predicate.test(flight2))
-                .isTrue();
+        assertThat(predicate.test(flight2)).isTrue();
     }
 
     @Test
@@ -76,9 +75,9 @@ public class FlightPredicateTest {
                 OffsetTime.parse("08:00:00Z"), "OSL", OffsetTime.parse("08:30:00Z"));
         Flight flight2 = createFlight(1L, "SK", "4455", LocalDate.parse("2017-01-01"), "OSL",
                 OffsetTime.parse("09:00:00Z"), "TRD", OffsetTime.parse("09:30:00Z"));
+
         Predicate<Flight> predicate = FlightPredicate.matchNextFlightId(flight1);
-        Assertions.assertThat(predicate.test(flight2))
-                .isFalse();
+        assertThat(predicate.test(flight2)).isFalse();
     }
 
     @Test
@@ -87,9 +86,9 @@ public class FlightPredicateTest {
                 OffsetTime.parse("08:00:00Z"), "OSL", OffsetTime.parse("08:30:00Z"));
         Flight flight2 = createFlight(1L, "SK", "4455", LocalDate.parse("2017-01-01"), "OSL",
                 OffsetTime.parse("09:00:00Z"), "BGO", OffsetTime.parse("09:30:00Z"));
+
         Predicate<Flight> predicate = FlightPredicate.matchPreviousByIata(flight1);
-        Assertions.assertThat(predicate.test(flight2))
-                .isTrue();
+        assertThat(predicate.test(flight2)).isTrue();
     }
 
     @Test
@@ -98,9 +97,9 @@ public class FlightPredicateTest {
                 OffsetTime.parse("08:00:00Z"), "OSL", OffsetTime.parse("08:30:00Z"));
         Flight flight2 = createFlight(2L, "SK", "4455", LocalDate.parse("2017-01-01"), "TOS",
                 OffsetTime.parse("09:00:00Z"), "TRD", OffsetTime.parse("09:30:00Z"));
+
         Predicate<Flight> predicate = FlightPredicate.matchPreviousByIata(flight1);
-        Assertions.assertThat(predicate.test(flight2))
-                .isFalse();
+        assertThat(predicate.test(flight2)).isFalse();
     }
 
     @Test
@@ -109,9 +108,9 @@ public class FlightPredicateTest {
                 OffsetTime.parse("08:00:00Z"), "OSL", OffsetTime.parse("08:30:00Z"));
         Flight flight2 = createFlight(2L, "SK", "4455", LocalDate.parse("2017-01-01"), "OSL",
                 OffsetTime.parse("09:00:00Z"), "TRD", OffsetTime.parse("09:30:00Z"));
+
         Predicate<Flight> predicate = FlightPredicate.matchNextByIata(flight1);
-        Assertions.assertThat(predicate.test(flight2))
-                .isTrue();
+        assertThat(predicate.test(flight2)).isTrue();
     }
 
     @Test
@@ -120,9 +119,9 @@ public class FlightPredicateTest {
                 OffsetTime.parse("08:00:00Z"), "TRD", OffsetTime.parse("08:30:00Z"));
         Flight flight2 = createFlight(1L, "SK", "4455", LocalDate.parse("2017-01-01"), "OSL",
                 OffsetTime.parse("09:00:00Z"), "TRD", OffsetTime.parse("09:30:00Z"));
+
         Predicate<Flight> predicate = FlightPredicate.matchNextByIata(flight1);
-        Assertions.assertThat(predicate.test(flight2))
-                .isFalse();
+        assertThat(predicate.test(flight2)).isFalse();
     }
 
     @Test
@@ -131,9 +130,9 @@ public class FlightPredicateTest {
                 OffsetTime.parse("09:00:00Z"), "OSL", OffsetTime.parse("08:30:00Z"));
         Flight flight2 = createFlight(1L, "SK", "4455", LocalDate.parse("2017-01-01"), "OSL",
                 OffsetTime.parse("08:00:00Z"), "TRD", OffsetTime.parse("08:30:00Z"));
+
         Predicate<Flight> predicate = FlightPredicate.matchPreviousByTime(flight1);
-        Assertions.assertThat(predicate.test(flight2))
-                .isTrue();
+        assertThat(predicate.test(flight2)).isTrue();
     }
 
     @Test
@@ -142,9 +141,9 @@ public class FlightPredicateTest {
                 OffsetTime.parse("08:00:00Z"), "OSL", OffsetTime.parse("08:30:00Z"));
         Flight flight2 = createFlight(2L, "SK", "4455", LocalDate.parse("2017-01-01"), "TOS",
                 OffsetTime.parse("09:00:00Z"), "TRD", OffsetTime.parse("09:30:00Z"));
+
         Predicate<Flight> predicate = FlightPredicate.matchPreviousByTime(flight1);
-        Assertions.assertThat(predicate.test(flight2))
-                .isFalse();
+        assertThat(predicate.test(flight2)).isFalse();
     }
 
     @Test
@@ -153,9 +152,9 @@ public class FlightPredicateTest {
                 OffsetTime.parse("08:00:00Z"), "OSL", OffsetTime.parse("08:30:00Z"));
         Flight flight2 = createFlight(2L, "SK", "4455", LocalDate.parse("2017-01-01"), "OSL",
                 OffsetTime.parse("09:00:00Z"), "TRD", OffsetTime.parse("09:30:00Z"));
+
         Predicate<Flight> predicate = FlightPredicate.matchNextByTime(flight1);
-        Assertions.assertThat(predicate.test(flight2))
-                .isTrue();
+        assertThat(predicate.test(flight2)).isTrue();
     }
 
     @Test
@@ -164,9 +163,9 @@ public class FlightPredicateTest {
                 OffsetTime.parse("08:00:00Z"), "OSL", OffsetTime.parse("08:30:00Z"));
         Flight flight2 = createFlight(1L, "SK", "4455", LocalDate.parse("2017-01-01"), "OSL",
                 OffsetTime.parse("07:00:00Z"), "TRD", OffsetTime.parse("07:30:00Z"));
+
         Predicate<Flight> predicate = FlightPredicate.matchNextByTime(flight1);
-        Assertions.assertThat(predicate.test(flight2))
-                .isFalse();
+        assertThat(predicate.test(flight2)).isFalse();
     }
 
     @Test
@@ -175,9 +174,9 @@ public class FlightPredicateTest {
                 OffsetTime.parse("08:00:00Z"), "OSL", OffsetTime.parse("08:30:00Z"));
         Flight flight2 = createFlight(2L, "SK", "4455", LocalDate.parse("2017-01-01"), "OSL",
                 OffsetTime.parse("09:00:00Z"), "TRD", OffsetTime.parse("09:30:00Z"));
+
         Predicate<Flight> predicate = FlightPredicate.matchDesignator(flight1);
-        Assertions.assertThat(predicate.test(flight2))
-                .isTrue();
+        assertThat(predicate.test(flight2)).isTrue();
     }
 
     @Test
@@ -186,9 +185,9 @@ public class FlightPredicateTest {
                 OffsetTime.parse("08:00:00Z"), "OSL", OffsetTime.parse("08:30:00Z"));
         Flight flight2 = createFlight(2L, "DY", "8899", LocalDate.parse("2017-01-01"), "OSL",
                 OffsetTime.parse("09:00:00Z"), "TRD", OffsetTime.parse("09:30:00Z"));
+
         Predicate<Flight> predicate = FlightPredicate.matchDesignator(flight1);
-        Assertions.assertThat(predicate.test(flight2))
-                .isFalse();
+        assertThat(predicate.test(flight2)).isFalse();
     }
 
     @Test
@@ -197,9 +196,9 @@ public class FlightPredicateTest {
                 OffsetTime.parse("08:00:00Z"), "OSL", OffsetTime.parse("08:30:00Z"));
         Flight flight2 = createFlight(2L, "SK", "4455", LocalDate.parse("2017-01-01"), "OSL",
                 OffsetTime.parse("09:00:00Z"), "TRD", OffsetTime.parse("09:30:00Z"));
+
         Predicate<Flight> predicate = FlightPredicate.matchFlightNumber(flight1);
-        Assertions.assertThat(predicate.test(flight2))
-                .isTrue();
+        assertThat(predicate.test(flight2)).isTrue();
     }
 
     @Test
@@ -208,9 +207,9 @@ public class FlightPredicateTest {
                 OffsetTime.parse("08:00:00Z"), "OSL", OffsetTime.parse("08:30:00Z"));
         Flight flight2 = createFlight(2L, "DY", "8899", LocalDate.parse("2017-01-01"), "OSL",
                 OffsetTime.parse("09:00:00Z"), "TRD", OffsetTime.parse("09:30:00Z"));
+
         Predicate<Flight> predicate = FlightPredicate.matchFlightNumber(flight1);
-        Assertions.assertThat(predicate.test(flight2))
-                .isFalse();
+        assertThat(predicate.test(flight2)).isFalse();
     }
 
     @Test
@@ -219,9 +218,9 @@ public class FlightPredicateTest {
                 OffsetTime.parse("08:00:00Z"), "OSL", OffsetTime.parse("08:30:00Z"));
         Flight flight2 = createFlight(2L, "SK", "4455", LocalDate.parse("2017-01-01"), "OSL",
                 OffsetTime.parse("09:00:00Z"), "TRD", OffsetTime.parse("09:30:00Z"));
+
         Predicate<Flight> predicate = FlightPredicate.matchDateOfOperation(flight1);
-        Assertions.assertThat(predicate.test(flight2))
-                .isTrue();
+        assertThat(predicate.test(flight2)).isTrue();
     }
 
     @Test
@@ -230,13 +229,13 @@ public class FlightPredicateTest {
                 OffsetTime.parse("08:00:00Z"), "OSL", OffsetTime.parse("08:30:00Z"));
         Flight flight2 = createFlight(2L, "DY", "8899", LocalDate.parse("2018-01-01"), "OSL",
                 OffsetTime.parse("09:00:00Z"), "TRD", OffsetTime.parse("09:30:00Z"));
+
         Predicate<Flight> predicate = FlightPredicate.matchDateOfOperation(flight1);
-        Assertions.assertThat(predicate.test(flight2))
-                .isFalse();
+        assertThat(predicate.test(flight2)).isFalse();
     }
 
     private Flight createFlight(long id, String designator, String flightNumber, LocalDate dateOfOperation,
-                                String departureStation, OffsetTime departureTime, String arrivalStation, OffsetTime arrivalTime) {
+            String departureStation, OffsetTime departureTime, String arrivalStation, OffsetTime arrivalTime) {
         Flight flight = new Flight();
         flight.setId(BigInteger.valueOf(id));
         flight.setAirlineDesignator(designator);

@@ -21,7 +21,6 @@ import java.util.List;
 
 import static no.rutebanken.extime.Constants.*;
 
-// TODO write unit test for this component
 @Component(value = "commonDataToNetexConverter")
 public class CommonDataToNetexConverter {
 
@@ -40,11 +39,9 @@ public class CommonDataToNetexConverter {
         logger.info("Converting common data to NeTEx");
         OffsetDateTime publicationTimestamp = OffsetDateTime.ofInstant(Instant.now(), ZoneId.of(DEFAULT_ZONE_ID));
 
-        // TODO read xmlns urls from configuration dataset instead
         Codespace avinorCodespace = netexObjectFactory.createCodespace(AVINOR_XMLNS, AVINOR_XMLNSURL);
         Codespace nsrCodespace = netexObjectFactory.createCodespace(NSR_XMLNS, NSR_XMLNSURL);
 
-        // TODO consider separating authorities and operators in yaml configuration file for static data
         JAXBElement<Authority> avinorAuthorityElement = netexObjectFactory.createAvinorAuthorityElement();
         JAXBElement<Authority> nsrAuthorityElement = netexObjectFactory.createNsrAuthorityElement();
         List<JAXBElement<Authority>> authorityElements = Arrays.asList(avinorAuthorityElement, nsrAuthorityElement);

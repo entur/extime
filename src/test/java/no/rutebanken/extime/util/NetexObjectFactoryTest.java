@@ -21,10 +21,6 @@ public class NetexObjectFactoryTest {
     }
 
     @Test
-    public void createStopPlace() throws Exception {
-    }
-
-    @Test
     public void createPointOnRoute() throws Exception {
         PointOnRoute pointOnRoute = netexObjectFactory.createPointOnRoute("59963891", "AVI:ScheduledStopPoint:17733643");
 

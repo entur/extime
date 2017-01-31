@@ -92,16 +92,6 @@ public class AvinorTimetableUtils {
         return objectFactory.createFlights(flights);
     }
 
-/*
-    public List<Flight> generateFlightsFromFeedDump() throws Exception {
-        ArrayList<Flight> generatedFlights = Lists.newArrayList();
-        Flights flightStructure = generateObjectsFromXml("/xml/testdata/avinor-flights_20170118-203723.xml", Flights.class);
-        List<Flight> flights = flightStructure.getFlight();
-        generatedFlights.addAll(flights);
-        return generatedFlights;
-    }
-*/
-
     public List<Flight> generateFlightsFromFeedDump(@ExchangeProperty(PROPERTY_STATIC_FLIGHTS_XML_FILE) String xmlFile) throws Exception {
         ArrayList<Flight> generatedFlights = Lists.newArrayList();
         Flights flightStructure = generateObjectsFromXml(xmlFile, Flights.class);
