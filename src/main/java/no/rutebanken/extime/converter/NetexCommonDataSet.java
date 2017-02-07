@@ -124,6 +124,9 @@ public class NetexCommonDataSet {
             ScheduledStopPointRefStructure scheduledStopPointRefStruct =
                     netexObjectFactory.createScheduledStopPointRefStructure(scheduledStopPoint.getId(), Boolean.TRUE);
 
+            StopPlace stopPlace = stopPlaceMap.get(airportIATA.name());
+            StopPlaceRefStructure stopPlaceRefStructure = netexObjectFactory.createStopPlaceRefStructure(stopPlace.getId(), Boolean.TRUE);
+
             QuayRefStructure quayRefStruct = netexObjectFactory.createQuayRefStructure(quayMap.get(airportIATA.name()).getId(), Boolean.TRUE);
 
             String stopPointIdSuffix = StringUtils.split(scheduledStopPoint.getId(), DEFAULT_ID_SEPARATOR)[2];
@@ -136,6 +139,7 @@ public class NetexCommonDataSet {
                     .withOrder(new BigInteger(Integer.toString(index)))
                     .withId(passengerStopAssignmentId)
                     .withScheduledStopPointRef(scheduledStopPointRefStruct)
+                    .withStopPlaceRef(stopPlaceRefStructure)
                     .withQuayRef(quayRefStruct);
             stopAssignmentMap.put(airportIATA.name(), stopAssignment);
             index++;
