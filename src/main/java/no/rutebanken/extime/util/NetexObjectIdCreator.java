@@ -2,6 +2,7 @@ package no.rutebanken.extime.util;
 
 import com.google.common.base.Joiner;
 import org.apache.commons.lang3.RandomUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -122,7 +123,18 @@ public class NetexObjectIdCreator {
         );
     }
 
-    public static String[] generateIdSequence(int startInclusive, int endExclusive, int totalInSequence) {
+    public static String[] generateIdSequence(int totalInSequence) {
+        String[] idSequence = new String[totalInSequence];
+        AtomicInteger incrementor = new AtomicInteger(1);
+
+        for (int i = 0; i < totalInSequence; i++) {
+            idSequence[i] = String.valueOf(incrementor.getAndAdd(1));
+        }
+
+        return idSequence;
+    }
+
+    public static String[] generateIdSequenceByRandomBase(int startInclusive, int endExclusive, int totalInSequence) {
         String[] idSequence = new String[totalInSequence];
         int idRangeBase = generateRandomId(startInclusive, endExclusive);
         AtomicInteger incrementor = new AtomicInteger(1);
@@ -136,6 +148,17 @@ public class NetexObjectIdCreator {
 
     public static int generateRandomId(int startInclusive, int endExclusive) {
         return RandomUtils.nextInt(startInclusive, endExclusive);
+    }
+
+    public static String hashObjectId(String objectId, int end) {
+        int hashcode = 0;
+
+        for (int i = 0; i < objectId.length(); i++) {
+            hashcode = (hashcode << 5) - hashcode + objectId.charAt(i);
+        }
+
+        String hashedObjectId = String.valueOf((hashcode < 0 ? -hashcode : hashcode));
+        return StringUtils.substring(hashedObjectId, 0, end);
     }
 
 }

@@ -113,7 +113,7 @@ public class LineDataToNetexConverter {
         return objectFactory.createPublicationDelivery(publicationDeliveryStructure);
     }
 
-    public List<RoutePoint> createRoutePoints(List<FlightRoute> flightRoutes) {
+    private List<RoutePoint> createRoutePoints(List<FlightRoute> flightRoutes) {
         Map<String, RoutePoint> routePointMap = netexCommonDataSet.getRoutePointMap();
 
         return flightRoutes.stream()
@@ -135,16 +135,19 @@ public class LineDataToNetexConverter {
         for (FlightRoute flightRoute : flightRoutes) {
             PointsOnRoute_RelStructure pointsOnRoute = objectFactory.createPointsOnRoute_RelStructure();
             List<String> routePointsInSequence = flightRoute.getRoutePointsInSequence();
-            String[] idSequence = NetexObjectIdCreator.generateIdSequence(DEFAULT_START_INCLUSIVE, DEFAULT_END_EXCLUSIVE, routePointsInSequence.size());
+            String[] idSequence = NetexObjectIdCreator.generateIdSequence(routePointsInSequence.size());
+
+            String objectId = Joiner.on(UNDERSCORE).skipNulls().join(localContext.get(AIRLINE_IATA), flightRoute.getRouteDesignation());
+            String hashedObjectId = NetexObjectIdCreator.hashObjectId(objectId, 8);
 
             for (int i = 0; i < routePointsInSequence.size(); i++) {
                 RoutePoint routePoint = routePointMap.get(routePointsInSequence.get(i));
-                PointOnRoute pointOnRoute = netexObjectFactory.createPointOnRoute(idSequence[i], routePoint.getId());
+                String pointOnRouteId = hashedObjectId + StringUtils.leftPad(idSequence[i], 2, "0");
+                PointOnRoute pointOnRoute = netexObjectFactory.createPointOnRoute(pointOnRouteId, routePoint.getId());
                 pointsOnRoute.getPointOnRoute().add(pointOnRoute);
             }
 
-            String objectId = Joiner.on(UNDERSCORE).skipNulls().join(localContext.get(AIRLINE_IATA), flightRoute.getRouteDesignation());
-            Route route = netexObjectFactory.createRoute(line.getId(), objectId, flightRoute.getRouteName(), pointsOnRoute);
+            Route route = netexObjectFactory.createRoute(line.getId(), hashedObjectId, flightRoute.getRouteName(), pointsOnRoute);
             routes.add(route);
 
             if (!routeIdDesignationMap.containsKey(route.getId())) {
@@ -152,11 +155,11 @@ public class LineDataToNetexConverter {
             }
         }
 
-        routes.sort(Comparator.comparing(Route::getId));
+        //routes.sort(Comparator.comparing(Route::getId));
         return routes;
     }
 
-    public List<JourneyPattern> createJourneyPatterns(List<Route> routes) {
+    private List<JourneyPattern> createJourneyPatterns(List<Route> routes) {
         Map<String, ScheduledStopPoint> stopPointMap = netexCommonDataSet.getStopPointMap();
         List<JourneyPattern> journeyPatterns = Lists.newArrayList();
 
@@ -167,7 +170,7 @@ public class LineDataToNetexConverter {
         for (Route route : routes) {
             PointsInJourneyPattern_RelStructure pointsInJourneyPattern = objectFactory.createPointsInJourneyPattern_RelStructure();
             List<PointOnRoute> pointsOnRoute = route.getPointsInSequence().getPointOnRoute();
-            String[] idSequence = NetexObjectIdCreator.generateIdSequence(DEFAULT_START_INCLUSIVE, DEFAULT_END_EXCLUSIVE, pointsOnRoute.size());
+            String[] idSequence = NetexObjectIdCreator.generateIdSequenceByRandomBase(DEFAULT_START_INCLUSIVE, DEFAULT_END_EXCLUSIVE, pointsOnRoute.size());
 
             for (int i = 0; i < pointsOnRoute.size(); i++) {
                 String pointIdRef = pointsOnRoute.get(i).getPointRef().getValue().getRef();
@@ -204,7 +207,7 @@ public class LineDataToNetexConverter {
         return journeyPatterns;
     }
 
-    public List<DestinationDisplay> createDestinationDisplaysForStopPoints(List<FlightRoute> flightRoutes) {
+    private List<DestinationDisplay> createDestinationDisplaysForStopPoints(List<FlightRoute> flightRoutes) {
         Map<String, NetexStaticDataSet.StopPlaceDataSet> stopPlaceDataSets = netexStaticDataSet.getStopPlaces();
         String objectIdPrefix = localContext.get(AIRLINE_IATA) + StringUtils.remove(localContext.get(LINE_DESIGNATION), DASH) + DASH;
 
@@ -216,7 +219,7 @@ public class LineDataToNetexConverter {
                 .collect(Collectors.toList());
     }
 
-    public List<DestinationDisplay> createDestinationDisplaysForPatterns(List<JourneyPattern> journeyPatterns) {
+    private List<DestinationDisplay> createDestinationDisplaysForPatterns(List<JourneyPattern> journeyPatterns) {
         Map<String, NetexStaticDataSet.StopPlaceDataSet> stopPlaceDataSets = netexStaticDataSet.getStopPlaces();
         List<DestinationDisplay> destinationDisplays = Lists.newArrayList();
 
@@ -270,7 +273,7 @@ public class LineDataToNetexConverter {
         return destinationDisplays;
     }
 
-    public List<ServiceJourney> createServiceJourneys(Line line, Map<String, Map<String, List<ScheduledFlight>>> routeJourneys) {
+    private List<ServiceJourney> createServiceJourneys(Line line, Map<String, Map<String, List<ScheduledFlight>>> routeJourneys) {
         List<ServiceJourney> serviceJourneyList = new ArrayList<>();
 
         if (!dayTypes.isEmpty()) {

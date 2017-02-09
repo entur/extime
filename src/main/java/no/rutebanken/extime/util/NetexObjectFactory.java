@@ -438,9 +438,9 @@ public class NetexObjectFactory {
                 .withPointsInSequence(pointsOnRoute);
     }
 
-    public PointOnRoute createPointOnRoute(String objectId, String stopPointId) {
+    public PointOnRoute createPointOnRoute(String objectId, String routePointId) {
         String pointOnRouteId = NetexObjectIdCreator.createPointOnRouteId(AVINOR_XMLNS, objectId);
-        RoutePointRefStructure routePointRefStruct = createRoutePointRefStructure(stopPointId);
+        RoutePointRefStructure routePointRefStruct = createRoutePointRefStructure(routePointId);
         JAXBElement<RoutePointRefStructure> routePointRefStructElement = objectFactory.createRoutePointRef(routePointRefStruct);
 
         return objectFactory.createPointOnRoute()

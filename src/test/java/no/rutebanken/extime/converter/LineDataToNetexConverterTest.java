@@ -1,10 +1,12 @@
 package no.rutebanken.extime.converter;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import no.rutebanken.extime.config.CamelRouteDisabler;
 import no.rutebanken.extime.fixtures.LineDataSetFixture;
 import no.rutebanken.extime.model.FlightRoute;
 import no.rutebanken.extime.model.LineDataSet;
+import no.rutebanken.extime.util.NetexObjectIdCreator;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -21,8 +23,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static no.rutebanken.extime.Constants.NETEX_PROFILE_VERSION;
-import static no.rutebanken.extime.Constants.VERSION_ONE;
+import static no.rutebanken.extime.Constants.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SuppressWarnings("unchecked")
@@ -96,7 +97,7 @@ public class LineDataToNetexConverterTest {
         assertThat(destinationDisplays)
                 .hasSize(4)
                 .extracting("id")
-                .contains("AVI:DestinationDisplay:DY_OSL-BGO", "AVI:DestinationDisplay:DY_BGO-OSL",
+                .contains("AVI:DestinationDisplay:48329871", "AVI:DestinationDisplay:52328893",
                         "AVI:DestinationDisplay:DYOSLBGO-OSL", "AVI:DestinationDisplay:DYOSLBGO-BGO");
 
         for (DestinationDisplay destinationDisplay : destinationDisplays) {
@@ -133,7 +134,7 @@ public class LineDataToNetexConverterTest {
         assertThat(destinationDisplays)
                 .hasSize(5)
                 .extracting("id")
-                .contains("AVI:DestinationDisplay:DY_OSL-SOG-BGO", "AVI:DestinationDisplay:DY_BGO-SOG-OSL",
+                .contains("AVI:DestinationDisplay:16464597", "AVI:DestinationDisplay:46780243",
                         "AVI:DestinationDisplay:DYOSLBGO-OSL", "AVI:DestinationDisplay:DYOSLBGO-SOG", "AVI:DestinationDisplay:DYOSLBGO-BGO");
 
         for (DestinationDisplay destinationDisplay : destinationDisplays) {
@@ -175,15 +176,10 @@ public class LineDataToNetexConverterTest {
         assertThat(line.getPublicCode()).isEqualTo(lineDataSet.getLineDesignation());
         assertThat(line.getOperatorRef().getRef()).isEqualTo(String.format("AVI:Operator:%s", lineDataSet.getAirlineIata()));
 
-        Set<String> routeIdRefs = lineDataSet.getFlightRoutes().stream()
-                .map(FlightRoute::getRouteDesignation)
-                .map(designation -> String.format("AVI:Route:%s_%s", lineDataSet.getAirlineIata(), designation))
-                .collect(Collectors.toSet());
-
         assertThat(line.getRoutes().getRouteRef())
                 .hasSize(lineDataSet.getFlightRoutes().size())
                 .extracting(RouteRefStructure::getRef)
-                .containsExactlyElementsOf(routeIdRefs);
+                .containsExactlyElementsOf(getRouteIds(lineDataSet));
     }
 
     private void assertValidRoutes(RoutesInFrame_RelStructure routeStruct, LineDataSet lineDataSet, Line line) {
@@ -196,11 +192,7 @@ public class LineDataToNetexConverterTest {
                 .collect(Collectors.toList());
         assertThat(routes).hasSize(lineDataSet.getFlightRoutes().size());
 
-        Set<String> routeIds = lineDataSet.getFlightRoutes().stream()
-                .map(FlightRoute::getRouteDesignation)
-                .map(designation -> String.format("AVI:Route:%s_%s", lineDataSet.getAirlineIata(), designation))
-                .collect(Collectors.toSet());
-        assertThat(routes).extracting(Route::getId).containsOnlyElementsOf(routeIds);
+        assertThat(routes).extracting(Route::getId).containsOnlyElementsOf(getRouteIds(lineDataSet));
 
         Set<String> routeNames = lineDataSet.getFlightRoutes().stream()
                 .map(FlightRoute::getRouteName)
@@ -219,23 +211,9 @@ public class LineDataToNetexConverterTest {
                 .collect(Collectors.toList());
         assertThat(journeyPatterns).hasSize(lineDataSet.getFlightRoutes().size());
 
-        Set<String> journeyPatternIds = lineDataSet.getFlightRoutes().stream()
-                .map(FlightRoute::getRouteDesignation)
-                .map(designation -> String.format("AVI:JourneyPattern:%s_%s", lineDataSet.getAirlineIata(), designation))
-                .collect(Collectors.toSet());
-        assertThat(journeyPatterns).extracting(JourneyPattern::getId).containsOnlyElementsOf(journeyPatternIds);
-
-        Set<String> routeIdRefs = lineDataSet.getFlightRoutes().stream()
-                .map(FlightRoute::getRouteDesignation)
-                .map(designation -> String.format("AVI:Route:%s_%s", lineDataSet.getAirlineIata(), designation))
-                .collect(Collectors.toSet());
-        assertThat(journeyPatterns).extracting("routeRef.ref").containsOnlyElementsOf(routeIdRefs);
-
-        Set<String> destinationDisplayIdRefs = lineDataSet.getFlightRoutes().stream()
-                .map(FlightRoute::getRouteDesignation)
-                .map(designation -> String.format("AVI:DestinationDisplay:%s_%s", lineDataSet.getAirlineIata(), designation))
-                .collect(Collectors.toSet());
-        assertThat(journeyPatterns).extracting("destinationDisplayRef.ref").containsOnlyElementsOf(destinationDisplayIdRefs);
+        assertThat(journeyPatterns).extracting(JourneyPattern::getId).containsOnlyElementsOf(getJourneyPatternIds(lineDataSet));
+        assertThat(journeyPatterns).extracting("routeRef.ref").containsOnlyElementsOf(getRouteIds(lineDataSet));
+        assertThat(journeyPatterns).extracting("destinationDisplayRef.ref").containsOnlyElementsOf(getDestinationDisplayIds(lineDataSet));
         assertThat(journeyPatterns).extracting("destinationDisplayRef.version").contains(VERSION_ONE);
 
         // TODO add assertions for points in sequence
@@ -243,6 +221,33 @@ public class LineDataToNetexConverterTest {
         journeyPatterns.forEach(journeyPattern -> assertThat(journeyPattern.getPointsInSequence()
                 .getPointInJourneyPatternOrStopPointInJourneyPatternOrTimingPointInJourneyPattern()).hasSize(2));
         */
+    }
+
+    private Set<String> getRouteIds(LineDataSet lineDataSet) {
+        return lineDataSet.getFlightRoutes().stream()
+                .map(FlightRoute::getRouteDesignation)
+                .map(designation -> Joiner.on(UNDERSCORE).join(lineDataSet.getAirlineIata(), designation))
+                .map(objectId -> NetexObjectIdCreator.hashObjectId(objectId, 8))
+                .map(hashedId -> String.format("AVI:Route:%s", hashedId))
+                .collect(Collectors.toSet());
+    }
+
+    private Set<String> getJourneyPatternIds(LineDataSet lineDataSet) {
+        return lineDataSet.getFlightRoutes().stream()
+                .map(FlightRoute::getRouteDesignation)
+                .map(designation -> Joiner.on(UNDERSCORE).join(lineDataSet.getAirlineIata(), designation))
+                .map(objectId -> NetexObjectIdCreator.hashObjectId(objectId, 8))
+                .map(hashedId -> String.format("AVI:JourneyPattern:%s", hashedId))
+                .collect(Collectors.toSet());
+    }
+
+    private Set<String> getDestinationDisplayIds(LineDataSet lineDataSet) {
+        return lineDataSet.getFlightRoutes().stream()
+                .map(FlightRoute::getRouteDesignation)
+                .map(designation -> Joiner.on(UNDERSCORE).join(lineDataSet.getAirlineIata(), designation))
+                .map(objectId -> NetexObjectIdCreator.hashObjectId(objectId, 8))
+                .map(hashedId -> String.format("AVI:DestinationDisplay:%s", hashedId))
+                .collect(Collectors.toSet());
     }
 
     private List<JAXBElement<? extends Common_VersionFrameStructure>> getDataObjectFrames(PublicationDeliveryStructure publicationDelivery) {
