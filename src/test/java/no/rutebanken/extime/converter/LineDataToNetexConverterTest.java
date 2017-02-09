@@ -190,7 +190,7 @@ public class LineDataToNetexConverterTest {
     }
 
     private void assertValidLine(Line line, LineDataSet lineDataSet) {
-        assertThat(line.getId()).isEqualTo(String.format("AVI:Line:%s-%s", lineDataSet.getAirlineIata(), lineDataSet.getLineDesignation()));
+        assertThat(line.getId()).isEqualTo(String.format("AVI:Line:%s_%s", lineDataSet.getAirlineIata(), lineDataSet.getLineDesignation()));
         assertThat(line.getName().getValue()).isEqualTo(lineDataSet.getLineName());
         assertThat(line.getTransportMode()).isEqualTo(AllVehicleModesOfTransportEnumeration.AIR);
         assertThat(line.getPublicCode()).isEqualTo(lineDataSet.getLineDesignation());

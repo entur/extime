@@ -7,6 +7,7 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static no.rutebanken.extime.Constants.DASH;
+import static no.rutebanken.extime.Constants.UNDERSCORE;
 
 public class NetexObjectIdCreator {
 
@@ -51,7 +52,7 @@ public class NetexObjectIdCreator {
     }
 
     public static String createLineId(String objectIdPrefix, Object[] parts) {
-        String objectId = Joiner.on(DASH).skipNulls().join(parts);
+        String objectId = Joiner.on(UNDERSCORE).skipNulls().join(parts);
         return NetexObjectIdCreator.composeNetexObjectId(objectIdPrefix, NetexObjectIdTypes.LINE_KEY, objectId);
     }
 
