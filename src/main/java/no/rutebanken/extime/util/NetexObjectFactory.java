@@ -222,7 +222,8 @@ public class NetexObjectFactory {
     }
 
     public JAXBElement<ServiceFrame> createServiceFrame(OffsetDateTime publicationTimestamp, String airlineName,
-                                                        String airlineIata, List<RoutePoint> routePoints, List<Route> routes, Line line, List<DestinationDisplay> destinationDisplays, List<JourneyPattern> journeyPatterns) {
+            String airlineIata, List<RoutePoint> routePoints, List<Route> routes, Line line,
+            List<DestinationDisplay> destinationDisplays, List<JourneyPattern> journeyPatterns) {
 
         String networkId = NetexObjectIdCreator.createNetworkId(AVINOR_XMLNS, airlineIata);
 
@@ -253,7 +254,7 @@ public class NetexObjectFactory {
             journeyPatternsInFrame.getJourneyPattern_OrJourneyPatternView().add(journeyPatternElement);
         }
 
-        String serviceFrameId = NetexObjectIdCreator.createTimetableFrameId(AVINOR_XMLNS,
+        String serviceFrameId = NetexObjectIdCreator.createServiceFrameId(AVINOR_XMLNS,
                 String.valueOf(NetexObjectIdCreator.generateRandomId(DEFAULT_START_INCLUSIVE, DEFAULT_END_EXCLUSIVE)));
 
         ServiceFrame serviceFrame = objectFactory.createServiceFrame()

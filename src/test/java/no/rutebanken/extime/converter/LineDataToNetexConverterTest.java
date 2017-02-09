@@ -7,6 +7,7 @@ import no.rutebanken.extime.fixtures.LineDataSetFixture;
 import no.rutebanken.extime.model.FlightRoute;
 import no.rutebanken.extime.model.LineDataSet;
 import no.rutebanken.extime.util.NetexObjectIdCreator;
+import no.rutebanken.extime.util.NetexObjectIdTypes;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -36,12 +37,34 @@ public class LineDataToNetexConverterTest {
     private LineDataToNetexConverter netexConverter;
 
     @Test
+    public void verifyFrameAttributes() throws Exception {
+        List<Pair<String, Integer>> routeJourneyPairs = Lists.newArrayList(Pair.of("OSL-BGO", 1), Pair.of("BGO-OSL", 1));
+        LineDataSet lineDataSet = LineDataSetFixture.createLineDataSet("DY", "OSL-BGO", routeJourneyPairs);
+        PublicationDeliveryStructure publicationDelivery = netexConverter.convertToNetex(lineDataSet).getValue();
+
+        CompositeFrame compositeFrame = getFrames(CompositeFrame.class, publicationDelivery.getDataObjects().getCompositeFrameOrCommonFrame()).get(0);
+        assertThat(compositeFrame).hasFieldOrPropertyWithValue("version", VERSION_ONE);
+        assertThat(compositeFrame.getId()).matches(id -> id.split(":")[1].equals(NetexObjectIdTypes.COMPOSITE_FRAME_KEY), "CompositeFrame");
+
+        ServiceFrame serviceFrame = getFrames(ServiceFrame.class, getDataObjectFrames(publicationDelivery)).get(0);
+        assertThat(serviceFrame).hasFieldOrPropertyWithValue("version", VERSION_ONE);
+        assertThat(serviceFrame.getId()).matches(id -> id.split(":")[1].equals(NetexObjectIdTypes.SERVICE_FRAME_KEY), "ServiceFrame");
+
+        TimetableFrame timetableFrame = getFrames(TimetableFrame.class, getDataObjectFrames(publicationDelivery)).get(0);
+        assertThat(timetableFrame).hasFieldOrPropertyWithValue("version", VERSION_ONE);
+        assertThat(timetableFrame.getId()).matches(id -> id.split(":")[1].equals(NetexObjectIdTypes.TIMETABLE_FRAME_KEY), "TimetableFrame");
+
+        ServiceCalendarFrame serviceCalendarFrame = getFrames(ServiceCalendarFrame.class, getDataObjectFrames(publicationDelivery)).get(0);
+        assertThat(serviceCalendarFrame).hasFieldOrPropertyWithValue("version", VERSION_ONE);
+        assertThat(serviceCalendarFrame.getId()).matches(id -> id.split(":")[1].equals(NetexObjectIdTypes.SERVICE_CALENDAR_FRAME_KEY), "ServiceCalendarFrame");
+    }
+
+    @Test
     public void testLineWithRoundTripRoutes() throws Exception {
         List<Pair<String, Integer>> routeJourneyPairs = Lists.newArrayList(Pair.of("OSL-BGO", 1), Pair.of("BGO-OSL", 1));
         LineDataSet lineDataSet = LineDataSetFixture.createLineDataSet("DY", "OSL-BGO", routeJourneyPairs);
 
-        JAXBElement<PublicationDeliveryStructure> publicationDeliveryElement = netexConverter.convertToNetex(lineDataSet);
-        PublicationDeliveryStructure publicationDelivery = publicationDeliveryElement.getValue();
+        PublicationDeliveryStructure publicationDelivery = netexConverter.convertToNetex(lineDataSet).getValue();
         assertValidPublicationDelivery(publicationDelivery, lineDataSet.getLineName());
 
         List<JAXBElement<? extends Common_VersionFrameStructure>> dataObjectFrames = getDataObjectFrames(publicationDelivery);
@@ -59,8 +82,7 @@ public class LineDataToNetexConverterTest {
         List<Pair<String, Integer>> routeJourneyPairs = Lists.newArrayList(Pair.of("TRD-OSL-BGO-MOL-SOG", 1), Pair.of("SOG-MOL-BGO-OSL-TRD", 1));
         LineDataSet lineDataSet = LineDataSetFixture.createLineDataSet("WF", "TRD-SOG", routeJourneyPairs);
 
-        JAXBElement<PublicationDeliveryStructure> publicationDeliveryElement = netexConverter.convertToNetex(lineDataSet);
-        PublicationDeliveryStructure publicationDelivery = publicationDeliveryElement.getValue();
+        PublicationDeliveryStructure publicationDelivery = netexConverter.convertToNetex(lineDataSet).getValue();
         assertValidPublicationDelivery(publicationDelivery, lineDataSet.getLineName());
 
         List<JAXBElement<? extends Common_VersionFrameStructure>> dataObjectFrames = getDataObjectFrames(publicationDelivery);
@@ -78,8 +100,7 @@ public class LineDataToNetexConverterTest {
         List<Pair<String, Integer>> routeJourneyPairs = Lists.newArrayList(Pair.of("OSL-BGO", 1), Pair.of("BGO-OSL", 1));
         LineDataSet lineDataSet = LineDataSetFixture.createLineDataSet("DY", "OSL-BGO", routeJourneyPairs);
 
-        JAXBElement<PublicationDeliveryStructure> publicationDeliveryElement = netexConverter.convertToNetex(lineDataSet);
-        PublicationDeliveryStructure publicationDelivery = publicationDeliveryElement.getValue();
+        PublicationDeliveryStructure publicationDelivery = netexConverter.convertToNetex(lineDataSet).getValue();
         assertValidPublicationDelivery(publicationDelivery, lineDataSet.getLineName());
 
         List<JAXBElement<? extends Common_VersionFrameStructure>> dataObjectFrames = getDataObjectFrames(publicationDelivery);
@@ -115,8 +136,7 @@ public class LineDataToNetexConverterTest {
         List<Pair<String, Integer>> routeJourneyPairs = Lists.newArrayList(Pair.of("OSL-SOG-BGO", 1), Pair.of("BGO-SOG-OSL", 1));
         LineDataSet lineDataSet = LineDataSetFixture.createLineDataSet("DY", "OSL-BGO", routeJourneyPairs);
 
-        JAXBElement<PublicationDeliveryStructure> publicationDeliveryElement = netexConverter.convertToNetex(lineDataSet);
-        PublicationDeliveryStructure publicationDelivery = publicationDeliveryElement.getValue();
+        PublicationDeliveryStructure publicationDelivery = netexConverter.convertToNetex(lineDataSet).getValue();
         assertValidPublicationDelivery(publicationDelivery, lineDataSet.getLineName());
 
         List<JAXBElement<? extends Common_VersionFrameStructure>> dataObjectFrames = getDataObjectFrames(publicationDelivery);
