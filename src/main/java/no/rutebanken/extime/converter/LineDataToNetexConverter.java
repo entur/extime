@@ -2,6 +2,7 @@ package no.rutebanken.extime.converter;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
+import com.google.common.collect.BiMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import no.rutebanken.extime.config.NetexStaticDataSet;
@@ -161,6 +162,7 @@ public class LineDataToNetexConverter {
 
     private List<JourneyPattern> createJourneyPatterns(List<Route> routes) {
         Map<String, ScheduledStopPoint> stopPointMap = netexCommonDataSet.getStopPointMap();
+        BiMap<String, String> airportHashes = netexCommonDataSet.getAirportHashes();
         List<JourneyPattern> journeyPatterns = Lists.newArrayList();
 
         if (!routeDesignationPatternMap.isEmpty()) {
@@ -174,8 +176,8 @@ public class LineDataToNetexConverter {
 
             for (int i = 0; i < pointsOnRoute.size(); i++) {
                 String pointIdRef = pointsOnRoute.get(i).getPointRef().getValue().getRef();
-                String airportIata = Iterables.getLast(Splitter.on(COLON).trimResults().split(pointIdRef));
-                ScheduledStopPoint scheduledStopPoint = stopPointMap.get(airportIata);
+                String stopPointObjectId = Iterables.getLast(Splitter.on(COLON).trimResults().split(pointIdRef));
+                ScheduledStopPoint scheduledStopPoint = stopPointMap.get(airportHashes.inverse().get(stopPointObjectId));
 
                 StopPointInJourneyPattern stopPointInJourneyPattern = netexObjectFactory.createStopPointInJourneyPattern(
                         idSequence[i], BigInteger.valueOf(i + 1), scheduledStopPoint.getId());
@@ -221,6 +223,7 @@ public class LineDataToNetexConverter {
 
     private List<DestinationDisplay> createDestinationDisplaysForPatterns(List<JourneyPattern> journeyPatterns) {
         Map<String, NetexStaticDataSet.StopPlaceDataSet> stopPlaceDataSets = netexStaticDataSet.getStopPlaces();
+        BiMap<String, String> airportHashes = netexCommonDataSet.getAirportHashes();
         List<DestinationDisplay> destinationDisplays = Lists.newArrayList();
 
         for (JourneyPattern journeyPattern : journeyPatterns) {
@@ -237,8 +240,8 @@ public class LineDataToNetexConverter {
             StopPointInJourneyPattern finalDestinationPoint = (StopPointInJourneyPattern) lastPointInSequence;
 
             String finalDestinationPointId = finalDestinationPoint.getScheduledStopPointRef().getValue().getRef();
-            String finalStopAirportIata = Iterables.getLast(Splitter.on(COLON).trimResults().split(finalDestinationPointId));
-            String frontTextValue = stopPlaceDataSets.get(finalStopAirportIata.toLowerCase()).getShortName();
+            String finalStopPointObjectId = Iterables.getLast(Splitter.on(COLON).trimResults().split(finalDestinationPointId));
+            String frontTextValue = stopPlaceDataSets.get(airportHashes.inverse().get(finalStopPointObjectId).toLowerCase()).getShortName();
             patternDestinationDisplay.setFrontText(netexObjectFactory.createMultilingualString(frontTextValue));
 
             // check if needed to set vias
@@ -250,8 +253,9 @@ public class LineDataToNetexConverter {
                     if (i > 0 && i < pointsInLinkSequence.size() - 1) {
                         StopPointInJourneyPattern stopPointInJourneyPattern = (StopPointInJourneyPattern) pointsInLinkSequence.get(i);
                         String stopPointIdRef = stopPointInJourneyPattern.getScheduledStopPointRef().getValue().getRef();
-                        String stopAirportIata = Iterables.getLast(Splitter.on(COLON).trimResults().split(stopPointIdRef));
-                        String objectIdRef = localContext.get(AIRLINE_IATA) + StringUtils.remove(localContext.get(LINE_DESIGNATION), DASH) + DASH + stopAirportIata;
+                        String stopPointObjectId = Iterables.getLast(Splitter.on(COLON).trimResults().split(stopPointIdRef));
+                        String inversedStopPointObjectId = airportHashes.inverse().get(stopPointObjectId);
+                        String objectIdRef = localContext.get(AIRLINE_IATA) + StringUtils.remove(localContext.get(LINE_DESIGNATION), DASH) + DASH + inversedStopPointObjectId;
 
                         String destinationDisplayIdRef = Joiner.on(COLON).skipNulls().join(AVINOR_XMLNS, DESTINATION_DISPLAY, objectIdRef);
                         DestinationDisplay destinationDisplay = netexObjectFactory.getDestinationDisplay(destinationDisplayIdRef);

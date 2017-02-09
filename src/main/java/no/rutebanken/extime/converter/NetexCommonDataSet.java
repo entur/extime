@@ -1,5 +1,7 @@
 package no.rutebanken.extime.converter;
 
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 import com.google.common.collect.Lists;
 import no.rutebanken.extime.config.NetexStaticDataSet;
 import no.rutebanken.extime.config.NetexStaticDataSet.StopPlaceDataSet;
@@ -38,6 +40,7 @@ public class NetexCommonDataSet {
     @Autowired
     private NetexObjectFactory netexObjectFactory;
 
+    private BiMap<String, String> airportHashes = HashBiMap.create();
     private Map<String, StopPlace> stopPlaceMap = new HashMap<>();
     private Map<String, Quay> quayMap = new HashMap<>();
     private Map<String, ScheduledStopPoint> stopPointMap = new HashMap<>();
@@ -46,10 +49,17 @@ public class NetexCommonDataSet {
 
     @PostConstruct
     public void init() {
+        populateAirportHashes();
         populateStopPlaceMap();
         populateStopPointMap();
         populateStopAssignmentMap();
         populateRoutePointMap();
+    }
+
+    private void populateAirportHashes() {
+        List<AirportIATA> airportIatas = Lists.newArrayList(AirportIATA.values());
+        airportIatas.sort(Comparator.comparing(Enum::name));
+        airportIatas.forEach(airportIata -> airportHashes.put(airportIata.name(), NetexObjectIdCreator.hashObjectId(airportIata.name(), 5)));
     }
 
     private void populateStopPlaceMap() {
@@ -100,7 +110,7 @@ public class NetexCommonDataSet {
 
         for (AirportIATA airportIATA : airportIATAS) {
             StopPlaceDataSet stopPlaceDataSet = stopPlaceDataSets.get(airportIATA.name().toLowerCase());
-            String stopPointId = NetexObjectIdCreator.createStopPointId(AVINOR_XMLNS, airportIATA.name().toUpperCase());
+            String stopPointId = NetexObjectIdCreator.createStopPointId(AVINOR_XMLNS, airportHashes.get(airportIATA.name()));
 
             ScheduledStopPoint stopPoint = objectFactory.createScheduledStopPoint()
                     .withVersion(VERSION_ONE)
@@ -195,5 +205,13 @@ public class NetexCommonDataSet {
 
     public Map<String, RoutePoint> getRoutePointMap() {
         return routePointMap;
+    }
+
+    public BiMap<String, String> getAirportHashes() {
+        return airportHashes;
+    }
+
+    public void setAirportHashes(BiMap<String, String> airportHashes) {
+        this.airportHashes = airportHashes;
     }
 }
