@@ -172,15 +172,16 @@ public class LineDataToNetexConverter {
         for (Route route : routes) {
             PointsInJourneyPattern_RelStructure pointsInJourneyPattern = objectFactory.createPointsInJourneyPattern_RelStructure();
             List<PointOnRoute> pointsOnRoute = route.getPointsInSequence().getPointOnRoute();
-            String[] idSequence = NetexObjectIdCreator.generateIdSequenceByRandomBase(DEFAULT_START_INCLUSIVE, DEFAULT_END_EXCLUSIVE, pointsOnRoute.size());
 
             for (int i = 0; i < pointsOnRoute.size(); i++) {
-                String pointIdRef = pointsOnRoute.get(i).getPointRef().getValue().getRef();
-                String stopPointObjectId = Iterables.getLast(Splitter.on(COLON).trimResults().split(pointIdRef));
-                ScheduledStopPoint scheduledStopPoint = stopPointMap.get(airportHashes.inverse().get(stopPointObjectId));
+                PointOnRoute pointOnRoute = pointsOnRoute.get(i);
+                String pointIdRef = pointOnRoute.getPointRef().getValue().getRef();
+                String stopPointIdSuffix = NetexObjectIdCreator.getObjectIdSuffix(pointIdRef);
+                ScheduledStopPoint scheduledStopPoint = stopPointMap.get(airportHashes.inverse().get(stopPointIdSuffix));
+                String pointOnRouteIdSuffix = NetexObjectIdCreator.getObjectIdSuffix(pointOnRoute.getId());
 
                 StopPointInJourneyPattern stopPointInJourneyPattern = netexObjectFactory.createStopPointInJourneyPattern(
-                        idSequence[i], BigInteger.valueOf(i + 1), scheduledStopPoint.getId());
+                        pointOnRouteIdSuffix, BigInteger.valueOf(i + 1), scheduledStopPoint.getId());
 
                 if (i == 0) {
                     stopPointInJourneyPattern.setForAlighting(false);

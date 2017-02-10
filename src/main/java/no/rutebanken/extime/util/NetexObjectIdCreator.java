@@ -1,12 +1,14 @@
 package no.rutebanken.extime.util;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
+import com.google.common.collect.Iterables;
 import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static no.rutebanken.extime.Constants.DASH;
+import static no.rutebanken.extime.Constants.COLON;
 import static no.rutebanken.extime.Constants.UNDERSCORE;
 
 public class NetexObjectIdCreator {
@@ -160,6 +162,12 @@ public class NetexObjectIdCreator {
 
         String hashedObjectId = String.valueOf((hashcode < 0 ? -hashcode : hashcode));
         return StringUtils.substring(hashedObjectId, 0, end);
+    }
+
+    public static String getObjectIdSuffix(String objectId) {
+        return Iterables.getLast(Splitter.on(COLON)
+                .trimResults()
+                .split(objectId));
     }
 
 }
