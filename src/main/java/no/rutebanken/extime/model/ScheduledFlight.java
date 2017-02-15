@@ -190,7 +190,7 @@ public class ScheduledFlight {
             return charMatcher.removeFrom(dashJoiner.join(stopTimes));
         }
 
-        return dashJoiner.join(timeOfDeparture, timeOfArrival);
+        return charMatcher.removeFrom(dashJoiner.join(timeOfDeparture, timeOfArrival));
     }
 
     @Override
@@ -217,7 +217,9 @@ public class ScheduledFlight {
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(flightId, airlineIATA, airlineName, airlineFlightId, departureAirportIATA, arrivalAirportIATA, departureAirportName, arrivalAirportName, dateOfOperation, timeOfDeparture, timeOfArrival, lineDesignation, stopsDesignation, timesDesignation, scheduledStopovers);
+        return Objects.hashCode(flightId, airlineIATA, airlineName, airlineFlightId, departureAirportIATA,
+                arrivalAirportIATA, departureAirportName, arrivalAirportName, dateOfOperation, timeOfDeparture,
+                timeOfArrival, lineDesignation, stopsDesignation, timesDesignation, scheduledStopovers);
     }
 
     @Override

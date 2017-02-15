@@ -320,11 +320,16 @@ public class LineDataToNetexConverter {
         List<PointInLinkSequence_VersionedChildStructure> pointsInLinkSequence = journeyPattern.getPointsInSequence()
                 .getPointInJourneyPatternOrStopPointInJourneyPatternOrTimingPointInJourneyPattern();
 
+        String[] idSequence = NetexObjectIdCreator.generateIdSequence(flightsByStopTimes.size());
+
+        int index = 0;
         for (Map.Entry<String, List<ScheduledFlight>> entry : flightsByStopTimes.entrySet()) {
             List<ScheduledFlight> journeyFlights = entry.getValue();
             TimetabledPassingTimes_RelStructure passingTimesRelStruct = aggregateJourneyPassingTimes(journeyFlights, pointsInLinkSequence);
             DayTypeRefs_RelStructure dayTypeRefsStruct = collectDayTypesAndAssignments(journeyFlights);
-            ServiceJourney serviceJourney = netexObjectFactory.createServiceJourney(line.getId(), flightId, dayTypeRefsStruct, journeyPatternId, passingTimesRelStruct);
+            String journeyIdSequence = StringUtils.leftPad(idSequence[index++], 2, "0");
+            String objectId = Joiner.on(DASH).skipNulls().join(flightId, journeyIdSequence, NetexObjectIdCreator.getObjectIdSuffix(journeyPatternId));
+            ServiceJourney serviceJourney = netexObjectFactory.createServiceJourney(objectId, line.getId(), flightId, dayTypeRefsStruct, journeyPatternId, passingTimesRelStruct);
             serviceJourneys.add(serviceJourney);
         }
 

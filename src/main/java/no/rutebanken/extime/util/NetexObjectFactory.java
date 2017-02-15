@@ -511,11 +511,10 @@ public class NetexObjectFactory {
         return destinationDisplay;
     }
 
-    public ServiceJourney createServiceJourney(String lineId, String flightId, DayTypeRefs_RelStructure dayTypeRefsStruct,
+    public ServiceJourney createServiceJourney(String objectId, String lineId, String flightId, DayTypeRefs_RelStructure dayTypeRefsStruct,
             String journeyPatternId, TimetabledPassingTimes_RelStructure passingTimesRelStruct) {
 
-        String serviceJourneyId = NetexObjectIdCreator.createServiceJourneyId(AVINOR_XMLNS,
-                String.valueOf(NetexObjectIdCreator.generateRandomId(DEFAULT_START_INCLUSIVE, DEFAULT_END_EXCLUSIVE)));
+        String serviceJourneyId = NetexObjectIdCreator.createServiceJourneyId(AVINOR_XMLNS, objectId);
 
         TimetabledPassingTime departurePassingTime = passingTimesRelStruct.getTimetabledPassingTime().get(0);
         OffsetTime departureTime = departurePassingTime.getDepartureTime();
