@@ -381,7 +381,7 @@ public class LineDataToNetexConverter {
             LocalDate dateOfOperation = journeyFlights.get(i).getDateOfOperation();
 
             String dayTypeIdLinePart = localContext.get(AIRLINE_IATA) + StringUtils.remove(localContext.get(LINE_DESIGNATION), DASH);
-            String dayTypeIdSuffix = Joiner.on(DASH).join(hashObjectId(dayTypeIdLinePart, 8), dateOfOperation.format(DateTimeFormatter.ofPattern(DAY_TYPE_PATTERN)));
+            String dayTypeIdSuffix = Joiner.on(DASH).join(hashObjectId(dayTypeIdLinePart, 10), dateOfOperation.format(DateTimeFormatter.ofPattern(DAY_TYPE_PATTERN)));
             String dayTypeId = NetexObjectIdCreator.createDayTypeId(AVINOR_XMLNS, dayTypeIdSuffix);
 
             DayType dayType;
