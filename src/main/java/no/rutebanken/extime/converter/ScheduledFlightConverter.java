@@ -565,4 +565,12 @@ public class ScheduledFlightConverter {
         }
     }
 
+    public boolean isKnownAirlineName(String airlineIata) {
+        return netexStaticDataSet.getOrganisations().containsKey(airlineIata);
+    }
+
+    public String getKnownAirlineNamegetKnownAirlineName(String airlineIata) {
+        return netexStaticDataSet.getOrganisations().get(airlineIata.toLowerCase()).getName();
+    }
+
 }
