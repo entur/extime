@@ -87,6 +87,7 @@ management.address=127.0.0.1
         * If you have dump mode enabled, disable in your local configuration file : `avinor.timetable.dump.enabled=false`
         * Run : `mvn spring-boot:run -Dspring.profiles.active=dev -Dspring.config.location=$HOME/config/extime_application.properties -Davinor.timetable.dump.file=$HOME/dev/git/extime/target/dump/dump.xml`
     * Normal mode, fetches all data from remote feed. This is the normal mode used in test and prod environment.
+        * Configure number of months needed to fetch data for, starting from 00:01 AM the current date, by changing the property: `avinor.timetable.period.months`, default is 1 month 
         * Run : `mvn spring-boot:run -Dspring.profiles.active=dev -Dspring.config.location=$HOME/config/extime_application.properties`
 * Local debug run with Maven, to enable maven debugging, add the following configuration to the `spring-boot-maven-plugin` plugin in pm.xml:
 ```
