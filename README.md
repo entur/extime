@@ -81,6 +81,7 @@ management.address=127.0.0.1
     * Dump mode, used to dump remotely fetched data to file for later reuse.
         * Enable dump mode in your local configuration file : `avinor.timetable.dump.enabled=true`
         * Choose your local directory, used to save the dump file, in property : `avinor.timetable.dump.output.path=$HOME/dev/git/extime/target/dump`
+        * Configure number of months needed to fetch data for, starting from 00:01 AM the current date, by changing the property: `avinor.timetable.period.months`, default is 1 month
         * Run : `mvn spring-boot:run -Dspring.profiles.active=dev -Dspring.config.location=$HOME/config/extime_application.properties`
     * Offline mode, uses a dump file, produced by above mode, instead of fetching from remote. Should only be used in dev environment. (Great for debugging!)
         * N.B. To run this mode, the application expects the availability of a dump file, produced in dump mode.
