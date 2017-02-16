@@ -566,10 +566,10 @@ public class ScheduledFlightConverter {
     }
 
     public boolean isKnownAirlineName(String airlineIata) {
-        return netexStaticDataSet.getOrganisations().containsKey(airlineIata);
+        return netexStaticDataSet.getOrganisations().containsKey(airlineIata.toLowerCase());
     }
 
-    public String getKnownAirlineNamegetKnownAirlineName(String airlineIata) {
+    public String getKnownAirlineName(String airlineIata) {
         return netexStaticDataSet.getOrganisations().get(airlineIata.toLowerCase()).getName();
     }
 

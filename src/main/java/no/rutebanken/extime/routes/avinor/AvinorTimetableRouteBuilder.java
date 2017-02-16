@@ -244,8 +244,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                         String enrichParameter = originalBody.getAirlineIata();
                         exchange.getIn().setBody(enrichParameter);
                     }).id("AirlineIataPreEnrichProcessor")
-                    .setHeader(HEADER_EXTIME_FETCH_RESOURCE_ENDPOINT, constant("direct:fetchAndCacheAirlineName")) // TODO add support for offline mode for this enricher
-                    .enrich("direct:retrieveResource", new AirlineNameEnricherAggregationStrategy())
+                    .enrich("direct:enrichWithAirlineName", new AirlineNameEnricherAggregationStrategy())
                     .bean(LineDataToNetexConverter.class, "convertToNetex").id("ConvertLineDataSetsToNetexProcessor")
                     .process(exchange -> exchange.getIn().setHeader(HEADER_FILE_NAME_GENERATED, generateFilename(exchange))).id("GenerateFileNameProcessor")
                     .marshal(jaxbDataFormat)
@@ -253,6 +252,24 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                     .setHeader(Exchange.CONTENT_TYPE, constant("text/xml;charset=utf-8"))
                     .setHeader(Exchange.CHARSET_NAME, constant("utf-8"))
                     .to("file:{{netex.generated.output.path}}")
+                .end()
+        ;
+
+        from("direct:enrichWithAirlineName")
+                .routeId("AirlineNameEnricher")
+                .choice()
+                    .when().method(ScheduledFlightConverter.class, "isKnownAirlineName")
+                        .bean(ScheduledFlightConverter.class, "getKnownAirlineName")
+                    .otherwise()
+                        .choice()
+                            .when(simpleF("${exchangeProperty[%s]} == true", Boolean.class, PROPERTY_OFFLINE_MODE))
+                                .log("Unknown airline IATA found, ${body} [OFFLINE MODE]")
+                                .process(exchange -> exchange.getIn().setBody(exchange.getIn().getBody(String.class).toUpperCase(), String.class))
+                            .otherwise()
+                                .log("Unknown airline IATA found, ${body}, fetching name from feed")
+                                .setHeader(HEADER_EXTIME_FETCH_RESOURCE_ENDPOINT, constant("direct:fetchAndCacheAirlineName"))
+                                .to("direct:retrieveResource")
+                        .end()
                 .end()
         ;
 
