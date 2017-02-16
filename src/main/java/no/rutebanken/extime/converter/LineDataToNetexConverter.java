@@ -28,6 +28,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static no.rutebanken.extime.Constants.*;
+import static no.rutebanken.extime.util.NetexObjectIdCreator.hashObjectId;
 import static no.rutebanken.extime.util.NetexObjectIdTypes.DESTINATION_DISPLAY;
 
 @Component(value = "lineDataToNetexConverter")
@@ -139,7 +140,7 @@ public class LineDataToNetexConverter {
             String[] idSequence = NetexObjectIdCreator.generateIdSequence(routePointsInSequence.size());
 
             String objectId = Joiner.on(UNDERSCORE).skipNulls().join(localContext.get(AIRLINE_IATA), flightRoute.getRouteDesignation());
-            String hashedObjectId = NetexObjectIdCreator.hashObjectId(objectId, 8);
+            String hashedObjectId = hashObjectId(objectId, 8);
 
             for (int i = 0; i < routePointsInSequence.size(); i++) {
                 RoutePoint routePoint = routePointMap.get(routePointsInSequence.get(i));
@@ -379,9 +380,8 @@ public class LineDataToNetexConverter {
         for (int i = 0; i < journeyFlights.size(); i++) {
             LocalDate dateOfOperation = journeyFlights.get(i).getDateOfOperation();
 
-            String dayTypeIdSuffix = localContext.get(AIRLINE_IATA) + StringUtils.remove(localContext.get(LINE_DESIGNATION), DASH)
-                    + DASH + dateOfOperation.format(DateTimeFormatter.ofPattern("EEE_dd"));
-
+            String dayTypeIdLinePart = localContext.get(AIRLINE_IATA) + StringUtils.remove(localContext.get(LINE_DESIGNATION), DASH);
+            String dayTypeIdSuffix = Joiner.on(DASH).join(hashObjectId(dayTypeIdLinePart, 8), dateOfOperation.format(DateTimeFormatter.ofPattern(DAY_TYPE_PATTERN)));
             String dayTypeId = NetexObjectIdCreator.createDayTypeId(AVINOR_XMLNS, dayTypeIdSuffix);
 
             DayType dayType;
@@ -394,12 +394,9 @@ public class LineDataToNetexConverter {
             JAXBElement<DayTypeRefStructure> dayTypeRefStructElement = objectFactory.createDayTypeRef(dayTypeRefStruct);
             dayTypeStructure.getDayTypeRef().add(dayTypeRefStructElement);
 
-            String assignmentIdSuffix = localContext.get(AIRLINE_IATA) + StringUtils.remove(localContext.get(LINE_DESIGNATION), DASH)
-                    + DASH + dateOfOperation.format(DateTimeFormatter.ofPattern("EEE_dd"));
-
             DayTypeAssignment dayTypeAssignment;
             if (!dayTypeAssignments.containsKey(dayTypeId)) {
-                dayTypeAssignment = netexObjectFactory.createDayTypeAssignment(assignmentIdSuffix, i + 1, dateOfOperation, dayTypeId);
+                dayTypeAssignment = netexObjectFactory.createDayTypeAssignment(dayTypeIdSuffix, i + 1, dateOfOperation, dayTypeId);
                 dayTypeAssignments.put(dayTypeAssignment.getId(), dayTypeAssignment);
             }
         }
