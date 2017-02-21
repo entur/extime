@@ -3,11 +3,13 @@ package no.rutebanken.extime.converter;
 import com.google.common.collect.Lists;
 import no.rutebanken.extime.model.AirlineDesignator;
 import no.rutebanken.extime.model.AirportIATA;
+import no.rutebanken.extime.util.DateUtils;
 import no.rutebanken.extime.util.NetexObjectFactory;
 import org.rutebanken.netex.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.xml.bind.JAXBElement;
@@ -34,6 +36,12 @@ public class CommonDataToNetexConverter {
 
     @Autowired
     private NetexCommonDataSet netexCommonDataSet;
+
+    @Autowired
+    private DateUtils dateUtils;
+
+    @Value("${avinor.timetable.period.months}")
+    private int numberOfMonthsInPeriod;
 
     public JAXBElement<PublicationDeliveryStructure> convertToNetex() throws Exception {
         logger.info("Converting common data to NeTEx");
@@ -91,7 +99,7 @@ public class CommonDataToNetexConverter {
         framesStruct.getCommonFrame().add(serviceFrameElement);
 
         JAXBElement<CompositeFrame> compositeFrameElement = netexObjectFactory
-                .createCompositeFrameElement(publicationTimestamp, framesStruct, avinorCodespace, nsrCodespace);
+                .createCompositeFrameElement(publicationTimestamp, framesStruct, dateUtils.generateAvailabilityPeriod(), avinorCodespace, nsrCodespace);
 
         logger.info("Done converting common data to NeTEx");
 

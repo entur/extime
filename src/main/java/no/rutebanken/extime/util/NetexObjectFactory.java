@@ -117,7 +117,10 @@ public class NetexObjectFactory {
         return objectFactory.createCompositeFrame(compositeFrame);
     }
 
-    public JAXBElement<CompositeFrame> createCompositeFrameElement(OffsetDateTime publicationTimestamp, Frames_RelStructure frames, Codespace... codespaces) {
+    public JAXBElement<CompositeFrame> createCompositeFrameElement(OffsetDateTime publicationTimestamp, Frames_RelStructure frames, AvailabilityPeriod availabilityPeriod, Codespace... codespaces) {
+
+        ValidityConditions_RelStructure validityConditionsStruct = objectFactory.createValidityConditions_RelStructure()
+                .withValidityConditionRefOrValidBetweenOrValidityCondition_(createAvailabilityCondition(availabilityPeriod));
 
         Codespaces_RelStructure codespacesStruct = objectFactory.createCodespaces_RelStructure()
                 .withCodespaceRefOrCodespace((Object[]) codespaces);
@@ -136,6 +139,7 @@ public class NetexObjectFactory {
                 .withVersion(VERSION_ONE)
                 .withCreated(publicationTimestamp)
                 .withId(compositeFrameId)
+                .withValidityConditions(validityConditionsStruct)
                 .withCodespaces(codespacesStruct)
                 .withFrameDefaults(versionFrameDefaultsStructure)
                 .withFrames(frames);

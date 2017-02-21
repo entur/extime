@@ -11,6 +11,7 @@ import no.rutebanken.extime.config.NetexStaticDataSet;
 import no.rutebanken.extime.config.NetexStaticDataSet.StopPlaceDataSet;
 import no.rutebanken.extime.model.*;
 import no.rutebanken.extime.util.AvinorTimetableUtils;
+import no.rutebanken.extime.util.DateUtils;
 import org.apache.camel.*;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.EnumUtils;
@@ -25,7 +26,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import java.io.InputStream;
 import java.math.BigInteger;
-import java.time.*;
+import java.time.OffsetTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.function.Function;
@@ -33,7 +34,8 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static no.rutebanken.extime.Constants.*;
+import static no.rutebanken.extime.Constants.DASH;
+import static no.rutebanken.extime.Constants.DEFAULT_DATE_TIME_PATTERN;
 import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.HEADER_EXTIME_HTTP_URI;
 import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.HEADER_EXTIME_URI_PARAMETERS;
 import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.PROPERTY_OFFLINE_MODE;
@@ -47,6 +49,9 @@ public class ScheduledFlightConverter {
 
     @Autowired
     private NetexStaticDataSet netexStaticDataSet;
+
+    @Autowired
+    private DateUtils dateUtils;
 
     @Autowired
     private TypeConverter typeConverter;
@@ -73,15 +78,6 @@ public class ScheduledFlightConverter {
     }
 
     public List<LineDataSet> convertToLineCentricDataSets(@ExchangeProperty(PROPERTY_OFFLINE_MODE) Boolean offlineMode, List<Flight> scheduledFlights) {
-
-        // TODO For now we create a separate from- and to date in converter, but this should actually
-        // TODO come as input headers from previous date range generator, to be 100% sure these are always the same
-        LocalDate requestPeriodFromDate = LocalDate.now(ZoneId.of(DEFAULT_ZONE_ID));
-        LocalDate requestPeriodToDate = requestPeriodFromDate.plusMonths(numberOfMonthsInPeriod);
-
-        OffsetTime offsetMidnight = OffsetTime.parse(OFFSET_MIDNIGHT_UTC).withOffsetSameLocal(ZoneOffset.UTC);
-        OffsetDateTime requestPeriodFromDateTime = requestPeriodFromDate.atTime(offsetMidnight);
-        OffsetDateTime requestPeriodToDateTime = requestPeriodToDate.atTime(offsetMidnight);
 
         // TODO check for codeshare flights here, use the infrequent designator enumset group, to only check international airlines
 
@@ -141,7 +137,7 @@ public class ScheduledFlightConverter {
             Map<String, List<ScheduledFlight>> mergedFlightsByLineDesignation = findAndMergeFlightsByEquivalentLines(flightsByLineDesignation);
 
             for (Map.Entry<String, List<ScheduledFlight>> lineEntry : mergedFlightsByLineDesignation.entrySet()) {
-                LineDataSet lineDataSet = populateFlightLineDataSet(requestPeriodFromDateTime, requestPeriodToDateTime, airlineIata, lineEntry);
+                LineDataSet lineDataSet = populateFlightLineDataSet(airlineIata, lineEntry);
                 lineDataSets.add(lineDataSet);
             }
         }
@@ -149,8 +145,7 @@ public class ScheduledFlightConverter {
         return lineDataSets;
     }
 
-    private LineDataSet populateFlightLineDataSet(OffsetDateTime requestPeriodFromDateTime, OffsetDateTime requestPeriodToDateTime,
-            String airlineIata, Map.Entry<String, List<ScheduledFlight>> flightsByLineEntry) {
+    private LineDataSet populateFlightLineDataSet(String airlineIata, Map.Entry<String, List<ScheduledFlight>> flightsByLineEntry) {
         LineDataSet lineDataSet = new LineDataSet();
         lineDataSet.setAirlineIata(airlineIata);
 
@@ -162,8 +157,7 @@ public class ScheduledFlightConverter {
 
         List<ScheduledFlight> flights = flightsByLineEntry.getValue();
 
-        AvailabilityPeriod availabilityPeriod = new AvailabilityPeriod(requestPeriodFromDateTime, requestPeriodToDateTime);
-        lineDataSet.setAvailabilityPeriod(availabilityPeriod);
+        lineDataSet.setAvailabilityPeriod(dateUtils.generateAvailabilityPeriod());
 
         List<FlightRoute> flightRoutes = flights.stream()
                 .map(flight -> new FlightRoute(flight.getRoutePattern(), getRouteNameFromDesignation(flight.getRoutePattern())))
