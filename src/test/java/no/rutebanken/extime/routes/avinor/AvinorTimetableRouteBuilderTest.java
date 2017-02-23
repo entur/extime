@@ -1,13 +1,29 @@
 package no.rutebanken.extime.routes.avinor;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Range;
-import no.avinor.flydata.xjc.model.scheduled.Flight;
-import no.rutebanken.extime.model.AirportIATA;
-import no.rutebanken.extime.model.ScheduledFlight;
-import no.rutebanken.extime.model.StopVisitType;
-import no.rutebanken.extime.util.DateUtils;
+import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.HEADER_EXTIME_HTTP_URI;
+import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.HEADER_EXTIME_RESOURCE_CODE;
+import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.HEADER_EXTIME_URI_PARAMETERS;
+import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEADER_LOWER_RANGE_ENDPOINT;
+import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEADER_TIMETABLE_LARGE_AIRPORT_RANGE;
+import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEADER_TIMETABLE_SMALL_AIRPORT_RANGE;
+import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEADER_TIMETABLE_STOP_VISIT_TYPE;
+import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEADER_UPPER_RANGE_ENDPOINT;
+
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.math.BigInteger;
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.function.Predicate;
+
+import javax.xml.bind.JAXBElement;
+
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.Produce;
@@ -26,22 +42,15 @@ import org.junit.Test;
 import org.rutebanken.netex.model.ObjectFactory;
 import org.rutebanken.netex.model.PublicationDeliveryStructure;
 
-import javax.xml.bind.JAXBElement;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.math.BigInteger;
-import java.time.LocalDate;
-import java.time.OffsetDateTime;
-import java.time.OffsetTime;
-import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.function.Predicate;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Range;
 
-import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.*;
-import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.*;
+import no.avinor.flydata.xjc.model.scheduled.Flight;
+import no.rutebanken.extime.model.AirportIATA;
+import no.rutebanken.extime.model.ScheduledFlight;
+import no.rutebanken.extime.model.StopVisitType;
+import no.rutebanken.extime.util.DateUtils;
 
 @SuppressWarnings("unchecked")
 public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
@@ -365,8 +374,8 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         getMockEndpoint("mock:file:target/netex").expectedBodiesReceived(createPublicationDelivery(), createPublicationDelivery());
 
         List<ScheduledFlight> scheduledFlights = Lists.newArrayList(
-                createScheduledFlight("WF", "WF739", LocalDate.now()),
-                createScheduledFlight("SK", "SK1038", LocalDate.now())
+                createScheduledFlight("WF", "WF739", OffsetDateTime.now()),
+                createScheduledFlight("SK", "SK1038", OffsetDateTime.now())
         );
 
         template.sendBody("direct:convertScheduledFlightsToNetex", scheduledFlights);
@@ -380,13 +389,13 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
 
     private List<Flight> createDummyFlights() {
         return Lists.newArrayList(
-                createDummyFlight(1L, "SK", "4455", LocalDate.parse("2017-01-01"), "BGO", OffsetTime.MIN, "OSL", OffsetTime.MAX),
-                createDummyFlight(2L, "DY", "6677", LocalDate.parse("2017-01-02"), "BGO", OffsetTime.MIN, "TRD", OffsetTime.MAX),
-                createDummyFlight(3L, "WF", "199", LocalDate.parse("2017-01-03"), "BGO", OffsetTime.MIN, "SVG", OffsetTime.MAX)
+                createDummyFlight(1L, "SK", "4455", DateUtils.parseDate("2017-01-01"), "BGO", OffsetTime.MIN, "OSL", OffsetTime.MAX),
+                createDummyFlight(2L, "DY", "6677", DateUtils.parseDate("2017-01-02"), "BGO", OffsetTime.MIN, "TRD", OffsetTime.MAX),
+                createDummyFlight(3L, "WF", "199", DateUtils.parseDate("2017-01-03"), "BGO", OffsetTime.MIN, "SVG", OffsetTime.MAX)
         );
     }
 
-    private ScheduledFlight createScheduledFlight(String airlineIATA, String airlineFlightId, LocalDate dateOfOperation) {
+    private ScheduledFlight createScheduledFlight(String airlineIATA, String airlineFlightId, OffsetDateTime dateOfOperation) {
         ScheduledFlight scheduledFlight = new ScheduledFlight();
         scheduledFlight.setAirlineIATA(airlineIATA);
         scheduledFlight.setAirlineFlightId(airlineFlightId);
@@ -400,7 +409,7 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         return scheduledFlight;
     }
 
-    private Flight createDummyFlight(long dummyId, String dummyDesignator, String dummyFlightNumber, LocalDate dummyDateOfOperation,
+    private Flight createDummyFlight(long dummyId, String dummyDesignator, String dummyFlightNumber, OffsetDateTime dummyDateOfOperation,
                                      String dummyDepartureStation, OffsetTime dummyDepartureTime, String dummyArrivalStation, OffsetTime dummyArrivalTime) {
         return new Flight() {{
             setId(BigInteger.valueOf(dummyId));

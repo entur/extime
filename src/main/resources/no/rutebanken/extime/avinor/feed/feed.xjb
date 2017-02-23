@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<jaxb:bindings version="2.1" xmlns:jaxb="http://java.sun.com/xml/ns/jaxb"
-               xmlns:xs="http://www.w3.org/2001/XMLSchema">
+<jaxb:bindings xmlns:jaxb="http://java.sun.com/xml/ns/jaxb" xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    xmlns:xjc="http://java.sun.com/xml/ns/jaxb/xjc" jaxb:version="2.1">
     <jaxb:globalBindings localScoping="toplevel">
-        <jaxb:javaType name="java.time.ZonedDateTime" xmlType="xs:dateTime"
-                       printMethod="java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME.format"
-                       parseMethod="java.time.ZonedDateTime.parse"/>
+        <xjc:javaType name="java.time.OffsetDateTime" xmlType="xs:dateTime" adapter="org.rutebanken.util.OffsetDateTimeISO8601XmlAdapter" />
+        <!--			<xjc:javaType name="java.time.LocalDateTime" xmlType="xs:dateTime" adapter="com.migesok.jaxb.adapter.javatime.LocalDateTimeXmlAdapter" />-->
+        <xjc:javaType name="java.time.OffsetTime" xmlType="xs:time" adapter="com.migesok.jaxb.adapter.javatime.OffsetTimeXmlAdapter" />
+        <xjc:javaType name="java.time.OffsetDateTime" xmlType="xs:date" adapter="org.rutebanken.util.OffsetDateXmlAdapter" />
+        <xjc:javaType name="java.time.Duration" xmlType="xs:duration" adapter="com.migesok.jaxb.adapter.javatime.DurationXmlAdapter" />
     </jaxb:globalBindings>
 </jaxb:bindings>

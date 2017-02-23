@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
 import java.util.List;
@@ -21,6 +22,18 @@ import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEA
 @Component(value = "dateUtils")
 public class DateUtils {
 
+	private final static DateTimeFormatter formatter = new DateTimeFormatterBuilder().appendPattern("yyyy-MM-dd")
+			.optionalStart().appendPattern("XXXXX").optionalEnd()
+            .parseDefaulting(ChronoField.HOUR_OF_DAY, 0)
+            .parseDefaulting(ChronoField.MINUTE_OF_HOUR, 0)
+            .parseDefaulting(ChronoField.SECOND_OF_MINUTE, 0)
+            .parseDefaulting(ChronoField.OFFSET_SECONDS,OffsetDateTime.now().getLong(ChronoField.OFFSET_SECONDS) )
+            .toFormatter();
+
+	public static OffsetDateTime parseDate(String dateWithZone) {
+		return OffsetDateTime.parse(dateWithZone, formatter);
+	}
+	
     @Value("${avinor.timetable.period.months}") int numberOfMonthsInPeriod;
     @Value("${avinor.timetable.max.range}") int maxRangeDays;
     @Value("${avinor.timetable.min.range}") int minRangeDays;

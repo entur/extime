@@ -1,19 +1,20 @@
 package no.rutebanken.extime.model;
 
-import com.google.common.base.CharMatcher;
-import com.google.common.base.Joiner;
-import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
+import static no.rutebanken.extime.Constants.DASH;
+import static no.rutebanken.extime.Constants.EMPTY;
 
 import java.math.BigInteger;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static no.rutebanken.extime.Constants.DASH;
-import static no.rutebanken.extime.Constants.EMPTY;
+import com.google.common.base.CharMatcher;
+import com.google.common.base.Joiner;
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
 
 public class ScheduledFlight {
 
@@ -25,7 +26,7 @@ public class ScheduledFlight {
     private String arrivalAirportIATA;
     private String departureAirportName;
     private String arrivalAirportName;
-    private LocalDate dateOfOperation;
+    private OffsetDateTime dateOfOperation;
     private OffsetTime timeOfDeparture;
     private OffsetTime timeOfArrival;
     private String lineDesignation;
@@ -97,15 +98,17 @@ public class ScheduledFlight {
         this.arrivalAirportName = arrivalAirportName;
     }
 
-    public LocalDate getDateOfOperation() {
-        return dateOfOperation;
-    }
+   
 
-    public void setDateOfOperation(LocalDate dateOfOperation) {
-        this.dateOfOperation = dateOfOperation;
-    }
+    public OffsetDateTime getDateOfOperation() {
+		return dateOfOperation;
+	}
 
-    public OffsetTime getTimeOfDeparture() {
+	public void setDateOfOperation(OffsetDateTime dateOfOperation) {
+		this.dateOfOperation = dateOfOperation;
+	}
+
+	public OffsetTime getTimeOfDeparture() {
         return timeOfDeparture;
     }
 

@@ -11,7 +11,9 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.time.ZoneOffset;
+import java.time.temporal.ChronoField;
 import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -62,14 +64,11 @@ public final class LineDataSetFixture {
         LineDataSet lineDataSet = LineDataSetFixture.createBasicLineDataSet(airlineIata, lineDesignation);
 
         // init period
-        LocalDate periodFromDate = LocalDate.now();
-        LocalDate periodToDate = periodFromDate.plusMonths(1);
+        OffsetDateTime periodFromDate = OffsetDateTime.now().truncatedTo(ChronoUnit.DAYS).with(ChronoField.OFFSET_SECONDS, 0);
+        OffsetDateTime periodToDate = periodFromDate.plusMonths(1);
 
-        OffsetTime offsetMidnight = OffsetTime.parse(OFFSET_MIDNIGHT_UTC).withOffsetSameLocal(ZoneOffset.UTC);
-        OffsetDateTime requestPeriodFromDateTime = periodFromDate.atTime(offsetMidnight);
-        OffsetDateTime requestPeriodToDateTime = periodToDate.atTime(offsetMidnight);
 
-        AvailabilityPeriod availabilityPeriod = new AvailabilityPeriod(requestPeriodFromDateTime, requestPeriodToDateTime);
+        AvailabilityPeriod availabilityPeriod = new AvailabilityPeriod(periodFromDate, periodToDate);
         lineDataSet.setAvailabilityPeriod(availabilityPeriod);
 
         // init routes and journeys
@@ -171,7 +170,7 @@ public final class LineDataSetFixture {
                 .collect(Collectors.toList());
     }
 
-    public static LocalDate generateRandomDate(LocalDate inclusive, LocalDate exclusive) {
+    public static OffsetDateTime generateRandomDate(OffsetDateTime inclusive, OffsetDateTime exclusive) {
         long days = ChronoUnit.DAYS.between(inclusive, exclusive);
         return inclusive.plusDays(new Random().nextInt((int) days + 1));
     }
