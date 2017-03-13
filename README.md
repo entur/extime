@@ -40,14 +40,14 @@ avinor.realtime.arrivals.timeto=96
 avinor.airport.feed.endpoint=http://flydata.avinor.no/airportNames.asp
 avinor.airline.feed.endpoint=http://flydata.avinor.no/airlineNames.asp
 
-netex.generated.output.path=/Users/swirzen/dev/git/extime/target/netex
-#netex.generated.output.path=/Users/swirzen/dev/temp/netex
-netex.compressed.output.path=/Users/swirzen/dev/git/extime/target/marduk
+netex.generated.output.path=$HOME/dev/git/extime/target/netex
+#netex.generated.output.path=$HOME/dev/temp/netex
+netex.compressed.output.path=$HOME/dev/git/extime/target/marduk
 netex.compressed.file.prefix=avinor-netex_
 
 blobstore.gcs.bucket.name=marduk-test-exchange
 blobstore.gcs.blob.path=inbound/received/avi/
-blobstore.gcs.credential.path=/Users/swirzen/dev/config/Carbon-6120ee33c0d0.json
+blobstore.gcs.credential.path=$HOME/dev/config/Carbon-6120ee33c0d0.json
 blobstore.gcs.project.id=carbon-1287
 blobstore.gcs.provider.id=21
 
