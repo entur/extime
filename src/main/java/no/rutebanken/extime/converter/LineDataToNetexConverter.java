@@ -188,7 +188,7 @@ public class LineDataToNetexConverter {
             String[] idSequence = NetexObjectIdCreator.generateIdSequence(routePointsInSequence.size());
 
             String objectId = Joiner.on(UNDERSCORE).skipNulls().join(localContext.get(AIRLINE_IATA), flightRoute.getRouteDesignation());
-            String hashedObjectId = hashObjectId(objectId, 8);
+            String hashedObjectId = hashObjectId(objectId, 10);
 
             for (int i = 0; i < routePointsInSequence.size(); i++) {
                 RoutePoint routePoint = routePointMap.get(routePointsInSequence.get(i));

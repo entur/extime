@@ -118,7 +118,7 @@ public class LineDataToNetexConverterTest {
         assertThat(destinationDisplays)
                 .hasSize(4)
                 .extracting("id")
-                .contains("AVI:DestinationDisplay:48329871", "AVI:DestinationDisplay:52328893",
+                .contains("AVI:DestinationDisplay:483298715", "AVI:DestinationDisplay:523288933",
                         "AVI:DestinationDisplay:DYOSLBGO-OSL", "AVI:DestinationDisplay:DYOSLBGO-BGO");
 
         for (DestinationDisplay destinationDisplay : destinationDisplays) {
@@ -154,7 +154,7 @@ public class LineDataToNetexConverterTest {
         assertThat(destinationDisplays)
                 .hasSize(5)
                 .extracting("id")
-                .contains("AVI:DestinationDisplay:16464597", "AVI:DestinationDisplay:46780243",
+                .contains("AVI:DestinationDisplay:1646459719", "AVI:DestinationDisplay:467802439",
                         "AVI:DestinationDisplay:DYOSLBGO-OSL", "AVI:DestinationDisplay:DYOSLBGO-SOG", "AVI:DestinationDisplay:DYOSLBGO-BGO");
 
         for (DestinationDisplay destinationDisplay : destinationDisplays) {
@@ -247,7 +247,7 @@ public class LineDataToNetexConverterTest {
         return lineDataSet.getFlightRoutes().stream()
                 .map(FlightRoute::getRouteDesignation)
                 .map(designation -> Joiner.on(UNDERSCORE).join(lineDataSet.getAirlineIata(), designation))
-                .map(objectId -> NetexObjectIdCreator.hashObjectId(objectId, 8))
+                .map(objectId -> NetexObjectIdCreator.hashObjectId(objectId, 10))
                 .map(hashedId -> String.format("AVI:Route:%s", hashedId))
                 .collect(Collectors.toSet());
     }
@@ -256,7 +256,7 @@ public class LineDataToNetexConverterTest {
         return lineDataSet.getFlightRoutes().stream()
                 .map(FlightRoute::getRouteDesignation)
                 .map(designation -> Joiner.on(UNDERSCORE).join(lineDataSet.getAirlineIata(), designation))
-                .map(objectId -> NetexObjectIdCreator.hashObjectId(objectId, 8))
+                .map(objectId -> NetexObjectIdCreator.hashObjectId(objectId, 10))
                 .map(hashedId -> String.format("AVI:JourneyPattern:%s", hashedId))
                 .collect(Collectors.toSet());
     }
@@ -265,7 +265,7 @@ public class LineDataToNetexConverterTest {
         return lineDataSet.getFlightRoutes().stream()
                 .map(FlightRoute::getRouteDesignation)
                 .map(designation -> Joiner.on(UNDERSCORE).join(lineDataSet.getAirlineIata(), designation))
-                .map(objectId -> NetexObjectIdCreator.hashObjectId(objectId, 8))
+                .map(objectId -> NetexObjectIdCreator.hashObjectId(objectId, 10))
                 .map(hashedId -> String.format("AVI:DestinationDisplay:%s", hashedId))
                 .collect(Collectors.toSet());
     }
