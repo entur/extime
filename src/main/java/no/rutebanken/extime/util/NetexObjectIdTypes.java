@@ -30,5 +30,5 @@ public interface NetexObjectIdTypes {
     String AVAILABILITY_CONDITION_KEY = "AvailabilityCondition";
     String SERVICE_JOURNEY_KEY = "ServiceJourney";
     String PASSENGER_STOP_ASSIGNMENT_KEY = "PassengerStopAssignment";
-
+    String OPERATING_PERIOD_KEY = "OperatingPeriod";
 }

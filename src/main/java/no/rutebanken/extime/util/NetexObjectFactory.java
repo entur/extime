@@ -58,6 +58,10 @@ import org.rutebanken.netex.model.LocaleStructure;
 import org.rutebanken.netex.model.MultilingualString;
 import org.rutebanken.netex.model.Network;
 import org.rutebanken.netex.model.ObjectFactory;
+import org.rutebanken.netex.model.OperatingPeriod;
+import org.rutebanken.netex.model.OperatingPeriodRefStructure;
+import org.rutebanken.netex.model.OperatingPeriod_VersionStructure;
+import org.rutebanken.netex.model.OperatingPeriodsInFrame_RelStructure;
 import org.rutebanken.netex.model.Operator;
 import org.rutebanken.netex.model.OperatorRefStructure;
 import org.rutebanken.netex.model.OrganisationTypeEnumeration;
@@ -375,26 +379,36 @@ public class NetexObjectFactory {
         return objectFactory.createTimetableFrame(timetableFrame);
     }
 
-    public JAXBElement<ServiceCalendarFrame> createServiceCalendarFrame(Map<String, DayType> dayTypes, Map<String, DayTypeAssignment> dayTypeAssignments) {
+    public JAXBElement<ServiceCalendarFrame> createServiceCalendarFrame(Map<String, DayType> dayTypes, Map<String, DayTypeAssignment> dayTypeAssignments, Map<String, OperatingPeriod> operatingPeriods) {
         DayTypesInFrame_RelStructure dayTypesStruct = objectFactory.createDayTypesInFrame_RelStructure();
         for (DayType dayType : dayTypes.values()) {
             JAXBElement<DayType> dayTypeElement = objectFactory.createDayType(dayType);
             dayTypesStruct.getDayType_().add(dayTypeElement);
         }
 
-        List<DayTypeAssignment> dayTypeAssignmentList = new ArrayList<>(dayTypeAssignments.values());
-        dayTypeAssignmentList.sort(Comparator.comparing(DayTypeAssignment::getOrder));
-        DayTypeAssignmentsInFrame_RelStructure dayTypeAssignmentsStruct = objectFactory.createDayTypeAssignmentsInFrame_RelStructure();
-        dayTypeAssignmentList.forEach(dayTypeAssignment -> dayTypeAssignmentsStruct.getDayTypeAssignment().add(dayTypeAssignment));
-
         String serviceCalendarFrameId = NetexObjectIdCreator.createServiceCalendarFrameId(AVINOR_XMLNS,
                 String.valueOf(NetexObjectIdCreator.generateRandomId(DEFAULT_START_INCLUSIVE, DEFAULT_END_EXCLUSIVE)));
 
         ServiceCalendarFrame serviceCalendarFrame = objectFactory.createServiceCalendarFrame()
-                .withVersion(VERSION_ONE)
-                .withId(serviceCalendarFrameId)
-                .withDayTypes(dayTypesStruct)
-                .withDayTypeAssignments(dayTypeAssignmentsStruct);
+                                                            .withVersion(VERSION_ONE)
+                                                            .withId(serviceCalendarFrameId)
+                                                            .withDayTypes(dayTypesStruct);
+
+        if (!dayTypeAssignments.isEmpty()) {
+            List<DayTypeAssignment> dayTypeAssignmentList = new ArrayList<>(dayTypeAssignments.values());
+            dayTypeAssignmentList.sort(Comparator.comparing(DayTypeAssignment::getOrder));
+            DayTypeAssignmentsInFrame_RelStructure dayTypeAssignmentsStruct = objectFactory.createDayTypeAssignmentsInFrame_RelStructure();
+            dayTypeAssignmentList.forEach(dayTypeAssignment -> dayTypeAssignmentsStruct.getDayTypeAssignment().add(dayTypeAssignment));
+
+            serviceCalendarFrame.withDayTypeAssignments(dayTypeAssignmentsStruct);
+        }
+
+        if (!operatingPeriods.isEmpty()) {
+            OperatingPeriodsInFrame_RelStructure operatingPeriodStruct = objectFactory.createOperatingPeriodsInFrame_RelStructure();
+            operatingPeriodStruct.getOperatingPeriodOrUicOperatingPeriod().addAll(operatingPeriods.values());
+            operatingPeriodStruct.getOperatingPeriodOrUicOperatingPeriod().sort(Comparator.comparing(OperatingPeriod_VersionStructure::getFromDate));
+            serviceCalendarFrame.withOperatingPeriods(operatingPeriodStruct);
+        }
 
         return objectFactory.createServiceCalendarFrame(serviceCalendarFrame);
     }
@@ -693,18 +707,38 @@ public class NetexObjectFactory {
                 .withId(dayTypeId);
     }
 
-    public DayTypeAssignment createDayTypeAssignment(String objectId, Integer order, OffsetDateTime dateOfOperation, String dayTypeId) {
+    public OperatingPeriod createOperatingPeriod(String operatingPeriodId,OffsetDateTime from, OffsetDateTime to){
+        return new OperatingPeriod().withId(operatingPeriodId).withVersion(VERSION_ONE).withFromDate(from).withToDate(to);
+    }
+
+    public DayTypeAssignment createDayTypeAssignment(String objectId, Integer order, OffsetDateTime dateOfOperation, String dayTypeId, boolean available) {
         String dayTypeAssignmentId = NetexObjectIdCreator.createDayTypeAssignmentId(AVINOR_XMLNS, objectId);
 
         DayTypeRefStructure dayTypeRefStruct = createDayTypeRefStructure(dayTypeId);
         JAXBElement<DayTypeRefStructure> dayTypeRefStructElement = objectFactory.createDayTypeRef(dayTypeRefStruct);
 
-        return objectFactory.createDayTypeAssignment()
-                .withVersion(VERSION_ONE)
-                .withId(dayTypeAssignmentId)
-                .withOrder(BigInteger.valueOf(order))
-                .withDate(dateOfOperation)
-                .withDayTypeRef(dayTypeRefStructElement);
+        DayTypeAssignment dayTypeAssignment = objectFactory.createDayTypeAssignment()
+                                                      .withVersion(VERSION_ONE)
+                                                      .withId(dayTypeAssignmentId)
+                                                      .withOrder(BigInteger.valueOf(order))
+                                                      .withDate(dateOfOperation)
+                                                      .withDayTypeRef(dayTypeRefStructElement);
+
+        if (!available) {
+            dayTypeAssignment.withIsAvailable(available);
+        }
+
+        return dayTypeAssignment;
+    }
+
+    public DayTypeAssignment createDayTypeAssignment(String objectId, Integer order, String dayTypeId, String operatingPeriodId) {
+
+        OperatingPeriodRefStructure operatingPeriodRefStructure =
+                objectFactory.createOperatingPeriodRefStructure().withRef(operatingPeriodId).withVersion(VERSION_ONE);
+
+        return createDayTypeAssignment(objectId, order, null, dayTypeId, true)
+                       .withOperatingPeriodRef(operatingPeriodRefStructure);
+
     }
 
     public MultilingualString createMultilingualString(String value) {

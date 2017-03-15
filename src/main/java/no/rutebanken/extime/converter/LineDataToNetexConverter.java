@@ -1,32 +1,26 @@
 package no.rutebanken.extime.converter;
 
-import static no.rutebanken.extime.Constants.AVINOR_XMLNS;
-import static no.rutebanken.extime.Constants.COLON;
-import static no.rutebanken.extime.Constants.DASH;
-import static no.rutebanken.extime.Constants.DAY_TYPE_PATTERN;
-import static no.rutebanken.extime.Constants.DEFAULT_ZONE_ID;
-import static no.rutebanken.extime.Constants.UNDERSCORE;
-import static no.rutebanken.extime.util.NetexObjectIdCreator.hashObjectId;
-import static no.rutebanken.extime.util.NetexObjectIdTypes.DESTINATION_DISPLAY;
-
-import java.math.BigInteger;
-import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import javax.xml.bind.JAXBElement;
-
+import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
+import com.google.common.collect.BiMap;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import no.rutebanken.extime.config.NetexStaticDataSet;
+import no.rutebanken.extime.model.AirlineDesignator;
+import no.rutebanken.extime.model.AvailabilityPeriod;
+import no.rutebanken.extime.model.FlightRoute;
+import no.rutebanken.extime.model.LineDataSet;
+import no.rutebanken.extime.model.ScheduledFlight;
+import no.rutebanken.extime.model.ScheduledStopover;
+import no.rutebanken.extime.util.NetexObjectFactory;
+import no.rutebanken.extime.util.NetexObjectIdCreator;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.EnumUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.rutebanken.helper.calendar.CalendarPattern;
+import org.rutebanken.helper.calendar.CalendarPatternAnalyzer;
 import org.rutebanken.netex.model.CompositeFrame;
+import org.rutebanken.netex.model.DayOfWeekEnumeration;
 import org.rutebanken.netex.model.DayType;
 import org.rutebanken.netex.model.DayTypeAssignment;
 import org.rutebanken.netex.model.DayTypeRefStructure;
@@ -37,11 +31,14 @@ import org.rutebanken.netex.model.Frames_RelStructure;
 import org.rutebanken.netex.model.JourneyPattern;
 import org.rutebanken.netex.model.Line;
 import org.rutebanken.netex.model.ObjectFactory;
+import org.rutebanken.netex.model.OperatingPeriod;
 import org.rutebanken.netex.model.Operator;
 import org.rutebanken.netex.model.PointInLinkSequence_VersionedChildStructure;
 import org.rutebanken.netex.model.PointOnRoute;
 import org.rutebanken.netex.model.PointsInJourneyPattern_RelStructure;
 import org.rutebanken.netex.model.PointsOnRoute_RelStructure;
+import org.rutebanken.netex.model.PropertiesOfDay_RelStructure;
+import org.rutebanken.netex.model.PropertyOfDay;
 import org.rutebanken.netex.model.PublicationDeliveryStructure;
 import org.rutebanken.netex.model.ResourceFrame;
 import org.rutebanken.netex.model.Route;
@@ -63,21 +60,28 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.Splitter;
-import com.google.common.collect.BiMap;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
+import javax.xml.bind.JAXBElement;
+import java.math.BigInteger;
+import java.time.DayOfWeek;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
 
-import no.rutebanken.extime.config.NetexStaticDataSet;
-import no.rutebanken.extime.model.AirlineDesignator;
-import no.rutebanken.extime.model.AvailabilityPeriod;
-import no.rutebanken.extime.model.FlightRoute;
-import no.rutebanken.extime.model.LineDataSet;
-import no.rutebanken.extime.model.ScheduledFlight;
-import no.rutebanken.extime.model.ScheduledStopover;
-import no.rutebanken.extime.util.NetexObjectFactory;
-import no.rutebanken.extime.util.NetexObjectIdCreator;
+import static no.rutebanken.extime.Constants.*;
+import static no.rutebanken.extime.util.NetexObjectIdCreator.hashObjectId;
+import static no.rutebanken.extime.util.NetexObjectIdTypes.DESTINATION_DISPLAY;
 
 @Component(value = "lineDataToNetexConverter")
 public class LineDataToNetexConverter {
@@ -91,6 +95,7 @@ public class LineDataToNetexConverter {
     private Map<String, JourneyPattern> routeDesignationPatternMap = new HashMap<>();
     private Map<String, DayType> dayTypes = new HashMap<>();
     private Map<String, DayTypeAssignment> dayTypeAssignments = new HashMap<>();
+    private Map<String, OperatingPeriod> operatingPeriods = new HashMap<>();
 
     @Autowired
     private NetexStaticDataSet netexStaticDataSet;
@@ -151,7 +156,7 @@ public class LineDataToNetexConverter {
         JAXBElement<TimetableFrame> timetableFrame = netexObjectFactory.createTimetableFrame(serviceJourneys);
         frames.getCommonFrame().add(timetableFrame);
 
-        JAXBElement<ServiceCalendarFrame> serviceCalendarFrame = netexObjectFactory.createServiceCalendarFrame(dayTypes, dayTypeAssignments);
+        JAXBElement<ServiceCalendarFrame> serviceCalendarFrame = netexObjectFactory.createServiceCalendarFrame(dayTypes, dayTypeAssignments, operatingPeriods);
         frames.getCommonFrame().add(serviceCalendarFrame);
 
         JAXBElement<CompositeFrame> compositeFrame = netexObjectFactory.createCompositeFrame(publicationTimestamp,
@@ -336,6 +341,9 @@ public class LineDataToNetexConverter {
         if (!dayTypeAssignments.isEmpty()) {
             dayTypeAssignments.clear();
         }
+        if (!operatingPeriods.isEmpty()) {
+            operatingPeriods.clear();
+        }
 
         for (Map.Entry<String, Map<String, List<ScheduledFlight>>> entry : routeJourneys.entrySet()) {
             String routeDesignation = entry.getKey();
@@ -374,8 +382,17 @@ public class LineDataToNetexConverter {
         int index = 0;
         for (Map.Entry<String, List<ScheduledFlight>> entry : flightsByStopTimes.entrySet()) {
             List<ScheduledFlight> journeyFlights = entry.getValue();
+
             TimetabledPassingTimes_RelStructure passingTimesRelStruct = aggregateJourneyPassingTimes(journeyFlights, pointsInLinkSequence);
-            DayTypeRefs_RelStructure dayTypeRefsStruct = collectDayTypesAndAssignments(journeyFlights);
+
+            CalendarPattern pattern = findPattern(journeyFlights);
+            DayTypeRefs_RelStructure dayTypeRefsStruct;
+            if (pattern != null) {
+                dayTypeRefsStruct = collectOperatingPeriodsDayTypesAndAssignmentsFromPattern(pattern);
+            } else {
+                dayTypeRefsStruct = collectDayTypesAndAssignments(journeyFlights);
+            }
+
             String journeyIdSequence = StringUtils.leftPad(idSequence[index++], 2, "0");
             String objectId = Joiner.on(DASH).skipNulls().join(flightId, journeyIdSequence, NetexObjectIdCreator.getObjectIdSuffix(journeyPatternId));
             ServiceJourney serviceJourney = netexObjectFactory.createServiceJourney(objectId, line.getId(), flightId, dayTypeRefsStruct, journeyPatternId, passingTimesRelStruct);
@@ -421,15 +438,26 @@ public class LineDataToNetexConverter {
         return passingTimesRelStructure;
     }
 
+    private CalendarPattern findPattern(List<ScheduledFlight> flights) {
+        Set<LocalDate> operationDates = flights.stream().map(f -> f.getDateOfOperation().toLocalDate()).collect(Collectors.toSet());
+        return new CalendarPatternAnalyzer().computeCalendarPattern(operationDates);
+    }
+
     private DayTypeRefs_RelStructure collectDayTypesAndAssignments(List<ScheduledFlight> journeyFlights) {
         DayTypeRefs_RelStructure dayTypeStructure = objectFactory.createDayTypeRefs_RelStructure();
-        journeyFlights.sort(Comparator.comparing(ScheduledFlight::getDateOfOperation));
+        List<OffsetDateTime> datesOfOperation = journeyFlights.stream().map(ScheduledFlight::getDateOfOperation).collect(Collectors.toList());
+        collectDayTypesAndAssignments(dayTypeStructure, datesOfOperation, true);
+        return dayTypeStructure;
+    }
 
-        for (int i = 0; i < journeyFlights.size(); i++) {
-            OffsetDateTime dateOfOperation = journeyFlights.get(i).getDateOfOperation();
+    private void collectDayTypesAndAssignments(DayTypeRefs_RelStructure dayTypeStructure, List<OffsetDateTime> datesOfOperation, boolean available) {
 
-            String dayTypeIdLinePart = localContext.get(AIRLINE_IATA) + StringUtils.remove(localContext.get(LINE_DESIGNATION), DASH);
-            String dayTypeIdSuffix = Joiner.on(DASH).join(hashObjectId(dayTypeIdLinePart, 10), dateOfOperation.format(DateTimeFormatter.ofPattern(DAY_TYPE_PATTERN)));
+        datesOfOperation.sort(Comparator.naturalOrder());
+        for (int i = 0; i < datesOfOperation.size(); i++) {
+            OffsetDateTime dateOfOperation = datesOfOperation.get(i);
+
+            String dayTypeIdLinePart = getIdLinePart();
+            String dayTypeIdSuffix = Joiner.on(DASH).skipNulls().join(dayTypeIdLinePart, dateOfOperation.format(DateTimeFormatter.ofPattern(DAY_TYPE_PATTERN)), available ? null : "X");
             String dayTypeId = NetexObjectIdCreator.createDayTypeId(AVINOR_XMLNS, dayTypeIdSuffix);
 
             DayType dayType;
@@ -444,12 +472,100 @@ public class LineDataToNetexConverter {
 
             DayTypeAssignment dayTypeAssignment;
             if (!dayTypeAssignments.containsKey(dayTypeId)) {
-                dayTypeAssignment = netexObjectFactory.createDayTypeAssignment(dayTypeIdSuffix, i + 1, dateOfOperation, dayTypeId);
+                dayTypeAssignment = netexObjectFactory.createDayTypeAssignment(dayTypeIdSuffix, i + 1, dateOfOperation, dayTypeId, available);
                 dayTypeAssignments.put(dayTypeAssignment.getId(), dayTypeAssignment);
             }
         }
+    }
+
+    private DayTypeRefs_RelStructure collectOperatingPeriodsDayTypesAndAssignmentsFromPattern(CalendarPattern pattern) {
+        DayTypeRefs_RelStructure dayTypeStructure = objectFactory.createDayTypeRefs_RelStructure();
+
+        String operatingPeriodId = addOperatingPeriod(pattern);
+        SortedSet<DayOfWeekEnumeration> daysOfWeek = pattern.significantDays.stream().map(sd -> toDayOfWeekEnumeration(sd)).collect(Collectors.toCollection(TreeSet::new));
+
+        String dayTypeIdSuffix = createDayTypeIdSuffix(pattern, daysOfWeek);
+        String dayTypeId = NetexObjectIdCreator.createDayTypeId(AVINOR_XMLNS, dayTypeIdSuffix);
+        if (!dayTypes.containsKey(dayTypeId)) {
+            PropertiesOfDay_RelStructure properties = new PropertiesOfDay_RelStructure().withPropertyOfDay(new PropertyOfDay().withDaysOfWeek(daysOfWeek));
+            DayType dayType = netexObjectFactory.createDayType(dayTypeId)
+                    .withProperties(properties);
+            dayTypes.put(dayTypeId, dayType);
+        }
+
+        DayTypeRefStructure dayTypeRefStruct = netexObjectFactory.createDayTypeRefStructure(dayTypeId);
+        JAXBElement<DayTypeRefStructure> dayTypeRefStructElement = objectFactory.createDayTypeRef(dayTypeRefStruct);
+        dayTypeStructure.getDayTypeRef().add(dayTypeRefStructElement);
+
+        DayTypeAssignment dayTypeAssignment;
+        if (!dayTypeAssignments.containsKey(dayTypeId)) {
+            dayTypeAssignment = netexObjectFactory.createDayTypeAssignment(dayTypeIdSuffix, 1, dayTypeId, operatingPeriodId);
+            dayTypeAssignments.put(dayTypeAssignment.getId(), dayTypeAssignment);
+        }
+
+        addIndividualDates(dayTypeStructure, pattern.additionalDates, true);
+        addIndividualDates(dayTypeStructure, pattern.excludedDates, false);
 
         return dayTypeStructure;
+    }
+
+    private String createDayTypeIdSuffix(CalendarPattern pattern, SortedSet<DayOfWeekEnumeration> daysOfWeek) {
+        StringBuilder sb = new StringBuilder();
+        daysOfWeek.forEach(dow -> sb.append(dow.value().substring(0, 2)));
+
+        return Joiner.on(DASH).join(getIdLinePart(), format(pattern.from), format(pattern.to), sb.toString());
+    }
+
+    private void addIndividualDates(DayTypeRefs_RelStructure dayTypeStructure, Set<LocalDate> dates, boolean available) {
+        if (!CollectionUtils.isEmpty(dates)) {
+            List<OffsetDateTime> offsetDateTimes = dates.stream().map(ed -> toOffsetDateTime(ed)).collect(Collectors.toList());
+            collectDayTypesAndAssignments(dayTypeStructure, offsetDateTimes, available);
+        }
+    }
+
+    private String addOperatingPeriod(CalendarPattern pattern) {
+        String operatingPeriodIdSuffix = Joiner.on(DASH).join(getIdLinePart(), format(pattern.from), format(pattern.to));
+        String operatingPeriodId = NetexObjectIdCreator.createOperatingPeriodId(AVINOR_XMLNS, operatingPeriodIdSuffix);
+
+        if (!operatingPeriods.containsKey(operatingPeriodId)) {
+            OffsetDateTime from = toOffsetDateTime(pattern.from);
+            OffsetDateTime to = toOffsetDateTime(pattern.to);
+            OperatingPeriod operatingPeriod = netexObjectFactory.createOperatingPeriod(operatingPeriodId, from, to);
+            operatingPeriods.put(operatingPeriodId, operatingPeriod);
+        }
+        return operatingPeriodId;
+    }
+
+    private String format(LocalDate localDate) {
+        return localDate.format(DateTimeFormatter.ofPattern(DAY_TYPE_PATTERN));
+    }
+
+    private OffsetDateTime toOffsetDateTime(LocalDate localDate) {
+        return localDate.atStartOfDay().atZone(ZoneId.of(DEFAULT_ZONE_ID)).toOffsetDateTime();
+    }
+
+    private DayOfWeekEnumeration toDayOfWeekEnumeration(DayOfWeek dayOfWeek) {
+        switch (dayOfWeek) {
+            case MONDAY:
+                return DayOfWeekEnumeration.MONDAY;
+            case TUESDAY:
+                return DayOfWeekEnumeration.TUESDAY;
+            case WEDNESDAY:
+                return DayOfWeekEnumeration.WEDNESDAY;
+            case THURSDAY:
+                return DayOfWeekEnumeration.THURSDAY;
+            case FRIDAY:
+                return DayOfWeekEnumeration.FRIDAY;
+            case SATURDAY:
+                return DayOfWeekEnumeration.SATURDAY;
+            case SUNDAY:
+                return DayOfWeekEnumeration.SUNDAY;
+        }
+        return null;
+    }
+
+    private String getIdLinePart() {
+        return hashObjectId(localContext.get(AIRLINE_IATA) + StringUtils.remove(localContext.get(LINE_DESIGNATION), DASH), 10);
     }
 
     private boolean isCommonDesignator(String airlineIata) {
