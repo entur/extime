@@ -102,6 +102,10 @@ public class NetexObjectIdCreator {
         return NetexObjectIdCreator.composeNetexObjectId(objectIdPrefix, NetexObjectIdTypes.DAY_TYPE_KEY, objectId);
     }
 
+    public static String createOperatingPeriodId(String objectIdPrefix, String objectId) {
+        return NetexObjectIdCreator.composeNetexObjectId(objectIdPrefix, NetexObjectIdTypes.OPERATING_PERIOD_KEY, objectId);
+    }
+
     public static String createDayTypeAssignmentId(String objectIdPrefix, String objectId) {
         return NetexObjectIdCreator.composeNetexObjectId(objectIdPrefix, NetexObjectIdTypes.DAY_TYPE_ASSIGNMENT_KEY, objectId);
     }

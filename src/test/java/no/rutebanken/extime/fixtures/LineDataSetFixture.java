@@ -38,11 +38,13 @@ public final class LineDataSetFixture {
         airlines.put("WF", "Widerøe");
     }
 
-    private LineDataSetFixture() {}
+    private LineDataSetFixture() {
+    }
 
     public static String getAirportName(String iata) {
         return airports.containsKey(iata) ? airports.get(iata) : null;
     }
+
     public static String getAirlineName(String iata) {
         return airlines.containsKey(iata) ? airlines.get(iata) : null;
     }
@@ -60,7 +62,7 @@ public final class LineDataSetFixture {
         return lineDataSet;
     }
 
-    public static LineDataSet createLineDataSet(String airlineIata, String lineDesignation, List<Pair<String, Integer>> routeJourneyPairs) {
+    public static LineDataSet createLineDataSetWithFixedDates(String airlineIata, String lineDesignation, List<Pair<String, List<OffsetDateTime>>> routeJourneyPairs, OffsetTime fixedTimeOfDeparture) {
         LineDataSet lineDataSet = LineDataSetFixture.createBasicLineDataSet(airlineIata, lineDesignation);
 
         // init period
@@ -75,20 +77,20 @@ public final class LineDataSetFixture {
         List<FlightRoute> routes = new ArrayList<>();
         Map<String, Map<String, List<ScheduledFlight>>> routeJourneys = new HashMap<>();
 
-        for (Pair<String, Integer> pair : routeJourneyPairs) {
+        for (Pair<String, List<OffsetDateTime>> pair : routeJourneyPairs) {
             Map<String, List<ScheduledFlight>> flightsById = new HashMap<>();
             List<ScheduledFlight> flights = new ArrayList<>();
 
             String routeDesignation = pair.getKey();
             routes.add(new FlightRoute(routeDesignation, resolveRouteName(routeDesignation)));
 
-            for (int i = 1; i <= pair.getValue(); i++) {
+            for (OffsetDateTime dateOfOperation : pair.getValue()) {
                 ScheduledFlight scheduledFlight = new ScheduledFlight();
                 scheduledFlight.setAirlineIATA(airlineIata);
 
                 String airlineFlightId = airlineIata + generateRandomId(100, 9999);
                 scheduledFlight.setAirlineFlightId(airlineFlightId);
-                scheduledFlight.setDateOfOperation(generateRandomDate(periodFromDate, periodToDate));
+                scheduledFlight.setDateOfOperation(dateOfOperation);
 
                 List<String> routeStops = resolveStops(routeDesignation);
                 if (routeStops.size() == 2) {
@@ -100,7 +102,10 @@ public final class LineDataSetFixture {
                     scheduledFlight.setArrivalAirportIATA(arrivalAirportIata);
                     scheduledFlight.setArrivalAirportName(airports.get(arrivalAirportIata));
 
-                    OffsetTime timeOfDeparture = generateOffsetTime();
+                    OffsetTime timeOfDeparture = fixedTimeOfDeparture;
+                    if (timeOfDeparture == null) {
+                        timeOfDeparture = generateOffsetTime();
+                    }
                     scheduledFlight.setTimeOfDeparture(timeOfDeparture);
 
                     OffsetTime timeOfArrival = timeOfDeparture.plusHours(1);
@@ -143,6 +148,17 @@ public final class LineDataSetFixture {
         return lineDataSet;
     }
 
+    public static LineDataSet createLineDataSet(String airlineIata, String lineDesignation, List<Pair<String, Integer>> routeJourneyPairs) {
+        // init period
+        OffsetDateTime periodFromDate = OffsetDateTime.now().truncatedTo(ChronoUnit.DAYS).with(ChronoField.OFFSET_SECONDS, 0);
+        OffsetDateTime periodToDate = periodFromDate.plusMonths(1);
+
+        List<Pair<String, List<OffsetDateTime>>> routeJourneyPairsWithFixedDatesOfOperation =
+                routeJourneyPairs.stream().map(p -> Pair.of(p.getKey(),
+                        generateRandomDates(p.getValue(), periodFromDate, periodToDate))).collect(Collectors.toList());
+        return createLineDataSetWithFixedDates(airlineIata, lineDesignation, routeJourneyPairsWithFixedDatesOfOperation, null);
+    }
+
     private static String resolveLineName(String lineDesignation) {
         List<String> airportIatas = Splitter.on(DASH)
                 .trimResults()
@@ -169,6 +185,15 @@ public final class LineDataSetFixture {
                 .splitToList(routeDesignation).stream()
                 .collect(Collectors.toList());
     }
+
+    public static List<OffsetDateTime> generateRandomDates(int cnt, OffsetDateTime inclusive, OffsetDateTime exclusive) {
+        List<OffsetDateTime> randomDates = new ArrayList<>();
+        for (int i = 1; i <= cnt; i++) {
+            randomDates.add(generateRandomDate(inclusive, exclusive));
+        }
+        return randomDates;
+    }
+
 
     public static OffsetDateTime generateRandomDate(OffsetDateTime inclusive, OffsetDateTime exclusive) {
         long days = ChronoUnit.DAYS.between(inclusive, exclusive);

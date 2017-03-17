@@ -2,6 +2,7 @@ package no.rutebanken.extime.converter;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import no.rutebanken.extime.config.CamelRouteDisabler;
 import no.rutebanken.extime.fixtures.LineDataSetFixture;
 import no.rutebanken.extime.model.FlightRoute;
@@ -9,6 +10,7 @@ import no.rutebanken.extime.model.LineDataSet;
 import no.rutebanken.extime.util.NetexObjectIdCreator;
 import no.rutebanken.extime.util.NetexObjectIdTypes;
 import org.apache.commons.lang3.tuple.Pair;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.rutebanken.netex.model.*;
@@ -18,9 +20,16 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import javax.xml.bind.JAXBElement;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -171,6 +180,81 @@ public class LineDataToNetexConverterTest {
                 assertThat(destinationDisplay.getVias().getVia().get(0).getDestinationDisplayRef().getRef()).isEqualTo("AVI:DestinationDisplay:DYOSLBGO-SOG");
             }
         }
+    }
+
+    @Test
+    public void testServiceJourneyWithOperatingPeriodAndExclusions() throws Exception {
+        OffsetDateTime patternFrom = LocalDate.of(2017, 1, 3).atStartOfDay().atOffset(ZoneOffset.ofHours(0));
+        OffsetDateTime patternTo = patternFrom.plusDays(70);
+        Set<DayOfWeek> pattern = Sets.newHashSet(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY);
+        // Pattern = 5 days a week, one exception at day 10
+        List<OffsetDateTime> flightDates = generatePattern(patternFrom, patternTo, pattern, 10);
+        List<Pair<String, List<OffsetDateTime>>> routeJourneyPairs = Lists.newArrayList(Pair.of("OSL-SOG", flightDates));
+        LineDataSet lineDataSet = LineDataSetFixture.createLineDataSetWithFixedDates("DY", "OSL-BGO", routeJourneyPairs, OffsetTime.now());
+
+        PublicationDeliveryStructure publicationDelivery = netexConverter.convertToNetex(lineDataSet).getValue();
+        assertValidPublicationDelivery(publicationDelivery, lineDataSet.getLineName());
+
+        List<JAXBElement<? extends Common_VersionFrameStructure>> dataObjectFrames = getDataObjectFrames(publicationDelivery);
+
+        ServiceCalendarFrame serviceCalendarFrame = getFrames(ServiceCalendarFrame.class, dataObjectFrames).get(0);
+        Map<String, DayType> dayTypes = serviceCalendarFrame.getDayTypes().getDayType_().stream()
+                .collect(Collectors.toMap(d -> d.getValue().getId(), d -> (DayType) d.getValue()));
+        Map<String, DayTypeAssignment> dayTimeAssignments = serviceCalendarFrame.getDayTypeAssignments().getDayTypeAssignment().stream()
+                .collect(Collectors.toMap(d -> d.getDayTypeRef().getValue().getRef(), d -> d));
+        Map<String, OperatingPeriod_VersionStructure> operatingPeriods = serviceCalendarFrame.getOperatingPeriods().getOperatingPeriodOrUicOperatingPeriod()
+                .stream().collect(Collectors.toMap(o -> o.getId(), o -> o));
+
+        TimetableFrame timetableFrame = getFrames(TimetableFrame.class, dataObjectFrames).get(0);
+        ServiceJourney serviceJourney = (ServiceJourney) timetableFrame.getVehicleJourneys().getDatedServiceJourneyOrDeadRunOrServiceJourney().get(0);
+
+        List<String> dayTypeRefs = serviceJourney.getDayTypes().getDayTypeRef().stream().map(e ->
+                e.getValue().getRef()).collect(Collectors.toList());
+
+        Set<OffsetDateTime> expectedExclusions = Sets.newHashSet(patternFrom.plusDays(10));
+
+        for (String dayTypeRef : dayTypeRefs) {
+            DayTypeAssignment assignment = dayTimeAssignments.get(dayTypeRef);
+            Assert.assertNotNull(assignment);
+            DayType dayType = dayTypes.get(assignment.getDayTypeRef().getValue().getRef());
+            Assert.assertNotNull(dayType);
+
+            if (assignment.getDate() == null) {
+                OperatingPeriod_VersionStructure operatingPeriod = operatingPeriods.get(assignment.getOperatingPeriodRef().getRef());
+                Assert.assertNotNull(operatingPeriod);
+                Assert.assertEquals(patternFrom, operatingPeriod.getFromDate());
+                Assert.assertEquals(patternTo, operatingPeriod.getToDate());
+
+                Assert.assertTrue(
+                        dayType.getProperties().getPropertyOfDay().get(0).getDaysOfWeek().containsAll(Arrays.asList(DayOfWeekEnumeration.MONDAY,
+                                DayOfWeekEnumeration.TUESDAY, DayOfWeekEnumeration.WEDNESDAY,
+                                DayOfWeekEnumeration.THURSDAY, DayOfWeekEnumeration.FRIDAY)));
+            } else {
+                Assert.assertFalse(assignment.isIsAvailable());
+                Assert.assertNull(assignment.getOperatingPeriodRef());
+                Assert.assertTrue(expectedExclusions.remove(assignment.getDate()));
+            }
+        }
+
+        Assert.assertTrue("Not all expected exclusion dates found", expectedExclusions.isEmpty());
+    }
+
+    private List<OffsetDateTime> generatePattern(OffsetDateTime start, OffsetDateTime end, Set<DayOfWeek> daysOfWeek, int... exclusionArray) {
+        List<OffsetDateTime> patternDates = new ArrayList<>();
+        Set<Integer> exclusions = new HashSet<>();
+        if (exclusionArray != null) {
+            Arrays.stream(exclusionArray).forEach(e -> exclusions.add(e));
+        }
+
+        OffsetDateTime current = start;
+        int i = 0;
+        while (!current.isAfter(end)) {
+            if (!exclusions.contains(i++) && daysOfWeek.contains(current.getDayOfWeek())) {
+                patternDates.add(current);
+            }
+            current = current.plusDays(1);
+        }
+        return patternDates;
     }
 
     private void assertValidPublicationDelivery(PublicationDeliveryStructure publicationDelivery, String lineName) {
