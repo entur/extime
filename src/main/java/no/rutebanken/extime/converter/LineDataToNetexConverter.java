@@ -1,5 +1,6 @@
 package no.rutebanken.extime.converter;
 
+
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.BiMap;
@@ -71,6 +72,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -482,9 +484,47 @@ public class LineDataToNetexConverter {
         DayTypeRefs_RelStructure dayTypeStructure = objectFactory.createDayTypeRefs_RelStructure();
 
         String operatingPeriodId = addOperatingPeriod(pattern);
-        SortedSet<DayOfWeekEnumeration> daysOfWeek = pattern.significantDays.stream().map(sd -> toDayOfWeekEnumeration(sd)).collect(Collectors.toCollection(TreeSet::new));
 
-        String dayTypeIdSuffix = createDayTypeIdSuffix(pattern, daysOfWeek);
+        for (Set<DayOfWeek> distinctPattern : splitDaysOfWeekPatternAccordingToProfile(pattern.significantDays)) {
+            SortedSet<DayOfWeekEnumeration> daysOfWeek = distinctPattern.stream().map(sd -> toDayOfWeekEnumeration(sd)).collect(Collectors.toCollection(TreeSet::new));
+            String dayTypeIdSuffix = createDayTypeIdSuffix(pattern, daysOfWeek);
+            collectDayTypesFromPattern(operatingPeriodId, dayTypeIdSuffix, dayTypeStructure, daysOfWeek);
+        }
+
+
+        addIndividualDates(dayTypeStructure, pattern.additionalDates, true);
+        addIndividualDates(dayTypeStructure, pattern.excludedDates, false);
+
+        return dayTypeStructure;
+    }
+
+    /**
+     * Saturdays and sundays should be represented with separate dayTypes according to profile
+     */
+    private List<Set<DayOfWeek>> splitDaysOfWeekPatternAccordingToProfile(Set<DayOfWeek> daysOfWeek) {
+        List<Set<DayOfWeek>> listOfPatterns = new ArrayList<>();
+        Set<DayOfWeek> weekDays = new HashSet<>();
+        Set<DayOfWeek> saturday = new HashSet<>();
+        Set<DayOfWeek> sunday = new HashSet<>();
+
+        for (DayOfWeek dayOfWeek : daysOfWeek) {
+            if (DayOfWeek.SATURDAY.equals(dayOfWeek)) {
+                saturday.add(dayOfWeek);
+                listOfPatterns.add(saturday);
+            } else if (DayOfWeek.SUNDAY.equals(dayOfWeek)) {
+                sunday.add(dayOfWeek);
+                listOfPatterns.add(sunday);
+            } else {
+                weekDays.add(dayOfWeek);
+                if (weekDays.size() == 1) {
+                    listOfPatterns.add(weekDays);
+                }
+            }
+        }
+        return listOfPatterns;
+    }
+
+    private void collectDayTypesFromPattern(String operatingPeriodId, String dayTypeIdSuffix, DayTypeRefs_RelStructure dayTypeStructure, SortedSet<DayOfWeekEnumeration> daysOfWeek) {
         String dayTypeId = NetexObjectIdCreator.createDayTypeId(AVINOR_XMLNS, dayTypeIdSuffix);
         if (!dayTypes.containsKey(dayTypeId)) {
             PropertiesOfDay_RelStructure properties = new PropertiesOfDay_RelStructure().withPropertyOfDay(new PropertyOfDay().withDaysOfWeek(daysOfWeek));
@@ -502,11 +542,6 @@ public class LineDataToNetexConverter {
             dayTypeAssignment = netexObjectFactory.createDayTypeAssignment(dayTypeIdSuffix, 1, dayTypeId, operatingPeriodId);
             dayTypeAssignments.put(dayTypeAssignment.getId(), dayTypeAssignment);
         }
-
-        addIndividualDates(dayTypeStructure, pattern.additionalDates, true);
-        addIndividualDates(dayTypeStructure, pattern.excludedDates, false);
-
-        return dayTypeStructure;
     }
 
     private String createDayTypeIdSuffix(CalendarPattern pattern, SortedSet<DayOfWeekEnumeration> daysOfWeek) {

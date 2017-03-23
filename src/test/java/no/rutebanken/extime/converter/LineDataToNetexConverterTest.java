@@ -9,11 +9,32 @@ import no.rutebanken.extime.model.FlightRoute;
 import no.rutebanken.extime.model.LineDataSet;
 import no.rutebanken.extime.util.NetexObjectIdCreator;
 import no.rutebanken.extime.util.NetexObjectIdTypes;
+import org.apache.commons.collections.ListUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.rutebanken.netex.model.*;
+import org.rutebanken.netex.model.AllVehicleModesOfTransportEnumeration;
+import org.rutebanken.netex.model.Common_VersionFrameStructure;
+import org.rutebanken.netex.model.CompositeFrame;
+import org.rutebanken.netex.model.DayOfWeekEnumeration;
+import org.rutebanken.netex.model.DayType;
+import org.rutebanken.netex.model.DayTypeAssignment;
+import org.rutebanken.netex.model.DestinationDisplay;
+import org.rutebanken.netex.model.JourneyPattern;
+import org.rutebanken.netex.model.JourneyPatternsInFrame_RelStructure;
+import org.rutebanken.netex.model.Line;
+import org.rutebanken.netex.model.LinkSequence_VersionStructure;
+import org.rutebanken.netex.model.Network;
+import org.rutebanken.netex.model.OperatingPeriod_VersionStructure;
+import org.rutebanken.netex.model.PublicationDeliveryStructure;
+import org.rutebanken.netex.model.Route;
+import org.rutebanken.netex.model.RouteRefStructure;
+import org.rutebanken.netex.model.RoutesInFrame_RelStructure;
+import org.rutebanken.netex.model.ServiceCalendarFrame;
+import org.rutebanken.netex.model.ServiceFrame;
+import org.rutebanken.netex.model.ServiceJourney;
+import org.rutebanken.netex.model.TimetableFrame;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.test.context.ActiveProfiles;
@@ -186,7 +207,7 @@ public class LineDataToNetexConverterTest {
     public void testServiceJourneyWithOperatingPeriodAndExclusions() throws Exception {
         OffsetDateTime patternFrom = LocalDate.of(2017, 1, 3).atStartOfDay().atOffset(ZoneOffset.ofHours(0));
         OffsetDateTime patternTo = patternFrom.plusDays(70);
-        Set<DayOfWeek> pattern = Sets.newHashSet(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY);
+        Set<DayOfWeek> pattern = Sets.newHashSet(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY, DayOfWeek.SATURDAY);
         // Pattern = 5 days a week, one exception at day 10
         List<OffsetDateTime> flightDates = generatePattern(patternFrom, patternTo, pattern, 10);
         List<Pair<String, List<OffsetDateTime>>> routeJourneyPairs = Lists.newArrayList(Pair.of("OSL-SOG", flightDates));
@@ -213,6 +234,9 @@ public class LineDataToNetexConverterTest {
 
         Set<OffsetDateTime> expectedExclusions = Sets.newHashSet(patternFrom.plusDays(10));
 
+        boolean weekDayPatternFound = false;
+        boolean saturdayPatternFound = false;
+
         for (String dayTypeRef : dayTypeRefs) {
             DayTypeAssignment assignment = dayTimeAssignments.get(dayTypeRef);
             Assert.assertNotNull(assignment);
@@ -225,17 +249,20 @@ public class LineDataToNetexConverterTest {
                 Assert.assertEquals(patternFrom, operatingPeriod.getFromDate());
                 Assert.assertEquals(patternTo, operatingPeriod.getToDate());
 
-                Assert.assertTrue(
-                        dayType.getProperties().getPropertyOfDay().get(0).getDaysOfWeek().containsAll(Arrays.asList(DayOfWeekEnumeration.MONDAY,
+                weekDayPatternFound |= ListUtils.isEqualList(
+                        dayType.getProperties().getPropertyOfDay().get(0).getDaysOfWeek(), Arrays.asList(DayOfWeekEnumeration.MONDAY,
                                 DayOfWeekEnumeration.TUESDAY, DayOfWeekEnumeration.WEDNESDAY,
-                                DayOfWeekEnumeration.THURSDAY, DayOfWeekEnumeration.FRIDAY)));
+                                DayOfWeekEnumeration.THURSDAY, DayOfWeekEnumeration.FRIDAY));
+                saturdayPatternFound |= ListUtils.isEqualList(
+                        dayType.getProperties().getPropertyOfDay().get(0).getDaysOfWeek(), Arrays.asList(DayOfWeekEnumeration.SATURDAY));
             } else {
                 Assert.assertFalse(assignment.isIsAvailable());
                 Assert.assertNull(assignment.getOperatingPeriodRef());
                 Assert.assertTrue(expectedExclusions.remove(assignment.getDate()));
             }
         }
-
+        Assert.assertTrue("Did not find expected pattern for week days", weekDayPatternFound);
+        Assert.assertTrue("Did not find expected pattern for saturdays", saturdayPatternFound);
         Assert.assertTrue("Not all expected exclusion dates found", expectedExclusions.isEmpty());
     }
 
