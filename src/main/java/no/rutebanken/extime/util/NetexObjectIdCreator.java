@@ -53,6 +53,10 @@ public class NetexObjectIdCreator {
         return NetexObjectIdCreator.composeNetexObjectId(objectIdPrefix, NetexObjectIdTypes.NETWORK_KEY, objectId);
     }
 
+    public static String createGroupOfLinesId(String objectIdPrefix, String objectId) {
+        return NetexObjectIdCreator.composeNetexObjectId(objectIdPrefix, NetexObjectIdTypes.GROUP_OF_LINES_KEY, objectId);
+    }
+
     public static String createLineId(String objectIdPrefix, Object[] parts) {
         String objectId = Joiner.on(UNDERSCORE).skipNulls().join(parts);
         return NetexObjectIdCreator.composeNetexObjectId(objectIdPrefix, NetexObjectIdTypes.LINE_KEY, objectId);

@@ -55,6 +55,13 @@ netex-data-sets:
       phone: 0047 75 43 18 00
       url: http://www.lufttransport.no/
       details:
+    vf:
+      company-number: 953 787 571
+      name: FlyViking
+      legal-name: FLYVIKING AS
+      phone: 0047 85 22 08 08
+      url: http://www.flyviking.no/
+      details:
 
   # StopPlace types that, for now, corresponding directly to the actual airports. In future versions these can
   # be divided into actual gates at the airport, that will map directly to the Quay type in NeTEx.

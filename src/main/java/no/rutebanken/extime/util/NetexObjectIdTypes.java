@@ -14,6 +14,7 @@ public interface NetexObjectIdTypes {
     String AUTHORITY_KEY = "Authority";
     String OPERATOR_KEY = "Operator";
     String NETWORK_KEY = "Network";
+    String GROUP_OF_LINES_KEY = "GroupOfLines";
     String LINE_KEY = "Line";
     String ROUTE_KEY = "Route";
     String STOP_PLACE_KEY = "StopPlace";

@@ -89,14 +89,17 @@ public class CommonDataToNetexConverter {
         stopPoints.sort(Comparator.comparing(ScheduledStopPoint::getId));
         logger.info("Retrieved and populated NeTEx structure with {} stop points", stopPoints.size());
 
-        JAXBElement<ResourceFrame> resourceFrameElement = netexObjectFactory.createResourceFrameElement(authorityElements, operatorElements);
-        JAXBElement<SiteFrame> siteFrameElement = netexObjectFactory.createSiteFrameElement(stopPlaces);
-        JAXBElement<ServiceFrame> serviceFrameElement = netexObjectFactory.createCommonServiceFrameElement(stopPoints, stopAssignmentElements);
-
         Frames_RelStructure framesStruct = objectFactory.createFrames_RelStructure();
-        framesStruct.getCommonFrame().add(resourceFrameElement);
-        framesStruct.getCommonFrame().add(siteFrameElement);
-        framesStruct.getCommonFrame().add(serviceFrameElement);
+        framesStruct.getCommonFrame().add(netexObjectFactory.createResourceFrameElement(authorityElements, operatorElements));
+        framesStruct.getCommonFrame().add(netexObjectFactory.createSiteFrameElement(stopPlaces));
+
+        for (AirlineDesignator designator : AirlineDesignator.values()) {
+            String designatorName = designator.name().toUpperCase();
+            Network network = netexObjectFactory.createNetwork(publicationTimestamp, designatorName, null);
+            framesStruct.getCommonFrame().add(netexObjectFactory.createNetworkServiceFrameElement(network));
+        }
+
+        framesStruct.getCommonFrame().add(netexObjectFactory.createCommonServiceFrameElement(stopPoints, stopAssignmentElements));
 
         JAXBElement<CompositeFrame> compositeFrameElement = netexObjectFactory
                 .createCompositeFrameElement(publicationTimestamp, framesStruct, dateUtils.generateAvailabilityPeriod(), avinorCodespace, nsrCodespace);

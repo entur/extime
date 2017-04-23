@@ -23,19 +23,14 @@ import org.apache.camel.converter.jaxb.JaxbDataFormat;
 import org.apache.camel.processor.aggregate.AggregationStrategy;
 import org.apache.camel.processor.aggregate.zipfile.ZipAggregationStrategy;
 import org.apache.commons.lang3.StringUtils;
-import org.rutebanken.netex.model.CompositeFrame;
-import org.rutebanken.netex.model.Line;
 import org.rutebanken.netex.model.PublicationDeliveryStructure;
-import org.rutebanken.netex.model.ServiceFrame;
 import org.springframework.stereotype.Component;
 
-import javax.xml.bind.JAXBElement;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.*;
 import static org.apache.camel.component.stax.StAXBuilder.stax;
@@ -246,7 +241,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                     }).id("AirlineIataPreEnrichProcessor")
                     .enrich("direct:enrichWithAirlineName", new AirlineNameEnricherAggregationStrategy())
                     .bean(LineDataToNetexConverter.class, "convertToNetex").id("ConvertLineDataSetsToNetexProcessor")
-                    .process(exchange -> exchange.getIn().setHeader(HEADER_FILE_NAME_GENERATED, generateFilename(exchange))).id("GenerateFileNameProcessor")
+                    .setHeader(HEADER_FILE_NAME_GENERATED, simple("${bean:avinorTimetableUtils?method=generateFilename}"))
                     .marshal(jaxbDataFormat)
                     .setHeader(Exchange.FILE_NAME, simpleF("${header.%s}.xml", HEADER_FILE_NAME_GENERATED))
                     .setHeader(Exchange.CONTENT_TYPE, constant("text/xml;charset=utf-8"))
@@ -426,40 +421,4 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
         }
     }
 
-    private static String generateFilename(Exchange exchange) {
-        @SuppressWarnings("unchecked")
-        JAXBElement<PublicationDeliveryStructure> publicationDelivery = (JAXBElement<PublicationDeliveryStructure>) exchange.getIn().getBody();
-
-        List<ServiceFrame> collect = publicationDelivery.getValue().getDataObjects().getCompositeFrameOrCommonFrame().stream()
-                .map(JAXBElement::getValue)
-                .filter(e -> e instanceof CompositeFrame)
-                .map(e -> (CompositeFrame) e)
-                .map(e -> e.getFrames().getCommonFrame())
-                .map(e -> e.stream()
-                        .map(JAXBElement::getValue)
-                        .filter(ex -> ex instanceof ServiceFrame)
-                        .map(ex -> (ServiceFrame) ex)
-                        .collect(Collectors.toList()))
-                .flatMap(Collection::stream)
-                .collect(Collectors.toList());
-
-        ServiceFrame sf = collect.get(0);
-        String network = sf.getNetwork().getName().getValue();
-        Line line = ((Line) sf.getLines().getLine_().get(0).getValue());
-        String publicCode = line.getPublicCode();
-
-        String filename = network + "-" + publicCode + "-" + line.getName().getValue().replace('/', '_');
-
-        return rewriteNorwegianCharacters(filename);
-    }
-
-    private static String rewriteNorwegianCharacters(String s) {
-        s = s.replace("Å", "AA");
-        s = s.replace("Ø", "OE");
-        s = s.replace("Æ", "AE");
-        s = s.replace("å", "aa");
-        s = s.replace("ø", "oe");
-        s = s.replace("æ", "ae");
-        return s;
-    }
 }

@@ -1,113 +1,23 @@
 package no.rutebanken.extime.util;
 
-import static no.rutebanken.extime.Constants.AVINOR_XMLNS;
-import static no.rutebanken.extime.Constants.AVINOR_XMLNSURL;
-import static no.rutebanken.extime.Constants.DASH;
-import static no.rutebanken.extime.Constants.DEFAULT_END_EXCLUSIVE;
-import static no.rutebanken.extime.Constants.DEFAULT_LANGUAGE;
-import static no.rutebanken.extime.Constants.DEFAULT_START_INCLUSIVE;
-import static no.rutebanken.extime.Constants.DEFAULT_ZONE_ID;
-import static no.rutebanken.extime.Constants.NETEX_PROFILE_VERSION;
-import static no.rutebanken.extime.Constants.NSR_XMLNS;
-import static no.rutebanken.extime.Constants.NSR_XMLNSURL;
-import static no.rutebanken.extime.Constants.VERSION_ONE;
+import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
+import no.rutebanken.extime.config.NetexStaticDataSet;
+import no.rutebanken.extime.model.AvailabilityPeriod;
+import org.rutebanken.netex.model.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
+import javax.xml.bind.JAXBElement;
 import java.math.BigInteger;
 import java.time.DayOfWeek;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
-import javax.xml.bind.JAXBElement;
-
-import org.rutebanken.netex.model.AllVehicleModesOfTransportEnumeration;
-import org.rutebanken.netex.model.Authority;
-import org.rutebanken.netex.model.AvailabilityCondition;
-import org.rutebanken.netex.model.Codespace;
-import org.rutebanken.netex.model.Codespaces_RelStructure;
-import org.rutebanken.netex.model.CompositeFrame;
-import org.rutebanken.netex.model.ContactStructure;
-import org.rutebanken.netex.model.DayOfWeekEnumeration;
-import org.rutebanken.netex.model.DayType;
-import org.rutebanken.netex.model.DayTypeAssignment;
-import org.rutebanken.netex.model.DayTypeAssignmentsInFrame_RelStructure;
-import org.rutebanken.netex.model.DayTypeRefStructure;
-import org.rutebanken.netex.model.DayTypeRefs_RelStructure;
-import org.rutebanken.netex.model.DayTypesInFrame_RelStructure;
-import org.rutebanken.netex.model.DestinationDisplay;
-import org.rutebanken.netex.model.DestinationDisplayRefStructure;
-import org.rutebanken.netex.model.DestinationDisplaysInFrame_RelStructure;
-import org.rutebanken.netex.model.Frames_RelStructure;
-import org.rutebanken.netex.model.JourneyPattern;
-import org.rutebanken.netex.model.JourneyPatternRefStructure;
-import org.rutebanken.netex.model.JourneyPatternsInFrame_RelStructure;
-import org.rutebanken.netex.model.JourneysInFrame_RelStructure;
-import org.rutebanken.netex.model.Line;
-import org.rutebanken.netex.model.LineRefStructure;
-import org.rutebanken.netex.model.LinesInFrame_RelStructure;
-import org.rutebanken.netex.model.LocaleStructure;
-import org.rutebanken.netex.model.MultilingualString;
-import org.rutebanken.netex.model.Network;
-import org.rutebanken.netex.model.ObjectFactory;
-import org.rutebanken.netex.model.OperatingPeriod;
-import org.rutebanken.netex.model.OperatingPeriodRefStructure;
-import org.rutebanken.netex.model.OperatingPeriod_VersionStructure;
-import org.rutebanken.netex.model.OperatingPeriodsInFrame_RelStructure;
-import org.rutebanken.netex.model.Operator;
-import org.rutebanken.netex.model.OperatorRefStructure;
-import org.rutebanken.netex.model.OrganisationTypeEnumeration;
-import org.rutebanken.netex.model.OrganisationsInFrame_RelStructure;
-import org.rutebanken.netex.model.PassengerStopAssignment;
-import org.rutebanken.netex.model.PointOnRoute;
-import org.rutebanken.netex.model.PointRefStructure;
-import org.rutebanken.netex.model.PointsInJourneyPattern_RelStructure;
-import org.rutebanken.netex.model.PointsOnRoute_RelStructure;
-import org.rutebanken.netex.model.PropertiesOfDay_RelStructure;
-import org.rutebanken.netex.model.PropertyOfDay;
-import org.rutebanken.netex.model.PublicationDeliveryStructure;
-import org.rutebanken.netex.model.QuayRefStructure;
-import org.rutebanken.netex.model.ResourceFrame;
-import org.rutebanken.netex.model.Route;
-import org.rutebanken.netex.model.RoutePoint;
-import org.rutebanken.netex.model.RoutePointRefStructure;
-import org.rutebanken.netex.model.RoutePointsInFrame_RelStructure;
-import org.rutebanken.netex.model.RouteRefStructure;
-import org.rutebanken.netex.model.RoutesInFrame_RelStructure;
-import org.rutebanken.netex.model.ScheduledStopPoint;
-import org.rutebanken.netex.model.ScheduledStopPointRefStructure;
-import org.rutebanken.netex.model.ScheduledStopPointsInFrame_RelStructure;
-import org.rutebanken.netex.model.ServiceCalendarFrame;
-import org.rutebanken.netex.model.ServiceFrame;
-import org.rutebanken.netex.model.ServiceJourney;
-import org.rutebanken.netex.model.SiteFrame;
-import org.rutebanken.netex.model.StopAssignmentsInFrame_RelStructure;
-import org.rutebanken.netex.model.StopPlace;
-import org.rutebanken.netex.model.StopPlaceRefStructure;
-import org.rutebanken.netex.model.StopPlacesInFrame_RelStructure;
-import org.rutebanken.netex.model.StopPointInJourneyPattern;
-import org.rutebanken.netex.model.StopPointInJourneyPatternRefStructure;
-import org.rutebanken.netex.model.TimetableFrame;
-import org.rutebanken.netex.model.TimetabledPassingTime;
-import org.rutebanken.netex.model.TimetabledPassingTimes_RelStructure;
-import org.rutebanken.netex.model.ValidityConditions_RelStructure;
-import org.rutebanken.netex.model.VersionFrameDefaultsStructure;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
-import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
-
-import no.rutebanken.extime.config.NetexStaticDataSet;
-import no.rutebanken.extime.model.AvailabilityPeriod;
+import static no.rutebanken.extime.Constants.*;
+import static no.rutebanken.extime.util.AvinorTimetableUtils.isCommonDesignator;
 
 @Component(value = "netexObjectFactory")
 public class NetexObjectFactory {
@@ -294,6 +204,18 @@ public class NetexObjectFactory {
         return objectFactory.createSiteFrame(siteFrame);
     }
 
+    public JAXBElement<ServiceFrame> createNetworkServiceFrameElement(Network network) {
+        String serviceFrameId = NetexObjectIdCreator.createServiceFrameId(AVINOR_XMLNS,
+                String.valueOf(NetexObjectIdCreator.generateRandomId(DEFAULT_START_INCLUSIVE, DEFAULT_END_EXCLUSIVE)));
+
+        ServiceFrame serviceFrame = objectFactory.createServiceFrame()
+                .withVersion(VERSION_ONE)
+                .withId(serviceFrameId)
+                .withNetwork(network);
+
+        return objectFactory.createServiceFrame(serviceFrame);
+    }
+
     public JAXBElement<ServiceFrame> createCommonServiceFrameElement(List<ScheduledStopPoint> scheduledStopPoints,
             List<JAXBElement<PassengerStopAssignment>> stopAssignmentElements) {
 
@@ -319,13 +241,10 @@ public class NetexObjectFactory {
             String airlineIata, List<RoutePoint> routePoints, List<Route> routes, Line line,
             List<DestinationDisplay> destinationDisplays, List<JourneyPattern> journeyPatterns) {
 
-        String networkId = NetexObjectIdCreator.createNetworkId(AVINOR_XMLNS, airlineIata);
-
-        Network network = objectFactory.createNetwork()
-                .withVersion(VERSION_ONE)
-                .withChanged(publicationTimestamp)
-                .withId(networkId)
-                .withName(createMultilingualString(airlineName));
+        Network network = null;
+        if (!isCommonDesignator(airlineIata)) {
+            network = createNetwork(publicationTimestamp, airlineIata, airlineName);
+        }
 
         RoutePointsInFrame_RelStructure routePointsInFrame = objectFactory.createRoutePointsInFrame_RelStructure()
                 .withRoutePoint(routePoints);
@@ -354,12 +273,15 @@ public class NetexObjectFactory {
         ServiceFrame serviceFrame = objectFactory.createServiceFrame()
                 .withVersion(VERSION_ONE)
                 .withId(serviceFrameId)
-                .withNetwork(network)
                 .withRoutePoints(routePointsInFrame)
                 .withRoutes(routesInFrame)
                 .withLines(linesInFrame)
                 .withDestinationDisplays(destinationDisplayStruct)
                 .withJourneyPatterns(journeyPatternsInFrame);
+
+        if (network != null) {
+            serviceFrame.setNetwork(network);
+        }
 
         return objectFactory.createServiceFrame(serviceFrame);
     }
@@ -427,13 +349,27 @@ public class NetexObjectFactory {
     }
 
     public Network createNetwork(OffsetDateTime publicationTimestamp, String airlineIata, String airlineName) {
+        if (airlineName == null) {
+            NetexStaticDataSet.OrganisationDataSet airlineDataSet = netexStaticDataSet.getOrganisations()
+                    .get(airlineIata.toLowerCase());
+            airlineName = airlineDataSet.getName();
+        }
+
         String networkId = NetexObjectIdCreator.createNetworkId(AVINOR_XMLNS, airlineIata);
+        GroupsOfLinesInFrame_RelStructure groupsOfLinesStruct = objectFactory.createGroupsOfLinesInFrame_RelStructure();
+
+        GroupOfLines groupOfLines = objectFactory.createGroupOfLines()
+                .withVersion(VERSION_ONE)
+                .withId(NetexObjectIdCreator.createGroupOfLinesId(AVINOR_XMLNS, airlineIata))
+                .withName(createMultilingualString(airlineName + " Fly"));
+        groupsOfLinesStruct.getGroupOfLines().add(groupOfLines);
 
         return objectFactory.createNetwork()
                 .withVersion(VERSION_ONE)
                 .withChanged(publicationTimestamp)
                 .withId(networkId)
-                .withName(createMultilingualString(airlineName));
+                .withName(createMultilingualString(airlineName))
+                .withGroupsOfLines(groupsOfLinesStruct);
     }
 
     public JAXBElement<Authority> createAvinorAuthorityElement() {
@@ -521,12 +457,16 @@ public class NetexObjectFactory {
     public Line createLine(String airlineIata, String lineDesignation, String lineName) {
         String lineId = NetexObjectIdCreator.createLineId(AVINOR_XMLNS, new String[] {airlineIata, lineDesignation});
 
+        GroupOfLinesRefStructure groupOfLinesRefStruct = objectFactory.createGroupOfLinesRefStructure()
+                .withRef(NetexObjectIdCreator.createNetworkId(AVINOR_XMLNS, airlineIata));
+
         return objectFactory.createLine()
                 .withVersion(VERSION_ONE)
                 .withId(lineId)
                 .withName(createMultilingualString(lineName))
                 .withTransportMode(AllVehicleModesOfTransportEnumeration.AIR)
-                .withPublicCode(lineDesignation);
+                .withPublicCode(lineDesignation)
+                .withRepresentedByGroupRef(groupOfLinesRefStruct);
     }
 
     public Route createRoute(String lineId, String objectId, String routeName, PointsOnRoute_RelStructure pointsOnRoute) {
@@ -718,11 +658,11 @@ public class NetexObjectFactory {
         JAXBElement<DayTypeRefStructure> dayTypeRefStructElement = objectFactory.createDayTypeRef(dayTypeRefStruct);
 
         DayTypeAssignment dayTypeAssignment = objectFactory.createDayTypeAssignment()
-                                                      .withVersion(VERSION_ONE)
-                                                      .withId(dayTypeAssignmentId)
-                                                      .withOrder(BigInteger.valueOf(order))
-                                                      .withDate(dateOfOperation)
-                                                      .withDayTypeRef(dayTypeRefStructElement);
+                .withVersion(VERSION_ONE)
+                .withId(dayTypeAssignmentId)
+                .withOrder(BigInteger.valueOf(order))
+                .withDate(dateOfOperation)
+                .withDayTypeRef(dayTypeRefStructElement);
 
         if (!available) {
             dayTypeAssignment.withIsAvailable(available);

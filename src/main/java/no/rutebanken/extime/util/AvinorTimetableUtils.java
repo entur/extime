@@ -5,6 +5,8 @@ import com.google.common.collect.Lists;
 import no.avinor.flydata.xjc.model.scheduled.Flight;
 import no.avinor.flydata.xjc.model.scheduled.Flights;
 import no.avinor.flydata.xjc.model.scheduled.ObjectFactory;
+import no.rutebanken.extime.config.NetexStaticDataSet;
+import no.rutebanken.extime.model.AirlineDesignator;
 import no.rutebanken.extime.model.AirportIATA;
 import no.rutebanken.extime.model.ServiceType;
 import no.rutebanken.extime.model.StopVisitType;
@@ -13,8 +15,13 @@ import org.apache.camel.ExchangeProperty;
 import org.apache.camel.Header;
 import org.apache.commons.lang3.EnumUtils;
 import org.rutebanken.helper.gcp.BlobStoreHelper;
+import org.rutebanken.netex.model.CompositeFrame;
+import org.rutebanken.netex.model.Line;
+import org.rutebanken.netex.model.PublicationDeliveryStructure;
+import org.rutebanken.netex.model.ServiceFrame;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.zeroturnaround.zip.ZipUtil;
@@ -30,8 +37,10 @@ import java.nio.file.*;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.HEADER_EXTIME_HTTP_URI;
@@ -69,6 +78,8 @@ public class AvinorTimetableUtils {
     @Value("${blobstore.gcs.provider.id}")
     private String providerId;
 
+    @Autowired
+    private NetexStaticDataSet netexStaticDataSet;
 
     public String useHttp4Client(@Header(HEADER_EXTIME_HTTP_URI) String httpUri) {
         return httpUri.replace("http", "http4");
@@ -143,6 +154,52 @@ public class AvinorTimetableUtils {
                 throw new RuntimeException(e);
             }
         }
+    }
+
+    public String generateFilename(Exchange exchange) {
+        @SuppressWarnings("unchecked")
+        JAXBElement<PublicationDeliveryStructure> publicationDelivery = (JAXBElement<PublicationDeliveryStructure>) exchange.getIn().getBody();
+
+        List<ServiceFrame> collect = publicationDelivery.getValue().getDataObjects().getCompositeFrameOrCommonFrame().stream()
+                .map(JAXBElement::getValue)
+                .filter(e -> e instanceof CompositeFrame)
+                .map(e -> (CompositeFrame) e)
+                .map(e -> e.getFrames().getCommonFrame())
+                .map(e -> e.stream()
+                        .map(JAXBElement::getValue)
+                        .filter(ex -> ex instanceof ServiceFrame)
+                        .map(ex -> (ServiceFrame) ex)
+                        .collect(Collectors.toList()))
+                .flatMap(Collection::stream)
+                .collect(Collectors.toList());
+
+        ServiceFrame sf = collect.get(0);
+
+        Line line = ((Line) sf.getLines().getLine_().get(0).getValue());
+
+        String networkName;
+        if (sf.getNetwork() != null) {
+            networkName = sf.getNetwork().getName().getValue();
+        } else {
+            String networkIdRef = line.getRepresentedByGroupRef().getRef();
+            String objectIdSuffix = NetexObjectIdCreator.getObjectIdSuffix(networkIdRef);
+            networkName = netexStaticDataSet.getOrganisations().get(objectIdSuffix.toLowerCase()).getName();
+        }
+
+        String publicCode = line.getPublicCode();
+        String filename = networkName + "-" + publicCode + "-" + line.getName().getValue().replace('/', '_');
+
+        return rewriteNorwegianCharacters(filename);
+    }
+
+    private String rewriteNorwegianCharacters(String s) {
+        s = s.replace("Å", "AA");
+        s = s.replace("Ø", "OE");
+        s = s.replace("Æ", "AE");
+        s = s.replace("å", "aa");
+        s = s.replace("ø", "oe");
+        s = s.replace("æ", "ae");
+        return s;
     }
 
     public void compressNetexFiles(Exchange exchange, @Header(Exchange.FILE_NAME) String compressedFileName) throws Exception {
@@ -229,5 +286,12 @@ public class AvinorTimetableUtils {
                 new StreamSource(getClass().getResourceAsStream(resourceName)), clazz).getValue();
     }
 
+    public static boolean isCommonDesignator(String airlineIata) {
+        if (EnumUtils.isValidEnum(AirlineDesignator.class, airlineIata.toUpperCase())) {
+            AirlineDesignator designator = AirlineDesignator.valueOf(airlineIata.toUpperCase());
+            return AirlineDesignator.commonDesignators.contains(designator);
+        }
+        return false;
+    }
 
 }

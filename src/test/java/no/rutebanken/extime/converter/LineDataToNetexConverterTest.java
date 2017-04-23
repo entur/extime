@@ -14,44 +14,15 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.rutebanken.netex.model.AllVehicleModesOfTransportEnumeration;
-import org.rutebanken.netex.model.Common_VersionFrameStructure;
-import org.rutebanken.netex.model.CompositeFrame;
-import org.rutebanken.netex.model.DayOfWeekEnumeration;
-import org.rutebanken.netex.model.DayType;
-import org.rutebanken.netex.model.DayTypeAssignment;
-import org.rutebanken.netex.model.DestinationDisplay;
-import org.rutebanken.netex.model.JourneyPattern;
-import org.rutebanken.netex.model.JourneyPatternsInFrame_RelStructure;
-import org.rutebanken.netex.model.Line;
-import org.rutebanken.netex.model.LinkSequence_VersionStructure;
-import org.rutebanken.netex.model.Network;
-import org.rutebanken.netex.model.OperatingPeriod_VersionStructure;
-import org.rutebanken.netex.model.PublicationDeliveryStructure;
-import org.rutebanken.netex.model.Route;
-import org.rutebanken.netex.model.RouteRefStructure;
-import org.rutebanken.netex.model.RoutesInFrame_RelStructure;
-import org.rutebanken.netex.model.ServiceCalendarFrame;
-import org.rutebanken.netex.model.ServiceFrame;
-import org.rutebanken.netex.model.ServiceJourney;
-import org.rutebanken.netex.model.TimetableFrame;
+import org.rutebanken.netex.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import javax.xml.bind.JAXBElement;
-import java.time.DayOfWeek;
-import java.time.LocalDate;
-import java.time.OffsetDateTime;
-import java.time.OffsetTime;
-import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.time.*;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static no.rutebanken.extime.Constants.*;
@@ -102,7 +73,6 @@ public class LineDataToNetexConverterTest {
 
         Line line = (Line) serviceFrame.getLines().getLine_().get(0).getValue();
 
-        assertValidNetwork(serviceFrame.getNetwork(), lineDataSet.getAirlineIata());
         assertValidLine(line, lineDataSet);
         assertValidRoutes(serviceFrame.getRoutes(), lineDataSet, line);
     }
@@ -120,7 +90,6 @@ public class LineDataToNetexConverterTest {
 
         Line line = (Line) serviceFrame.getLines().getLine_().get(0).getValue();
 
-        assertValidNetwork(serviceFrame.getNetwork(), lineDataSet.getAirlineIata());
         assertValidLine(line, lineDataSet);
         assertValidRoutes(serviceFrame.getRoutes(), lineDataSet, line);
     }
@@ -294,11 +263,13 @@ public class LineDataToNetexConverterTest {
         assertThat(publicationDelivery.getDataObjects()).isNotNull();
     }
 
+/*
     private void assertValidNetwork(Network network, String airlineIata) {
         assertThat(network).isNotNull();
         assertThat(network.getId()).isEqualTo(String.format("AVI:Network:%s", airlineIata));
         assertThat(network.getName().getValue()).isEqualTo(LineDataSetFixture.getAirlineName(airlineIata));
     }
+*/
 
     private void assertValidLine(Line line, LineDataSet lineDataSet) {
         assertThat(line.getId()).isEqualTo(String.format("AVI:Line:%s_%s", lineDataSet.getAirlineIata(), lineDataSet.getLineDesignation()));
@@ -306,6 +277,7 @@ public class LineDataToNetexConverterTest {
         assertThat(line.getTransportMode()).isEqualTo(AllVehicleModesOfTransportEnumeration.AIR);
         assertThat(line.getPublicCode()).isEqualTo(lineDataSet.getLineDesignation());
         assertThat(line.getOperatorRef().getRef()).isEqualTo(String.format("AVI:Operator:%s", lineDataSet.getAirlineIata()));
+        assertThat(line.getRepresentedByGroupRef().getRef()).isEqualTo(String.format("AVI:Network:%s", lineDataSet.getAirlineIata()));
 
         assertThat(line.getRoutes().getRouteRef())
                 .hasSize(lineDataSet.getFlightRoutes().size())
