@@ -460,6 +460,10 @@ public class NetexObjectFactory {
         GroupOfLinesRefStructure groupOfLinesRefStruct = objectFactory.createGroupOfLinesRefStructure()
                 .withRef(NetexObjectIdCreator.createNetworkId(AVINOR_XMLNS, airlineIata));
 
+        if (!isCommonDesignator(airlineIata)) {
+            groupOfLinesRefStruct.setVersion(VERSION_ONE);
+        }
+
         return objectFactory.createLine()
                 .withVersion(VERSION_ONE)
                 .withId(lineId)
