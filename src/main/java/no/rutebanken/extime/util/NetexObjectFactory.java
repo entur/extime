@@ -349,6 +349,9 @@ public class NetexObjectFactory {
     }
 
     public Network createNetwork(OffsetDateTime publicationTimestamp, String airlineIata, String airlineName) {
+        NetexStaticDataSet.OrganisationDataSet avinorDataSet = netexStaticDataSet.getOrganisations()
+                .get(AVINOR_XMLNS.toLowerCase());
+
         if (airlineName == null) {
             NetexStaticDataSet.OrganisationDataSet airlineDataSet = netexStaticDataSet.getOrganisations()
                     .get(airlineIata.toLowerCase());
@@ -356,6 +359,12 @@ public class NetexObjectFactory {
         }
 
         String networkId = NetexObjectIdCreator.createNetworkId(AVINOR_XMLNS, airlineIata);
+        String authorityId = NetexObjectIdCreator.createAuthorityId(AVINOR_XMLNS, avinorDataSet.getName());
+
+        AuthorityRefStructure authorityRefStruct = objectFactory.createAuthorityRefStructure()
+                //.withVersion(VERSION_ONE)
+                .withRef(authorityId);
+
         GroupsOfLinesInFrame_RelStructure groupsOfLinesStruct = objectFactory.createGroupsOfLinesInFrame_RelStructure();
 
         GroupOfLines groupOfLines = objectFactory.createGroupOfLines()
@@ -369,7 +378,8 @@ public class NetexObjectFactory {
                 .withChanged(publicationTimestamp)
                 .withId(networkId)
                 .withName(createMultilingualString(airlineName))
-                .withGroupsOfLines(groupsOfLinesStruct);
+                .withTransportOrganisationRef(objectFactory.createAuthorityRef(authorityRefStruct));
+                //.withGroupsOfLines(groupsOfLinesStruct);
     }
 
     public JAXBElement<Authority> createAvinorAuthorityElement() {

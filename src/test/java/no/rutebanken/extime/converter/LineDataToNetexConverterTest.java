@@ -43,19 +43,14 @@ public class LineDataToNetexConverterTest {
         LineDataSet lineDataSet = LineDataSetFixture.createLineDataSet("DY", "OSL-BGO", routeJourneyPairs);
         PublicationDeliveryStructure publicationDelivery = netexConverter.convertToNetex(lineDataSet).getValue();
 
-        CompositeFrame compositeFrame = getFrames(CompositeFrame.class, publicationDelivery.getDataObjects().getCompositeFrameOrCommonFrame()).get(0);
-        assertThat(compositeFrame).hasFieldOrPropertyWithValue("version", VERSION_ONE);
-        assertThat(compositeFrame.getId()).matches(id -> id.split(":")[1].equals(NetexObjectIdTypes.COMPOSITE_FRAME_KEY), "CompositeFrame");
+        NetexTestUtils.verifyCompositeFrameAttributes(publicationDelivery);
+        NetexTestUtils.verifyServiceFrameAttributes(publicationDelivery);
 
-        ServiceFrame serviceFrame = getFrames(ServiceFrame.class, getDataObjectFrames(publicationDelivery)).get(0);
-        assertThat(serviceFrame).hasFieldOrPropertyWithValue("version", VERSION_ONE);
-        assertThat(serviceFrame.getId()).matches(id -> id.split(":")[1].equals(NetexObjectIdTypes.SERVICE_FRAME_KEY), "ServiceFrame");
-
-        TimetableFrame timetableFrame = getFrames(TimetableFrame.class, getDataObjectFrames(publicationDelivery)).get(0);
+        TimetableFrame timetableFrame = NetexTestUtils.getFrames(TimetableFrame.class, NetexTestUtils.getDataObjectFrames(publicationDelivery)).get(0);
         assertThat(timetableFrame).hasFieldOrPropertyWithValue("version", VERSION_ONE);
         assertThat(timetableFrame.getId()).matches(id -> id.split(":")[1].equals(NetexObjectIdTypes.TIMETABLE_FRAME_KEY), "TimetableFrame");
 
-        ServiceCalendarFrame serviceCalendarFrame = getFrames(ServiceCalendarFrame.class, getDataObjectFrames(publicationDelivery)).get(0);
+        ServiceCalendarFrame serviceCalendarFrame = NetexTestUtils.getFrames(ServiceCalendarFrame.class, NetexTestUtils.getDataObjectFrames(publicationDelivery)).get(0);
         assertThat(serviceCalendarFrame).hasFieldOrPropertyWithValue("version", VERSION_ONE);
         assertThat(serviceCalendarFrame.getId()).matches(id -> id.split(":")[1].equals(NetexObjectIdTypes.SERVICE_CALENDAR_FRAME_KEY), "ServiceCalendarFrame");
     }
@@ -68,8 +63,8 @@ public class LineDataToNetexConverterTest {
         PublicationDeliveryStructure publicationDelivery = netexConverter.convertToNetex(lineDataSet).getValue();
         assertValidPublicationDelivery(publicationDelivery, lineDataSet.getLineName());
 
-        List<JAXBElement<? extends Common_VersionFrameStructure>> dataObjectFrames = getDataObjectFrames(publicationDelivery);
-        ServiceFrame serviceFrame = getFrames(ServiceFrame.class, dataObjectFrames).get(0);
+        List<JAXBElement<? extends Common_VersionFrameStructure>> dataObjectFrames = NetexTestUtils.getDataObjectFrames(publicationDelivery);
+        ServiceFrame serviceFrame = NetexTestUtils.getFrames(ServiceFrame.class, dataObjectFrames).get(0);
 
         Line line = (Line) serviceFrame.getLines().getLine_().get(0).getValue();
 
@@ -85,8 +80,8 @@ public class LineDataToNetexConverterTest {
         PublicationDeliveryStructure publicationDelivery = netexConverter.convertToNetex(lineDataSet).getValue();
         assertValidPublicationDelivery(publicationDelivery, lineDataSet.getLineName());
 
-        List<JAXBElement<? extends Common_VersionFrameStructure>> dataObjectFrames = getDataObjectFrames(publicationDelivery);
-        ServiceFrame serviceFrame = getFrames(ServiceFrame.class, dataObjectFrames).get(0);
+        List<JAXBElement<? extends Common_VersionFrameStructure>> dataObjectFrames = NetexTestUtils.getDataObjectFrames(publicationDelivery);
+        ServiceFrame serviceFrame = NetexTestUtils.getFrames(ServiceFrame.class, dataObjectFrames).get(0);
 
         Line line = (Line) serviceFrame.getLines().getLine_().get(0).getValue();
 
@@ -102,8 +97,8 @@ public class LineDataToNetexConverterTest {
         PublicationDeliveryStructure publicationDelivery = netexConverter.convertToNetex(lineDataSet).getValue();
         assertValidPublicationDelivery(publicationDelivery, lineDataSet.getLineName());
 
-        List<JAXBElement<? extends Common_VersionFrameStructure>> dataObjectFrames = getDataObjectFrames(publicationDelivery);
-        ServiceFrame serviceFrame = getFrames(ServiceFrame.class, dataObjectFrames).get(0);
+        List<JAXBElement<? extends Common_VersionFrameStructure>> dataObjectFrames = NetexTestUtils.getDataObjectFrames(publicationDelivery);
+        ServiceFrame serviceFrame = NetexTestUtils.getFrames(ServiceFrame.class, dataObjectFrames).get(0);
 
         // check journey patterns for destination display reference
         JourneyPatternsInFrame_RelStructure journeyPatternStruct = serviceFrame.getJourneyPatterns();
@@ -138,8 +133,8 @@ public class LineDataToNetexConverterTest {
         PublicationDeliveryStructure publicationDelivery = netexConverter.convertToNetex(lineDataSet).getValue();
         assertValidPublicationDelivery(publicationDelivery, lineDataSet.getLineName());
 
-        List<JAXBElement<? extends Common_VersionFrameStructure>> dataObjectFrames = getDataObjectFrames(publicationDelivery);
-        ServiceFrame serviceFrame = getFrames(ServiceFrame.class, dataObjectFrames).get(0);
+        List<JAXBElement<? extends Common_VersionFrameStructure>> dataObjectFrames = NetexTestUtils.getDataObjectFrames(publicationDelivery);
+        ServiceFrame serviceFrame = NetexTestUtils.getFrames(ServiceFrame.class, dataObjectFrames).get(0);
 
         // check journey patterns for destination display reference
         JourneyPatternsInFrame_RelStructure journeyPatternStruct = serviceFrame.getJourneyPatterns();
@@ -185,9 +180,9 @@ public class LineDataToNetexConverterTest {
         PublicationDeliveryStructure publicationDelivery = netexConverter.convertToNetex(lineDataSet).getValue();
         assertValidPublicationDelivery(publicationDelivery, lineDataSet.getLineName());
 
-        List<JAXBElement<? extends Common_VersionFrameStructure>> dataObjectFrames = getDataObjectFrames(publicationDelivery);
+        List<JAXBElement<? extends Common_VersionFrameStructure>> dataObjectFrames = NetexTestUtils.getDataObjectFrames(publicationDelivery);
 
-        ServiceCalendarFrame serviceCalendarFrame = getFrames(ServiceCalendarFrame.class, dataObjectFrames).get(0);
+        ServiceCalendarFrame serviceCalendarFrame = NetexTestUtils.getFrames(ServiceCalendarFrame.class, dataObjectFrames).get(0);
         Map<String, DayType> dayTypes = serviceCalendarFrame.getDayTypes().getDayType_().stream()
                 .collect(Collectors.toMap(d -> d.getValue().getId(), d -> (DayType) d.getValue()));
         Map<String, DayTypeAssignment> dayTimeAssignments = serviceCalendarFrame.getDayTypeAssignments().getDayTypeAssignment().stream()
@@ -195,7 +190,7 @@ public class LineDataToNetexConverterTest {
         Map<String, OperatingPeriod_VersionStructure> operatingPeriods = serviceCalendarFrame.getOperatingPeriods().getOperatingPeriodOrUicOperatingPeriod()
                 .stream().collect(Collectors.toMap(o -> o.getId(), o -> o));
 
-        TimetableFrame timetableFrame = getFrames(TimetableFrame.class, dataObjectFrames).get(0);
+        TimetableFrame timetableFrame = NetexTestUtils.getFrames(TimetableFrame.class, dataObjectFrames).get(0);
         ServiceJourney serviceJourney = (ServiceJourney) timetableFrame.getVehicleJourneys().getDatedServiceJourneyOrDeadRunOrServiceJourney().get(0);
 
         List<String> dayTypeRefs = serviceJourney.getDayTypes().getDayTypeRef().stream().map(e ->
@@ -351,24 +346,6 @@ public class LineDataToNetexConverterTest {
                 .map(objectId -> NetexObjectIdCreator.hashObjectId(objectId, 10))
                 .map(hashedId -> String.format("AVI:DestinationDisplay:%s", hashedId))
                 .collect(Collectors.toSet());
-    }
-
-    private List<JAXBElement<? extends Common_VersionFrameStructure>> getDataObjectFrames(PublicationDeliveryStructure publicationDelivery) {
-        List<JAXBElement<? extends Common_VersionFrameStructure>> dataObjectFrames = publicationDelivery.getDataObjects().getCompositeFrameOrCommonFrame();
-        CompositeFrame compositeFrame = getFrames(CompositeFrame.class, dataObjectFrames).get(0);
-        return compositeFrame.getFrames().getCommonFrame();
-    }
-
-    public <T> List<T> getFrames(Class<T> clazz, List<JAXBElement<? extends Common_VersionFrameStructure>> dataObjectFrames) {
-        List<T> foundFrames = new ArrayList<>();
-
-        for (JAXBElement<? extends Common_VersionFrameStructure> frame : dataObjectFrames) {
-            if (frame.getValue().getClass().equals(clazz)) {
-                foundFrames.add(clazz.cast(frame.getValue()));
-            }
-        }
-
-        return foundFrames;
     }
 
 }
