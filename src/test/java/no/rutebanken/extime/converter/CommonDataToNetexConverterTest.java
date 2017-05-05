@@ -1,6 +1,7 @@
 package no.rutebanken.extime.converter;
 
 import no.rutebanken.extime.config.CamelRouteDisabler;
+import no.rutebanken.extime.model.AirportIATA;
 import no.rutebanken.extime.util.NetexObjectIdTypes;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -86,11 +87,17 @@ public class CommonDataToNetexConverterTest {
             if (serviceFrame.getNetwork() != null) {
                 assertValidNetwork(serviceFrame.getNetwork());
             } else {
+                assertThat(serviceFrame.getRoutePoints()).isNotNull();
+                assertThat(serviceFrame.getRoutePoints().getRoutePoint()).isNotEmpty();
+                assertThat(serviceFrame.getRoutePoints().getRoutePoint()).hasSize(AirportIATA.values().length);
+
                 assertThat(serviceFrame.getScheduledStopPoints()).isNotNull();
                 assertThat(serviceFrame.getScheduledStopPoints().getScheduledStopPoint()).isNotEmpty();
+                assertThat(serviceFrame.getScheduledStopPoints().getScheduledStopPoint()).hasSize(AirportIATA.values().length);
 
                 assertThat(serviceFrame.getStopAssignments()).isNotNull();
                 assertThat(serviceFrame.getStopAssignments().getStopAssignment()).isNotEmpty();
+                assertThat(serviceFrame.getStopAssignments().getStopAssignment()).hasSize(AirportIATA.values().length);
             }
         }
     }

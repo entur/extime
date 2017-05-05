@@ -216,38 +216,38 @@ public class NetexObjectFactory {
         return objectFactory.createServiceFrame(serviceFrame);
     }
 
-    public JAXBElement<ServiceFrame> createCommonServiceFrameElement(List<ScheduledStopPoint> scheduledStopPoints,
-            List<JAXBElement<PassengerStopAssignment>> stopAssignmentElements) {
-
-        ScheduledStopPointsInFrame_RelStructure scheduledStopPointsStruct = objectFactory.createScheduledStopPointsInFrame_RelStructure();
-        StopAssignmentsInFrame_RelStructure stopAssignmentsStruct = objectFactory.createStopAssignmentsInFrame_RelStructure();
+    public JAXBElement<ServiceFrame> createCommonServiceFrameElement(List<RoutePoint> routePoints,
+            List<ScheduledStopPoint> scheduledStopPoints, List<JAXBElement<PassengerStopAssignment>> stopAssignmentElements) {
 
         String serviceFrameId = NetexObjectIdCreator.createServiceFrameId(AVINOR_XMLNS,
                 String.valueOf(NetexObjectIdCreator.generateRandomId(DEFAULT_START_INCLUSIVE, DEFAULT_END_EXCLUSIVE)));
 
+        RoutePointsInFrame_RelStructure routePointStruct = objectFactory.createRoutePointsInFrame_RelStructure()
+                .withRoutePoint(routePoints);
+
+        ScheduledStopPointsInFrame_RelStructure scheduledStopPointsStruct = objectFactory.createScheduledStopPointsInFrame_RelStructure();
+        scheduledStopPoints.forEach(stopPoint -> scheduledStopPointsStruct.getScheduledStopPoint().add(stopPoint));
+
+        StopAssignmentsInFrame_RelStructure stopAssignmentsStruct = objectFactory.createStopAssignmentsInFrame_RelStructure();
+        stopAssignmentElements.forEach(stopAssignmentElement -> stopAssignmentsStruct.getStopAssignment().add(stopAssignmentElement));
+
         ServiceFrame serviceFrame = objectFactory.createServiceFrame()
                 .withVersion(VERSION_ONE)
-                .withId(serviceFrameId);
-        serviceFrame.setScheduledStopPoints(scheduledStopPointsStruct);
-        serviceFrame.setStopAssignments(stopAssignmentsStruct);
-
-        scheduledStopPoints.forEach(stopPoint -> scheduledStopPointsStruct.getScheduledStopPoint().add(stopPoint));
-        stopAssignmentElements.forEach(stopAssignmentElement -> stopAssignmentsStruct.getStopAssignment().add(stopAssignmentElement));
+                .withId(serviceFrameId)
+                .withRoutePoints(routePointStruct)
+                .withScheduledStopPoints(scheduledStopPointsStruct)
+                .withStopAssignments(stopAssignmentsStruct);
 
         return objectFactory.createServiceFrame(serviceFrame);
     }
 
     public JAXBElement<ServiceFrame> createServiceFrame(OffsetDateTime publicationTimestamp, String airlineName,
-            String airlineIata, List<RoutePoint> routePoints, List<Route> routes, Line line,
-            List<DestinationDisplay> destinationDisplays, List<JourneyPattern> journeyPatterns) {
+            String airlineIata, List<Route> routes, Line line, List<DestinationDisplay> destinationDisplays, List<JourneyPattern> journeyPatterns) {
 
         Network network = null;
         if (!isCommonDesignator(airlineIata)) {
             network = createNetwork(publicationTimestamp, airlineIata, airlineName);
         }
-
-        RoutePointsInFrame_RelStructure routePointsInFrame = objectFactory.createRoutePointsInFrame_RelStructure()
-                .withRoutePoint(routePoints);
 
         RoutesInFrame_RelStructure routesInFrame = objectFactory.createRoutesInFrame_RelStructure();
         for (Route route : routes) {
@@ -273,7 +273,6 @@ public class NetexObjectFactory {
         ServiceFrame serviceFrame = objectFactory.createServiceFrame()
                 .withVersion(VERSION_ONE)
                 .withId(serviceFrameId)
-                .withRoutePoints(routePointsInFrame)
                 .withRoutes(routesInFrame)
                 .withLines(linesInFrame)
                 .withDestinationDisplays(destinationDisplayStruct)
@@ -759,7 +758,7 @@ public class NetexObjectFactory {
 
     public RoutePointRefStructure createRoutePointRefStructure(String stopPointId) {
         return objectFactory.createRoutePointRefStructure()
-                .withVersion(VERSION_ONE)
+                //.withVersion(VERSION_ONE)
                 .withRef(stopPointId);
     }
 

@@ -67,6 +67,7 @@ public class CommonDataToNetexConverter {
 
         List<StopPlace> stopPlaces = Lists.newArrayList();
         List<ScheduledStopPoint> stopPoints = Lists.newArrayList();
+        List<RoutePoint> routePoints = Lists.newArrayList();
         List<JAXBElement<PassengerStopAssignment>> stopAssignmentElements = Lists.newArrayList();
 
         for (AirportIATA airportIATA : airportIATAS) {
@@ -77,6 +78,9 @@ public class CommonDataToNetexConverter {
 
             ScheduledStopPoint stopPoint = netexCommonDataSet.getStopPointMap().get(airportIataName);
             stopPoints.add(stopPoint);
+
+            RoutePoint routePoint = netexCommonDataSet.getRoutePointMap().get(airportIataName);
+            routePoints.add(routePoint);
 
             PassengerStopAssignment stopAssignment = netexCommonDataSet.getStopAssignmentMap().get(airportIataName);
             JAXBElement<PassengerStopAssignment> stopAssignmentElement = objectFactory.createPassengerStopAssignment(stopAssignment);
@@ -99,7 +103,7 @@ public class CommonDataToNetexConverter {
             framesStruct.getCommonFrame().add(netexObjectFactory.createNetworkServiceFrameElement(network));
         }
 
-        framesStruct.getCommonFrame().add(netexObjectFactory.createCommonServiceFrameElement(stopPoints, stopAssignmentElements));
+        framesStruct.getCommonFrame().add(netexObjectFactory.createCommonServiceFrameElement(routePoints, stopPoints, stopAssignmentElements));
 
         JAXBElement<CompositeFrame> compositeFrameElement = netexObjectFactory
                 .createCompositeFrameElement(publicationTimestamp, framesStruct, dateUtils.generateAvailabilityPeriod(), avinorCodespace, nsrCodespace);

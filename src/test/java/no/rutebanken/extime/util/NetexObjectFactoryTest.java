@@ -2,8 +2,6 @@ package no.rutebanken.extime.util;
 
 import no.rutebanken.extime.config.CamelRouteDisabler;
 import org.assertj.core.api.Assertions;
-import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.rutebanken.netex.model.*;
@@ -228,11 +226,6 @@ public class NetexObjectFactoryTest {
         Assertions.assertThat(routePointRefStructure)
                 .isNotNull()
                 .isInstanceOf(RoutePointRefStructure.class);
-
-        Assertions.assertThat(routePointRefStructure.getVersion())
-                .isNotNull()
-                .isNotEmpty()
-                .isEqualTo(VERSION_ONE);
 
         Assertions.assertThat(routePointRefStructure.getRef())
                 .isNotNull()

@@ -77,7 +77,6 @@ public class LineDataToNetexConverter {
         line.setOperatorRef(isFrequentOperator ? netexObjectFactory.createOperatorRefStructure(operatorId, Boolean.FALSE) :
                 netexObjectFactory.createOperatorRefStructure(operatorId, Boolean.TRUE));
 
-        List<RoutePoint> routePoints = createRoutePoints(lineDataSet.getFlightRoutes());
         List<Route> routes = createRoutes(line, lineDataSet.getFlightRoutes());
         List<RouteRefStructure> routeRefStructures = netexObjectFactory.createRouteRefStructures(routes);
         RouteRefs_RelStructure routeRefStruct = objectFactory.createRouteRefs_RelStructure().withRouteRef(routeRefStructures);
@@ -99,7 +98,7 @@ public class LineDataToNetexConverter {
         }
 
         JAXBElement<ServiceFrame> serviceFrame = netexObjectFactory.createServiceFrame(publicationTimestamp,
-                lineDataSet.getAirlineName(), lineDataSet.getAirlineIata(), routePoints, routes, line, destinationDisplays, journeyPatterns);
+                lineDataSet.getAirlineName(), lineDataSet.getAirlineIata(), routes, line, destinationDisplays, journeyPatterns);
         frames.getCommonFrame().add(serviceFrame);
 
         JAXBElement<TimetableFrame> timetableFrame = netexObjectFactory.createTimetableFrame(serviceJourneys);
@@ -115,17 +114,6 @@ public class LineDataToNetexConverter {
                 publicationTimestamp, compositeFrame, lineDataSet.getLineName());
 
         return objectFactory.createPublicationDelivery(publicationDeliveryStructure);
-    }
-
-    private List<RoutePoint> createRoutePoints(List<FlightRoute> flightRoutes) {
-        Map<String, RoutePoint> routePointMap = netexCommonDataSet.getRoutePointMap();
-
-        return flightRoutes.stream()
-                .flatMap(flightRoute -> flightRoute.getRoutePointsInSequence().stream())
-                .distinct()
-                .sorted(Comparator.comparing(iata -> iata))
-                .map(routePointMap::get)
-                .collect(Collectors.toList());
     }
 
     private List<Route> createRoutes(Line line, List<FlightRoute> flightRoutes) {
