@@ -108,6 +108,7 @@ public class NetexStaticDataSet {
         private String name;
         private String shortName;
         private LocationDataSet location;
+        private String nsrId;
 
         public String getName() {
             return name;
@@ -133,12 +134,21 @@ public class NetexStaticDataSet {
             this.shortName = shortName;
         }
 
+        public String getNsrId() {
+            return nsrId;
+        }
+
+        public void setNsrId(String nsrId) {
+            this.nsrId = nsrId;
+        }
+
         @Override
         public String toString() {
             return MoreObjects.toStringHelper(this)
                     .add("name", name)
                     .add("shortName", shortName)
                     .add("location", location)
+                    .add("nsrId", nsrId)
                     .toString();
         }
     }
