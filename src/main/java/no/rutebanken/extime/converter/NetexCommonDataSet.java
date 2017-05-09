@@ -72,9 +72,13 @@ public class NetexCommonDataSet {
         airportIATAS.sort(Comparator.comparing(Enum::name));
 
         for (AirportIATA airportIATA : airportIATAS) {
-            String stopPlaceId = NetexObjectIdCreator.createStopPlaceId(AVINOR_XMLNS, airportIATA.name().toUpperCase());
-            String quayId = NetexObjectIdCreator.createQuayId(AVINOR_XMLNS, airportIATA.name().toUpperCase());
             StopPlaceDataSet stopPlaceDataSet = stopPlaceDataSets.get(airportIATA.name().toLowerCase());
+
+            String objectIdPrefix = isWithSiteFrame ? AVINOR_XMLNS : NSR_XMLNS;
+            String objectIdSuffix = isWithSiteFrame ? airportIATA.name().toUpperCase() : stopPlaceDataSet.getNsrId();
+
+            String stopPlaceId = NetexObjectIdCreator.createStopPlaceId(objectIdPrefix, objectIdSuffix);
+            String quayId = NetexObjectIdCreator.createQuayId(objectIdPrefix, objectIdSuffix);
 
             LocationStructure locationStruct = objectFactory.createLocationStructure()
                     .withSrsName(DEFAULT_COORDINATE_SYSTEM)

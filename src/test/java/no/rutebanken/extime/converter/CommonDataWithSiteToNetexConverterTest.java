@@ -12,6 +12,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import javax.xml.bind.JAXBElement;
 import java.time.OffsetDateTime;
 import java.util.List;
 
@@ -97,9 +98,22 @@ public class CommonDataWithSiteToNetexConverterTest {
                 assertThat(serviceFrame.getScheduledStopPoints().getScheduledStopPoint()).isNotEmpty();
                 assertThat(serviceFrame.getScheduledStopPoints().getScheduledStopPoint()).hasSize(AirportIATA.values().length);
 
-                assertThat(serviceFrame.getStopAssignments()).isNotNull();
-                assertThat(serviceFrame.getStopAssignments().getStopAssignment()).isNotEmpty();
-                assertThat(serviceFrame.getStopAssignments().getStopAssignment()).hasSize(AirportIATA.values().length);
+                StopAssignmentsInFrame_RelStructure stopAssignmentStruct = serviceFrame.getStopAssignments();
+                assertThat(stopAssignmentStruct).isNotNull();
+                assertThat(stopAssignmentStruct.getStopAssignment()).isNotEmpty();
+                assertThat(stopAssignmentStruct.getStopAssignment()).hasSize(AirportIATA.values().length);
+
+                for (JAXBElement<? extends StopAssignment_VersionStructure> stopAssignmentElement : stopAssignmentStruct.getStopAssignment()) {
+                    PassengerStopAssignment stopAssignment = (PassengerStopAssignment) stopAssignmentElement.getValue();
+
+                    StopPlaceRefStructure stopPlaceRef = stopAssignment.getStopPlaceRef();
+                    assertThat(stopPlaceRef).isNotNull();
+                    assertThat(stopPlaceRef.getRef()).isNotNull().isNotEmpty().matches("^AVI:StopPlace:[A-Z]{3}$");
+
+                    QuayRefStructure quayRef = stopAssignment.getQuayRef();
+                    assertThat(quayRef).isNotNull();
+                    assertThat(quayRef.getRef()).isNotNull().isNotEmpty().matches("^AVI:Quay:[A-Z]{3}$");
+                }
             }
         }
     }
