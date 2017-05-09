@@ -9,6 +9,7 @@ import org.rutebanken.netex.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.time.OffsetDateTime;
@@ -22,7 +23,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ActiveProfiles("test")
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = {CamelRouteDisabler.class, CommonDataToNetexConverter.class})
-public class CommonDataToNetexConverterTest {
+@TestPropertySource(properties = {"avinor.timetable.export.site = false"})
+public class CommonDataWithoutSiteToNetexConverterTest {
 
     @Autowired
     private CommonDataToNetexConverter netexConverter;
@@ -39,14 +41,12 @@ public class CommonDataToNetexConverterTest {
         assertThat(resourceFrame).hasFieldOrPropertyWithValue("version", VERSION_ONE);
         assertThat(resourceFrame.getId()).matches(id -> id.split(":")[1].equals(NetexObjectIdTypes.RESOURCE_FRAME_KEY), "ResourceFrame");
 
-        SiteFrame siteFrame = NetexTestUtils.getFrames(SiteFrame.class, NetexTestUtils.getDataObjectFrames(publicationDelivery)).get(0);
-        assertThat(siteFrame).hasFieldOrPropertyWithValue("version", VERSION_ONE);
-        assertThat(siteFrame.getId()).matches(id -> id.split(":")[1].equals(NetexObjectIdTypes.SITE_FRAME_KEY), "SiteFrame");
+        List<SiteFrame> siteFrames = NetexTestUtils.getFrames(SiteFrame.class, NetexTestUtils.getDataObjectFrames(publicationDelivery));
+        assertThat(siteFrames).isEmpty();
 
         NetexTestUtils.verifyServiceFrameAttributes(publicationDelivery);
 
         assertValidResourceFrame(resourceFrame);
-        assertValidSiteFrame(siteFrame);
         assertValidServiceFrame(publicationDelivery);
     }
 
@@ -58,7 +58,6 @@ public class CommonDataToNetexConverterTest {
         assertThat(publicationDelivery.getDataObjects()).isNotNull();
     }
 
-    // TODO add more detailed assertions on object structures
     private void assertValidCompositeFrame(PublicationDeliveryStructure publicationDelivery) {
         CompositeFrame compositeFrame = NetexTestUtils.getFrames(CompositeFrame.class, publicationDelivery.getDataObjects().getCompositeFrameOrCommonFrame()).get(0);
         assertThat(compositeFrame.getValidityConditions()).isNotNull();
@@ -69,15 +68,9 @@ public class CommonDataToNetexConverterTest {
         assertThat(compositeFrame.getFrameDefaults()).isNotNull();
     }
 
-    // TODO add more detailed assertions on object structures
     private void assertValidResourceFrame(ResourceFrame resourceFrame) {
         assertThat(resourceFrame.getOrganisations()).isNotNull();
         assertThat(resourceFrame.getOrganisations().getOrganisation_()).isNotEmpty();
-    }
-
-    private void assertValidSiteFrame(SiteFrame siteFrame) {
-        assertThat(siteFrame.getStopPlaces()).isNotNull();
-        assertThat(siteFrame.getStopPlaces().getStopPlace()).isNotEmpty();
     }
 
     private void assertValidServiceFrame(PublicationDeliveryStructure publicationDelivery) {
@@ -109,4 +102,5 @@ public class CommonDataToNetexConverterTest {
         assertThat(network.getName()).isNotNull();
         assertThat(network.getTransportOrganisationRef()).isNotNull();
     }
+
 }

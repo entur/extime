@@ -13,6 +13,7 @@ import org.rutebanken.netex.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Component;
 
@@ -39,6 +40,9 @@ public class NetexCommonDataSet {
 
     @Autowired
     private NetexObjectFactory netexObjectFactory;
+
+    @Value("${avinor.timetable.export.site}")
+    private boolean isWithSiteFrame;
 
     private BiMap<String, String> airportHashes = HashBiMap.create();
     private Map<String, StopPlace> stopPlaceMap = new HashMap<>();
@@ -135,9 +139,8 @@ public class NetexCommonDataSet {
                     netexObjectFactory.createScheduledStopPointRefStructure(scheduledStopPoint.getId(), Boolean.TRUE);
 
             StopPlace stopPlace = stopPlaceMap.get(airportIATA.name());
-            StopPlaceRefStructure stopPlaceRefStructure = netexObjectFactory.createStopPlaceRefStructure(stopPlace.getId(), Boolean.TRUE);
-
-            QuayRefStructure quayRefStruct = netexObjectFactory.createQuayRefStructure(quayMap.get(airportIATA.name()).getId(), Boolean.TRUE);
+            StopPlaceRefStructure stopPlaceRefStructure = netexObjectFactory.createStopPlaceRefStructure(stopPlace.getId(), isWithSiteFrame);
+            QuayRefStructure quayRefStruct = netexObjectFactory.createQuayRefStructure(quayMap.get(airportIATA.name()).getId(), isWithSiteFrame);
 
             String stopPointIdSuffix = StringUtils.split(scheduledStopPoint.getId(), DEFAULT_ID_SEPARATOR)[2];
 

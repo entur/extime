@@ -5,6 +5,7 @@ import no.rutebanken.extime.model.AirlineDesignator;
 import no.rutebanken.extime.model.AirportIATA;
 import no.rutebanken.extime.util.DateUtils;
 import no.rutebanken.extime.util.NetexObjectFactory;
+import org.apache.commons.collections.CollectionUtils;
 import org.rutebanken.netex.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +45,7 @@ public class CommonDataToNetexConverter {
     private int numberOfMonthsInPeriod;
 
     @Value("${avinor.timetable.export.site}")
-    private int isWithSiteFrame;
+    private boolean isWithSiteFrame;
 
     public JAXBElement<PublicationDeliveryStructure> convertToNetex() throws Exception {
         logger.info("Converting common data to NeTEx");
@@ -75,9 +76,11 @@ public class CommonDataToNetexConverter {
 
         for (AirportIATA airportIATA : airportIATAS) {
             String airportIataName = airportIATA.name();
-            
-            StopPlace stopPlace = netexCommonDataSet.getStopPlaceMap().get(airportIataName);
-            stopPlaces.add(stopPlace);
+
+            if (isWithSiteFrame) {
+                StopPlace stopPlace = netexCommonDataSet.getStopPlaceMap().get(airportIataName);
+                stopPlaces.add(stopPlace);
+            }
 
             ScheduledStopPoint stopPoint = netexCommonDataSet.getStopPointMap().get(airportIataName);
             stopPoints.add(stopPoint);
@@ -90,15 +93,17 @@ public class CommonDataToNetexConverter {
             stopAssignmentElements.add(stopAssignmentElement);
         }
 
-        stopPlaces.sort(Comparator.comparing(StopPlace::getId));
-        logger.info("Retrieved and populated NeTEx structure with {} stop places", stopPlaces.size());
+        Frames_RelStructure framesStruct = objectFactory.createFrames_RelStructure();
 
         stopPoints.sort(Comparator.comparing(ScheduledStopPoint::getId));
         logger.info("Retrieved and populated NeTEx structure with {} stop points", stopPoints.size());
-
-        Frames_RelStructure framesStruct = objectFactory.createFrames_RelStructure();
         framesStruct.getCommonFrame().add(netexObjectFactory.createResourceFrameElement(authorityElements, operatorElements));
-        framesStruct.getCommonFrame().add(netexObjectFactory.createSiteFrameElement(stopPlaces));
+
+        if (isWithSiteFrame && CollectionUtils.isNotEmpty(stopPlaces)) {
+            logger.info("Retrieved and populated NeTEx structure with {} stop places", stopPlaces.size());
+            stopPlaces.sort(Comparator.comparing(StopPlace::getId));
+            framesStruct.getCommonFrame().add(netexObjectFactory.createSiteFrameElement(stopPlaces));
+        }
 
         for (AirlineDesignator designator : AirlineDesignator.values()) {
             String designatorName = designator.name().toUpperCase();
