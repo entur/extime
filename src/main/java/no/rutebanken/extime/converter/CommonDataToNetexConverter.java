@@ -43,6 +43,9 @@ public class CommonDataToNetexConverter {
     @Value("${avinor.timetable.period.months}")
     private int numberOfMonthsInPeriod;
 
+    @Value("${avinor.timetable.export.site}")
+    private int isWithSiteFrame;
+
     public JAXBElement<PublicationDeliveryStructure> convertToNetex() throws Exception {
         logger.info("Converting common data to NeTEx");
         OffsetDateTime publicationTimestamp = OffsetDateTime.ofInstant(Instant.now(), ZoneId.of(DEFAULT_ZONE_ID));
@@ -72,7 +75,7 @@ public class CommonDataToNetexConverter {
 
         for (AirportIATA airportIATA : airportIATAS) {
             String airportIataName = airportIATA.name();
-
+            
             StopPlace stopPlace = netexCommonDataSet.getStopPlaceMap().get(airportIataName);
             stopPlaces.add(stopPlace);
 
