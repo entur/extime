@@ -74,8 +74,11 @@ public class NetexCommonDataSet {
         for (AirportIATA airportIATA : airportIATAS) {
             StopPlaceDataSet stopPlaceDataSet = stopPlaceDataSets.get(airportIATA.name().toLowerCase());
 
-            String objectIdPrefix = isWithSiteFrame ? AVINOR_XMLNS : NSR_XMLNS;
-            String objectIdSuffix = isWithSiteFrame ? airportIATA.name().toUpperCase() : stopPlaceDataSet.getNsrId();
+//            String objectIdPrefix = isWithSiteFrame ? AVINOR_XMLNS : NSR_XMLNS; // TODO enable when stop register is ready and stable
+//            String objectIdSuffix = isWithSiteFrame ? airportIATA.name().toUpperCase() : stopPlaceDataSet.getNsrId(); // TODO enable when stop register is ready and stable
+
+            String objectIdPrefix = AVINOR_XMLNS;
+            String objectIdSuffix = airportIATA.name().toUpperCase();
 
             String stopPlaceId = NetexObjectIdCreator.createStopPlaceId(objectIdPrefix, objectIdSuffix);
             String quayId = NetexObjectIdCreator.createQuayId(objectIdPrefix, objectIdSuffix);

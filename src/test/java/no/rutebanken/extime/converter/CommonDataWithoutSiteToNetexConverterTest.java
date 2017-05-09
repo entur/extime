@@ -96,6 +96,8 @@ public class CommonDataWithoutSiteToNetexConverterTest {
                 assertThat(stopAssignmentStruct.getStopAssignment()).isNotEmpty();
                 assertThat(stopAssignmentStruct.getStopAssignment()).hasSize(AirportIATA.values().length);
 
+                // TODO enable the following block when stop register is ready and stable
+/*
                 for (JAXBElement<? extends StopAssignment_VersionStructure> stopAssignmentElement : stopAssignmentStruct.getStopAssignment()) {
                     PassengerStopAssignment stopAssignment = (PassengerStopAssignment) stopAssignmentElement.getValue();
 
@@ -119,6 +121,7 @@ public class CommonDataWithoutSiteToNetexConverterTest {
                         assertThat(quayRef.getRef()).matches("^NSR:Quay:\\d{5}$");
                     }
                 }
+*/
             }
         }
     }
