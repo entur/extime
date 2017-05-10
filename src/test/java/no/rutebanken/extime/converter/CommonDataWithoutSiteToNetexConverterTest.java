@@ -132,6 +132,8 @@ public class CommonDataWithoutSiteToNetexConverterTest {
         assertThat(network.getId()).isNotNull();
         assertThat(network.getName()).isNotNull();
         assertThat(network.getTransportOrganisationRef()).isNotNull();
+        assertThat(network.getTransportOrganisationRef().getValue().getVersion()).isNotNull();
+        assertThat(network.getTransportOrganisationRef().getValue().getRef()).isNotNull().isNotEmpty().matches("AVI:Authority:Avinor");
     }
 
 }

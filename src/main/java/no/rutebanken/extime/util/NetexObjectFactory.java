@@ -361,7 +361,7 @@ public class NetexObjectFactory {
         String authorityId = NetexObjectIdCreator.createAuthorityId(AVINOR_XMLNS, avinorDataSet.getName());
 
         AuthorityRefStructure authorityRefStruct = objectFactory.createAuthorityRefStructure()
-                //.withVersion(VERSION_ONE)
+                .withVersion(VERSION_ONE)
                 .withRef(authorityId);
 
         GroupsOfLinesInFrame_RelStructure groupsOfLinesStruct = objectFactory.createGroupsOfLinesInFrame_RelStructure();
