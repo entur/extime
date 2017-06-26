@@ -83,9 +83,11 @@ public class ScheduledFlightConverter {
 
         List<Flight> filteredFlights;
         if (offlineMode) {
-            filteredFlights = scheduledFlights;
+            //filteredFlights = scheduledFlights;
+            filteredFlights = filterFlightsWithInfrequentDesignator(scheduledFlights); // TODO temp fix removing flights with infrequent airline designators
         } else {
-            filteredFlights = filterValidFlights(scheduledFlights);
+            //filteredFlights = filterValidFlights(scheduledFlights);
+            filteredFlights = filterFlightsWithInfrequentDesignator(scheduledFlights); // TODO temp fix removing flights with infrequent airline designators
         }
 
         Map<String, List<Flight>> flightsByDepartureAirport = filteredFlights.stream()
@@ -297,6 +299,20 @@ public class ScheduledFlightConverter {
     private <T> Predicate<T> distinctByKey(Function<? super T, ?> keyExtractor) {
         Set<Object> seen = new HashSet<>();
         return t -> seen.add(keyExtractor.apply(t));
+    }
+
+    private List<Flight> filterFlightsWithInfrequentDesignator(List<Flight> scheduledFlights) {
+        Set<BigInteger> invalidFlightIds = Sets.newHashSet();
+
+        for (Flight flight : scheduledFlights) {
+            if (hasInfrequentDesignator(flight)) {
+                invalidFlightIds.add(flight.getId());
+            }
+        }
+
+        return scheduledFlights.stream()
+                .filter(flight -> !invalidFlightIds.contains(flight.getId()))
+                .collect(Collectors.toList());
     }
 
     private List<Flight> filterValidFlights(List<Flight> scheduledFlights) {
