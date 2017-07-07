@@ -224,6 +224,7 @@ public class LineDataToNetexConverter {
             String routeIdRef = journeyPattern.getRouteRef().getRef();
             String objectId = Iterables.getLast(Splitter.on(COLON).trimResults().split(routeIdRef));
             DestinationDisplay patternDestinationDisplay = netexObjectFactory.createDestinationDisplay(objectId);
+            DestinationDisplayRefStructure destinationDisplayRefStruct = netexObjectFactory.createDestinationDisplayRefStructure(patternDestinationDisplay.getId());
 
             // get the final destination from stop points sequence, to set as front text
             List<PointInLinkSequence_VersionedChildStructure> pointsInLinkSequence = journeyPattern.getPointsInSequence()
@@ -242,6 +243,12 @@ public class LineDataToNetexConverter {
 
                 for (int i = 0; i < pointsInLinkSequence.size(); i++) {
 
+                	// TODO must clean up destination display handling. Should be on StopPointInJourneyPattern now, not on JourneyPattern
+                	if(i == 0) {
+                        StopPointInJourneyPattern stopPointInJourneyPattern = (StopPointInJourneyPattern) pointsInLinkSequence.get(i);
+                        stopPointInJourneyPattern.setDestinationDisplayRef(destinationDisplayRefStruct);          		
+                	}
+                	
                     if (i > 0 && i < pointsInLinkSequence.size() - 1) {
                         StopPointInJourneyPattern stopPointInJourneyPattern = (StopPointInJourneyPattern) pointsInLinkSequence.get(i);
                         String stopPointIdRef = stopPointInJourneyPattern.getScheduledStopPointRef().getValue().getRef();
@@ -253,9 +260,9 @@ public class LineDataToNetexConverter {
                         DestinationDisplay destinationDisplay = netexObjectFactory.getDestinationDisplay(destinationDisplayIdRef);
 
                         if (destinationDisplay != null) {
-                            DestinationDisplayRefStructure destinationDisplayRefStruct = netexObjectFactory.createDestinationDisplayRefStructure(destinationDisplay.getId());
+                            DestinationDisplayRefStructure viaRefStruct = netexObjectFactory.createDestinationDisplayRefStructure(destinationDisplay.getId());
                             Via_VersionedChildStructure viaChildStruct = objectFactory.createVia_VersionedChildStructure();
-                            viaChildStruct.setDestinationDisplayRef(destinationDisplayRefStruct);
+                            viaChildStruct.setDestinationDisplayRef(viaRefStruct);
                             viasStruct.getVia().add(viaChildStruct);
                         }
                     }
@@ -263,8 +270,7 @@ public class LineDataToNetexConverter {
                 patternDestinationDisplay.setVias(viasStruct);
             }
             destinationDisplays.add(patternDestinationDisplay);
-            DestinationDisplayRefStructure destinationDisplayRefStruct = netexObjectFactory.createDestinationDisplayRefStructure(patternDestinationDisplay.getId());
-            journeyPattern.setDestinationDisplayRef(destinationDisplayRefStruct);
+            //journeyPattern.setDestinationDisplayRef(destinationDisplayRefStruct);
         }
         return destinationDisplays;
     }
