@@ -186,8 +186,8 @@ public class AvinorTimetableUtils {
             networkName = netexStaticDataSet.getOrganisations().get(objectIdSuffix.toLowerCase()).getName();
         }
 
-        String publicCode = line.getPublicCode();
-        String filename = networkName + "-" + publicCode + "-" + line.getName().getValue().replace('/', '_');
+       // String publicCode = line.getPublicCode();
+        String filename = networkName + "-" + line.getName().getValue().replace('/', '_');
 
         return rewriteNorwegianCharacters(filename);
     }

@@ -303,7 +303,7 @@ public class LineDataToNetexConverterTest {
         assertThat(line.getId()).isEqualTo(String.format("AVI:Line:%s_%s", lineDataSet.getAirlineIata(), lineDataSet.getLineDesignation()));
         assertThat(line.getName().getValue()).isEqualTo(lineDataSet.getLineName());
         assertThat(line.getTransportMode()).isEqualTo(AllVehicleModesOfTransportEnumeration.AIR);
-        assertThat(line.getPublicCode()).isEqualTo(lineDataSet.getLineDesignation());
+       // assertThat(line.getPublicCode()).isEqualTo(lineDataSet.getLineDesignation());
         assertThat(line.getOperatorRef().getRef()).isEqualTo(String.format("AVI:Operator:%s", lineDataSet.getAirlineIata()));
         assertThat(line.getRepresentedByGroupRef().getRef()).isEqualTo(String.format("AVI:Network:%s", lineDataSet.getAirlineIata()));
 
