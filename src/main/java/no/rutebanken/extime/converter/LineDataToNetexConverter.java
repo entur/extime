@@ -1,36 +1,97 @@
 package no.rutebanken.extime.converter;
 
 
-import com.google.common.base.Joiner;
-import com.google.common.base.Splitter;
-import com.google.common.collect.BiMap;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import no.rutebanken.extime.config.NetexStaticDataSet;
-import no.rutebanken.extime.model.*;
-import no.rutebanken.extime.util.NetexObjectFactory;
-import no.rutebanken.extime.util.NetexObjectIdCreator;
+import static no.rutebanken.extime.Constants.AVINOR_XMLNS;
+import static no.rutebanken.extime.Constants.COLON;
+import static no.rutebanken.extime.Constants.DASH;
+import static no.rutebanken.extime.Constants.DAY_TYPE_PATTERN;
+import static no.rutebanken.extime.Constants.DEFAULT_ZONE_ID;
+import static no.rutebanken.extime.Constants.UNDERSCORE;
+import static no.rutebanken.extime.util.AvinorTimetableUtils.isCommonDesignator;
+import static no.rutebanken.extime.util.NetexObjectIdCreator.hashObjectId;
+import static no.rutebanken.extime.util.NetexObjectIdTypes.DESTINATION_DISPLAY;
+
+import java.math.BigInteger;
+import java.time.DayOfWeek;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
+
+import javax.xml.bind.JAXBElement;
+
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.rutebanken.helper.calendar.CalendarPattern;
 import org.rutebanken.helper.calendar.CalendarPatternAnalyzer;
-import org.rutebanken.netex.model.*;
+import org.rutebanken.netex.model.CompositeFrame;
+import org.rutebanken.netex.model.DayOfWeekEnumeration;
+import org.rutebanken.netex.model.DayType;
+import org.rutebanken.netex.model.DayTypeAssignment;
+import org.rutebanken.netex.model.DayTypeRefStructure;
+import org.rutebanken.netex.model.DayTypeRefs_RelStructure;
+import org.rutebanken.netex.model.DestinationDisplay;
+import org.rutebanken.netex.model.DestinationDisplayRefStructure;
+import org.rutebanken.netex.model.Frames_RelStructure;
+import org.rutebanken.netex.model.JourneyPattern;
+import org.rutebanken.netex.model.Line;
+import org.rutebanken.netex.model.ObjectFactory;
+import org.rutebanken.netex.model.OperatingPeriod;
+import org.rutebanken.netex.model.Operator;
+import org.rutebanken.netex.model.PointInLinkSequence_VersionedChildStructure;
+import org.rutebanken.netex.model.PointOnRoute;
+import org.rutebanken.netex.model.PointsInJourneyPattern_RelStructure;
+import org.rutebanken.netex.model.PointsOnRoute_RelStructure;
+import org.rutebanken.netex.model.PropertiesOfDay_RelStructure;
+import org.rutebanken.netex.model.PropertyOfDay;
+import org.rutebanken.netex.model.PublicationDeliveryStructure;
+import org.rutebanken.netex.model.ResourceFrame;
+import org.rutebanken.netex.model.Route;
+import org.rutebanken.netex.model.RoutePoint;
+import org.rutebanken.netex.model.RouteRefStructure;
+import org.rutebanken.netex.model.RouteRefs_RelStructure;
+import org.rutebanken.netex.model.ScheduledStopPoint;
+import org.rutebanken.netex.model.ServiceCalendarFrame;
+import org.rutebanken.netex.model.ServiceFrame;
+import org.rutebanken.netex.model.ServiceJourney;
+import org.rutebanken.netex.model.StopPointInJourneyPattern;
+import org.rutebanken.netex.model.TimetableFrame;
+import org.rutebanken.netex.model.TimetabledPassingTime;
+import org.rutebanken.netex.model.TimetabledPassingTimes_RelStructure;
+import org.rutebanken.netex.model.Via_VersionedChildStructure;
+import org.rutebanken.netex.model.Vias_RelStructure;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import javax.xml.bind.JAXBElement;
-import java.math.BigInteger;
-import java.time.*;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
-import java.util.stream.Collectors;
+import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
+import com.google.common.collect.BiMap;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
-import static no.rutebanken.extime.Constants.*;
-import static no.rutebanken.extime.util.AvinorTimetableUtils.isCommonDesignator;
-import static no.rutebanken.extime.util.NetexObjectIdCreator.hashObjectId;
-import static no.rutebanken.extime.util.NetexObjectIdTypes.DESTINATION_DISPLAY;
+import no.rutebanken.extime.config.NetexStaticDataSet;
+import no.rutebanken.extime.model.AvailabilityPeriod;
+import no.rutebanken.extime.model.FlightRoute;
+import no.rutebanken.extime.model.LineDataSet;
+import no.rutebanken.extime.model.ScheduledFlight;
+import no.rutebanken.extime.model.ScheduledStopover;
+import no.rutebanken.extime.util.NetexObjectFactory;
+import no.rutebanken.extime.util.NetexObjectIdCreator;
 
 @Component(value = "lineDataToNetexConverter")
 public class LineDataToNetexConverter {
@@ -263,7 +324,8 @@ public class LineDataToNetexConverter {
                             Via_VersionedChildStructure viaChildStruct = objectFactory.createVia_VersionedChildStructure();
                             viaChildStruct.setDestinationDisplayRef(viaRefStruct);
                             viasStruct.getVia().add(viaChildStruct);
-                            viaTexts.add(destinationDisplay.getName().getValue());
+                            String frontTextValueVia = stopPlaceDataSets.get(airportHashes.inverse().get(stopPointObjectId).toLowerCase()).getShortName();
+                            viaTexts.add(frontTextValueVia);
                         }
                     }
                 }
@@ -271,7 +333,7 @@ public class LineDataToNetexConverter {
             }
             
             if(viaTexts.size() > 0) {
-            	String newName = patternDestinationDisplay.getName().getValue()+" (via "+org.apache.commons.lang.StringUtils.join(viaTexts," ")+")";
+            	String newName = patternDestinationDisplay.getName().getValue()+" (via "+StringUtils.join(viaTexts," ")+")";
             	patternDestinationDisplay.setName(netexObjectFactory.createMultilingualString(newName));
             }
             
