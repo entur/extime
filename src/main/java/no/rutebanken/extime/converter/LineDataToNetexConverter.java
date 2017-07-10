@@ -237,18 +237,15 @@ public class LineDataToNetexConverter {
             String frontTextValue = stopPlaceDataSets.get(airportHashes.inverse().get(finalStopPointObjectId).toLowerCase()).getShortName();
             patternDestinationDisplay.setFrontText(netexObjectFactory.createMultilingualString(frontTextValue));
 
+            StopPointInJourneyPattern firstStopPointInJourneyPattern = (StopPointInJourneyPattern) pointsInLinkSequence.get(0);
+            firstStopPointInJourneyPattern.setDestinationDisplayRef(destinationDisplayRefStruct);          		
+            
+            
             // check if needed to set vias
             if (pointsInLinkSequence.size() > 2) {
                 Vias_RelStructure viasStruct = objectFactory.createVias_RelStructure();
 
                 for (int i = 0; i < pointsInLinkSequence.size(); i++) {
-
-                	// TODO must clean up destination display handling. Should be on StopPointInJourneyPattern now, not on JourneyPattern
-                	if(i == 0) {
-                        StopPointInJourneyPattern stopPointInJourneyPattern = (StopPointInJourneyPattern) pointsInLinkSequence.get(i);
-                        stopPointInJourneyPattern.setDestinationDisplayRef(destinationDisplayRefStruct);          		
-                	}
-                	
                     if (i > 0 && i < pointsInLinkSequence.size() - 1) {
                         StopPointInJourneyPattern stopPointInJourneyPattern = (StopPointInJourneyPattern) pointsInLinkSequence.get(i);
                         String stopPointIdRef = stopPointInJourneyPattern.getScheduledStopPointRef().getValue().getRef();
