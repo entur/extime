@@ -236,10 +236,12 @@ public class LineDataToNetexConverter {
             String finalStopPointObjectId = Iterables.getLast(Splitter.on(COLON).trimResults().split(finalDestinationPointId));
             String frontTextValue = stopPlaceDataSets.get(airportHashes.inverse().get(finalStopPointObjectId).toLowerCase()).getShortName();
             patternDestinationDisplay.setFrontText(netexObjectFactory.createMultilingualString(frontTextValue));
+            patternDestinationDisplay.setName(patternDestinationDisplay.getFrontText());
 
             StopPointInJourneyPattern firstStopPointInJourneyPattern = (StopPointInJourneyPattern) pointsInLinkSequence.get(0);
             firstStopPointInJourneyPattern.setDestinationDisplayRef(destinationDisplayRefStruct);          		
             
+            List<String> viaTexts = new ArrayList<>();
             
             // check if needed to set vias
             if (pointsInLinkSequence.size() > 2) {
@@ -261,11 +263,18 @@ public class LineDataToNetexConverter {
                             Via_VersionedChildStructure viaChildStruct = objectFactory.createVia_VersionedChildStructure();
                             viaChildStruct.setDestinationDisplayRef(viaRefStruct);
                             viasStruct.getVia().add(viaChildStruct);
+                            viaTexts.add(destinationDisplay.getName().getValue());
                         }
                     }
                 }
                 patternDestinationDisplay.setVias(viasStruct);
             }
+            
+            if(viaTexts.size() > 0) {
+            	String newName = patternDestinationDisplay.getName().getValue()+" (via "+org.apache.commons.lang.StringUtils.join(viaTexts," ")+")";
+            	patternDestinationDisplay.setName(netexObjectFactory.createMultilingualString(newName));
+            }
+            
             destinationDisplays.add(patternDestinationDisplay);
             //journeyPattern.setDestinationDisplayRef(destinationDisplayRefStruct);
         }
