@@ -106,9 +106,9 @@ public class CommonDataWithSiteToNetexConverterTest {
                 for (JAXBElement<? extends StopAssignment_VersionStructure> stopAssignmentElement : stopAssignmentStruct.getStopAssignment()) {
                     PassengerStopAssignment stopAssignment = (PassengerStopAssignment) stopAssignmentElement.getValue();
 
-                    StopPlaceRefStructure stopPlaceRef = stopAssignment.getStopPlaceRef();
-                    assertThat(stopPlaceRef).isNotNull();
-                    assertThat(stopPlaceRef.getRef()).isNotNull().isNotEmpty().matches("^AVI:StopPlace:[A-Z]{3}$");
+//                    StopPlaceRefStructure stopPlaceRef = stopAssignment.getStopPlaceRef();
+//                    assertThat(stopPlaceRef).isNotNull();
+//                    assertThat(stopPlaceRef.getRef()).isNotNull().isNotEmpty().matches("^AVI:StopPlace:[A-Z]{3}$");
 
                     QuayRefStructure quayRef = stopAssignment.getQuayRef();
                     assertThat(quayRef).isNotNull();
