@@ -406,7 +406,7 @@ public class LineDataToNetexConverter {
 
             String journeyIdSequence = StringUtils.leftPad(idSequence[index++], 2, "0");
             String objectId = Joiner.on(DASH).skipNulls().join(flightId, journeyIdSequence, NetexObjectIdCreator.getObjectIdSuffix(journeyPatternId));
-            ServiceJourney serviceJourney = netexObjectFactory.createServiceJourney(objectId, line.getId(), flightId, dayTypeRefsStruct, journeyPatternId, passingTimesRelStruct);
+            ServiceJourney serviceJourney = netexObjectFactory.createServiceJourney(objectId, line.getId(), flightId, dayTypeRefsStruct, journeyPatternId, passingTimesRelStruct,journeyFlights.get(0).getArrivalAirportName());
             serviceJourneys.add(serviceJourney);
         }
 

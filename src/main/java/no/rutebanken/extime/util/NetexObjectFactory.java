@@ -569,7 +569,7 @@ public class NetexObjectFactory {
     }
 
     public ServiceJourney createServiceJourney(String objectId, String lineId, String flightId, DayTypeRefs_RelStructure dayTypeRefsStruct,
-            String journeyPatternId, TimetabledPassingTimes_RelStructure passingTimesRelStruct) {
+            String journeyPatternId, TimetabledPassingTimes_RelStructure passingTimesRelStruct, String name) {
 
         String serviceJourneyId = NetexObjectIdCreator.createServiceJourneyId(AVINOR_XMLNS, objectId);
 
@@ -588,6 +588,7 @@ public class NetexObjectFactory {
                 .withVersion(VERSION_ONE)
                 .withId(serviceJourneyId)
                 .withPublicCode(flightId)
+                .withName(createMultilingualString(name))
                // .withDepartureTime(departureTime)
                 .withDayTypes(dayTypeRefsStruct)
                 .withJourneyPatternRef(journeyPatternRefStructElement)
