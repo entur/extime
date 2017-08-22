@@ -7,13 +7,13 @@ import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 @ActiveProfiles("test")
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = {CamelRouteDisabler.class, AvinorTimetableUtils.class})
+@SpringBootTest(classes = {CamelRouteDisabler.class, AvinorTimetableUtils.class}, properties = "spring.config.name=application,netex-static-data")
 public class AvinorTimetableUtilsTest {
 
     @Autowired

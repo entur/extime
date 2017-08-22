@@ -1,25 +1,14 @@
 package no.rutebanken.extime.converter;
 
-import static no.rutebanken.extime.Constants.NETEX_PROFILE_VERSION;
-import static no.rutebanken.extime.Constants.UNDERSCORE;
-import static no.rutebanken.extime.Constants.VERSION_ONE;
-import static org.assertj.core.api.Assertions.assertThat;
-
-import java.time.DayOfWeek;
-import java.time.LocalDate;
-import java.time.OffsetDateTime;
-import java.time.OffsetTime;
-import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import javax.xml.bind.JAXBElement;
-
+import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import no.rutebanken.extime.config.CamelRouteDisabler;
+import no.rutebanken.extime.fixtures.LineDataSetFixture;
+import no.rutebanken.extime.model.FlightRoute;
+import no.rutebanken.extime.model.LineDataSet;
+import no.rutebanken.extime.util.NetexObjectIdCreator;
+import no.rutebanken.extime.util.NetexObjectIdTypes;
 import org.apache.commons.collections.ListUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Assert;
@@ -46,25 +35,31 @@ import org.rutebanken.netex.model.ServiceJourney;
 import org.rutebanken.netex.model.StopPointInJourneyPattern;
 import org.rutebanken.netex.model.TimetableFrame;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import javax.xml.bind.JAXBElement;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
-import no.rutebanken.extime.config.CamelRouteDisabler;
-import no.rutebanken.extime.fixtures.LineDataSetFixture;
-import no.rutebanken.extime.model.FlightRoute;
-import no.rutebanken.extime.model.LineDataSet;
-import no.rutebanken.extime.util.NetexObjectIdCreator;
-import no.rutebanken.extime.util.NetexObjectIdTypes;
+import static no.rutebanken.extime.Constants.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @SuppressWarnings("unchecked")
 @ActiveProfiles("test")
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = {CamelRouteDisabler.class, LineDataToNetexConverter.class})
+@SpringBootTest(classes = {CamelRouteDisabler.class, LineDataToNetexConverter.class}, properties = "spring.config.name=application,netex-static-data")
 public class LineDataToNetexConverterTest {
 
     @Autowired
@@ -344,15 +339,15 @@ public class LineDataToNetexConverterTest {
 
         assertThat(journeyPatterns).extracting(JourneyPattern::getId).containsOnlyElementsOf(getJourneyPatternIds(lineDataSet));
         assertThat(journeyPatterns).extracting("routeRef.ref").containsOnlyElementsOf(getRouteIds(lineDataSet));
-        
+
         for(JourneyPattern jp : journeyPatterns) {
         	StopPointInJourneyPattern stopPoint = (StopPointInJourneyPattern) jp.getPointsInSequence().getPointInJourneyPatternOrStopPointInJourneyPatternOrTimingPointInJourneyPattern().get(0);
             assertThat(stopPoint).extracting("destinationDisplayRef.ref").isNotNull();
         	//assertThat(stopPoint).extracting("destinationDisplayRef.ref").containsOnlyElementsOf(getDestinationDisplayIds(lineDataSet));
             //assertThat(stopPoint).extracting("destinationDisplayRef.version").contains(VERSION_ONE);
-        	
+
         }
-        
+
 
         // TODO add assertions for points in sequence
         /*

@@ -1,11 +1,12 @@
 package no.rutebanken.extime;
 
-import org.apache.camel.spring.boot.FatJarRouter;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.builder.SpringApplicationBuilder;
 
 @SpringBootApplication
-public class App extends FatJarRouter {
+public class App {
     public static void main(String[] args) {
-        FatJarRouter.main(args);
+        new SpringApplicationBuilder(App.class).properties("spring.config.name=application,netex-static-data").run(args);
     }
 }
+

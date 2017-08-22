@@ -1,31 +1,34 @@
 package no.rutebanken.extime.converter;
 
-import com.google.common.base.Splitter;
-import com.google.common.collect.Iterables;
 import no.rutebanken.extime.config.CamelRouteDisabler;
 import no.rutebanken.extime.model.AirportIATA;
 import no.rutebanken.extime.util.NetexObjectIdTypes;
-import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.rutebanken.netex.model.*;
+import org.rutebanken.netex.model.CompositeFrame;
+import org.rutebanken.netex.model.Network;
+import org.rutebanken.netex.model.PublicationDeliveryStructure;
+import org.rutebanken.netex.model.ResourceFrame;
+import org.rutebanken.netex.model.ServiceFrame;
+import org.rutebanken.netex.model.SiteFrame;
+import org.rutebanken.netex.model.StopAssignmentsInFrame_RelStructure;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import javax.xml.bind.JAXBElement;
 import java.time.OffsetDateTime;
 import java.util.List;
 
-import static no.rutebanken.extime.Constants.*;
+import static no.rutebanken.extime.Constants.NETEX_PROFILE_VERSION;
+import static no.rutebanken.extime.Constants.VERSION_ONE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SuppressWarnings("unchecked")
 @ActiveProfiles("test")
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = {CamelRouteDisabler.class, CommonDataToNetexConverter.class})
+@SpringBootTest(classes = {CamelRouteDisabler.class, CommonDataToNetexConverter.class}, properties = "spring.config.name=application,netex-static-data")
 @TestPropertySource(properties = {"avinor.timetable.export.site = false"})
 public class CommonDataWithoutSiteToNetexConverterTest {
 

@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Component("netexStaticDataSet")
-@ConfigurationProperties(prefix = "netex-data-sets", locations = "classpath:netex-static-data.yml")
+@ConfigurationProperties(prefix = "netex-data-sets")
 public class NetexStaticDataSet {
 
     private Map<String, OrganisationDataSet> organisations = new HashMap<>();

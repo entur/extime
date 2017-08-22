@@ -4,9 +4,20 @@ import no.rutebanken.extime.config.CamelRouteDisabler;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.rutebanken.netex.model.*;
+import org.rutebanken.netex.model.DayTypeRefStructure;
+import org.rutebanken.netex.model.MultilingualString;
+import org.rutebanken.netex.model.OperatorRefStructure;
+import org.rutebanken.netex.model.PointOnRoute;
+import org.rutebanken.netex.model.PointRefStructure;
+import org.rutebanken.netex.model.RoutePointRefStructure;
+import org.rutebanken.netex.model.RouteRefStructure;
+import org.rutebanken.netex.model.ScheduledStopPointRefStructure;
+import org.rutebanken.netex.model.StopPlaceRefStructure;
+import org.rutebanken.netex.model.StopPointInJourneyPattern;
+import org.rutebanken.netex.model.StopPointInJourneyPatternRefStructure;
+import org.rutebanken.netex.model.TimetabledPassingTime;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -16,7 +27,7 @@ import static no.rutebanken.extime.Constants.VERSION_ONE;
 
 @ActiveProfiles("test")
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = {CamelRouteDisabler.class, NetexObjectFactory.class})
+@SpringBootTest(classes = {CamelRouteDisabler.class, NetexObjectFactory.class}, properties = "spring.config.name=application,netex-static-data")
 public class NetexObjectFactoryTest {
 
     @Autowired

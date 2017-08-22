@@ -124,8 +124,10 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .log(LoggingLevel.DEBUG, this.getClass().getName(), "Fetching airport name by IATA code: ${header.ExtimeResourceCode}")
                 .setHeader(HEADER_EXTIME_HTTP_URI, simple("{{avinor.airport.feed.endpoint}}"))
                 .setHeader(HEADER_EXTIME_URI_PARAMETERS, simpleF("airport=${header.%s}&shortname=Y&ukname=Y", HEADER_EXTIME_RESOURCE_CODE))
+                .convertBodyTo(String.class)
                 .to("direct:fetchXmlStreamFromHttpFeed").id("FetchAirportNameFromHttpFeedProcessor")
-                .convertBodyTo(AirportNames.class)
+                .convertBodyTo(String.class)
+                .unmarshal(new JaxbDataFormat("no.avinor.flydata.xjc.model.airport"))
 
                 .process(exchange -> {
                     List<AirportName> airportNames = exchange.getIn().getBody(AirportNames.class).getAirportName();
@@ -142,7 +144,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .setHeader(HEADER_EXTIME_HTTP_URI, simple("{{avinor.airline.feed.endpoint}}"))
                 .setHeader(HEADER_EXTIME_URI_PARAMETERS, simpleF("airline=${header.%s}", HEADER_EXTIME_RESOURCE_CODE))
                 .to("direct:fetchXmlStreamFromHttpFeed").id("FetchAirlineNameFromHttpFeedProcessor")
-                .convertBodyTo(AirlineNames.class)
+                .unmarshal(new JaxbDataFormat("no.avinor.flydata.xjc.model.airline"))
 
                 .process(exchange -> {
                     List<AirlineName> airlineNames = exchange.getIn().getBody(AirlineNames.class).getAirlineName();
