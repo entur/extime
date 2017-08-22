@@ -70,20 +70,20 @@
         <dependency>
             <groupId>net.logstash.logback</groupId>
             <artifactId>logstash-logback-encoder</artifactId>
-            <version>4.7</version>
+            <version>4.11</version>
         </dependency>
 
         <dependency>
             <groupId>org.codehaus.janino</groupId>
             <artifactId>janino</artifactId>
-            <version>2.7.8</version>
+            <version>3.0.7</version>
         </dependency>
 
         <!-- Compile Scope -->
         <dependency>
             <groupId>org.jvnet.jaxb2_commons</groupId>
             <artifactId>jaxb2-basics-runtime</artifactId>
-            <version>0.11.0</version>
+            <version>0.11.1</version>
             <scope>compile</scope>
         </dependency>
 
@@ -147,7 +147,8 @@
         <dependency>
             <groupId>org.apache.activemq</groupId>
             <artifactId>activemq-camel</artifactId>
-            <version>5.12.3</version>
+            <!-- Holding back activemq version as newest version no long support spring wired broker config-->
+            <version>5.13.4</version>
         </dependency>
 
 
