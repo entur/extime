@@ -204,9 +204,9 @@
             <version>0.0.3-SNAPSHOT</version>
         </dependency>
         <dependency>
-            <groupId>org.rutebanken</groupId>
+            <groupId>org.entur</groupId>
             <artifactId>siri-java-model</artifactId>
-            <version>0.9-SNAPSHOT</version>
+            <version>0.12-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.zeroturnaround</groupId>
