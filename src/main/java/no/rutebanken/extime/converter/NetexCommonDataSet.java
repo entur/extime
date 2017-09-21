@@ -158,7 +158,7 @@ public class NetexCommonDataSet {
                     .withVersion(VERSION_ONE)
                     .withOrder(new BigInteger(Integer.toString(index)))
                     .withId(passengerStopAssignmentId)
-                    .withScheduledStopPointRef(scheduledStopPointRefStruct)
+                    .withScheduledStopPointRef(objectFactory.createScheduledStopPointRef(scheduledStopPointRefStruct))
                   //  .withStopPlaceRef(stopPlaceRefStructure)
                     .withQuayRef(quayRefStruct);
             stopAssignmentMap.put(airportIATA.name(), stopAssignment);
