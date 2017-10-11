@@ -6,11 +6,15 @@ import com.google.common.collect.Lists;
 import no.rutebanken.extime.model.*;
 import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.tomcat.jni.Local;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.temporal.ChronoField;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalUnit;
@@ -62,12 +66,12 @@ public final class LineDataSetFixture {
         return lineDataSet;
     }
 
-    public static LineDataSet createLineDataSetWithFixedDates(String airlineIata, String lineDesignation, List<Pair<String, List<OffsetDateTime>>> routeJourneyPairs, OffsetTime fixedTimeOfDeparture) {
+    public static LineDataSet createLineDataSetWithFixedDates(String airlineIata, String lineDesignation, List<Pair<String, List<LocalDate>>> routeJourneyPairs, LocalTime fixedTimeOfDeparture) {
         LineDataSet lineDataSet = LineDataSetFixture.createBasicLineDataSet(airlineIata, lineDesignation);
 
         // init period
-        OffsetDateTime periodFromDate = OffsetDateTime.now().truncatedTo(ChronoUnit.DAYS).with(ChronoField.OFFSET_SECONDS, 0);
-        OffsetDateTime periodToDate = periodFromDate.plusMonths(1);
+        LocalDateTime periodFromDate = LocalDate.now().atStartOfDay();
+        LocalDateTime periodToDate = periodFromDate.plusMonths(1);
 
 
         AvailabilityPeriod availabilityPeriod = new AvailabilityPeriod(periodFromDate, periodToDate);
@@ -77,14 +81,14 @@ public final class LineDataSetFixture {
         List<FlightRoute> routes = new ArrayList<>();
         Map<String, Map<String, List<ScheduledFlight>>> routeJourneys = new HashMap<>();
 
-        for (Pair<String, List<OffsetDateTime>> pair : routeJourneyPairs) {
+        for (Pair<String, List<LocalDate>> pair : routeJourneyPairs) {
             Map<String, List<ScheduledFlight>> flightsById = new HashMap<>();
             List<ScheduledFlight> flights = new ArrayList<>();
 
             String routeDesignation = pair.getKey();
             routes.add(new FlightRoute(routeDesignation, resolveRouteName(routeDesignation)));
 
-            for (OffsetDateTime dateOfOperation : pair.getValue()) {
+            for (LocalDate dateOfOperation : pair.getValue()) {
                 ScheduledFlight scheduledFlight = new ScheduledFlight();
                 scheduledFlight.setAirlineIATA(airlineIata);
 
@@ -102,18 +106,20 @@ public final class LineDataSetFixture {
                     scheduledFlight.setArrivalAirportIATA(arrivalAirportIata);
                     scheduledFlight.setArrivalAirportName(airports.get(arrivalAirportIata));
 
-                    OffsetTime timeOfDeparture = fixedTimeOfDeparture;
-                    if (timeOfDeparture == null) {
+                    LocalTime timeOfDeparture;
+                    if (fixedTimeOfDeparture == null) {
                         timeOfDeparture = generateOffsetTime();
+                    } else {
+                         timeOfDeparture = fixedTimeOfDeparture;
                     }
                     scheduledFlight.setTimeOfDeparture(timeOfDeparture);
 
-                    OffsetTime timeOfArrival = timeOfDeparture.plusHours(1);
+                    LocalTime timeOfArrival = timeOfDeparture.plusHours(1);
                     scheduledFlight.setTimeOfArrival(timeOfArrival);
                 } else if (routeStops.size() > 2) {
                     List<ScheduledStopover> stopovers = Lists.newArrayList();
-                    OffsetTime timeOfArrival = generateOffsetTime();
-                    OffsetTime timeOfDeparture;
+                    LocalTime timeOfArrival = generateOffsetTime();
+                    LocalTime timeOfDeparture;
 
                     for (int j = 0; j < routeStops.size(); j++) {
                         ScheduledStopover stopover = new ScheduledStopover();
@@ -150,10 +156,10 @@ public final class LineDataSetFixture {
 
     public static LineDataSet createLineDataSet(String airlineIata, String lineDesignation, List<Pair<String, Integer>> routeJourneyPairs) {
         // init period
-        OffsetDateTime periodFromDate = OffsetDateTime.now().truncatedTo(ChronoUnit.DAYS).with(ChronoField.OFFSET_SECONDS, 0);
-        OffsetDateTime periodToDate = periodFromDate.plusMonths(1);
+        LocalDate periodFromDate = LocalDate.now();
+        LocalDate periodToDate = periodFromDate.plusMonths(1);
 
-        List<Pair<String, List<OffsetDateTime>>> routeJourneyPairsWithFixedDatesOfOperation =
+        List<Pair<String, List<LocalDate>>> routeJourneyPairsWithFixedDatesOfOperation =
                 routeJourneyPairs.stream().map(p -> Pair.of(p.getKey(),
                         generateRandomDates(p.getValue(), periodFromDate, periodToDate))).collect(Collectors.toList());
         return createLineDataSetWithFixedDates(airlineIata, lineDesignation, routeJourneyPairsWithFixedDatesOfOperation, null);
@@ -186,8 +192,8 @@ public final class LineDataSetFixture {
                 .collect(Collectors.toList());
     }
 
-    public static List<OffsetDateTime> generateRandomDates(int cnt, OffsetDateTime inclusive, OffsetDateTime exclusive) {
-        List<OffsetDateTime> randomDates = new ArrayList<>();
+    public static List<LocalDate> generateRandomDates(int cnt, LocalDate inclusive, LocalDate exclusive) {
+        List<LocalDate> randomDates = new ArrayList<>();
         for (int i = 1; i <= cnt; i++) {
             randomDates.add(generateRandomDate(inclusive, exclusive));
         }
@@ -195,15 +201,15 @@ public final class LineDataSetFixture {
     }
 
 
-    public static OffsetDateTime generateRandomDate(OffsetDateTime inclusive, OffsetDateTime exclusive) {
+    public static LocalDate generateRandomDate(LocalDate inclusive, LocalDate exclusive) {
         long days = ChronoUnit.DAYS.between(inclusive, exclusive);
         return inclusive.plusDays(new Random().nextInt((int) days + 1));
     }
 
-    public static OffsetTime generateOffsetTime() {
+    public static LocalTime generateOffsetTime() {
         int hour = generateRandomId(10, 20);
         int minute = generateRandomId(10, 50);
-        return OffsetTime.parse(Joiner.on(COLON).join(hour, minute, "00Z"));
+        return LocalTime.of(hour, minute);
     }
 
     public static int generateRandomId(int startInclusive, int endExclusive) {

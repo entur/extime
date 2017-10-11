@@ -2,7 +2,8 @@ package no.rutebanken.extime.converter;
 
 import java.math.BigInteger;
 import java.time.OffsetDateTime;
-import java.time.OffsetTime;
+import java.time.LocalTime;
+import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -40,7 +41,7 @@ public class ScheduledFlightConverterTest {
 
     @Test
     public void extractNoStopoversFromFlights() throws Exception {
-        List<Triple<StopVisitType, String, OffsetTime>> triples =
+        List<Triple<StopVisitType, String, LocalTime>> triples =
                 clazzUnderTest.extractStopoversFromFlights(Collections.emptyList());
         Assertions.assertThat(triples)
                 .isNotNull()
@@ -49,7 +50,7 @@ public class ScheduledFlightConverterTest {
 
     @Test
     public void extractStopoversFromFlights() throws Exception {
-        List<Triple<StopVisitType, String, OffsetTime>> triples =
+        List<Triple<StopVisitType, String, LocalTime>> triples =
                 clazzUnderTest.extractStopoversFromFlights(createDummyFlights());
 
         Assertions.assertThat(triples)
@@ -72,9 +73,9 @@ public class ScheduledFlightConverterTest {
     public void testIsMultiLegFlightRoute() throws Exception {
         List<Flight> flightLegs = Lists.newArrayList(
                 createFlight(1002L, "WF", "149", DateUtils.parseDate("2017-01-01"), "HOV",
-                        OffsetTime.parse("07:00:00Z"), "SOG", OffsetTime.parse("07:30:00Z")),
+                        LocalTime.parse("07:00:00"), "SOG", LocalTime.parse("07:30:00")),
                 createFlight(1003L, "WF", "149", DateUtils.parseDate("2017-01-01"), "SOG",
-                        OffsetTime.parse("08:00:00Z"), "BGO", OffsetTime.parse("08:30:00Z"))
+                        LocalTime.parse("08:00:00"), "BGO", LocalTime.parse("08:30:00"))
         );
 
         boolean isMultiLegFlightRoute = clazzUnderTest.isMultiLegFlightRoute(flightLegs);
@@ -86,7 +87,7 @@ public class ScheduledFlightConverterTest {
     public void testIsNotMultiLegFlightRoute() throws Exception {
         List<Flight> flightLegs = Lists.newArrayList(
                 createFlight(1002L, "WF", "149", DateUtils.parseDate("2017-01-01"), "HOV",
-                        OffsetTime.parse("07:00:00Z"), "SOG", OffsetTime.parse("07:30:00Z"))
+                        LocalTime.parse("07:00:00"), "SOG", LocalTime.parse("07:30:00"))
         );
 
         boolean isMultiLegFlightRoute = clazzUnderTest.isMultiLegFlightRoute(flightLegs);
@@ -98,7 +99,7 @@ public class ScheduledFlightConverterTest {
     public void testIsDirectFlightRoute() throws Exception {
         List<Flight> flightLegs = Lists.newArrayList(
                 createFlight(1002L, "WF", "149", DateUtils.parseDate("2017-01-01"), "HOV",
-                        OffsetTime.parse("07:00:00Z"), "SOG", OffsetTime.parse("07:30:00Z"))
+                        LocalTime.parse("07:00:00"), "SOG", LocalTime.parse("07:30:00"))
         );
 
         boolean isDirectFlightRoute = clazzUnderTest.isDirectFlightRoute(flightLegs);
@@ -110,9 +111,9 @@ public class ScheduledFlightConverterTest {
     public void testIsNotDirectFlightRoute() throws Exception {
         List<Flight> flightLegs = Lists.newArrayList(
                 createFlight(1002L, "WF", "149", DateUtils.parseDate("2017-01-01"), "HOV",
-                        OffsetTime.parse("07:00:00Z"), "SOG", OffsetTime.parse("07:30:00Z")),
+                        LocalTime.parse("07:00:00"), "SOG", LocalTime.parse("07:30:00")),
                 createFlight(1003L, "WF", "149", DateUtils.parseDate("2017-01-01"), "SOG",
-                        OffsetTime.parse("08:00:00Z"), "BGO", OffsetTime.parse("08:30:00Z"))
+                        LocalTime.parse("08:00:00"), "BGO", LocalTime.parse("08:30:00"))
         );
 
         boolean isDirectFlightRoute = clazzUnderTest.isDirectFlightRoute(flightLegs);
@@ -141,18 +142,18 @@ public class ScheduledFlightConverterTest {
     public void testCollectedFlightLegIds() throws Exception {
         List<Flight> flightLegs = Lists.newArrayList(
                 createFlight(1002L, "WF", "149", DateUtils.parseDate("2017-01-01"), "HOV",
-                        OffsetTime.parse("07:00:00Z"), "SOG", OffsetTime.parse("07:30:00Z")),
+                        LocalTime.parse("07:00:00"), "SOG", LocalTime.parse("07:30:00")),
                 createFlight(1003L, "WF", "149", DateUtils.parseDate("2017-01-01"), "SOG",
-                        OffsetTime.parse("08:00:00Z"), "BGO", OffsetTime.parse("08:30:00Z")),
+                        LocalTime.parse("08:00:00"), "BGO", LocalTime.parse("08:30:00")),
                 createFlight(9999L, "SK", "4455", DateUtils.parseDate("2017-01-02"), "TRD",
-                        OffsetTime.parse("08:00:00Z"), "OSL", OffsetTime.parse("08:30:00Z")),
+                        LocalTime.parse("08:00:00"), "OSL", LocalTime.parse("08:30:00")),
                 createFlight(8888L, "DY", "8899", DateUtils.parseDate("2017-01-03"), "OSL",
-                        OffsetTime.parse("08:00:00Z"), "HOV", OffsetTime.parse("08:30:00Z")),
+                        LocalTime.parse("08:00:00"), "HOV", LocalTime.parse("08:30:00")),
                 createFlight(7777L, "M3", "566", DateUtils.parseDate("2017-01-03"), "BGO",
-                        OffsetTime.parse("08:00:00Z"), "TRD", OffsetTime.parse("08:30:00Z"))
+                        LocalTime.parse("08:00:00"), "TRD", LocalTime.parse("08:30:00"))
         );
         Flight currentFlight = createFlight(1001L, "WF", "149", DateUtils.parseDate("2017-01-01"), "OSL",
-                OffsetTime.parse("06:00:00Z"), "HOV", OffsetTime.parse("06:30:00Z"));
+                LocalTime.parse("06:00:00"), "HOV", LocalTime.parse("06:30:00"));
 
         Map<String, List<Flight>> flightsByDepartureAirport = flightLegs.stream()
                 .collect(Collectors.groupingBy(Flight::getDepartureStation));
@@ -176,18 +177,18 @@ public class ScheduledFlightConverterTest {
     public void testFindConnectingFlightLegsForFirstLeg() throws Exception {
         List<Flight> flightLegs = Lists.newArrayList(
                 createFlight(1002L, "WF", "149", DateUtils.parseDate("2017-01-01"), "HOV",
-                        OffsetTime.parse("07:00:00Z"), "SOG", OffsetTime.parse("07:30:00Z")),
+                        LocalTime.parse("07:00:00"), "SOG", LocalTime.parse("07:30:00")),
                 createFlight(1003L, "WF", "149", DateUtils.parseDate("2017-01-01"), "SOG",
-                        OffsetTime.parse("08:00:00Z"), "BGO", OffsetTime.parse("08:30:00Z")),
+                        LocalTime.parse("08:00:00"), "BGO", LocalTime.parse("08:30:00")),
                 createFlight(9999L, "SK", "4455", DateUtils.parseDate("2017-01-02"), "TRD",
-                        OffsetTime.parse("08:00:00Z"), "OSL", OffsetTime.parse("08:30:00Z")),
+                        LocalTime.parse("08:00:00"), "OSL", LocalTime.parse("08:30:00")),
                 createFlight(8888L, "DY", "8899", DateUtils.parseDate("2017-01-03"), "OSL",
-                        OffsetTime.parse("08:00:00Z"), "HOV", OffsetTime.parse("08:30:00Z")),
+                        LocalTime.parse("08:00:00"), "HOV", LocalTime.parse("08:30:00")),
                 createFlight(7777L, "M3", "566", DateUtils.parseDate("2017-01-03"), "BGO",
-                        OffsetTime.parse("08:00:00Z"), "TRD", OffsetTime.parse("08:30:00Z"))
+                        LocalTime.parse("08:00:00"), "TRD", LocalTime.parse("08:30:00"))
         );
         Flight currentFlight = createFlight(1001L, "WF", "149", DateUtils.parseDate("2017-01-01"), "OSL",
-                OffsetTime.parse("06:00:00Z"), "HOV", OffsetTime.parse("06:30:00Z"));
+                LocalTime.parse("06:00:00"), "HOV", LocalTime.parse("06:30:00"));
 
         Map<String, List<Flight>> flightsByDepartureAirport = flightLegs.stream()
                 .collect(Collectors.groupingBy(Flight::getDepartureStation));
@@ -209,18 +210,18 @@ public class ScheduledFlightConverterTest {
     public void testFindConnectingFlightLegsForLastLeg() throws Exception {
         List<Flight> flightLegs = Lists.newArrayList(
                 createFlight(1001L, "WF", "149", DateUtils.parseDate("2017-01-01"), "OSL",
-                        OffsetTime.parse("06:00:00Z"), "HOV", OffsetTime.parse("06:30:00Z")),
+                        LocalTime.parse("06:00:00"), "HOV", LocalTime.parse("06:30:00")),
                 createFlight(1002L, "WF", "149", DateUtils.parseDate("2017-01-01"), "HOV",
-                        OffsetTime.parse("07:00:00Z"), "SOG", OffsetTime.parse("07:30:00Z")),
+                        LocalTime.parse("07:00:00"), "SOG", LocalTime.parse("07:30:00")),
                 createFlight(9999L, "SK", "4455", DateUtils.parseDate("2017-01-02"), "TRD",
-                        OffsetTime.parse("08:00:00Z"), "OSL", OffsetTime.parse("08:30:00Z")),
+                        LocalTime.parse("08:00:00"), "OSL", LocalTime.parse("08:30:00")),
                 createFlight(8888L, "DY", "8899", DateUtils.parseDate("2017-01-03"), "OSL",
-                        OffsetTime.parse("08:00:00Z"), "HOV", OffsetTime.parse("08:30:00Z")),
+                        LocalTime.parse("08:00:00"), "HOV", LocalTime.parse("08:30:00")),
                 createFlight(7777L, "M3", "566", DateUtils.parseDate("2017-01-03"), "BGO",
-                        OffsetTime.parse("08:00:00Z"), "TRD", OffsetTime.parse("08:30:00Z"))
+                        LocalTime.parse("08:00:00"), "TRD", LocalTime.parse("08:30:00"))
         );
         Flight currentFlight = createFlight(1003L, "WF", "149", DateUtils.parseDate("2017-01-01"), "SOG",
-                OffsetTime.parse("08:00:00Z"), "BGO", OffsetTime.parse("08:30:00Z"));
+                LocalTime.parse("08:00:00"), "BGO", LocalTime.parse("08:30:00"));
 
         Map<String, List<Flight>> flightsByDepartureAirport = flightLegs.stream()
                 .collect(Collectors.groupingBy(Flight::getDepartureStation));
@@ -242,18 +243,18 @@ public class ScheduledFlightConverterTest {
     public void testFindConnectingFlightLegsForMiddleLeg() throws Exception {
         List<Flight> flightLegs = Lists.newArrayList(
                 createFlight(1001L, "WF", "149", DateUtils.parseDate("2017-01-01"), "OSL",
-                        OffsetTime.parse("06:00:00Z"), "HOV", OffsetTime.parse("06:30:00Z")),
+                        LocalTime.parse("06:00:00"), "HOV", LocalTime.parse("06:30:00")),
                 createFlight(1003L, "WF", "149", DateUtils.parseDate("2017-01-01"), "SOG",
-                        OffsetTime.parse("08:00:00Z"), "BGO", OffsetTime.parse("08:30:00Z")),
+                        LocalTime.parse("08:00:00"), "BGO", LocalTime.parse("08:30:00")),
                 createFlight(9999L, "SK", "4455", DateUtils.parseDate("2017-01-02"), "TRD",
-                        OffsetTime.parse("08:00:00Z"), "OSL", OffsetTime.parse("08:30:00Z")),
+                        LocalTime.parse("08:00:00"), "OSL", LocalTime.parse("08:30:00")),
                 createFlight(8888L, "DY", "8899", DateUtils.parseDate("2017-01-03"), "OSL",
-                        OffsetTime.parse("08:00:00Z"), "HOV", OffsetTime.parse("08:30:00Z")),
+                        LocalTime.parse("08:00:00"), "HOV", LocalTime.parse("08:30:00")),
                 createFlight(7777L, "M3", "566", DateUtils.parseDate("2017-01-03"), "BGO",
-                        OffsetTime.parse("08:00:00Z"), "TRD", OffsetTime.parse("08:30:00Z"))
+                        LocalTime.parse("08:00:00"), "TRD", LocalTime.parse("08:30:00"))
         );
         Flight currentFlight = createFlight(1002L, "WF", "149", DateUtils.parseDate("2017-01-01"), "HOV",
-                OffsetTime.parse("07:00:00Z"), "SOG", OffsetTime.parse("07:30:00Z"));
+                LocalTime.parse("07:00:00"), "SOG", LocalTime.parse("07:30:00"));
 
         Map<String, List<Flight>> flightsByDepartureAirport = flightLegs.stream()
                 .collect(Collectors.groupingBy(Flight::getDepartureStation));
@@ -275,28 +276,28 @@ public class ScheduledFlightConverterTest {
     public void testFindConnectingFlightLegsForArbitraryLeg() throws Exception {
         List<Flight> flightLegs = Lists.newArrayList(
                 createFlight(1001L, "WF", "199", DateUtils.parseDate("2017-01-01"), "OSL",
-                        OffsetTime.parse("06:00:00Z"), "TRD", OffsetTime.parse("06:30:00Z")),
+                        LocalTime.parse("06:00:00"), "TRD", LocalTime.parse("06:30:00")),
                 createFlight(1002L, "WF", "199", DateUtils.parseDate("2017-01-01"), "TRD",
-                        OffsetTime.parse("07:00:00Z"), "BGO", OffsetTime.parse("07:30:00Z")),
+                        LocalTime.parse("07:00:00"), "BGO", LocalTime.parse("07:30:00")),
                 createFlight(1003L, "WF", "199", DateUtils.parseDate("2017-01-01"), "BGO",
-                        OffsetTime.parse("08:00:00Z"), "HOV", OffsetTime.parse("08:30:00Z")),
+                        LocalTime.parse("08:00:00"), "HOV", LocalTime.parse("08:30:00")),
                 createFlight(1005L, "WF", "199", DateUtils.parseDate("2017-01-01"), "SOG",
-                        OffsetTime.parse("10:00:00Z"), "TOS", OffsetTime.parse("10:30:00Z")),
+                        LocalTime.parse("10:00:00"), "TOS", LocalTime.parse("10:30:00")),
                 createFlight(1006L, "WF", "199", DateUtils.parseDate("2017-01-01"), "TOS",
-                        OffsetTime.parse("11:00:00Z"), "EVE", OffsetTime.parse("11:30:00Z")),
+                        LocalTime.parse("11:00:00"), "EVE", LocalTime.parse("11:30:00")),
                 createFlight(9999L, "SK", "4455", DateUtils.parseDate("2017-01-02"), "TRD",
-                        OffsetTime.parse("08:00:00Z"), "OSL", OffsetTime.parse("08:30:00Z")),
+                        LocalTime.parse("08:00:00"), "OSL", LocalTime.parse("08:30:00")),
                 createFlight(8888L, "DY", "8899", DateUtils.parseDate("2017-01-03"), "OSL",
-                        OffsetTime.parse("08:00:00Z"), "HOV", OffsetTime.parse("08:30:00Z")),
+                        LocalTime.parse("08:00:00"), "HOV", LocalTime.parse("08:30:00")),
                 createFlight(7777L, "M3", "566", DateUtils.parseDate("2017-01-03"), "BGO",
-                        OffsetTime.parse("08:00:00Z"), "TRD", OffsetTime.parse("08:30:00Z")),
+                        LocalTime.parse("08:00:00"), "TRD", LocalTime.parse("08:30:00")),
                 createFlight(7766L, "DY", "444", DateUtils.parseDate("2017-01-03"), "TOS",
-                        OffsetTime.parse("08:00:00Z"), "EVE", OffsetTime.parse("08:30:00Z")),
+                        LocalTime.parse("08:00:00"), "EVE", LocalTime.parse("08:30:00")),
                 createFlight(7766L, "DY", "333", DateUtils.parseDate("2017-01-04"), "EVE",
-                        OffsetTime.parse("08:00:00Z"), "TOS", OffsetTime.parse("08:30:00Z"))
+                        LocalTime.parse("08:00:00"), "TOS", LocalTime.parse("08:30:00"))
         );
         Flight currentFlight = createFlight(1004L, "WF", "199", DateUtils.parseDate("2017-01-01"), "HOV",
-                OffsetTime.parse("09:00:00Z"), "SOG", OffsetTime.parse("09:30:00Z"));
+                LocalTime.parse("09:00:00"), "SOG", LocalTime.parse("09:30:00"));
 
         Map<String, List<Flight>> flightsByDepartureAirport = flightLegs.stream()
                 .collect(Collectors.groupingBy(Flight::getDepartureStation));
@@ -319,10 +320,10 @@ public class ScheduledFlightConverterTest {
     public void testFindNextFlightLegsForLastLeg() throws Exception {
         List<Flight> flightLegs = Lists.newArrayList(
                 createFlight(1099L, "SK", "4455", DateUtils.parseDate("2017-01-30"), "BGO",
-                        OffsetTime.parse("07:00:00Z"), "OSL", OffsetTime.parse("07:30:00Z"))
+                        LocalTime.parse("07:00:00"), "OSL", LocalTime.parse("07:30:00"))
         );
         Flight currentFlight = createFlight(1003L, "WF", "149", DateUtils.parseDate("2017-01-01"), "SOG",
-                OffsetTime.parse("06:00:00Z"), "BGO", OffsetTime.parse("06:30:00Z"));
+                LocalTime.parse("06:00:00"), "BGO", LocalTime.parse("06:30:00"));
 
         Map<String, List<Flight>> flightsByDepartureAirport = flightLegs.stream()
                 .collect(Collectors.groupingBy(Flight::getDepartureStation));
@@ -339,14 +340,14 @@ public class ScheduledFlightConverterTest {
     public void testFindNextFlightLegs() throws Exception {
         List<Flight> flightLegs = Lists.newArrayList(
                 createFlight(1002L, "WF", "149", DateUtils.parseDate("2017-01-01"), "HOV",
-                        OffsetTime.parse("09:00:00Z"), "SOG", OffsetTime.parse("09:30:00Z")),
+                        LocalTime.parse("09:00:00"), "SOG", LocalTime.parse("09:30:00")),
                 createFlight(1003L, "WF", "149", DateUtils.parseDate("2017-01-01"), "SOG",
-                        OffsetTime.parse("10:00:00Z"), "BGO", OffsetTime.parse("10:30:00Z")),
+                        LocalTime.parse("10:00:00"), "BGO", LocalTime.parse("10:30:00")),
                 createFlight(1004L, "WF", "148", DateUtils.parseDate("2017-01-02"), "BGO",
-                        OffsetTime.parse("06:00:00Z"), "SOG", OffsetTime.parse("06:30:00Z"))
+                        LocalTime.parse("06:00:00"), "SOG", LocalTime.parse("06:30:00"))
         );
         Flight currentFlight = createFlight(1001L, "WF", "149", DateUtils.parseDate("2017-01-01"), "OSL",
-                OffsetTime.parse("08:00:00Z"), "HOV", OffsetTime.parse("08:30:00Z"));
+                LocalTime.parse("08:00:00"), "HOV", LocalTime.parse("08:30:00"));
 
         Map<String, List<Flight>> flightsByDepartureAirport = flightLegs.stream()
                 .collect(Collectors.groupingBy(Flight::getDepartureStation));
@@ -364,10 +365,10 @@ public class ScheduledFlightConverterTest {
     public void testFindPreviousFlightLegsForFirstLeg() throws Exception {
         List<Flight> flightLegs = Lists.newArrayList(
                 createFlight(1099L, "SK", "4455", DateUtils.parseDate("2017-01-30"), "TRD",
-                        OffsetTime.parse("07:00:00Z"), "OSL", OffsetTime.parse("07:30:00Z"))
+                        LocalTime.parse("07:00:00"), "OSL", LocalTime.parse("07:30:00"))
         );
         Flight currentFlight = createFlight(1001L, "WF", "149", DateUtils.parseDate("2017-01-01"), "OSL",
-                OffsetTime.parse("06:00:00Z"), "HOV", OffsetTime.parse("06:30:00Z"));
+                LocalTime.parse("06:00:00"), "HOV", LocalTime.parse("06:30:00"));
 
         Map<String, List<Flight>> flightsByArrivalAirportIata = flightLegs.stream()
                 .collect(Collectors.groupingBy(Flight::getArrivalStation));
@@ -384,14 +385,14 @@ public class ScheduledFlightConverterTest {
     public void testFindPreviousFlightLegs() throws Exception {
         List<Flight> flightLegs = Lists.newArrayList(
                 createFlight(1001L, "WF", "149", DateUtils.parseDate("2017-01-01"), "OSL",
-                        OffsetTime.parse("06:00:00Z"), "HOV", OffsetTime.parse("06:30:00Z")),
+                        LocalTime.parse("06:00:00"), "HOV", LocalTime.parse("06:30:00")),
                 createFlight(1002L, "WF", "149", DateUtils.parseDate("2017-01-01"), "HOV",
-                        OffsetTime.parse("07:00:00Z"), "SOG", OffsetTime.parse("07:30:00Z")),
+                        LocalTime.parse("07:00:00"), "SOG", LocalTime.parse("07:30:00")),
                 createFlight(1004L, "WF", "148", DateUtils.parseDate("2017-01-02"), "HOV",
-                        OffsetTime.parse("07:00:00Z"), "OSL", OffsetTime.parse("07:30:00Z"))
+                        LocalTime.parse("07:00:00"), "OSL", LocalTime.parse("07:30:00"))
         );
         Flight currentFlight = createFlight(1003L, "WF", "149", DateUtils.parseDate("2017-01-01"), "SOG",
-                OffsetTime.parse("08:00:00Z"), "BGO", OffsetTime.parse("08:30:00Z"));
+                LocalTime.parse("08:00:00"), "BGO", LocalTime.parse("08:30:00"));
 
         Map<String, List<Flight>> flightsByArrivalAirportIata = flightLegs.stream()
                 .collect(Collectors.groupingBy(Flight::getArrivalStation));
@@ -409,12 +410,12 @@ public class ScheduledFlightConverterTest {
     @Test
     public void testFindOptionalConnectingFlightLeg() throws Exception {
         Flight currentFlightLeg = createFlight(1003L, "WF", "149", DateUtils.parseDate("2017-01-01"),
-                "SOG", OffsetTime.parse("09:00:00Z"), "BGO", OffsetTime.parse("09:30:00Z"));
+                "SOG", LocalTime.parse("09:00:00"), "BGO", LocalTime.parse("09:30:00"));
         Predicate<Flight> previousFlightPredicate = FlightPredicate.matchPreviousFlight(currentFlightLeg);
 
         List<Flight> flightLegs = Lists.newArrayList(
                 createFlight(1002L, "WF", "149", DateUtils.parseDate("2017-01-01"), "HOV",
-                        OffsetTime.parse("08:00:00Z"), "SOG", OffsetTime.parse("08:30:00Z"))
+                        LocalTime.parse("08:00:00"), "SOG", LocalTime.parse("08:30:00"))
         );
 
         Optional<Flight> optionalFlight = clazzUnderTest.findOptionalConnectingFlightLeg(previousFlightPredicate, flightLegs);
@@ -429,12 +430,12 @@ public class ScheduledFlightConverterTest {
     @Test
     public void testDoNotFindOptionalConnectingFlightLeg() throws Exception {
         Flight currentFlightLeg = createFlight(1001L, "WF", "149", DateUtils.parseDate("2017-01-01"),
-                "OSL", OffsetTime.parse("07:00:00Z"), "HOV", OffsetTime.parse("07:30:00Z"));
+                "OSL", LocalTime.parse("07:00:00"), "HOV", LocalTime.parse("07:30:00"));
         Predicate<Flight> previousFlightPredicate = FlightPredicate.matchPreviousFlight(currentFlightLeg);
 
         List<Flight> flightLegs = Lists.newArrayList(
                 createFlight(1003L, "WF", "149", DateUtils.parseDate("2017-01-01"), "SOG",
-                        OffsetTime.parse("08:00:00Z"), "BGO", OffsetTime.parse("08:30:00Z"))
+                        LocalTime.parse("08:00:00"), "BGO", LocalTime.parse("08:30:00"))
         );
 
         Optional<Flight> optionalFlight = clazzUnderTest.findOptionalConnectingFlightLeg(previousFlightPredicate, flightLegs);
@@ -446,14 +447,14 @@ public class ScheduledFlightConverterTest {
 
     private List<Flight> createDummyFlights() {
         return Lists.newArrayList(
-                createFlight(1L, "SK", "4455", DateUtils.parseDate("2017-01-01Z"), "BGO", OffsetTime.MIN, "OSL", OffsetTime.MAX),
-                createFlight(2L, "DY", "6677", DateUtils.parseDate("2017-01-02Z"), "BGO", OffsetTime.MIN, "TRD", OffsetTime.MAX),
-                createFlight(3L, "WF", "199", DateUtils.parseDate("2017-01-03Z"), "BGO", OffsetTime.MIN, "SVG", OffsetTime.MAX)
+                createFlight(1L, "SK", "4455", DateUtils.parseDate("2017-01-01"), "BGO", LocalTime.MIN, "OSL", LocalTime.MAX),
+                createFlight(2L, "DY", "6677", DateUtils.parseDate("2017-01-02"), "BGO", LocalTime.MIN, "TRD", LocalTime.MAX),
+                createFlight(3L, "WF", "199", DateUtils.parseDate("2017-01-03"), "BGO", LocalTime.MIN, "SVG", LocalTime.MAX)
         );
     }
 
-    private Flight createFlight(long id, String designator, String flightNumber, OffsetDateTime dateOfOperation,
-                                String departureStation, OffsetTime departureTime, String arrivalStation, OffsetTime arrivalTime) {
+    private Flight createFlight(long id, String designator, String flightNumber, ZonedDateTime dateOfOperation,
+                                String departureStation, LocalTime departureTime, String arrivalStation, LocalTime arrivalTime) {
         Flight flight = new Flight();
         flight.setId(BigInteger.valueOf(id));
         flight.setAirlineDesignator(designator);

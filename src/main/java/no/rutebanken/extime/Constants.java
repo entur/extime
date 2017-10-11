@@ -9,7 +9,7 @@ public final class Constants {
     public static final String DASH = "-";
     public static final String UNDERSCORE = "_";
     public static final String COLON = ":";
-    public static final String DEFAULT_ZONE_ID = "UTC";
+    public static final String DEFAULT_ZONE_ID = "Europe/Oslo";
     public static final String DEFAULT_LANGUAGE = "no";
     public static final int DEFAULT_START_INCLUSIVE = 1111111;
     public static final int DEFAULT_END_EXCLUSIVE = 8888888;

@@ -42,9 +42,13 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import javax.xml.bind.JAXBElement;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -197,13 +201,13 @@ public class LineDataToNetexConverterTest {
 
     @Test
     public void testServiceJourneyWithOperatingPeriodAndExclusions() throws Exception {
-        OffsetDateTime patternFrom = LocalDate.of(2017, 1, 3).atStartOfDay().atOffset(ZoneOffset.ofHours(0));
-        OffsetDateTime patternTo = patternFrom.plusDays(70);
+        LocalDate patternFrom = LocalDate.of(2017, 1, 3);
+        LocalDate patternTo = patternFrom.plusDays(70);
         Set<DayOfWeek> pattern = Sets.newHashSet(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY, DayOfWeek.SATURDAY);
         // Pattern = 5 days a week, one exception at day 10
-        List<OffsetDateTime> flightDates = generatePattern(patternFrom, patternTo, pattern, 10);
-        List<Pair<String, List<OffsetDateTime>>> routeJourneyPairs = Lists.newArrayList(Pair.of("OSL-SOG", flightDates));
-        LineDataSet lineDataSet = LineDataSetFixture.createLineDataSetWithFixedDates("DY", "OSL-BGO", routeJourneyPairs, OffsetTime.now());
+        List<LocalDate> flightDates = generatePattern(patternFrom, patternTo, pattern, 10);
+        List<Pair<String, List<LocalDate>>> routeJourneyPairs = Lists.newArrayList(Pair.of("OSL-SOG", flightDates));
+        LineDataSet lineDataSet = LineDataSetFixture.createLineDataSetWithFixedDates("DY", "OSL-BGO", routeJourneyPairs, ZonedDateTime.now().toLocalTime());
 
         PublicationDeliveryStructure publicationDelivery = netexConverter.convertToNetex(lineDataSet).getValue();
         assertValidPublicationDelivery(publicationDelivery, lineDataSet.getLineName());
@@ -224,7 +228,7 @@ public class LineDataToNetexConverterTest {
         List<String> dayTypeRefs = serviceJourney.getDayTypes().getDayTypeRef().stream().map(e ->
                 e.getValue().getRef()).collect(Collectors.toList());
 
-        Set<OffsetDateTime> expectedExclusions = Sets.newHashSet(patternFrom.plusDays(10));
+        Set<LocalDate> expectedExclusions = Sets.newHashSet(patternFrom.plusDays(10));
 
         boolean weekDayPatternFound = false;
         boolean saturdayPatternFound = false;
@@ -238,8 +242,8 @@ public class LineDataToNetexConverterTest {
             if (assignment.getDate() == null) {
                 OperatingPeriod_VersionStructure operatingPeriod = operatingPeriods.get(assignment.getOperatingPeriodRef().getRef());
                 Assert.assertNotNull(operatingPeriod);
-                Assert.assertEquals(patternFrom, operatingPeriod.getFromDate());
-                Assert.assertEquals(patternTo, operatingPeriod.getToDate());
+                Assert.assertEquals(patternFrom.atStartOfDay(), operatingPeriod.getFromDate());
+                Assert.assertEquals(patternTo.atStartOfDay(), operatingPeriod.getToDate());
 
                 weekDayPatternFound |= ListUtils.isEqualList(
                         dayType.getProperties().getPropertyOfDay().get(0).getDaysOfWeek(), Arrays.asList(DayOfWeekEnumeration.MONDAY,
@@ -250,7 +254,7 @@ public class LineDataToNetexConverterTest {
             } else {
                 Assert.assertFalse(assignment.isIsAvailable());
                 Assert.assertNull(assignment.getOperatingPeriodRef());
-                Assert.assertTrue(expectedExclusions.remove(assignment.getDate()));
+                Assert.assertTrue(expectedExclusions.remove(assignment.getDate().toLocalDate()));
             }
         }
         Assert.assertTrue("Did not find expected pattern for week days", weekDayPatternFound);
@@ -258,14 +262,14 @@ public class LineDataToNetexConverterTest {
         Assert.assertTrue("Not all expected exclusion dates found", expectedExclusions.isEmpty());
     }
 
-    private List<OffsetDateTime> generatePattern(OffsetDateTime start, OffsetDateTime end, Set<DayOfWeek> daysOfWeek, int... exclusionArray) {
-        List<OffsetDateTime> patternDates = new ArrayList<>();
+    private List<LocalDate> generatePattern(LocalDate start, LocalDate end, Set<DayOfWeek> daysOfWeek, int... exclusionArray) {
+        List<LocalDate> patternDates = new ArrayList<>();
         Set<Integer> exclusions = new HashSet<>();
         if (exclusionArray != null) {
             Arrays.stream(exclusionArray).forEach(e -> exclusions.add(e));
         }
 
-        OffsetDateTime current = start;
+        LocalDate current = start;
         int i = 0;
         while (!current.isAfter(end)) {
             if (!exclusions.contains(i++) && daysOfWeek.contains(current.getDayOfWeek())) {
@@ -279,7 +283,7 @@ public class LineDataToNetexConverterTest {
     private void assertValidPublicationDelivery(PublicationDeliveryStructure publicationDelivery, String lineName) {
         assertThat(publicationDelivery).isNotNull();
         assertThat(publicationDelivery.getVersion()).isEqualTo(NETEX_PROFILE_VERSION);
-        assertThat(publicationDelivery.getPublicationTimestamp()).isNotNull().isBefore(OffsetDateTime.now());
+        assertThat(publicationDelivery.getPublicationTimestamp()).isNotNull().isBefore(ZonedDateTime.now().toLocalDateTime());
         assertThat(publicationDelivery.getParticipantRef()).isEqualTo("Avinor");
         assertThat(publicationDelivery.getDescription()).isNotNull();
         assertThat(publicationDelivery.getDescription().getValue()).isEqualTo("Line: " + lineName);

@@ -9,10 +9,21 @@ import no.avinor.flydata.xjc.model.scheduled.Flight;
 import no.avinor.flydata.xjc.model.scheduled.Flights;
 import no.rutebanken.extime.config.NetexStaticDataSet;
 import no.rutebanken.extime.config.NetexStaticDataSet.StopPlaceDataSet;
-import no.rutebanken.extime.model.*;
+import no.rutebanken.extime.model.AirlineDesignator;
+import no.rutebanken.extime.model.AirportIATA;
+import no.rutebanken.extime.model.FlightPredicate;
+import no.rutebanken.extime.model.FlightRoute;
+import no.rutebanken.extime.model.LineDataSet;
+import no.rutebanken.extime.model.ScheduledFlight;
+import no.rutebanken.extime.model.ScheduledStopover;
+import no.rutebanken.extime.model.StopVisitType;
 import no.rutebanken.extime.util.AvinorTimetableUtils;
 import no.rutebanken.extime.util.DateUtils;
-import org.apache.camel.*;
+import org.apache.camel.Endpoint;
+import org.apache.camel.EndpointInject;
+import org.apache.camel.ExchangeProperty;
+import org.apache.camel.ProducerTemplate;
+import org.apache.camel.TypeConverter;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.EnumUtils;
 import org.apache.commons.lang3.tuple.ImmutableTriple;
@@ -26,9 +37,20 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import java.io.InputStream;
 import java.math.BigInteger;
-import java.time.OffsetTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -106,7 +128,7 @@ public class ScheduledFlightConverter {
                 continue;
             }
             if (isMultiLegFlightRoute(connectingFlightLegs)) {
-                List<Triple<StopVisitType, String, OffsetTime>> stopovers = extractStopoversFromFlights(connectingFlightLegs);
+                List<Triple<StopVisitType, String, LocalTime>> stopovers = extractStopoversFromFlights(connectingFlightLegs);
                 List<ScheduledStopover> scheduledStopovers = createScheduledStopovers(stopovers);
                 ScheduledFlight scheduledFlightWithStopovers = convertToScheduledFlight(flight, scheduledStopovers);
 
@@ -130,7 +152,7 @@ public class ScheduledFlightConverter {
         // group by airline iata and unique lines
         Map<String, Map<String, List<ScheduledFlight>>> flightsByAirlineAndLine = mergedScheduledFlights.stream()
                 .collect(Collectors.groupingBy(ScheduledFlight::getAirlineIATA,
-                         Collectors.groupingBy(ScheduledFlight::getOperatingLine)));
+                        Collectors.groupingBy(ScheduledFlight::getOperatingLine)));
 
         // find and merge all flights belonging to equivalent lines, and update map
         for (Map.Entry<String, Map<String, List<ScheduledFlight>>> entry : flightsByAirlineAndLine.entrySet()) {
@@ -197,9 +219,9 @@ public class ScheduledFlightConverter {
                 .trimResults()
                 .omitEmptyStrings()
                 .splitToList(routeDesignation).stream()
-                    .map(String::toLowerCase)
-                    .map(iata -> stopPlaceDataSets.get(iata).getShortName())
-                    .collect(Collectors.toList());
+                .map(String::toLowerCase)
+                .map(iata -> stopPlaceDataSets.get(iata).getShortName())
+                .collect(Collectors.toList());
         return Joiner.on(DASH).skipNulls().join(airportNames);
     }
 
@@ -273,7 +295,7 @@ public class ScheduledFlightConverter {
             AirportIATA airportIata = AirportIATA.valueOf(airportIataCode);
             if (AirportIATA.LARGE_SIZED_AIRPORTS.contains(airportIata)) {
                 return new AirportWithSize(airportIata, 3);
-            } else if (AirportIATA.MEDIUM_SIZED_AIRPORTS.contains(airportIata))  {
+            } else if (AirportIATA.MEDIUM_SIZED_AIRPORTS.contains(airportIata)) {
                 return new AirportWithSize(airportIata, 2);
             } else {
                 return new AirportWithSize(airportIata, 1);
@@ -390,12 +412,12 @@ public class ScheduledFlightConverter {
         return nextFlight.getStd().isAfter(currentFlight.getSta());
     }
 
-    public List<ScheduledStopover> createScheduledStopovers(List<Triple<StopVisitType, String, OffsetTime>> stopovers) {
+    public List<ScheduledStopover> createScheduledStopovers(List<Triple<StopVisitType, String, LocalTime>> stopovers) {
         List<ScheduledStopover> multiLegFlights = Lists.newArrayList();
-        Triple<StopVisitType, String, OffsetTime> tempArrivalStopover = null;
+        Triple<StopVisitType, String, LocalTime> tempArrivalStopover = null;
 
-        for (ListIterator<Triple<StopVisitType, String, OffsetTime>> it = stopovers.listIterator(); it.hasNext(); ) {
-            Triple<StopVisitType, String, OffsetTime> stopover = it.next();
+        for (ListIterator<Triple<StopVisitType, String, LocalTime>> it = stopovers.listIterator(); it.hasNext(); ) {
+            Triple<StopVisitType, String, LocalTime> stopover = it.next();
 
             if (stopover.getLeft().equals(StopVisitType.DEPARTURE)) {
                 ScheduledStopover scheduledStopover = new ScheduledStopover();
@@ -430,7 +452,7 @@ public class ScheduledFlightConverter {
     }
 
     public List<Flight> findConnectingFlightLegs(Flight currentFlightLeg, Map<String, List<Flight>> flightsByDepartureAirportIata,
-            Map<String, List<Flight>> flightsByArrivalAirportIata, Set<BigInteger> distinctFlightLegIds) {
+                                                 Map<String, List<Flight>> flightsByArrivalAirportIata, Set<BigInteger> distinctFlightLegIds) {
 
         if (distinctFlightLegIds.contains(currentFlightLeg.getId())) {
             return Collections.emptyList();
@@ -493,14 +515,14 @@ public class ScheduledFlightConverter {
                 .findFirst();
     }
 
-    public List<Triple<StopVisitType, String, OffsetTime>> extractStopoversFromFlights(List<Flight> stopoverFlights) {
-        List<Triple<StopVisitType, String, OffsetTime>> stopoverTriples = new ArrayList<>();
+    public List<Triple<StopVisitType, String, LocalTime>> extractStopoversFromFlights(List<Flight> stopoverFlights) {
+        List<Triple<StopVisitType, String, LocalTime>> stopoverTriples = new ArrayList<>();
 
         stopoverFlights.forEach(stopoverFlight -> {
-            Triple<StopVisitType, String, OffsetTime> departureTriple = new ImmutableTriple<>(
+            Triple<StopVisitType, String, LocalTime> departureTriple = new ImmutableTriple<>(
                     StopVisitType.DEPARTURE, stopoverFlight.getDepartureStation(), stopoverFlight.getStd());
 
-            Triple<StopVisitType, String, OffsetTime> arrivalTriple = new ImmutableTriple<>(
+            Triple<StopVisitType, String, LocalTime> arrivalTriple = new ImmutableTriple<>(
                     StopVisitType.ARRIVAL, stopoverFlight.getArrivalStation(), stopoverFlight.getSta());
 
             stopoverTriples.add(departureTriple);
@@ -520,7 +542,7 @@ public class ScheduledFlightConverter {
         ScheduledFlight scheduledFlight = new ScheduledFlight();
         scheduledFlight.setAirlineIATA(flight.getAirlineDesignator());
         scheduledFlight.setAirlineFlightId(flight.getAirlineDesignator() + flight.getFlightNumber());
-        scheduledFlight.setDateOfOperation(flight.getDateOfOperation());
+        scheduledFlight.setDateOfOperation(dateUtils.toExportLocalDateTime(flight.getDateOfOperation()).toLocalDate());
 
         if (CollectionUtils.isNotEmpty(scheduledStopovers)) {
             scheduledFlight.getScheduledStopovers().addAll(scheduledStopovers);
@@ -537,8 +559,8 @@ public class ScheduledFlightConverter {
             scheduledFlight.setFlightId(flight.getId());
             scheduledFlight.setDepartureAirportIATA(flight.getDepartureStation());
             scheduledFlight.setArrivalAirportIATA(flight.getArrivalStation());
-            scheduledFlight.setTimeOfDeparture(flight.getStd());
-            scheduledFlight.setTimeOfArrival(flight.getSta());
+            scheduledFlight.setTimeOfDeparture(dateUtils.toExportLocalTime(flight.getDateOfOperation().with(flight.getStd())));
+            scheduledFlight.setTimeOfArrival(dateUtils.toExportLocalTime(flight.getDateOfOperation().with(flight.getSta())));
             String lineDesignation = joiner.join(scheduledFlight.getDepartureAirportIATA(), scheduledFlight.getArrivalAirportIATA());
             scheduledFlight.setLineDesignation(lineDesignation);
             scheduledFlight.setStopsDesignation(lineDesignation);

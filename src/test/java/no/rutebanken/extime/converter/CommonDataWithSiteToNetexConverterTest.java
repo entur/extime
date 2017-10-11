@@ -65,7 +65,7 @@ public class CommonDataWithSiteToNetexConverterTest {
     private void assertValidPublicationDelivery(PublicationDeliveryStructure publicationDelivery) {
         assertThat(publicationDelivery).isNotNull();
         assertThat(publicationDelivery.getVersion()).isEqualTo(NETEX_PROFILE_VERSION);
-        assertThat(publicationDelivery.getPublicationTimestamp()).isNotNull().isBefore(OffsetDateTime.now());
+        assertThat(publicationDelivery.getPublicationTimestamp()).isNotNull().isBefore(OffsetDateTime.now().toLocalDateTime());
         assertThat(publicationDelivery.getParticipantRef()).isEqualTo("Avinor");
         assertThat(publicationDelivery.getDataObjects()).isNotNull();
     }

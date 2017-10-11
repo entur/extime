@@ -1,6 +1,7 @@
 package no.rutebanken.extime.model;
 
 import java.math.BigInteger;
+import java.time.LocalTime;
 import java.time.OffsetTime;
 
 public class ScheduledStopover {
@@ -8,8 +9,8 @@ public class ScheduledStopover {
     private BigInteger id;
     private String airportIATA;
     private String airportName;
-    private OffsetTime arrivalTime;
-    private OffsetTime departureTime;
+    private LocalTime arrivalTime;
+    private LocalTime departureTime;
     private Boolean forAlighting;
     private Boolean forBoarding;
     private Integer order;
@@ -38,19 +39,19 @@ public class ScheduledStopover {
         this.airportName = airportName;
     }
 
-    public OffsetTime getArrivalTime() {
+    public LocalTime getArrivalTime() {
         return arrivalTime;
     }
 
-    public void setArrivalTime(OffsetTime arrivalTime) {
+    public void setArrivalTime(LocalTime arrivalTime) {
         this.arrivalTime = arrivalTime;
     }
 
-    public OffsetTime getDepartureTime() {
+    public LocalTime getDepartureTime() {
         return departureTime;
     }
 
-    public void setDepartureTime(OffsetTime departureTime) {
+    public void setDepartureTime(LocalTime departureTime) {
         this.departureTime = departureTime;
     }
 

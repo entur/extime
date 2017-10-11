@@ -4,16 +4,100 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import no.rutebanken.extime.config.NetexStaticDataSet;
 import no.rutebanken.extime.model.AvailabilityPeriod;
-import org.rutebanken.netex.model.*;
+import org.rutebanken.netex.model.AllVehicleModesOfTransportEnumeration;
+import org.rutebanken.netex.model.Authority;
+import org.rutebanken.netex.model.AuthorityRefStructure;
+import org.rutebanken.netex.model.AvailabilityCondition;
+import org.rutebanken.netex.model.Codespace;
+import org.rutebanken.netex.model.Codespaces_RelStructure;
+import org.rutebanken.netex.model.CompositeFrame;
+import org.rutebanken.netex.model.ContactStructure;
+import org.rutebanken.netex.model.DayOfWeekEnumeration;
+import org.rutebanken.netex.model.DayType;
+import org.rutebanken.netex.model.DayTypeAssignment;
+import org.rutebanken.netex.model.DayTypeAssignmentsInFrame_RelStructure;
+import org.rutebanken.netex.model.DayTypeRefStructure;
+import org.rutebanken.netex.model.DayTypeRefs_RelStructure;
+import org.rutebanken.netex.model.DayTypesInFrame_RelStructure;
+import org.rutebanken.netex.model.DestinationDisplay;
+import org.rutebanken.netex.model.DestinationDisplayRefStructure;
+import org.rutebanken.netex.model.DestinationDisplaysInFrame_RelStructure;
+import org.rutebanken.netex.model.Frames_RelStructure;
+import org.rutebanken.netex.model.GroupOfLines;
+import org.rutebanken.netex.model.GroupOfLinesRefStructure;
+import org.rutebanken.netex.model.GroupsOfLinesInFrame_RelStructure;
+import org.rutebanken.netex.model.JourneyPattern;
+import org.rutebanken.netex.model.JourneyPatternRefStructure;
+import org.rutebanken.netex.model.JourneyPatternsInFrame_RelStructure;
+import org.rutebanken.netex.model.JourneysInFrame_RelStructure;
+import org.rutebanken.netex.model.Line;
+import org.rutebanken.netex.model.LineRefStructure;
+import org.rutebanken.netex.model.LinesInFrame_RelStructure;
+import org.rutebanken.netex.model.LocaleStructure;
+import org.rutebanken.netex.model.MultilingualString;
+import org.rutebanken.netex.model.Network;
+import org.rutebanken.netex.model.ObjectFactory;
+import org.rutebanken.netex.model.OperatingPeriod;
+import org.rutebanken.netex.model.OperatingPeriodRefStructure;
+import org.rutebanken.netex.model.OperatingPeriod_VersionStructure;
+import org.rutebanken.netex.model.OperatingPeriodsInFrame_RelStructure;
+import org.rutebanken.netex.model.Operator;
+import org.rutebanken.netex.model.OperatorRefStructure;
+import org.rutebanken.netex.model.OrganisationTypeEnumeration;
+import org.rutebanken.netex.model.OrganisationsInFrame_RelStructure;
+import org.rutebanken.netex.model.PassengerStopAssignment;
+import org.rutebanken.netex.model.PointOnRoute;
+import org.rutebanken.netex.model.PointRefStructure;
+import org.rutebanken.netex.model.PointsInJourneyPattern_RelStructure;
+import org.rutebanken.netex.model.PointsOnRoute_RelStructure;
+import org.rutebanken.netex.model.PropertiesOfDay_RelStructure;
+import org.rutebanken.netex.model.PropertyOfDay;
+import org.rutebanken.netex.model.PublicationDeliveryStructure;
+import org.rutebanken.netex.model.QuayRefStructure;
+import org.rutebanken.netex.model.ResourceFrame;
+import org.rutebanken.netex.model.Route;
+import org.rutebanken.netex.model.RoutePoint;
+import org.rutebanken.netex.model.RoutePointRefStructure;
+import org.rutebanken.netex.model.RoutePointsInFrame_RelStructure;
+import org.rutebanken.netex.model.RouteRefStructure;
+import org.rutebanken.netex.model.RoutesInFrame_RelStructure;
+import org.rutebanken.netex.model.ScheduledStopPoint;
+import org.rutebanken.netex.model.ScheduledStopPointRefStructure;
+import org.rutebanken.netex.model.ScheduledStopPointsInFrame_RelStructure;
+import org.rutebanken.netex.model.ServiceCalendarFrame;
+import org.rutebanken.netex.model.ServiceFrame;
+import org.rutebanken.netex.model.ServiceJourney;
+import org.rutebanken.netex.model.SiteFrame;
+import org.rutebanken.netex.model.StopAssignmentsInFrame_RelStructure;
+import org.rutebanken.netex.model.StopPlace;
+import org.rutebanken.netex.model.StopPlaceRefStructure;
+import org.rutebanken.netex.model.StopPlacesInFrame_RelStructure;
+import org.rutebanken.netex.model.StopPointInJourneyPattern;
+import org.rutebanken.netex.model.StopPointInJourneyPatternRefStructure;
+import org.rutebanken.netex.model.TimetableFrame;
+import org.rutebanken.netex.model.TimetabledPassingTime;
+import org.rutebanken.netex.model.TimetabledPassingTimes_RelStructure;
+import org.rutebanken.netex.model.ValidityConditions_RelStructure;
+import org.rutebanken.netex.model.VersionFrameDefaultsStructure;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.xml.bind.JAXBElement;
 import java.math.BigInteger;
 import java.time.DayOfWeek;
-import java.time.OffsetDateTime;
-import java.time.OffsetTime;
-import java.util.*;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static no.rutebanken.extime.Constants.*;
@@ -27,6 +111,9 @@ public class NetexObjectFactory {
 
     @Autowired
     private NetexStaticDataSet netexStaticDataSet;
+
+    @Autowired
+    private DateUtils dateUtils;
 
     private static final String WORK_DAYS_DISPLAY_NAME = "Ukedager (mandag til fredag)";
     private static final String SATURDAY_DISPLAY_NAME = "Helgdag (lørdag)";
@@ -51,7 +138,7 @@ public class NetexObjectFactory {
     private Map<String, Route> routes = new HashMap<>();
     private Map<String, DestinationDisplay> destinationDisplays = new HashMap<>();
 
-    public PublicationDeliveryStructure createPublicationDeliveryStructure(OffsetDateTime publicationTimestamp, JAXBElement<CompositeFrame> compositeFrame, String lineName) {
+    public PublicationDeliveryStructure createPublicationDeliveryStructure(Instant publicationTimestamp, JAXBElement<CompositeFrame> compositeFrame, String lineName) {
         NetexStaticDataSet.OrganisationDataSet avinorDataSet = netexStaticDataSet.getOrganisations().get(AVINOR_XMLNS.toLowerCase());
         PublicationDeliveryStructure.DataObjects dataObjects = objectFactory.createPublicationDeliveryStructureDataObjects();
         dataObjects.getCompositeFrameOrCommonFrame().add(compositeFrame);
@@ -59,14 +146,14 @@ public class NetexObjectFactory {
 
         return objectFactory.createPublicationDeliveryStructure()
                 .withVersion(NETEX_PROFILE_VERSION)
-                .withPublicationTimestamp(publicationTimestamp)
+                .withPublicationTimestamp(dateUtils.toExportLocalDateTime(publicationTimestamp))
                 .withParticipantRef(avinorDataSet.getName())
                 .withDescription(description)
                 .withDataObjects(dataObjects);
     }
 
     public JAXBElement<PublicationDeliveryStructure> createPublicationDeliveryStructureElement(
-            OffsetDateTime publicationTimestamp, JAXBElement<CompositeFrame> compositeFrame, String description) {
+            Instant publicationTimestamp, JAXBElement<CompositeFrame> compositeFrame, String description) {
 
         NetexStaticDataSet.OrganisationDataSet avinorDataSet = netexStaticDataSet.getOrganisations().get(AVINOR_XMLNS.toLowerCase());
 
@@ -75,7 +162,7 @@ public class NetexObjectFactory {
 
         PublicationDeliveryStructure publicationDeliveryStructure = objectFactory.createPublicationDeliveryStructure()
                 .withVersion(NETEX_PROFILE_VERSION)
-                .withPublicationTimestamp(publicationTimestamp)
+                .withPublicationTimestamp(dateUtils.toExportLocalDateTime(publicationTimestamp))
                 .withParticipantRef(avinorDataSet.getName())
                 //.withDescription(createMultilingualString(description)) // TODO find out if needed
                 .withDataObjects(dataObjects);
@@ -83,7 +170,7 @@ public class NetexObjectFactory {
         return objectFactory.createPublicationDelivery(publicationDeliveryStructure);
     }
 
-    public JAXBElement<CompositeFrame> createCompositeFrame(OffsetDateTime publicationTimestamp,
+    public JAXBElement<CompositeFrame> createCompositeFrame(Instant publicationTimestamp,
             AvailabilityPeriod availabilityPeriod, String airlineIata, String lineDesignation, Frames_RelStructure frames) {
 
         ValidityConditions_RelStructure validityConditionsStruct = objectFactory.createValidityConditions_RelStructure()
@@ -107,7 +194,7 @@ public class NetexObjectFactory {
 
         CompositeFrame compositeFrame = objectFactory.createCompositeFrame()
                 .withVersion(VERSION_ONE)
-                .withCreated(publicationTimestamp)
+                .withCreated(dateUtils.toExportLocalDateTime(publicationTimestamp))
                 .withId(compositeFrameId)
                 .withValidityConditions(validityConditionsStruct)
                 .withCodespaces(codespaces)
@@ -117,7 +204,7 @@ public class NetexObjectFactory {
         return objectFactory.createCompositeFrame(compositeFrame);
     }
 
-    public JAXBElement<CompositeFrame> createCompositeFrameElement(OffsetDateTime publicationTimestamp, Frames_RelStructure frames, AvailabilityPeriod availabilityPeriod, Codespace... codespaces) {
+    public JAXBElement<CompositeFrame> createCompositeFrameElement(Instant publicationTimestamp, Frames_RelStructure frames, AvailabilityPeriod availabilityPeriod, Codespace... codespaces) {
 
         ValidityConditions_RelStructure validityConditionsStruct = objectFactory.createValidityConditions_RelStructure()
                 .withValidityConditionRefOrValidBetweenOrValidityCondition_(createAvailabilityCondition(availabilityPeriod));
@@ -137,7 +224,7 @@ public class NetexObjectFactory {
 
         CompositeFrame compositeFrame = objectFactory.createCompositeFrame()
                 .withVersion(VERSION_ONE)
-                .withCreated(publicationTimestamp)
+                .withCreated(dateUtils.toExportLocalDateTime(publicationTimestamp))
                 .withId(compositeFrameId)
                 .withValidityConditions(validityConditionsStruct)
                 .withCodespaces(codespacesStruct)
@@ -241,8 +328,8 @@ public class NetexObjectFactory {
         return objectFactory.createServiceFrame(serviceFrame);
     }
 
-    public JAXBElement<ServiceFrame> createServiceFrame(OffsetDateTime publicationTimestamp, String airlineName,
-            String airlineIata, List<Route> routes, Line line, List<DestinationDisplay> destinationDisplays, List<JourneyPattern> journeyPatterns) {
+    public JAXBElement<ServiceFrame> createServiceFrame(Instant publicationTimestamp, String airlineName,
+                                                        String airlineIata, List<Route> routes, Line line, List<DestinationDisplay> destinationDisplays, List<JourneyPattern> journeyPatterns) {
 
         Network network = null;
         if (!isCommonDesignator(airlineIata)) {
@@ -284,6 +371,8 @@ public class NetexObjectFactory {
 
         return objectFactory.createServiceFrame(serviceFrame);
     }
+
+
 
     public JAXBElement<TimetableFrame> createTimetableFrame(List<ServiceJourney> serviceJourneys) {
         JourneysInFrame_RelStructure journeysInFrameRelStructure = objectFactory.createJourneysInFrame_RelStructure();
@@ -347,7 +436,7 @@ public class NetexObjectFactory {
         return objectFactory.createAvailabilityCondition(availabilityCondition);
     }
 
-    public Network createNetwork(OffsetDateTime publicationTimestamp, String airlineIata, String airlineName) {
+    public Network createNetwork(Instant publicationTimestamp, String airlineIata, String airlineName) {
         NetexStaticDataSet.OrganisationDataSet avinorDataSet = netexStaticDataSet.getOrganisations()
                 .get(AVINOR_XMLNS.toLowerCase());
 
@@ -374,7 +463,7 @@ public class NetexObjectFactory {
 
         return objectFactory.createNetwork()
                 .withVersion(VERSION_ONE)
-                .withChanged(publicationTimestamp)
+                .withChanged(dateUtils.toExportLocalDateTime(publicationTimestamp))
                 .withId(networkId)
                 .withName(createMultilingualString(airlineName))
                 .withTransportOrganisationRef(objectFactory.createAuthorityRef(authorityRefStruct));
@@ -661,11 +750,11 @@ public class NetexObjectFactory {
                 .withId(dayTypeId);
     }
 
-    public OperatingPeriod createOperatingPeriod(String operatingPeriodId,OffsetDateTime from, OffsetDateTime to){
-        return new OperatingPeriod().withId(operatingPeriodId).withVersion(VERSION_ONE).withFromDate(from).withToDate(to);
+    public OperatingPeriod createOperatingPeriod(String operatingPeriodId,LocalDate from, LocalDate to){
+        return new OperatingPeriod().withId(operatingPeriodId).withVersion(VERSION_ONE).withFromDate(from.atStartOfDay()).withToDate(to.atStartOfDay());
     }
 
-    public DayTypeAssignment createDayTypeAssignment(String objectId, Integer order, OffsetDateTime dateOfOperation, String dayTypeId, boolean available) {
+    public DayTypeAssignment createDayTypeAssignment(String objectId, Integer order, LocalDate dateOfOperation, String dayTypeId, boolean available) {
         String dayTypeAssignmentId = NetexObjectIdCreator.createDayTypeAssignmentId(AVINOR_XMLNS, objectId);
 
         DayTypeRefStructure dayTypeRefStruct = createDayTypeRefStructure(dayTypeId);
@@ -675,7 +764,7 @@ public class NetexObjectFactory {
                 .withVersion(VERSION_ONE)
                 .withId(dayTypeAssignmentId)
                 .withOrder(BigInteger.valueOf(order))
-                .withDate(dateOfOperation)
+                .withDate(dateOfOperation == null ? null : dateOfOperation.atStartOfDay())
                 .withDayTypeRef(dayTypeRefStructElement);
 
         if (!available) {

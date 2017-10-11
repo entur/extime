@@ -30,21 +30,32 @@ public class DateUtils {
             .parseDefaulting(ChronoField.OFFSET_SECONDS,OffsetDateTime.now().getLong(ChronoField.OFFSET_SECONDS) )
             .toFormatter();
 
-	public static OffsetDateTime parseDate(String dateWithZone) {
-		return OffsetDateTime.parse(dateWithZone, formatter);
+	public static ZonedDateTime parseDate(String dateWithZone) {
+		return ZonedDateTime.parse(dateWithZone, formatter);
 	}
 	
     @Value("${avinor.timetable.period.months}") int numberOfMonthsInPeriod;
     @Value("${avinor.timetable.max.range}") int maxRangeDays;
     @Value("${avinor.timetable.min.range}") int minRangeDays;
+    @Value("${netex.export.time.zone.id:CET}")
+    private ZoneId exportZoneId;
+
+    public LocalDateTime toExportLocalDateTime(Instant instant) {
+        return LocalDateTime.ofInstant(instant, exportZoneId);
+    }
+
+    public LocalDateTime toExportLocalDateTime(ZonedDateTime zonedDateTime){
+        return zonedDateTime.withZoneSameInstant(exportZoneId).toLocalDateTime();
+    }
+
+    public LocalTime toExportLocalTime(ZonedDateTime zonedDateTime){
+        return zonedDateTime.withZoneSameInstant(exportZoneId).toLocalTime();
+    }
 
     public AvailabilityPeriod generateAvailabilityPeriod() {
         LocalDate requestPeriodFromDate = LocalDate.now(ZoneId.of(DEFAULT_ZONE_ID));
         LocalDate requestPeriodToDate = requestPeriodFromDate.plusMonths(numberOfMonthsInPeriod);
-        OffsetTime offsetMidnight = OffsetTime.parse(OFFSET_MIDNIGHT_UTC).withOffsetSameLocal(ZoneOffset.UTC);
-        OffsetDateTime requestPeriodFromDateTime = requestPeriodFromDate.atTime(offsetMidnight);
-        OffsetDateTime requestPeriodToDateTime = requestPeriodToDate.atTime(offsetMidnight);
-        return new AvailabilityPeriod(requestPeriodFromDateTime, requestPeriodToDateTime);
+        return new AvailabilityPeriod(requestPeriodFromDate.atStartOfDay(), requestPeriodToDate.atStartOfDay());
     }
 
     public void generateDateRanges(Exchange exchange) {

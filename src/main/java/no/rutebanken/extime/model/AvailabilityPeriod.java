@@ -1,12 +1,12 @@
 package no.rutebanken.extime.model;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 
 public class AvailabilityPeriod {
-    private OffsetDateTime periodFromDateTime;
-    private OffsetDateTime periodToDateTime;
+    private LocalDateTime periodFromDateTime;
+    private LocalDateTime periodToDateTime;
 
-    public AvailabilityPeriod(OffsetDateTime periodFromDateTime, OffsetDateTime periodToDateTime) throws IllegalArgumentException {
+    public AvailabilityPeriod(LocalDateTime periodFromDateTime, LocalDateTime periodToDateTime) throws IllegalArgumentException {
         if (periodFromDateTime.isAfter(periodToDateTime)) {
             throw new IllegalArgumentException("From date cannot be after to date");
         }
@@ -14,19 +14,19 @@ public class AvailabilityPeriod {
         this.periodToDateTime = periodToDateTime;
     }
 
-    public OffsetDateTime getPeriodFromDateTime() {
+    public LocalDateTime getPeriodFromDateTime() {
         return periodFromDateTime;
     }
 
-    public void setPeriodFromDateTime(OffsetDateTime periodFromDateTime) {
+    public void setPeriodFromDateTime(LocalDateTime periodFromDateTime) {
         this.periodFromDateTime = periodFromDateTime;
     }
 
-    public OffsetDateTime getPeriodToDateTime() {
+    public LocalDateTime getPeriodToDateTime() {
         return periodToDateTime;
     }
 
-    public void setPeriodToDateTime(OffsetDateTime periodToDateTime) {
+    public void setPeriodToDateTime(LocalDateTime periodToDateTime) {
         this.periodToDateTime = periodToDateTime;
     }
 

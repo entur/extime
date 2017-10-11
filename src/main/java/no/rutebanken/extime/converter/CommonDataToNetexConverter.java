@@ -49,7 +49,7 @@ public class CommonDataToNetexConverter {
 
     public JAXBElement<PublicationDeliveryStructure> convertToNetex() throws Exception {
         logger.info("Converting common data to NeTEx");
-        OffsetDateTime publicationTimestamp = OffsetDateTime.ofInstant(Instant.now(), ZoneId.of(DEFAULT_ZONE_ID));
+        Instant publicationTimestamp = Instant.now();
 
         Codespace avinorCodespace = netexObjectFactory.createCodespace(AVINOR_XMLNS, AVINOR_XMLNSURL);
         Codespace nsrCodespace = netexObjectFactory.createCodespace(NSR_XMLNS, NSR_XMLNSURL);

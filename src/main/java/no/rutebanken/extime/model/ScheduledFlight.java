@@ -5,8 +5,10 @@ import static no.rutebanken.extime.Constants.EMPTY;
 
 import java.math.BigInteger;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -26,9 +28,9 @@ public class ScheduledFlight {
     private String arrivalAirportIATA;
     private String departureAirportName;
     private String arrivalAirportName;
-    private OffsetDateTime dateOfOperation;
-    private OffsetTime timeOfDeparture;
-    private OffsetTime timeOfArrival;
+    private LocalDate dateOfOperation;
+    private LocalTime timeOfDeparture;
+    private LocalTime timeOfArrival;
     private String lineDesignation;
     private String stopsDesignation;
     private String timesDesignation;
@@ -98,29 +100,27 @@ public class ScheduledFlight {
         this.arrivalAirportName = arrivalAirportName;
     }
 
-   
+    public LocalDate getDateOfOperation() {
+        return dateOfOperation;
+    }
 
-    public OffsetDateTime getDateOfOperation() {
-		return dateOfOperation;
-	}
+    public void setDateOfOperation(LocalDate dateOfOperation) {
+        this.dateOfOperation = dateOfOperation;
+    }
 
-	public void setDateOfOperation(OffsetDateTime dateOfOperation) {
-		this.dateOfOperation = dateOfOperation;
-	}
-
-	public OffsetTime getTimeOfDeparture() {
+    public LocalTime getTimeOfDeparture() {
         return timeOfDeparture;
     }
 
-    public void setTimeOfDeparture(OffsetTime timeOfDeparture) {
+    public void setTimeOfDeparture(LocalTime timeOfDeparture) {
         this.timeOfDeparture = timeOfDeparture;
     }
 
-    public OffsetTime getTimeOfArrival() {
+    public LocalTime getTimeOfArrival() {
         return timeOfArrival;
     }
 
-    public void setTimeOfArrival(OffsetTime timeOfArrival) {
+    public void setTimeOfArrival(LocalTime timeOfArrival) {
         this.timeOfArrival = timeOfArrival;
     }
 

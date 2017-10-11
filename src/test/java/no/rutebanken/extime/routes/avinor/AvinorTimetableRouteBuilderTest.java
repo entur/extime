@@ -13,8 +13,11 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
@@ -36,6 +39,7 @@ import org.apache.camel.impl.JndiRegistry;
 import org.apache.camel.model.ProcessorDefinition;
 import org.apache.camel.test.junit4.CamelTestSupport;
 import org.apache.camel.util.jndi.JndiContext;
+import org.apache.tomcat.jni.Local;
 import org.assertj.core.api.Assertions;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -183,7 +187,7 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
                 createRange("2017-01-15", "2017-01-29")
         );
 
-        Map<String,Object> headers = Maps.newHashMap();
+        Map<String, Object> headers = Maps.newHashMap();
         headers.put(HEADER_EXTIME_RESOURCE_CODE, "BGO");
         headers.put(HEADER_TIMETABLE_LARGE_AIRPORT_RANGE, ranges);
         template.sendBodyAndHeaders("direct:fetchTimetableForAirport", null, headers);
@@ -209,7 +213,7 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         getMockEndpoint("mock:smallAirportLogger").expectedMessageCount(1);
         getMockEndpoint("mock:direct:fetchTimetableForAirportByRanges").expectedMessageCount(1);
 
-        Map<String,Object> headers = Maps.newHashMap();
+        Map<String, Object> headers = Maps.newHashMap();
         headers.put(HEADER_EXTIME_RESOURCE_CODE, "EVE");
         headers.put(HEADER_TIMETABLE_SMALL_AIRPORT_RANGE, Lists.newArrayList(createRange("2017-01-01", "2017-01-31")));
 
@@ -278,7 +282,7 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
                 "airport=TRD&direction=D&PeriodFrom=2017-01-01Z&PeriodTo=2017-01-31Z");
         getMockEndpoint("mock:splitAndJoinEndpoint").expectedMessageCount(2);
 
-        Map<String,Object> headers = Maps.newHashMap();
+        Map<String, Object> headers = Maps.newHashMap();
         headers.put(HEADER_EXTIME_RESOURCE_CODE, "TRD");
         headers.put(HEADER_LOWER_RANGE_ENDPOINT, "2017-01-01Z");
         headers.put(HEADER_UPPER_RANGE_ENDPOINT, "2017-01-31Z");
@@ -301,7 +305,7 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         getMockEndpoint("mock:flightSplitWireTap").expectedMessageCount(12);
 
         InputStream inputStream = new FileInputStream("target/classes/xml/scheduled-flights.xml");
-        List<Flight> flights  = (List<Flight>) splitJoinFlightsTemplate.requestBodyAndHeader(
+        List<Flight> flights = (List<Flight>) splitJoinFlightsTemplate.requestBodyAndHeader(
                 inputStream, HEADER_TIMETABLE_STOP_VISIT_TYPE, StopVisitType.DEPARTURE);
 
         assertMockEndpointsSatisfied();
@@ -326,7 +330,7 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         getMockEndpoint("mock:flightSplitWireTap").expectedMessageCount(24);
 
         InputStream inputStream = new FileInputStream("target/classes/xml/scheduled-arrivals-trd.xml");
-        List<Flight> flights  = (List<Flight>) splitJoinFlightsTemplate.requestBodyAndHeader(
+        List<Flight> flights = (List<Flight>) splitJoinFlightsTemplate.requestBodyAndHeader(
                 inputStream, HEADER_TIMETABLE_STOP_VISIT_TYPE, StopVisitType.ARRIVAL);
 
         assertMockEndpointsSatisfied();
@@ -374,8 +378,8 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         getMockEndpoint("mock:file:target/netex").expectedBodiesReceived(createPublicationDelivery(), createPublicationDelivery());
 
         List<ScheduledFlight> scheduledFlights = Lists.newArrayList(
-                createScheduledFlight("WF", "WF739", OffsetDateTime.now()),
-                createScheduledFlight("SK", "SK1038", OffsetDateTime.now())
+                createScheduledFlight("WF", "WF739", LocalDate.now()),
+                createScheduledFlight("SK", "SK1038", LocalDate.now())
         );
 
         template.sendBody("direct:convertScheduledFlightsToNetex", scheduledFlights);
@@ -389,13 +393,13 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
 
     private List<Flight> createDummyFlights() {
         return Lists.newArrayList(
-                createDummyFlight(1L, "SK", "4455", DateUtils.parseDate("2017-01-01"), "BGO", OffsetTime.MIN, "OSL", OffsetTime.MAX),
-                createDummyFlight(2L, "DY", "6677", DateUtils.parseDate("2017-01-02"), "BGO", OffsetTime.MIN, "TRD", OffsetTime.MAX),
-                createDummyFlight(3L, "WF", "199", DateUtils.parseDate("2017-01-03"), "BGO", OffsetTime.MIN, "SVG", OffsetTime.MAX)
+                createDummyFlight(1L, "SK", "4455", DateUtils.parseDate("2017-01-01"), "BGO", LocalTime.of(0, 0), "OSL", LocalTime.of(23, 59)),
+                createDummyFlight(2L, "DY", "6677", DateUtils.parseDate("2017-01-02"), "BGO", LocalTime.of(0, 0), "TRD", LocalTime.of(23, 59)),
+                createDummyFlight(3L, "WF", "199", DateUtils.parseDate("2017-01-03"), "BGO", LocalTime.of(0, 0), "SVG", LocalTime.of(23, 59))
         );
     }
 
-    private ScheduledFlight createScheduledFlight(String airlineIATA, String airlineFlightId, OffsetDateTime dateOfOperation) {
+    private ScheduledFlight createScheduledFlight(String airlineIATA, String airlineFlightId, LocalDate dateOfOperation) {
         ScheduledFlight scheduledFlight = new ScheduledFlight();
         scheduledFlight.setAirlineIATA(airlineIATA);
         scheduledFlight.setAirlineFlightId(airlineFlightId);
@@ -404,13 +408,13 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         scheduledFlight.setDepartureAirportName("");
         scheduledFlight.setArrivalAirportIATA("");
         scheduledFlight.setArrivalAirportName("");
-        scheduledFlight.setTimeOfDeparture(OffsetTime.MIN);
-        scheduledFlight.setTimeOfArrival(OffsetTime.MAX);
+        scheduledFlight.setTimeOfDeparture(LocalTime.of(0,0));
+        scheduledFlight.setTimeOfArrival(LocalTime.of(23,59));
         return scheduledFlight;
     }
 
-    private Flight createDummyFlight(long dummyId, String dummyDesignator, String dummyFlightNumber, OffsetDateTime dummyDateOfOperation,
-                                     String dummyDepartureStation, OffsetTime dummyDepartureTime, String dummyArrivalStation, OffsetTime dummyArrivalTime) {
+    private Flight createDummyFlight(long dummyId, String dummyDesignator, String dummyFlightNumber, ZonedDateTime dummyDateOfOperation,
+                                     String dummyDepartureStation, LocalTime dummyDepartureTime, String dummyArrivalStation, LocalTime dummyArrivalTime) {
         return new Flight() {{
             setId(BigInteger.valueOf(dummyId));
             setAirlineDesignator(dummyDesignator);
@@ -427,7 +431,7 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         ObjectFactory objectFactory = new ObjectFactory();
         PublicationDeliveryStructure publicationDeliveryStructure1 = objectFactory.createPublicationDeliveryStructure()
                 .withVersion("1.0")
-                .withPublicationTimestamp(DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse("2016-08-16T08:24:21Z", OffsetDateTime::from))
+                .withPublicationTimestamp(DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse("2016-08-16T08:24:21Z", LocalDateTime::from))
                 .withParticipantRef("AVI");
         return objectFactory.createPublicationDelivery(publicationDeliveryStructure1);
     }
@@ -436,7 +440,7 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         ObjectFactory objectFactory = new ObjectFactory();
         return objectFactory.createPublicationDeliveryStructure()
                 .withVersion("1.0")
-                .withPublicationTimestamp(DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse("2016-08-16T08:24:21Z", OffsetDateTime::from))
+                .withPublicationTimestamp(DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse("2016-08-16T08:24:21Z", LocalDateTime::from))
                 .withParticipantRef("AVI");
     }
 

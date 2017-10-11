@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.*;
 import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -96,7 +97,7 @@ public class AvinorTimetableUtils {
     public JAXBElement<Flights> createFlightsElement(List<Flight> flightList) {
         ObjectFactory objectFactory = new ObjectFactory();
         Flights flights = objectFactory.createFlights();
-        flights.setTime(OffsetDateTime.now());
+        flights.setTime(ZonedDateTime.now());
         flights.setAirport("OSL");
         flightList.forEach(flight -> flights.getFlight().add(flight));
         return objectFactory.createFlights(flights);
