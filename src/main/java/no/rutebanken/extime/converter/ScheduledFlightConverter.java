@@ -38,6 +38,7 @@ import javax.annotation.PostConstruct;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.time.LocalTime;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -129,7 +130,7 @@ public class ScheduledFlightConverter {
             }
             if (isMultiLegFlightRoute(connectingFlightLegs)) {
                 List<Triple<StopVisitType, String, LocalTime>> stopovers = extractStopoversFromFlights(connectingFlightLegs);
-                List<ScheduledStopover> scheduledStopovers = createScheduledStopovers(stopovers);
+                List<ScheduledStopover> scheduledStopovers = createScheduledStopovers(stopovers, flight.getDateOfOperation());
                 ScheduledFlight scheduledFlightWithStopovers = convertToScheduledFlight(flight, scheduledStopovers);
 
                 if (scheduledFlightWithStopovers != null) {
@@ -412,7 +413,7 @@ public class ScheduledFlightConverter {
         return nextFlight.getStd().isAfter(currentFlight.getSta());
     }
 
-    public List<ScheduledStopover> createScheduledStopovers(List<Triple<StopVisitType, String, LocalTime>> stopovers) {
+    public List<ScheduledStopover> createScheduledStopovers(List<Triple<StopVisitType, String, LocalTime>> stopovers, ZonedDateTime dateOfOperation) {
         List<ScheduledStopover> multiLegFlights = Lists.newArrayList();
         Triple<StopVisitType, String, LocalTime> tempArrivalStopover = null;
 
@@ -422,10 +423,10 @@ public class ScheduledFlightConverter {
             if (stopover.getLeft().equals(StopVisitType.DEPARTURE)) {
                 ScheduledStopover scheduledStopover = new ScheduledStopover();
                 scheduledStopover.setAirportIATA(stopover.getMiddle());
-                scheduledStopover.setDepartureTime(stopover.getRight());
+                scheduledStopover.setDepartureTime(dateUtils.toExportLocalTime(dateOfOperation.with(stopover.getRight())));
 
                 if (tempArrivalStopover != null) {
-                    scheduledStopover.setArrivalTime(tempArrivalStopover.getRight());
+                    scheduledStopover.setArrivalTime(dateUtils.toExportLocalTime(dateOfOperation.with(tempArrivalStopover.getRight())));
                 }
 
                 multiLegFlights.add(scheduledStopover);
@@ -433,7 +434,7 @@ public class ScheduledFlightConverter {
                 if (!it.hasNext()) {
                     ScheduledStopover scheduledStopover = new ScheduledStopover();
                     scheduledStopover.setAirportIATA(stopover.getMiddle());
-                    scheduledStopover.setArrivalTime(stopover.getRight());
+                    scheduledStopover.setArrivalTime(dateUtils.toExportLocalTime(dateOfOperation.with(stopover.getRight())));
                     multiLegFlights.add(scheduledStopover);
                 } else {
                     tempArrivalStopover = stopover;
