@@ -17,7 +17,6 @@ public final class Constants {
     // date/period specific constants
     public static final String DEFAULT_DATE_TIME_PATTERN = "yyyy-MM-dd";
     public static final String DAY_TYPE_PATTERN = "MMM_EEE_dd";
-    public static final String OFFSET_MIDNIGHT_UTC = "00:00:00Z";
 
     // netex specific constants
     public static final String NETEX_PROFILE_VERSION = "1.04:NO-NeTEx-networktimetable:1.0";

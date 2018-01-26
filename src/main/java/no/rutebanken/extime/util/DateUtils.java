@@ -7,7 +7,13 @@ import org.apache.camel.Exchange;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.time.*;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
@@ -15,7 +21,6 @@ import java.time.temporal.TemporalAccessor;
 import java.util.List;
 
 import static no.rutebanken.extime.Constants.DEFAULT_ZONE_ID;
-import static no.rutebanken.extime.Constants.OFFSET_MIDNIGHT_UTC;
 import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEADER_TIMETABLE_LARGE_AIRPORT_RANGE;
 import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEADER_TIMETABLE_SMALL_AIRPORT_RANGE;
 

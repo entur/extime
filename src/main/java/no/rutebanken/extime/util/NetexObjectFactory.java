@@ -662,9 +662,6 @@ public class NetexObjectFactory {
 
         String serviceJourneyId = NetexObjectIdCreator.createServiceJourneyId(AVINOR_XMLNS, objectId);
 
-        TimetabledPassingTime departurePassingTime = passingTimesRelStruct.getTimetabledPassingTime().get(0);
-        //OffsetTime departureTime = departurePassingTime.getDepartureTime();
-
         JourneyPatternRefStructure journeyPatternRefStruct = objectFactory.createJourneyPatternRefStructure()
                 .withVersion(VERSION_ONE)
                 .withRef(journeyPatternId);
