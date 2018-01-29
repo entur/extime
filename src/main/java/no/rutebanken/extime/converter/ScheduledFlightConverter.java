@@ -485,6 +485,8 @@ public class ScheduledFlightConverter {
         List<Flight> flightLegsForIata = flightsByArrivalAirportIata.get(departureAirportIata);
         Predicate<Flight> flightPredicate = FlightPredicate.matchPreviousFlight(currentFlightLeg);
 
+        logger.info("Attempting to find previous flight legs for flight leg: "+ currentFlightLeg);
+
         Optional<Flight> optionalFlightLeg = findOptionalConnectingFlightLeg(flightPredicate, flightLegsForIata);
         optionalFlightLeg.ifPresent(flight -> {
             Flight flightLeg = optionalFlightLeg.get();
