@@ -50,6 +50,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
@@ -113,6 +114,8 @@ public class ScheduledFlightConverter {
             filteredFlights = filterFlightsWithInfrequentDesignator(scheduledFlights); // TODO temp fix removing flights with infrequent airline designators
         }
 
+        filteredFlights = filterFlightsWithArrivalAtDepartureStation(filteredFlights);
+
         Map<String, List<Flight>> flightsByDepartureAirport = filteredFlights.stream()
                 .collect(Collectors.groupingBy(Flight::getDepartureStation));
 
@@ -168,6 +171,13 @@ public class ScheduledFlightConverter {
         }
 
         return lineDataSets;
+    }
+
+    /**
+     * Remove any flights where departure station and arrival station are the same. Causes loops in conversion and are probably not relevant (if event correct).
+     */
+    private List<Flight> filterFlightsWithArrivalAtDepartureStation(List<Flight> filteredFlights) {
+        return filteredFlights.stream().filter(flight -> !Objects.equals(flight.getDepartureStation(), flight.getArrivalStation())).collect(Collectors.toList());
     }
 
     private LineDataSet populateFlightLineDataSet(String airlineIata, Map.Entry<String, List<ScheduledFlight>> flightsByLineEntry) {
