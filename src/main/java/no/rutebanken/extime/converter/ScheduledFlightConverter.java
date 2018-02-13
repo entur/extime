@@ -495,14 +495,16 @@ public class ScheduledFlightConverter {
         List<Flight> flightLegsForIata = flightsByArrivalAirportIata.get(departureAirportIata);
         Predicate<Flight> flightPredicate = FlightPredicate.matchPreviousFlight(currentFlightLeg);
 
-        logger.debug("Attempting to find previous flight legs for flight leg: "+ currentFlightLeg);
+        logger.debug("Attempting to find previous flight legs for flight leg: " + currentFlightLeg);
 
-        Optional<Flight> optionalFlightLeg = findOptionalConnectingFlightLeg(flightPredicate, flightLegsForIata);
-        optionalFlightLeg.ifPresent(flight -> {
-            Flight flightLeg = optionalFlightLeg.get();
-            previousFlightLegs.add(flightLeg);
-            findPreviousFlightLegs(flightLeg, flightsByArrivalAirportIata, previousFlightLegs);
-        });
+        if (flightLegsForIata != null) {
+            Optional<Flight> optionalFlightLeg = findOptionalConnectingFlightLeg(flightPredicate, flightLegsForIata);
+            optionalFlightLeg.ifPresent(flight -> {
+                Flight flightLeg = optionalFlightLeg.get();
+                previousFlightLegs.add(flightLeg);
+                findPreviousFlightLegs(flightLeg, flightsByArrivalAirportIata, previousFlightLegs);
+            });
+        }
 
         return previousFlightLegs;
     }
@@ -512,12 +514,14 @@ public class ScheduledFlightConverter {
         List<Flight> flightLegsForIata = flightsByDepartureAirportIata.get(arrivalAirportIata);
         Predicate<Flight> flightPredicate = FlightPredicate.matchNextFlight(currentFlightLeg);
 
-        Optional<Flight> optionalFlightLeg = findOptionalConnectingFlightLeg(flightPredicate, flightLegsForIata);
-        optionalFlightLeg.ifPresent(flight -> {
-            Flight flightLeg = optionalFlightLeg.get();
-            nextFlightLegs.add(flightLeg);
-            findNextFlightLegs(flightLeg, flightsByDepartureAirportIata, nextFlightLegs);
-        });
+        if (flightLegsForIata != null) {
+            Optional<Flight> optionalFlightLeg = findOptionalConnectingFlightLeg(flightPredicate, flightLegsForIata);
+            optionalFlightLeg.ifPresent(flight -> {
+                Flight flightLeg = optionalFlightLeg.get();
+                nextFlightLegs.add(flightLeg);
+                findNextFlightLegs(flightLeg, flightsByDepartureAirportIata, nextFlightLegs);
+            });
+        }
 
         return nextFlightLegs;
     }
