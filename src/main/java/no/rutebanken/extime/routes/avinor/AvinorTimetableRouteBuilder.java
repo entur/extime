@@ -62,15 +62,12 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
 
         JaxbDataFormat jaxbDataFormat = new JaxbDataFormat();
         jaxbDataFormat.setContextPath(PublicationDeliveryStructure.class.getPackage().getName());
-        jaxbDataFormat.setSchema("classpath:/xsd/NeTEx-XML-1.04beta/schema/xsd/NeTEx_publication.xsd"); // TODO use schema from netex-java-model instead
-        //jaxbDataFormat.setNamespacePrefixRef(NAMESPACE_PREFIX_REF);
+
         jaxbDataFormat.setPrettyPrint(true);
         jaxbDataFormat.setEncoding("UTF-8");
 
         JaxbDataFormat flightsJaxbDataFormat = new JaxbDataFormat();
         flightsJaxbDataFormat.setContextPath(Flights.class.getPackage().getName());
-        jaxbDataFormat.setPrettyPrint(true);
-        jaxbDataFormat.setEncoding("UTF-8");
 
         from("{{avinor.timetable.scheduler.consumer}}")
                 .routeId("AvinorTimetableSchedulerStarter")
@@ -103,6 +100,10 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                     .log(LoggingLevel.DEBUG, this.getClass().getName(), "==========================================")
                     .log(LoggingLevel.DEBUG, this.getClass().getName(), "Processing airport with IATA code: ${body}")
                     .setHeader(HEADER_EXTIME_RESOURCE_CODE, simple("${body}"))
+
+
+                .filter(simple("${body.name} == 'BOO'"))
+
                     .to("direct:fetchTimetableForAirport").id("FetchTimetableProcessor")
                     .log(LoggingLevel.DEBUG, this.getClass().getName(), "Flights fetched for ${header.ExtimeResourceCode}")
                 .end()
