@@ -115,61 +115,66 @@ public class LineDataToNetexConverter {
 
 
     public JAXBElement<PublicationDeliveryStructure> convertToNetex(LineDataSet lineDataSet) throws Exception {
-        if (netexObjectFactory != null) {
-            netexObjectFactory.clearReferentials();
+        try {
+            if (netexObjectFactory != null) {
+                netexObjectFactory.clearReferentials();
+            }
+
+            localContext.put(AIRLINE_IATA, lineDataSet.getAirlineIata());
+            localContext.put(LINE_DESIGNATION, lineDataSet.getLineDesignation());
+
+            Instant publicationTimestamp = Instant.now();
+            AvailabilityPeriod availabilityPeriod = lineDataSet.getAvailabilityPeriod();
+            String airlineIata = lineDataSet.getAirlineIata();
+
+            String operatorId = NetexObjectIdCreator.createOperatorId(AVINOR_XMLNS, airlineIata);
+            boolean isFrequentOperator = isCommonDesignator(airlineIata);
+
+            Line line = netexObjectFactory.createLine(lineDataSet.getAirlineIata(), lineDataSet.getLineDesignation(), lineDataSet.getLineName());
+            line.setOperatorRef(isFrequentOperator ? netexObjectFactory.createOperatorRefStructure(operatorId, Boolean.FALSE) :
+                    netexObjectFactory.createOperatorRefStructure(operatorId, Boolean.TRUE));
+
+            List<Route> routes = createRoutes(line, lineDataSet.getFlightRoutes());
+            List<RouteRefStructure> routeRefStructures = netexObjectFactory.createRouteRefStructures(routes);
+            RouteRefs_RelStructure routeRefStruct = objectFactory.createRouteRefs_RelStructure().withRouteRef(routeRefStructures);
+            line.setRoutes(routeRefStruct);
+
+            List<JourneyPattern> journeyPatterns = createJourneyPatterns(routes);
+            List<DestinationDisplay> destinationDisplaysForStops = createDestinationDisplaysForStopPoints(lineDataSet.getFlightRoutes());
+            List<DestinationDisplay> destinationDisplaysForPatterns = createDestinationDisplaysForPatterns(journeyPatterns);
+            List<DestinationDisplay> destinationDisplays = Lists.newArrayList(Iterables.concat(destinationDisplaysForPatterns, destinationDisplaysForStops));
+            List<ServiceJourney> serviceJourneys = createServiceJourneys(line, lineDataSet.getRouteJourneys());
+
+            Frames_RelStructure frames = objectFactory.createFrames_RelStructure();
+
+            if (!isFrequentOperator) {
+                logger.warn("Infrequent operator identified by id : {}", airlineIata);
+                Operator operator = netexObjectFactory.createInfrequentAirlineOperatorElement(airlineIata, lineDataSet.getAirlineName(), operatorId);
+                JAXBElement<ResourceFrame> resourceFrameElement = netexObjectFactory.createResourceFrameElement(operator);
+                frames.getCommonFrame().add(resourceFrameElement);
+            }
+
+            JAXBElement<ServiceFrame> serviceFrame = netexObjectFactory.createServiceFrame(publicationTimestamp,
+                    lineDataSet.getAirlineName(), lineDataSet.getAirlineIata(), routes, line, destinationDisplays, journeyPatterns);
+            frames.getCommonFrame().add(serviceFrame);
+
+            JAXBElement<TimetableFrame> timetableFrame = netexObjectFactory.createTimetableFrame(serviceJourneys);
+            frames.getCommonFrame().add(timetableFrame);
+
+            JAXBElement<ServiceCalendarFrame> serviceCalendarFrame = netexObjectFactory.createServiceCalendarFrame(dayTypes, dayTypeAssignments, operatingPeriods);
+            frames.getCommonFrame().add(serviceCalendarFrame);
+
+            JAXBElement<CompositeFrame> compositeFrame = netexObjectFactory.createCompositeFrame(publicationTimestamp,
+                    availabilityPeriod, lineDataSet.getAirlineIata(), lineDataSet.getLineDesignation(), frames);
+
+            PublicationDeliveryStructure publicationDeliveryStructure = netexObjectFactory.createPublicationDeliveryStructure(
+                    publicationTimestamp, compositeFrame, lineDataSet.getLineName());
+
+            return objectFactory.createPublicationDelivery(publicationDeliveryStructure);
+        } finally {
+            // Empty all session data
+            clearAll();
         }
-
-        localContext.put(AIRLINE_IATA, lineDataSet.getAirlineIata());
-        localContext.put(LINE_DESIGNATION, lineDataSet.getLineDesignation());
-
-        Instant publicationTimestamp = Instant.now();
-        AvailabilityPeriod availabilityPeriod = lineDataSet.getAvailabilityPeriod();
-        String airlineIata = lineDataSet.getAirlineIata();
-
-        String operatorId = NetexObjectIdCreator.createOperatorId(AVINOR_XMLNS, airlineIata);
-        boolean isFrequentOperator = isCommonDesignator(airlineIata);
-
-        Line line = netexObjectFactory.createLine(lineDataSet.getAirlineIata(), lineDataSet.getLineDesignation(), lineDataSet.getLineName());
-        line.setOperatorRef(isFrequentOperator ? netexObjectFactory.createOperatorRefStructure(operatorId, Boolean.FALSE) :
-                netexObjectFactory.createOperatorRefStructure(operatorId, Boolean.TRUE));
-
-        List<Route> routes = createRoutes(line, lineDataSet.getFlightRoutes());
-        List<RouteRefStructure> routeRefStructures = netexObjectFactory.createRouteRefStructures(routes);
-        RouteRefs_RelStructure routeRefStruct = objectFactory.createRouteRefs_RelStructure().withRouteRef(routeRefStructures);
-        line.setRoutes(routeRefStruct);
-
-        List<JourneyPattern> journeyPatterns = createJourneyPatterns(routes);
-        List<DestinationDisplay> destinationDisplaysForStops = createDestinationDisplaysForStopPoints(lineDataSet.getFlightRoutes());
-        List<DestinationDisplay> destinationDisplaysForPatterns = createDestinationDisplaysForPatterns(journeyPatterns);
-        List<DestinationDisplay> destinationDisplays = Lists.newArrayList(Iterables.concat(destinationDisplaysForPatterns, destinationDisplaysForStops));
-        List<ServiceJourney> serviceJourneys = createServiceJourneys(line, lineDataSet.getRouteJourneys());
-
-        Frames_RelStructure frames = objectFactory.createFrames_RelStructure();
-
-        if (!isFrequentOperator) {
-            logger.warn("Infrequent operator identified by id : {}", airlineIata);
-            Operator operator = netexObjectFactory.createInfrequentAirlineOperatorElement(airlineIata, lineDataSet.getAirlineName(), operatorId);
-            JAXBElement<ResourceFrame> resourceFrameElement = netexObjectFactory.createResourceFrameElement(operator);
-            frames.getCommonFrame().add(resourceFrameElement);
-        }
-
-        JAXBElement<ServiceFrame> serviceFrame = netexObjectFactory.createServiceFrame(publicationTimestamp,
-                lineDataSet.getAirlineName(), lineDataSet.getAirlineIata(), routes, line, destinationDisplays, journeyPatterns);
-        frames.getCommonFrame().add(serviceFrame);
-
-        JAXBElement<TimetableFrame> timetableFrame = netexObjectFactory.createTimetableFrame(serviceJourneys);
-        frames.getCommonFrame().add(timetableFrame);
-
-        JAXBElement<ServiceCalendarFrame> serviceCalendarFrame = netexObjectFactory.createServiceCalendarFrame(dayTypes, dayTypeAssignments, operatingPeriods);
-        frames.getCommonFrame().add(serviceCalendarFrame);
-
-        JAXBElement<CompositeFrame> compositeFrame = netexObjectFactory.createCompositeFrame(publicationTimestamp,
-                availabilityPeriod, lineDataSet.getAirlineIata(), lineDataSet.getLineDesignation(), frames);
-
-        PublicationDeliveryStructure publicationDeliveryStructure = netexObjectFactory.createPublicationDeliveryStructure(
-                publicationTimestamp, compositeFrame, lineDataSet.getLineName());
-
-        return objectFactory.createPublicationDelivery(publicationDeliveryStructure);
     }
 
     private List<Route> createRoutes(Line line, List<FlightRoute> flightRoutes) {
@@ -626,4 +631,15 @@ public class LineDataToNetexConverter {
         return hashObjectId(localContext.get(AIRLINE_IATA) + StringUtils.remove(localContext.get(LINE_DESIGNATION), DASH), 10);
     }
 
+    private void clearAll() {
+        localContext.clear();
+        routeIdDesignationMap.clear();
+        routeDesignationPatternMap.clear();
+        dayTypes.clear();
+        dayTypeAssignments.clear();
+        operatingPeriods.clear();
+        if (netexObjectFactory != null) {
+            netexObjectFactory.clearReferentials();
+        }
+    }
 }
