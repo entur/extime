@@ -191,7 +191,7 @@ public class LineDataToNetexConverter {
             for (int i = 0; i < routePointsInSequence.size(); i++) {
                 RoutePoint routePoint = routePointMap.get(routePointsInSequence.get(i));
                 String pointOnRouteId = hashedObjectId + StringUtils.leftPad(idSequence[i], 2, "0");
-                PointOnRoute pointOnRoute = netexObjectFactory.createPointOnRoute(pointOnRouteId, routePoint.getId());
+                PointOnRoute pointOnRoute = netexObjectFactory.createPointOnRoute(pointOnRouteId, routePoint.getId(), i + 1);
                 pointsOnRoute.getPointOnRoute().add(pointOnRoute);
             }
 

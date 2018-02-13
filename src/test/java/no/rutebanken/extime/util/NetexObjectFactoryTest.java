@@ -35,7 +35,7 @@ public class NetexObjectFactoryTest {
 
     @Test
     public void createPointOnRoute() throws Exception {
-        PointOnRoute pointOnRoute = netexObjectFactory.createPointOnRoute("59963891", "AVI:ScheduledStopPoint:17733643");
+        PointOnRoute pointOnRoute = netexObjectFactory.createPointOnRoute("59963891", "AVI:ScheduledStopPoint:17733643",7);
 
         Assertions.assertThat(pointOnRoute)
                 .isNotNull()
@@ -45,6 +45,10 @@ public class NetexObjectFactoryTest {
                 .isNotNull()
                 .isNotEmpty()
                 .isEqualTo("AVI:PointOnRoute:59963891");
+
+        Assertions.assertThat(pointOnRoute.getOrder())
+                .isNotNull()
+                .isEqualTo(BigInteger.valueOf(7));
 
         Assertions.assertThat(pointOnRoute.getPointRef().getValue().getRef())
                 .isNotNull()
