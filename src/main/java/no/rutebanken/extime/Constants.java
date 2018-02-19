@@ -19,7 +19,7 @@ public final class Constants {
     public static final String DAY_TYPE_PATTERN = "MMM_EEE_dd";
 
     // netex specific constants
-    public static final String NETEX_PROFILE_VERSION = "1.07:NO-NeTEx-networktimetable:1.1";
+    public static final String NETEX_PROFILE_VERSION = "1.08:NO-NeTEx-networktimetable:1.1";
     public static final String VERSION_ONE = "1";
 
     public static final String NSR_XMLNS = "NSR";
