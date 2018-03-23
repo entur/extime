@@ -371,6 +371,13 @@ netex-data-sets:
         latitude: 63.454194
         longitude: 10.917965
       nsr-id: 1215
+    trf:
+      name: Sandefjord Lufthavn
+      short-name: Sandefjord
+      location:
+        latitude: 59.17907
+        longitude: 10.253157
+      nsr-id: 58586
     vaw:
       name: Vardø Lufthavn
       short-name: Vardø
