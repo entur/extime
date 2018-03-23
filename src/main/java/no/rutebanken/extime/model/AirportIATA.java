@@ -46,6 +46,7 @@ public enum AirportIATA {
     SVJ, // Svolvær lufthavn
     TOS, // Tromsø lufthavn
     TRD, // Trondheim lufthavn
+    TRF, // Sandefjord lufthavn, Torp
     VAW, // Vardø lufthavn
     VDB, // Fagernes lufthamn
     VDS, // Vadsø lufthavn
