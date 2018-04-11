@@ -8,7 +8,6 @@ import com.google.common.collect.Sets;
 import no.avinor.flydata.xjc.model.scheduled.Flight;
 import no.avinor.flydata.xjc.model.scheduled.Flights;
 import no.rutebanken.extime.config.NetexStaticDataSet;
-import no.rutebanken.extime.config.NetexStaticDataSet.StopPlaceDataSet;
 import no.rutebanken.extime.model.AirlineDesignator;
 import no.rutebanken.extime.model.AirportIATA;
 import no.rutebanken.extime.model.FlightPredicate;
@@ -94,7 +93,7 @@ public class ScheduledFlightConverter {
 
     private String uriParametersFormat = "airport=%s&direction=%s&designator=%s&number=%s&PeriodFrom=%sZ&PeriodTo=%sZ";
 
-    private Map<String, StopPlaceDataSet> stopPlaceDataSets;
+    private Map<String, NetexStaticDataSet.StopPlaceDataSet> stopPlaceDataSets;
 
     @PostConstruct
     public void init() {

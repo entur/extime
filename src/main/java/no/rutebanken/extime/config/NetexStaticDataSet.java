@@ -107,7 +107,6 @@ public class NetexStaticDataSet {
 
         private String name;
         private String shortName;
-        private LocationDataSet location;
         private String nsrId;
 
         public String getName() {
@@ -116,14 +115,6 @@ public class NetexStaticDataSet {
 
         public void setName(String name) {
             this.name = name;
-        }
-
-        public LocationDataSet getLocation() {
-            return location;
-        }
-
-        public void setLocation(LocationDataSet location) {
-            this.location = location;
         }
 
         public String getShortName() {
@@ -147,40 +138,11 @@ public class NetexStaticDataSet {
             return MoreObjects.toStringHelper(this)
                     .add("name", name)
                     .add("shortName", shortName)
-                    .add("location", location)
                     .add("nsrId", nsrId)
                     .toString();
         }
     }
 
-    public static class LocationDataSet {
 
-        private BigDecimal latitude;
-        private BigDecimal longitude;
-
-        public BigDecimal getLatitude() {
-            return latitude;
-        }
-
-        public void setLatitude(BigDecimal latitude) {
-            this.latitude = latitude;
-        }
-
-        public BigDecimal getLongitude() {
-            return longitude;
-        }
-
-        public void setLongitude(BigDecimal longitude) {
-            this.longitude = longitude;
-        }
-
-        @Override
-        public String toString() {
-            return MoreObjects.toStringHelper(this)
-                    .add("latitude", latitude)
-                    .add("longitude", longitude)
-                    .toString();
-        }
-    }
 
 }

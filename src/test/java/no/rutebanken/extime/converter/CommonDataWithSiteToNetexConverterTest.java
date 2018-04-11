@@ -51,14 +51,9 @@ public class CommonDataWithSiteToNetexConverterTest {
         assertThat(resourceFrame).hasFieldOrPropertyWithValue("version", VERSION_ONE);
         assertThat(resourceFrame.getId()).matches(id -> id.split(":")[1].equals(NetexObjectIdTypes.RESOURCE_FRAME_KEY), "ResourceFrame");
 
-        SiteFrame siteFrame = NetexTestUtils.getFrames(SiteFrame.class, NetexTestUtils.getDataObjectFrames(publicationDelivery)).get(0);
-        assertThat(siteFrame).hasFieldOrPropertyWithValue("version", VERSION_ONE);
-        assertThat(siteFrame.getId()).matches(id -> id.split(":")[1].equals(NetexObjectIdTypes.SITE_FRAME_KEY), "SiteFrame");
-
         NetexTestUtils.verifyServiceFrameAttributes(publicationDelivery);
 
         assertValidResourceFrame(resourceFrame);
-        assertValidSiteFrame(siteFrame);
         assertValidServiceFrame(publicationDelivery);
     }
 
@@ -85,11 +80,6 @@ public class CommonDataWithSiteToNetexConverterTest {
     private void assertValidResourceFrame(ResourceFrame resourceFrame) {
         assertThat(resourceFrame.getOrganisations()).isNotNull();
         assertThat(resourceFrame.getOrganisations().getOrganisation_()).isNotEmpty();
-    }
-
-    private void assertValidSiteFrame(SiteFrame siteFrame) {
-        assertThat(siteFrame.getStopPlaces()).isNotNull();
-        assertThat(siteFrame.getStopPlaces().getStopPlace()).isNotEmpty();
     }
 
     private void assertValidServiceFrame(PublicationDeliveryStructure publicationDelivery) {

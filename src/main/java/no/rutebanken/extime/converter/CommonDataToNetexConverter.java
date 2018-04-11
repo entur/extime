@@ -77,11 +77,6 @@ public class CommonDataToNetexConverter {
         for (AirportIATA airportIATA : airportIATAS) {
             String airportIataName = airportIATA.name();
 
-            if (isWithSiteFrame) {
-                StopPlace stopPlace = netexCommonDataSet.getStopPlaceMap().get(airportIataName);
-                stopPlaces.add(stopPlace);
-            }
-
             ScheduledStopPoint stopPoint = netexCommonDataSet.getStopPointMap().get(airportIataName);
             stopPoints.add(stopPoint);
 
