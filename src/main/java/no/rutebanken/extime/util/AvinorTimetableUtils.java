@@ -83,7 +83,7 @@ public class AvinorTimetableUtils {
     private NetexStaticDataSet netexStaticDataSet;
 
     public String useHttp4Client(@Header(HEADER_EXTIME_HTTP_URI) String httpUri) {
-        return httpUri.replace("http", "http4");
+        return httpUri.replace("https:", "https4:").replace("http:","http4:");
     }
 
     public void findUniqueAirlines(List<Flight> flights) {
