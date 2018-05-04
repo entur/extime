@@ -4,6 +4,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import no.rutebanken.extime.config.NetexStaticDataSet;
 import no.rutebanken.extime.model.AvailabilityPeriod;
+import org.rutebanken.netex.model.AirSubmodeEnumeration;
 import org.rutebanken.netex.model.AllVehicleModesOfTransportEnumeration;
 import org.rutebanken.netex.model.Authority;
 import org.rutebanken.netex.model.AuthorityRefStructure;
@@ -567,6 +568,7 @@ public class NetexObjectFactory {
                 .withId(lineId)
                 .withName(createMultilingualString(lineName))
                 .withTransportMode(AllVehicleModesOfTransportEnumeration.AIR)
+                .withTransportSubmode(objectFactory.createTransportSubmodeStructure().withAirSubmode(AirSubmodeEnumeration.DOMESTIC_FLIGHT))
                // .withPublicCode(lineDesignation)
                 .withRepresentedByGroupRef(groupOfLinesRefStruct);
     }
