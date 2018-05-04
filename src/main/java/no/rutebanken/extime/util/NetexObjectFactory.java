@@ -693,7 +693,7 @@ public class NetexObjectFactory {
         JAXBElement<StopPointInJourneyPatternRefStructure> stopPointInJourneyPatternRefStructElement = objectFactory
                 .createStopPointInJourneyPatternRef(stopPointInJourneyPatternRefStruct);
 
-        String timetabledPassingTimeId = NetexObjectIdCreator.createTimetableFrameId(AVINOR_XMLNS,
+        String timetabledPassingTimeId = NetexObjectIdCreator.createTimetabledPassingTimeId(AVINOR_XMLNS,
                 String.valueOf(NetexObjectIdCreator.generateRandomId(DEFAULT_START_INCLUSIVE, DEFAULT_END_EXCLUSIVE)));
 
         return objectFactory.createTimetabledPassingTime().withId(timetabledPassingTimeId).withVersion(VERSION_ONE)
