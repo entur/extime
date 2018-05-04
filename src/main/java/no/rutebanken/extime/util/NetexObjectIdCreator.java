@@ -41,6 +41,10 @@ public class NetexObjectIdCreator {
 
     // entity ids
 
+    public static String createTimetabledPassingTimeId(String objectIdPrefix, String objectId) {
+        return NetexObjectIdCreator.composeNetexObjectId(objectIdPrefix, NetexObjectIdTypes.TIMETABLED_PASSING_TIME_KEY, objectId);
+    }
+
     public static String createAuthorityId(String objectIdPrefix, String objectId) {
         return NetexObjectIdCreator.composeNetexObjectId(objectIdPrefix, NetexObjectIdTypes.AUTHORITY_KEY, objectId);
     }

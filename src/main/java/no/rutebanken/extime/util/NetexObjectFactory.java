@@ -693,55 +693,11 @@ public class NetexObjectFactory {
         JAXBElement<StopPointInJourneyPatternRefStructure> stopPointInJourneyPatternRefStructElement = objectFactory
                 .createStopPointInJourneyPatternRef(stopPointInJourneyPatternRefStruct);
 
-        return objectFactory.createTimetabledPassingTime()
+        String timetabledPassingTimeId = NetexObjectIdCreator.createTimetableFrameId(AVINOR_XMLNS,
+                String.valueOf(NetexObjectIdCreator.generateRandomId(DEFAULT_START_INCLUSIVE, DEFAULT_END_EXCLUSIVE)));
+
+        return objectFactory.createTimetabledPassingTime().withId(timetabledPassingTimeId).withVersion(VERSION_ONE)
                 .withPointInJourneyPatternRef(stopPointInJourneyPatternRefStructElement);
-    }
-
-    private List<DayType> createDayTypes(Set<DayOfWeek> weekDaysPattern, String flightId) {
-        Map<Boolean, List<DayOfWeek>> dayOfWeeksByDayType = weekDaysPattern.stream()
-                .collect(Collectors.partitioningBy(dayOfWeek -> dayOfWeek.query(DateUtils.WorkDays::isWorkDay)));
-
-        List<DayOfWeek> workDays = dayOfWeeksByDayType.get(Boolean.TRUE);
-        List<DayOfWeek> weekendDays = dayOfWeeksByDayType.get(Boolean.FALSE);
-        List<DayType> dayTypes = Lists.newArrayList();
-
-        if (!workDays.isEmpty()) {
-            dayTypes.add(createDayType(workDays, flightId, WORK_DAYS_LABEL, WORK_DAYS_DISPLAY_NAME));
-        }
-
-        if (!weekendDays.isEmpty()) {
-            if (weekendDays.contains(DayOfWeek.SATURDAY)) {
-                int index = weekendDays.indexOf(DayOfWeek.SATURDAY);
-                List<DayOfWeek> saturday = Lists.newArrayList(weekendDays.get(index));
-                dayTypes.add(createDayType(saturday, flightId, SATURDAY_LABEL, SATURDAY_DISPLAY_NAME));
-            }
-            if (weekendDays.contains(DayOfWeek.SUNDAY)) {
-                int index = weekendDays.indexOf(DayOfWeek.SUNDAY);
-                List<DayOfWeek> sunday = Lists.newArrayList(weekendDays.get(index));
-                dayTypes.add(createDayType(sunday, flightId, SUNDAY_LABEL, SUNDAY_DISPLAY_NAME));
-            }
-        }
-
-        return dayTypes;
-    }
-
-    public DayType createDayType(List<DayOfWeek> daysOfWeekPattern, String flightId, String objectId, String name) {
-        List<DayOfWeekEnumeration> daysOfWeek = Lists.newArrayList();
-        daysOfWeekPattern.forEach(dayOfWeek -> daysOfWeek.add(dayOfWeekMap.get(dayOfWeek)));
-
-        PropertyOfDay propertyOfDayWeekDays = objectFactory.createPropertyOfDay();
-        propertyOfDayWeekDays.getDaysOfWeek().addAll(daysOfWeek);
-
-        PropertiesOfDay_RelStructure propertiesOfDay = objectFactory.createPropertiesOfDay_RelStructure()
-                .withPropertyOfDay(propertyOfDayWeekDays);
-
-        String dayTypeId = NetexObjectIdCreator.createDayTypeId(AVINOR_XMLNS, String.format("%s_%s", flightId, objectId));
-
-        return objectFactory.createDayType()
-                .withVersion(VERSION_ONE)
-                .withId(dayTypeId)
-                .withName(createMultilingualString(name))
-                .withProperties(propertiesOfDay);
     }
 
     public DayType createDayType(String dayTypeId) {
