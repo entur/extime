@@ -5,8 +5,18 @@ import no.rutebanken.extime.model.AirlineDesignator;
 import no.rutebanken.extime.model.AirportIATA;
 import no.rutebanken.extime.util.DateUtils;
 import no.rutebanken.extime.util.NetexObjectFactory;
-import org.apache.commons.collections.CollectionUtils;
-import org.rutebanken.netex.model.*;
+import org.rutebanken.netex.model.Authority;
+import org.rutebanken.netex.model.Codespace;
+import org.rutebanken.netex.model.CompositeFrame;
+import org.rutebanken.netex.model.Frames_RelStructure;
+import org.rutebanken.netex.model.Network;
+import org.rutebanken.netex.model.ObjectFactory;
+import org.rutebanken.netex.model.Operator;
+import org.rutebanken.netex.model.PassengerStopAssignment;
+import org.rutebanken.netex.model.PublicationDeliveryStructure;
+import org.rutebanken.netex.model.RoutePoint;
+import org.rutebanken.netex.model.ScheduledStopPoint;
+import org.rutebanken.netex.model.StopPlace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,8 +25,6 @@ import org.springframework.stereotype.Component;
 
 import javax.xml.bind.JAXBElement;
 import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -43,9 +51,6 @@ public class CommonDataToNetexConverter {
 
     @Value("${avinor.timetable.period.months}")
     private int numberOfMonthsInPeriod;
-
-    @Value("${avinor.timetable.export.site}")
-    private boolean isWithSiteFrame;
 
     public JAXBElement<PublicationDeliveryStructure> convertToNetex() throws Exception {
         logger.info("Converting common data to NeTEx");
@@ -93,12 +98,6 @@ public class CommonDataToNetexConverter {
         stopPoints.sort(Comparator.comparing(ScheduledStopPoint::getId));
         logger.info("Retrieved and populated NeTEx structure with {} stop points", stopPoints.size());
         framesStruct.getCommonFrame().add(netexObjectFactory.createResourceFrameElement(authorityElements, operatorElements));
-
-        if (isWithSiteFrame && CollectionUtils.isNotEmpty(stopPlaces)) {
-            logger.info("Retrieved and populated NeTEx structure with {} stop places", stopPlaces.size());
-            stopPlaces.sort(Comparator.comparing(StopPlace::getId));
-            framesStruct.getCommonFrame().add(netexObjectFactory.createSiteFrameElement(stopPlaces));
-        }
 
         for (AirlineDesignator designator : AirlineDesignator.values()) {
             String designatorName = designator.name().toUpperCase();

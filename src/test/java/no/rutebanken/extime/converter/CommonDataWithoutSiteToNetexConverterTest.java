@@ -29,7 +29,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ActiveProfiles("test")
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = {CamelRouteDisabler.class, CommonDataToNetexConverter.class}, properties = "spring.config.name=application,netex-static-data")
-@TestPropertySource(properties = {"avinor.timetable.export.site = false"})
 public class CommonDataWithoutSiteToNetexConverterTest {
 
     @Autowired

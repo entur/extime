@@ -277,22 +277,6 @@ public class NetexObjectFactory {
         return objectFactory.createResourceFrame(resourceFrame);
     }
 
-    public JAXBElement<SiteFrame> createSiteFrameElement(List<StopPlace> stopPlaces) {
-        StopPlacesInFrame_RelStructure stopPlacesStruct = objectFactory.createStopPlacesInFrame_RelStructure();
-
-        String siteFrameId = NetexObjectIdCreator.createSiteFrameId(AVINOR_XMLNS,
-                String.valueOf(NetexObjectIdCreator.generateRandomId(DEFAULT_START_INCLUSIVE, DEFAULT_END_EXCLUSIVE)));
-
-        SiteFrame siteFrame = objectFactory.createSiteFrame()
-                .withVersion(VERSION_ONE)
-                .withId(siteFrameId);
-        siteFrame.setStopPlaces(stopPlacesStruct);
-
-        stopPlaces.forEach(stopPlace -> stopPlacesStruct.getStopPlace().add(stopPlace));
-
-        return objectFactory.createSiteFrame(siteFrame);
-    }
-
     public JAXBElement<ServiceFrame> createNetworkServiceFrameElement(Network network) {
         String serviceFrameId = NetexObjectIdCreator.createServiceFrameId(AVINOR_XMLNS,
                 String.valueOf(NetexObjectIdCreator.generateRandomId(DEFAULT_START_INCLUSIVE, DEFAULT_END_EXCLUSIVE)));
