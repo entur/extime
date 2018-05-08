@@ -772,16 +772,14 @@ public class NetexObjectFactory {
                 .collect(Collectors.toList());
     }
 
-    public StopPlaceRefStructure createStopPlaceRefStructure(String stopPlaceId, boolean withRefValidation) {
-        StopPlaceRefStructure stopPlaceRefStruct = objectFactory.createStopPlaceRefStructure()
+    public StopPlaceRefStructure createStopPlaceRefStructure(String stopPlaceId) {
+        return objectFactory.createStopPlaceRefStructure()
                 .withRef(stopPlaceId);
-        return withRefValidation ? stopPlaceRefStruct.withVersion(VERSION_ONE) : stopPlaceRefStruct;
     }
 
-    public QuayRefStructure createQuayRefStructure(String quayId, boolean withRefValidation) {
-        QuayRefStructure quayRefStructure = objectFactory.createQuayRefStructure()
+    public QuayRefStructure createQuayRefStructure(String quayId) {
+        return objectFactory.createQuayRefStructure()
                 .withRef(quayId);
-        return withRefValidation ? quayRefStructure.withVersion(VERSION_ONE) : quayRefStructure;
     }
 
     public ScheduledStopPointRefStructure createScheduledStopPointRefStructure(String stopPointId, boolean withRefValidation) {

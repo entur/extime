@@ -48,9 +48,6 @@ public class NetexCommonDataSet {
     @Autowired
     private NetexObjectFactory netexObjectFactory;
 
-    @Value("${avinor.timetable.export.site}")
-    private boolean isWithSiteFrame;
-
     private BiMap<String, String> airportHashes = HashBiMap.create();
     private Map<String, ScheduledStopPoint> stopPointMap = new HashMap<>();
     private Map<String, PassengerStopAssignment> stopAssignmentMap = new HashMap<>();
@@ -109,9 +106,7 @@ public class NetexCommonDataSet {
             ScheduledStopPointRefStructure scheduledStopPointRefStruct =
                     netexObjectFactory.createScheduledStopPointRefStructure(scheduledStopPoint.getId(), Boolean.TRUE);
 
-           // StopPlace stopPlace = stopPlaceMap.get(airportIATA.name());
-            //StopPlaceRefStructure stopPlaceRefStructure = netexObjectFactory.createStopPlaceRefStructure(stopPlace.getId(), isWithSiteFrame);
-            QuayRefStructure quayRefStruct = netexObjectFactory.createQuayRefStructure(createQuayId(airportIATA.name()), isWithSiteFrame);
+            QuayRefStructure quayRefStruct = netexObjectFactory.createQuayRefStructure(createQuayId(airportIATA.name()));
 
             String stopPointIdSuffix = StringUtils.split(scheduledStopPoint.getId(), DEFAULT_ID_SEPARATOR)[2];
 

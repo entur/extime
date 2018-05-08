@@ -156,16 +156,11 @@ public class NetexObjectFactoryTest {
     @Test
     public void createStopPlaceRefStructure() throws Exception {
         // TODO also test the case where validation for references is disabled
-        StopPlaceRefStructure stopPlaceRefStructure = netexObjectFactory.createStopPlaceRefStructure("AVI:StopPlace:TRD", Boolean.TRUE);
+        StopPlaceRefStructure stopPlaceRefStructure = netexObjectFactory.createStopPlaceRefStructure("AVI:StopPlace:TRD");
 
         Assertions.assertThat(stopPlaceRefStructure)
                 .isNotNull()
                 .isInstanceOf(StopPlaceRefStructure.class);
-
-        Assertions.assertThat(stopPlaceRefStructure.getVersion())
-                .isNotNull()
-                .isNotEmpty()
-                .isEqualTo(VERSION_ONE);
 
         Assertions.assertThat(stopPlaceRefStructure.getRef())
                 .isNotNull()
