@@ -418,10 +418,8 @@ public class LineDataToNetexConverter {
             Iterator<ScheduledStopover> stopoverIterator = scheduledStopovers.iterator();
             Iterator<PointInLinkSequence_VersionedChildStructure> pointInLinkSequenceIterator = pointsInLinkSequence.iterator();
 
-            LocalTime previousArrivalTime = null;
-            LocalTime previousDepartureTime = null;
-            BigInteger arrivalOffset = BigInteger.ZERO;
-            BigInteger departureOffset = BigInteger.ZERO;
+            LocalTime previousArrivalOrDepartureTime = null;
+            BigInteger dayOffset = BigInteger.ZERO;
             
             while (stopoverIterator.hasNext() && pointInLinkSequenceIterator.hasNext()) {
                 ScheduledStopover scheduledStopover = stopoverIterator.next();
@@ -430,27 +428,27 @@ public class LineDataToNetexConverter {
 
                 if (scheduledStopover.getArrivalTime() != null) {
                     passingTime.setArrivalTime(scheduledStopover.getArrivalTime());
-                    if(previousArrivalTime != null && scheduledStopover.getArrivalTime().isBefore(previousArrivalTime)) {
-                    	arrivalOffset = arrivalOffset.add(BigInteger.ONE);
+                    if(previousArrivalOrDepartureTime != null && scheduledStopover.getArrivalTime().isBefore(previousArrivalOrDepartureTime)) {
+                        dayOffset = dayOffset.add(BigInteger.ONE);
                     }
-                    if(!arrivalOffset.equals(BigInteger.ZERO)) {
-                    	passingTime.setArrivalDayOffset(arrivalOffset);
+                    if(!dayOffset.equals(BigInteger.ZERO)) {
+                    	passingTime.setArrivalDayOffset(dayOffset);
                     }
+                    previousArrivalOrDepartureTime = scheduledStopover.getArrivalTime();
                 }
+
                 if (scheduledStopover.getDepartureTime() != null) {
                     passingTime.setDepartureTime(scheduledStopover.getDepartureTime());
-                    if(previousDepartureTime != null && scheduledStopover.getDepartureTime().isBefore(previousDepartureTime)) {
-                    	departureOffset = departureOffset.add(BigInteger.ONE);
+                    if(previousArrivalOrDepartureTime != null && scheduledStopover.getDepartureTime().isBefore(previousArrivalOrDepartureTime)) {
+                        dayOffset = dayOffset.add(BigInteger.ONE);
                     }
-                    if(!departureOffset.equals(BigInteger.ZERO)) {
-                    	passingTime.setDepartureDayOffset(departureOffset);
+                    if(!dayOffset.equals(BigInteger.ZERO)) {
+                    	passingTime.setDepartureDayOffset(dayOffset);
                     }
+                    previousArrivalOrDepartureTime = scheduledStopover.getDepartureTime();
                 }
 
                 passingTimesRelStructure.withTimetabledPassingTime(passingTime);
-                
-                previousArrivalTime = scheduledStopover.getArrivalTime();
-                previousDepartureTime = scheduledStopover.getDepartureTime();
             }
         } else {
             TimetabledPassingTime departurePassingTime = netexObjectFactory.createTimetabledPassingTime(pointsInLinkSequence.get(0).getId());
