@@ -202,13 +202,13 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .streamCaching()
 
                 .split(stax(Flight.class, false), new ScheduledAirportFlightsAggregationStrategy()).streaming()
-                    .wireTap("mock:wireTapEndpoint").id("FlightSplitWireTap")
-                    // TODO add logging to wiretap
-                    /*.log(LoggingLevel.DEBUG, this.getClass().getName(),
-                            "Processing flight with id: ${body.airlineDesignator}${body.flightNumber}")
-                         .id("FlightSplitLogProcessor")*/
+                .wireTap("direct:wireTapFlightSplitter").id("FlightSplitWireTap")
                 .end()
         ;
+
+         from("direct:wireTapFlightSplitter")
+                 .process(e -> {/* Do nothing. WireTap used by test. This should not have been implemented as split - aggregate */} )
+                 .routeId("DoNothingFlightSplitWireTap");
 
         from("direct:convertCommonDataToNetex")
                 .routeId("CommonDataToNetexConverter")
