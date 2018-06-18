@@ -1,9 +1,9 @@
 package no.rutebanken.extime.util;
 
 import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
 import no.rutebanken.extime.config.NetexStaticDataSet;
 import no.rutebanken.extime.model.AvailabilityPeriod;
+import org.apache.commons.collections.CollectionUtils;
 import org.rutebanken.netex.model.AirSubmodeEnumeration;
 import org.rutebanken.netex.model.AllVehicleModesOfTransportEnumeration;
 import org.rutebanken.netex.model.Authority;
@@ -37,6 +37,7 @@ import org.rutebanken.netex.model.LinesInFrame_RelStructure;
 import org.rutebanken.netex.model.LocaleStructure;
 import org.rutebanken.netex.model.MultilingualString;
 import org.rutebanken.netex.model.Network;
+import org.rutebanken.netex.model.NetworksInFrame_RelStructure;
 import org.rutebanken.netex.model.ObjectFactory;
 import org.rutebanken.netex.model.OperatingPeriod;
 import org.rutebanken.netex.model.OperatingPeriodRefStructure;
@@ -51,8 +52,6 @@ import org.rutebanken.netex.model.PointOnRoute;
 import org.rutebanken.netex.model.PointRefStructure;
 import org.rutebanken.netex.model.PointsInJourneyPattern_RelStructure;
 import org.rutebanken.netex.model.PointsOnRoute_RelStructure;
-import org.rutebanken.netex.model.PropertiesOfDay_RelStructure;
-import org.rutebanken.netex.model.PropertyOfDay;
 import org.rutebanken.netex.model.PublicationDeliveryStructure;
 import org.rutebanken.netex.model.QuayRefStructure;
 import org.rutebanken.netex.model.ResourceFrame;
@@ -68,11 +67,8 @@ import org.rutebanken.netex.model.ScheduledStopPointsInFrame_RelStructure;
 import org.rutebanken.netex.model.ServiceCalendarFrame;
 import org.rutebanken.netex.model.ServiceFrame;
 import org.rutebanken.netex.model.ServiceJourney;
-import org.rutebanken.netex.model.SiteFrame;
 import org.rutebanken.netex.model.StopAssignmentsInFrame_RelStructure;
-import org.rutebanken.netex.model.StopPlace;
 import org.rutebanken.netex.model.StopPlaceRefStructure;
-import org.rutebanken.netex.model.StopPlacesInFrame_RelStructure;
 import org.rutebanken.netex.model.StopPointInJourneyPattern;
 import org.rutebanken.netex.model.StopPointInJourneyPatternRefStructure;
 import org.rutebanken.netex.model.TimetableFrame;
@@ -88,8 +84,6 @@ import java.math.BigInteger;
 import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -98,7 +92,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -277,19 +270,8 @@ public class NetexObjectFactory {
         return objectFactory.createResourceFrame(resourceFrame);
     }
 
-    public JAXBElement<ServiceFrame> createNetworkServiceFrameElement(Network network) {
-        String serviceFrameId = NetexObjectIdCreator.createServiceFrameId(AVINOR_XMLNS,
-                String.valueOf(NetexObjectIdCreator.generateRandomId(DEFAULT_START_INCLUSIVE, DEFAULT_END_EXCLUSIVE)));
 
-        ServiceFrame serviceFrame = objectFactory.createServiceFrame()
-                .withVersion(VERSION_ONE)
-                .withId(serviceFrameId)
-                .withNetwork(network);
-
-        return objectFactory.createServiceFrame(serviceFrame);
-    }
-
-    public JAXBElement<ServiceFrame> createCommonServiceFrameElement(List<RoutePoint> routePoints,
+    public JAXBElement<ServiceFrame> createCommonServiceFrameElement(Collection<Network> networks, List<RoutePoint> routePoints,
             List<ScheduledStopPoint> scheduledStopPoints, List<JAXBElement<PassengerStopAssignment>> stopAssignmentElements) {
 
         String serviceFrameId = NetexObjectIdCreator.createServiceFrameId(AVINOR_XMLNS,
@@ -310,6 +292,19 @@ public class NetexObjectFactory {
                 .withRoutePoints(routePointStruct)
                 .withScheduledStopPoints(scheduledStopPointsStruct)
                 .withStopAssignments(stopAssignmentsStruct);
+
+        if (!CollectionUtils.isEmpty(networks)) {
+            Iterator<Network> networkIterator=networks.iterator();
+            serviceFrame.withNetwork(networkIterator.next());
+
+            if (networkIterator.hasNext()) {
+                NetworksInFrame_RelStructure additionalNetworks = new NetworksInFrame_RelStructure();
+                while (networkIterator.hasNext()) {
+                    additionalNetworks.getNetwork().add(networkIterator.next());
+                }
+                serviceFrame.withAdditionalNetworks(additionalNetworks);
+            }
+        }
 
         return objectFactory.createServiceFrame(serviceFrame);
     }

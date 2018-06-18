@@ -28,7 +28,9 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static no.rutebanken.extime.Constants.*;
 
@@ -74,10 +76,10 @@ public class CommonDataToNetexConverter {
         List<AirportIATA> airportIATAS = Lists.newArrayList(AirportIATA.values());
         airportIATAS.sort(Comparator.comparing(Enum::name));
 
-        List<StopPlace> stopPlaces = Lists.newArrayList();
         List<ScheduledStopPoint> stopPoints = Lists.newArrayList();
         List<RoutePoint> routePoints = Lists.newArrayList();
         List<JAXBElement<PassengerStopAssignment>> stopAssignmentElements = Lists.newArrayList();
+        Set<Network> networks = new HashSet<>();
 
         for (AirportIATA airportIATA : airportIATAS) {
             String airportIataName = airportIATA.name();
@@ -102,10 +104,10 @@ public class CommonDataToNetexConverter {
         for (AirlineDesignator designator : AirlineDesignator.values()) {
             String designatorName = designator.name().toUpperCase();
             Network network = netexObjectFactory.createNetwork(publicationTimestamp, designatorName, null);
-            framesStruct.getCommonFrame().add(netexObjectFactory.createNetworkServiceFrameElement(network));
+            networks.add(network);
         }
 
-        framesStruct.getCommonFrame().add(netexObjectFactory.createCommonServiceFrameElement(routePoints, stopPoints, stopAssignmentElements));
+        framesStruct.getCommonFrame().add(netexObjectFactory.createCommonServiceFrameElement(networks, routePoints, stopPoints, stopAssignmentElements));
 
         JAXBElement<CompositeFrame> compositeFrameElement = netexObjectFactory
                 .createCompositeFrameElement(publicationTimestamp, framesStruct, dateUtils.generateAvailabilityPeriod(), avinorCodespace, nsrCodespace);
