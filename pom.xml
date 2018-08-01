@@ -23,9 +23,9 @@
 
         <!-- versions for use in mvn plugins as we cannot inherit them from a BOM -->
         <docker.maven.plugin.version>0.21.0</docker.maven.plugin.version>
-        <spring-boot-plugin.version>1.5.6.RELEASE</spring-boot-plugin.version>
-        <spring-boot.version>1.5.6.RELEASE</spring-boot.version>
-        <camel.version>2.19.2</camel.version>
+        <spring-boot-plugin.version>2.0.3.RELEASE</spring-boot-plugin.version>
+        <spring-boot.version>2.0.3.RELEASE</spring-boot.version>
+        <camel.version>2.22.0</camel.version>
 
         <!-- Docker & Fabric8 Configs -->
         <docker.from>eu.gcr.io/carbon-1287/java-base-image</docker.from>
@@ -90,17 +90,17 @@
         <!-- Camel -->
         <dependency>
             <groupId>org.apache.camel</groupId>
-            <artifactId>camel-spring-boot-starter</artifactId>
-            <version>${camel.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.camel</groupId>
             <artifactId>camel-core</artifactId>
             <version>${camel.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.camel</groupId>
             <artifactId>camel-spring-boot</artifactId>
+            <version>${camel.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-spring</artifactId>
             <version>${camel.version}</version>
         </dependency>
         <dependency>
@@ -142,6 +142,11 @@
         <dependency>
             <groupId>org.apache.camel</groupId>
             <artifactId>camel-zipfile</artifactId>
+            <version>${camel.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-jms</artifactId>
             <version>${camel.version}</version>
         </dependency>
         <dependency>
@@ -284,6 +289,12 @@
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
             <version>3.4.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-collections4</artifactId>
+            <version>4.2</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

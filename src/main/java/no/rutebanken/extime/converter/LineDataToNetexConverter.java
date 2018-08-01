@@ -14,7 +14,6 @@ import no.rutebanken.extime.model.ScheduledFlight;
 import no.rutebanken.extime.model.ScheduledStopover;
 import no.rutebanken.extime.util.NetexObjectFactory;
 import no.rutebanken.extime.util.NetexObjectIdCreator;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.rutebanken.helper.calendar.CalendarPattern;
 import org.rutebanken.helper.calendar.CalendarPatternAnalyzer;
@@ -58,6 +57,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 import javax.xml.bind.JAXBElement;
 import java.math.BigInteger;

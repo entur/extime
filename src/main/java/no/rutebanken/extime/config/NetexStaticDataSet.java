@@ -2,20 +2,22 @@ package no.rutebanken.extime.config;
 
 import com.google.common.base.MoreObjects;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Configuration;
 
-import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
-@Component("netexStaticDataSet")
+@Configuration
+@EnableConfigurationProperties
 @ConfigurationProperties(prefix = "netex-data-sets")
 public class NetexStaticDataSet {
 
     private Map<String, OrganisationDataSet> organisations = new HashMap<>();
     private Map<String, StopPlaceDataSet> stopPlaces = new HashMap<>();
 
-    public NetexStaticDataSet() {}
+    public NetexStaticDataSet() {
+        toString();}
 
     public Map<String, OrganisationDataSet> getOrganisations() {
         return organisations;

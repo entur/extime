@@ -23,7 +23,6 @@ import org.apache.camel.EndpointInject;
 import org.apache.camel.ExchangeProperty;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.TypeConverter;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.EnumUtils;
 import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.apache.commons.lang3.tuple.Triple;
@@ -32,6 +31,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.PostConstruct;
 import java.io.InputStream;
@@ -454,11 +454,11 @@ public class ScheduledFlightConverter {
     }
 
     public boolean isMultiLegFlightRoute(List<Flight> flights) {
-        return CollectionUtils.isNotEmpty(flights) && flights.size() > 1;
+        return !CollectionUtils.isEmpty(flights) && flights.size() > 1;
     }
 
     public boolean isDirectFlightRoute(List<Flight> flights) {
-        return CollectionUtils.isNotEmpty(flights) && flights.size() == 1;
+        return !CollectionUtils.isEmpty(flights) && flights.size() == 1;
     }
 
     public List<Flight> findConnectingFlightLegs(Flight currentFlightLeg, Map<String, List<Flight>> flightsByDepartureAirportIata,
@@ -471,13 +471,13 @@ public class ScheduledFlightConverter {
         List<Flight> connectingFlightLegs = Lists.newArrayList(currentFlightLeg);
         List<Flight> previousFlightLegs = findPreviousFlightLegs(currentFlightLeg, flightsByArrivalAirportIata, Lists.newArrayList());
 
-        if (CollectionUtils.isNotEmpty(previousFlightLegs)) {
+        if (!CollectionUtils.isEmpty(previousFlightLegs)) {
             connectingFlightLegs.addAll(previousFlightLegs);
         }
 
         List<Flight> nextFlightLegs = findNextFlightLegs(currentFlightLeg, flightsByDepartureAirportIata, Lists.newArrayList());
 
-        if (CollectionUtils.isNotEmpty(nextFlightLegs)) {
+        if (!CollectionUtils.isEmpty(nextFlightLegs)) {
             connectingFlightLegs.addAll(nextFlightLegs);
         }
 
@@ -560,7 +560,7 @@ public class ScheduledFlightConverter {
         scheduledFlight.setAirlineFlightId(flight.getAirlineDesignator() + flight.getFlightNumber());
         scheduledFlight.setDateOfOperation(dateUtils.toExportLocalDateTime(flight.getDateOfOperation()).toLocalDate());
 
-        if (CollectionUtils.isNotEmpty(scheduledStopovers)) {
+        if (!CollectionUtils.isEmpty(scheduledStopovers)) {
             scheduledFlight.getScheduledStopovers().addAll(scheduledStopovers);
             String departureAirportIata = scheduledStopovers.get(0).getAirportIATA();
             String arrivalAirportIata = scheduledStopovers.get(scheduledStopovers.size() - 1).getAirportIATA();

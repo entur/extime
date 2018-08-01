@@ -9,7 +9,7 @@ import no.rutebanken.extime.model.FlightRoute;
 import no.rutebanken.extime.model.LineDataSet;
 import no.rutebanken.extime.util.NetexObjectIdCreator;
 import no.rutebanken.extime.util.NetexObjectIdTypes;
-import org.apache.commons.collections.ListUtils;
+import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Assert;
 import org.junit.Test;

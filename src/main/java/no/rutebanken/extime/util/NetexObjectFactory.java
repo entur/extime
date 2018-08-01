@@ -3,7 +3,6 @@ package no.rutebanken.extime.util;
 import com.google.common.base.Joiner;
 import no.rutebanken.extime.config.NetexStaticDataSet;
 import no.rutebanken.extime.model.AvailabilityPeriod;
-import org.apache.commons.collections.CollectionUtils;
 import org.rutebanken.netex.model.AirSubmodeEnumeration;
 import org.rutebanken.netex.model.AllVehicleModesOfTransportEnumeration;
 import org.rutebanken.netex.model.Authority;
@@ -78,6 +77,7 @@ import org.rutebanken.netex.model.ValidityConditions_RelStructure;
 import org.rutebanken.netex.model.VersionFrameDefaultsStructure;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 import javax.xml.bind.JAXBElement;
 import java.math.BigInteger;
