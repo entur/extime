@@ -13,7 +13,6 @@ import no.rutebanken.extime.model.StopVisitType;
 import org.apache.camel.Exchange;
 import org.apache.camel.ExchangeProperty;
 import org.apache.camel.Header;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.EnumUtils;
 import org.rutebanken.helper.gcp.BlobStoreHelper;
 import org.rutebanken.netex.model.CompositeFrame;
@@ -33,11 +32,9 @@ import javax.xml.bind.JAXBException;
 import javax.xml.transform.stream.StreamSource;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.LinkOption;
-import java.nio.file.Path;
-import java.nio.file.PathMatcher;
-import java.nio.file.Paths;
+import java.io.InputStream;
+import java.nio.file.*;
+import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -248,10 +245,10 @@ public class AvinorTimetableUtils {
             logger.info("Created blob : {}", blobIdName);
             Storage storage = BlobStoreHelper.getStorage(credentialPath, projectId);
 
-            byte[] content = FileUtils.readFileToByteArray(filePath.toFile());
-            BlobStoreHelper.uploadBlob(storage, bucketName, blobIdName, content, false);
-            logger.info("Stored blob with name '{}' and size '{}' in bucket '{}'", filePath.getFileName().toString(), Files.size(filePath), bucketName);
-
+            try (InputStream inputStream = Files.newInputStream(filePath)) {
+                BlobStoreHelper.uploadBlob(storage, bucketName, blobIdName, inputStream, false);
+                logger.info("Stored blob with name '{}' and size '{}' in bucket '{}'", filePath.getFileName().toString(), Files.size(filePath), bucketName);
+            }
         } catch (RuntimeException e) {
             logger.warn("Failed to put file '{}' in blobstore", compressedFileName, e);
         }
