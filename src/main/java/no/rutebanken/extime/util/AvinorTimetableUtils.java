@@ -246,7 +246,7 @@ public class AvinorTimetableUtils {
             Storage storage = BlobStoreHelper.getStorage(credentialPath, projectId);
 
             try (InputStream inputStream = Files.newInputStream(filePath)) {
-                BlobStoreHelper.uploadBlob(storage, bucketName, blobIdName, inputStream, false);
+                BlobStoreHelper.uploadBlobWithRetry(storage, bucketName, blobIdName, inputStream, false);
                 logger.info("Stored blob with name '{}' and size '{}' in bucket '{}'", filePath.getFileName().toString(), Files.size(filePath), bucketName);
             }
         } catch (RuntimeException e) {
