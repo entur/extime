@@ -18,28 +18,28 @@ netex-data-sets:
       name: Avinor
       legal-name: AVINOR AS
       phone: 0047 815 30 550
-      url: http://www.avinor.no
+      url: https://www.avinor.no
       details:
     sk:
       company-number: 811176702
       name: SAS
       legal-name: SAS NORGE AS
       phone: 0047 648 16 050
-      url: http://www.sas.no
+      url: https://www.sas.no
       details:
     wf:
       company-number: 917330557
       name: Widerøe
       legal-name: WIDERØE'S FLYVESELSKAP AS
       phone: 0047 755 13 500
-      url: http://www.wideroe.no
+      url: https://www.wideroe.no
       details:
     dy:
       company-number: 912084949
       name: Norwegian
       legal-name: NORWEGIAN AIR NORWAY AS
       phone: 0047 815 21 815
-      url: http://www.norwegian.no
+      url: https://www.norwegian.no
       details:
     m3:
       company-number:
