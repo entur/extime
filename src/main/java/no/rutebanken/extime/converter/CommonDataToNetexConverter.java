@@ -6,6 +6,7 @@ import no.rutebanken.extime.model.AirportIATA;
 import no.rutebanken.extime.util.DateUtils;
 import no.rutebanken.extime.util.NetexObjectFactory;
 import org.rutebanken.netex.model.Authority;
+import org.rutebanken.netex.model.Branding;
 import org.rutebanken.netex.model.Codespace;
 import org.rutebanken.netex.model.CompositeFrame;
 import org.rutebanken.netex.model.Frames_RelStructure;
@@ -16,7 +17,6 @@ import org.rutebanken.netex.model.PassengerStopAssignment;
 import org.rutebanken.netex.model.PublicationDeliveryStructure;
 import org.rutebanken.netex.model.RoutePoint;
 import org.rutebanken.netex.model.ScheduledStopPoint;
-import org.rutebanken.netex.model.StopPlace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -66,11 +66,15 @@ public class CommonDataToNetexConverter {
         List<JAXBElement<Authority>> authorityElements = Arrays.asList(avinorAuthorityElement, nsrAuthorityElement);
 
         List<JAXBElement<Operator>> operatorElements = new ArrayList<>(AirlineDesignator.values().length);
+        List<JAXBElement<Branding>> brandingElements = new ArrayList<>(AirlineDesignator.values().length);
 
         for (AirlineDesignator designator : AirlineDesignator.values()) {
             String designatorName = designator.name().toUpperCase();
             JAXBElement<Operator> operatorElement = netexObjectFactory.createAirlineOperatorElement(designatorName);
             operatorElements.add(operatorElement);
+
+            JAXBElement<Branding> brandingElement = netexObjectFactory.createAirlineBrandingElement(designatorName);
+            brandingElements.add(brandingElement);
         }
 
         List<AirportIATA> airportIATAS = Lists.newArrayList(AirportIATA.values());
@@ -99,7 +103,7 @@ public class CommonDataToNetexConverter {
 
         stopPoints.sort(Comparator.comparing(ScheduledStopPoint::getId));
         logger.info("Retrieved and populated NeTEx structure with {} stop points", stopPoints.size());
-        framesStruct.getCommonFrame().add(netexObjectFactory.createResourceFrameElement(authorityElements, operatorElements));
+        framesStruct.getCommonFrame().add(netexObjectFactory.createResourceFrameElement(authorityElements, operatorElements, brandingElements));
 
         for (AirlineDesignator designator : AirlineDesignator.values()) {
             String designatorName = designator.name().toUpperCase();

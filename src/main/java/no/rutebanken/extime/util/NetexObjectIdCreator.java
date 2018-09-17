@@ -53,6 +53,10 @@ public class NetexObjectIdCreator {
         return NetexObjectIdCreator.composeNetexObjectId(objectIdPrefix, NetexObjectIdTypes.OPERATOR_KEY, objectId);
     }
 
+    public static String createBrandingId(String objectIdPrefix, String objectId) {
+        return NetexObjectIdCreator.composeNetexObjectId(objectIdPrefix, NetexObjectIdTypes.BRANDING_KEY, objectId);
+    }
+
     public static String createNetworkId(String objectIdPrefix, String objectId) {
         return NetexObjectIdCreator.composeNetexObjectId(objectIdPrefix, NetexObjectIdTypes.NETWORK_KEY, objectId);
     }

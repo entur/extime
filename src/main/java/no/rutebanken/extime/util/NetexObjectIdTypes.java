@@ -12,6 +12,7 @@ public interface NetexObjectIdTypes {
 
     // entity id keys
     String AUTHORITY_KEY = "Authority";
+    String BRANDING_KEY = "Branding";
     String OPERATOR_KEY = "Operator";
     String NETWORK_KEY = "Network";
     String GROUP_OF_LINES_KEY = "GroupOfLines";

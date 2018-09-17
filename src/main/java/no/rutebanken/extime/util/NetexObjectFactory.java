@@ -8,6 +8,8 @@ import org.rutebanken.netex.model.AllVehicleModesOfTransportEnumeration;
 import org.rutebanken.netex.model.Authority;
 import org.rutebanken.netex.model.AuthorityRefStructure;
 import org.rutebanken.netex.model.AvailabilityCondition;
+import org.rutebanken.netex.model.Branding;
+import org.rutebanken.netex.model.BrandingRefStructure;
 import org.rutebanken.netex.model.Codespace;
 import org.rutebanken.netex.model.Codespaces_RelStructure;
 import org.rutebanken.netex.model.CompositeFrame;
@@ -73,6 +75,8 @@ import org.rutebanken.netex.model.StopPointInJourneyPatternRefStructure;
 import org.rutebanken.netex.model.TimetableFrame;
 import org.rutebanken.netex.model.TimetabledPassingTime;
 import org.rutebanken.netex.model.TimetabledPassingTimes_RelStructure;
+import org.rutebanken.netex.model.TypeOfFrameRefStructure;
+import org.rutebanken.netex.model.TypesOfValueInFrame_RelStructure;
 import org.rutebanken.netex.model.ValidityConditions_RelStructure;
 import org.rutebanken.netex.model.VersionFrameDefaultsStructure;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -166,7 +170,7 @@ public class NetexObjectFactory {
     }
 
     public JAXBElement<CompositeFrame> createCompositeFrame(Instant publicationTimestamp,
-            AvailabilityPeriod availabilityPeriod, String airlineIata, String lineDesignation, Frames_RelStructure frames) {
+                                                            AvailabilityPeriod availabilityPeriod, String airlineIata, String lineDesignation, Frames_RelStructure frames) {
 
         ValidityConditions_RelStructure validityConditionsStruct = objectFactory.createValidityConditions_RelStructure()
                 .withValidityConditionRefOrValidBetweenOrValidityCondition_(createAvailabilityCondition(availabilityPeriod));
@@ -230,7 +234,8 @@ public class NetexObjectFactory {
     }
 
     public JAXBElement<ResourceFrame> createResourceFrameElement(Collection<JAXBElement<Authority>> authorityElements,
-            Collection<JAXBElement<Operator>> operatorElements) {
+                                                                 Collection<JAXBElement<Operator>> operatorElements,
+                                                                 Collection<JAXBElement<Branding>> brandingElements) {
 
         OrganisationsInFrame_RelStructure organisationsStruct = objectFactory.createOrganisationsInFrame_RelStructure();
 
@@ -241,6 +246,7 @@ public class NetexObjectFactory {
                 .withVersion(VERSION_ONE)
                 .withId(resourceFrameId);
         resourceFrame.setOrganisations(organisationsStruct);
+        resourceFrame.setTypesOfValue(new TypesOfValueInFrame_RelStructure());
 
         for (Iterator<JAXBElement<Authority>> iterator = authorityElements.iterator(); iterator.hasNext(); ) {
             JAXBElement<Authority> authorityElement = iterator.next();
@@ -250,6 +256,10 @@ public class NetexObjectFactory {
         for (Iterator<JAXBElement<Operator>> iterator = operatorElements.iterator(); iterator.hasNext(); ) {
             JAXBElement<Operator> operatorElement = iterator.next();
             resourceFrame.getOrganisations().getOrganisation_().add(operatorElement);
+        }
+        for (Iterator<JAXBElement<Branding>> iterator = brandingElements.iterator(); iterator.hasNext(); ) {
+            JAXBElement<Branding> brandingElement = iterator.next();
+            resourceFrame.getTypesOfValue().getValueSetOrTypeOfValue().add(brandingElement);
         }
 
         return objectFactory.createResourceFrame(resourceFrame);
@@ -272,7 +282,7 @@ public class NetexObjectFactory {
 
 
     public JAXBElement<ServiceFrame> createCommonServiceFrameElement(Collection<Network> networks, List<RoutePoint> routePoints,
-            List<ScheduledStopPoint> scheduledStopPoints, List<JAXBElement<PassengerStopAssignment>> stopAssignmentElements) {
+                                                                     List<ScheduledStopPoint> scheduledStopPoints, List<JAXBElement<PassengerStopAssignment>> stopAssignmentElements) {
 
         String serviceFrameId = NetexObjectIdCreator.createServiceFrameId(AVINOR_XMLNS,
                 String.valueOf(NetexObjectIdCreator.generateRandomId(DEFAULT_START_INCLUSIVE, DEFAULT_END_EXCLUSIVE)));
@@ -294,7 +304,7 @@ public class NetexObjectFactory {
                 .withStopAssignments(stopAssignmentsStruct);
 
         if (!CollectionUtils.isEmpty(networks)) {
-            Iterator<Network> networkIterator=networks.iterator();
+            Iterator<Network> networkIterator = networks.iterator();
             serviceFrame.withNetwork(networkIterator.next());
 
             if (networkIterator.hasNext()) {
@@ -354,7 +364,6 @@ public class NetexObjectFactory {
     }
 
 
-
     public JAXBElement<TimetableFrame> createTimetableFrame(List<ServiceJourney> serviceJourneys) {
         JourneysInFrame_RelStructure journeysInFrameRelStructure = objectFactory.createJourneysInFrame_RelStructure();
         journeysInFrameRelStructure.getDatedServiceJourneyOrDeadRunOrServiceJourney().addAll(serviceJourneys);
@@ -381,9 +390,9 @@ public class NetexObjectFactory {
                 String.valueOf(NetexObjectIdCreator.generateRandomId(DEFAULT_START_INCLUSIVE, DEFAULT_END_EXCLUSIVE)));
 
         ServiceCalendarFrame serviceCalendarFrame = objectFactory.createServiceCalendarFrame()
-                                                            .withVersion(VERSION_ONE)
-                                                            .withId(serviceCalendarFrameId)
-                                                            .withDayTypes(dayTypesStruct);
+                .withVersion(VERSION_ONE)
+                .withId(serviceCalendarFrameId)
+                .withDayTypes(dayTypesStruct);
 
         if (!dayTypeAssignments.isEmpty()) {
             List<DayTypeAssignment> dayTypeAssignmentList = new ArrayList<>(dayTypeAssignments.values());
@@ -448,7 +457,7 @@ public class NetexObjectFactory {
                 .withId(networkId)
                 .withName(createMultilingualString(airlineName))
                 .withTransportOrganisationRef(objectFactory.createAuthorityRef(authorityRefStruct));
-                //.withGroupsOfLines(groupsOfLinesStruct);
+        //.withGroupsOfLines(groupsOfLinesStruct);
     }
 
     public JAXBElement<Authority> createAvinorAuthorityElement() {
@@ -490,6 +499,9 @@ public class NetexObjectFactory {
                 .get(airlineIata.toLowerCase());
 
         String operatorId = NetexObjectIdCreator.createOperatorId(AVINOR_XMLNS, airlineIata);
+        String brandingId = NetexObjectIdCreator.createBrandingId(AVINOR_XMLNS, airlineIata);
+
+        BrandingRefStructure brandingRefStructure = new BrandingRefStructure().withRef(brandingId).withVersion(VERSION_ONE);
 
         Operator operator = objectFactory.createOperator()
                 .withVersion(VERSION_ONE)
@@ -499,9 +511,24 @@ public class NetexObjectFactory {
                 .withLegalName(createMultilingualString((airlineDataSet.getLegalName())))
                 .withContactDetails(createContactStructure(airlineDataSet.getPhone(), airlineDataSet.getUrl()))
                 .withCustomerServiceContactDetails(createContactStructure(airlineDataSet.getPhone(), airlineDataSet.getUrl()))
-                .withOrganisationType(OrganisationTypeEnumeration.OPERATOR);
+                .withOrganisationType(OrganisationTypeEnumeration.OPERATOR)
+                .withBrandingRef(brandingRefStructure);
 
         return objectFactory.createOperator(operator);
+    }
+
+    public JAXBElement<Branding> createAirlineBrandingElement(String airlineIata) {
+        NetexStaticDataSet.OrganisationDataSet airlineDataSet = netexStaticDataSet.getOrganisations()
+                .get(airlineIata.toLowerCase());
+
+        String brandingId = NetexObjectIdCreator.createBrandingId(AVINOR_XMLNS, airlineIata);
+
+        Branding branding = objectFactory.createBranding()
+                .withVersion(VERSION_ONE)
+                .withId(brandingId)
+                .withName(createMultilingualString(airlineDataSet.getName()));
+
+        return objectFactory.createBranding(branding);
     }
 
     public JAXBElement<Operator> createAirlineOperatorElement(Operator operator) {
@@ -534,7 +561,7 @@ public class NetexObjectFactory {
     }
 
     public Line createLine(String airlineIata, String lineDesignation, String lineName) {
-        String lineId = NetexObjectIdCreator.createLineId(AVINOR_XMLNS, new String[] {airlineIata, lineDesignation});
+        String lineId = NetexObjectIdCreator.createLineId(AVINOR_XMLNS, new String[]{airlineIata, lineDesignation});
 
         GroupOfLinesRefStructure groupOfLinesRefStruct = objectFactory.createGroupOfLinesRefStructure()
                 .withRef(NetexObjectIdCreator.createNetworkId(AVINOR_XMLNS, airlineIata));
@@ -549,7 +576,7 @@ public class NetexObjectFactory {
                 .withName(createMultilingualString(lineName))
                 .withTransportMode(AllVehicleModesOfTransportEnumeration.AIR)
                 .withTransportSubmode(objectFactory.createTransportSubmodeStructure().withAirSubmode(AirSubmodeEnumeration.DOMESTIC_FLIGHT))
-               // .withPublicCode(lineDesignation)
+                // .withPublicCode(lineDesignation)
                 .withRepresentedByGroupRef(groupOfLinesRefStruct);
     }
 
@@ -641,7 +668,7 @@ public class NetexObjectFactory {
     }
 
     public ServiceJourney createServiceJourney(String objectId, String lineId, String flightId, DayTypeRefs_RelStructure dayTypeRefsStruct,
-            String journeyPatternId, TimetabledPassingTimes_RelStructure passingTimesRelStruct, String name) {
+                                               String journeyPatternId, TimetabledPassingTimes_RelStructure passingTimesRelStruct, String name) {
 
         String serviceJourneyId = NetexObjectIdCreator.createServiceJourneyId(AVINOR_XMLNS, objectId);
 
@@ -658,7 +685,7 @@ public class NetexObjectFactory {
                 .withId(serviceJourneyId)
                 .withPublicCode(flightId)
                 .withName(createMultilingualString(name))
-               // .withDepartureTime(departureTime)
+                // .withDepartureTime(departureTime)
                 .withDayTypes(dayTypeRefsStruct)
                 .withJourneyPatternRef(journeyPatternRefStructElement)
                 .withLineRef(lineRefStructElement)
@@ -685,7 +712,7 @@ public class NetexObjectFactory {
                 .withId(dayTypeId);
     }
 
-    public OperatingPeriod createOperatingPeriod(String operatingPeriodId,LocalDate from, LocalDate to){
+    public OperatingPeriod createOperatingPeriod(String operatingPeriodId, LocalDate from, LocalDate to) {
         return new OperatingPeriod().withId(operatingPeriodId).withVersion(VERSION_ONE).withFromDate(from.atStartOfDay()).withToDate(to.atStartOfDay());
     }
 
@@ -715,7 +742,7 @@ public class NetexObjectFactory {
                 objectFactory.createOperatingPeriodRefStructure().withRef(operatingPeriodId).withVersion(VERSION_ONE);
 
         return createDayTypeAssignment(objectId, order, null, dayTypeId, true)
-                       .withOperatingPeriodRef(operatingPeriodRefStructure);
+                .withOperatingPeriodRef(operatingPeriodRefStructure);
 
     }
 
@@ -797,7 +824,7 @@ public class NetexObjectFactory {
                 .withRef(destinationDisplayId);
     }
 
-    public void clearReferentials(){
+    public void clearReferentials() {
         routes.clear();
         destinationDisplays.clear();
     }
