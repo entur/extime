@@ -33,8 +33,11 @@ import javax.xml.transform.stream.StreamSource;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.*;
-import java.time.OffsetDateTime;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
+import java.nio.file.PathMatcher;
+import java.nio.file.Paths;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -51,7 +54,7 @@ import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.PRO
 @Component
 public class AvinorTimetableUtils {
 
-    private Logger logger = LoggerFactory.getLogger(this.getClass());
+    private static Logger LOG = LoggerFactory.getLogger(AvinorTimetableUtils.class);
 
     private static final String XML_GLOB = "glob:*.xml";
 
@@ -144,10 +147,10 @@ public class AvinorTimetableUtils {
             try (Stream<Path> stream = Files.list(netexOutputPath)) {
                 stream.filter(isRegularFile.and(path -> matcher.matches(path.getFileName()))).forEach((path) -> {
                     try {
-                        logger.info("Deleting '{}'", path.getFileName().toString());
+                        LOG.info("Deleting '{}'", path.getFileName().toString());
                         Files.delete(path);
                     } catch (IOException e) {
-                        logger.info("Failed to delete '{}'", path.toAbsolutePath());
+                        LOG.info("Failed to delete '{}'", path.toAbsolutePath());
                         throw new RuntimeException("File path delete error : " + path.getFileName().toString());
                     }
                 });
@@ -236,21 +239,21 @@ public class AvinorTimetableUtils {
                                     @Header(HEADER_MESSAGE_CORRELATION_ID) String correlationId) throws Exception {
         try {
             Path filePath = Paths.get(compressedFilePath);
-            logger.info("Placing file '{}' from provider with id '{}' and correlation id '{}' in blob store.",
+            LOG.info("Placing file '{}' from provider with id '{}' and correlation id '{}' in blob store.",
                     compressedFileName, providerId, correlationId);
 
             String blobIdName = blobPath + compressedFileName;
-            logger.info("Created blob : {}", blobIdName);
+            LOG.info("Created blob : {}", blobIdName);
 
-            logger.info("Created blob : {}", blobIdName);
+            LOG.info("Created blob : {}", blobIdName);
             Storage storage = BlobStoreHelper.getStorage(credentialPath, projectId);
 
             try (InputStream inputStream = Files.newInputStream(filePath)) {
                 BlobStoreHelper.uploadBlobWithRetry(storage, bucketName, blobIdName, inputStream, false);
-                logger.info("Stored blob with name '{}' and size '{}' in bucket '{}'", filePath.getFileName().toString(), Files.size(filePath), bucketName);
+                LOG.info("Stored blob with name '{}' and size '{}' in bucket '{}'", filePath.getFileName().toString(), Files.size(filePath), bucketName);
             }
         } catch (RuntimeException e) {
-            logger.warn("Failed to put file '{}' in blobstore", compressedFileName, e);
+            LOG.warn("Failed to put file '{}' in blobstore", compressedFileName, e);
         }
     }
 
@@ -290,7 +293,11 @@ public class AvinorTimetableUtils {
     public static boolean isCommonDesignator(String airlineIata) {
         if (EnumUtils.isValidEnum(AirlineDesignator.class, airlineIata.toUpperCase())) {
             AirlineDesignator designator = AirlineDesignator.valueOf(airlineIata.toUpperCase());
-            return AirlineDesignator.commonDesignators.contains(designator);
+            boolean isCommonDesignator= AirlineDesignator.commonDesignators.contains(designator);
+            if (!isCommonDesignator) {
+                LOG.info("Received uncommon airline.designator: " + airlineIata);
+            }
+            return isCommonDesignator;
         }
         return false;
     }
