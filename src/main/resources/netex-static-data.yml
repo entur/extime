@@ -36,10 +36,10 @@ netex-data-sets:
       details:
     dx:
       company-number: 00000000
-      name: Leap
-      legal-name: Air LEAP AB
-      phone: +46 (0)8-639 85 38
-      url: https://www.airleap.se
+      name: DAT
+      legal-name: Danish Air Transport A/S
+      phone: +45 76 92 30 40
+      url: https://dat.dk
       details:
     dy:
       company-number: 912084949
