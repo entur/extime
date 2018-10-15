@@ -34,6 +34,13 @@ netex-data-sets:
       phone: 0047 755 13 500
       url: https://www.wideroe.no
       details:
+    dx:
+      company-number: 00000000
+      name: Leap
+      legal-name: Air LEAP AB
+      phone: +46 (0)8-639 85 38
+      url: https://www.airleap.se
+      details:
     dy:
       company-number: 912084949
       name: Norwegian
