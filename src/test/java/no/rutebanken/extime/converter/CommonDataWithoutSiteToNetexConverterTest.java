@@ -3,7 +3,6 @@ package no.rutebanken.extime.converter;
 import no.rutebanken.extime.config.CamelRouteDisabler;
 import no.rutebanken.extime.model.AirportIATA;
 import no.rutebanken.extime.util.NetexObjectIdTypes;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.rutebanken.netex.model.CompositeFrame;
@@ -34,7 +33,6 @@ public class CommonDataWithoutSiteToNetexConverterTest {
 
     @Autowired
     private CommonDataToNetexConverter netexConverter;
-
 
     @Test
     public void verifyPublicationDelivery() throws Exception {
