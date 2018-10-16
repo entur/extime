@@ -35,7 +35,7 @@ public class CommonDataWithoutSiteToNetexConverterTest {
     @Autowired
     private CommonDataToNetexConverter netexConverter;
 
-    @Ignore
+
     @Test
     public void verifyPublicationDelivery() throws Exception {
         PublicationDeliveryStructure publicationDelivery = netexConverter.convertToNetex().getValue();
