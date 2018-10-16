@@ -441,7 +441,7 @@
                     <excludes>
                         <exclude>**/*KT.java</exclude>
                     </excludes>
-                    <argLine>-Xmx1024m</argLine>
+                    <argLine>-Xmx2G</argLine>
                 </configuration>
             </plugin>
             <plugin>
