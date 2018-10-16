@@ -1,4 +1,4 @@
-# extime
+# extime [![CircleCI](https://circleci.com/gh/rutebanken/extime/tree/master.svg?style=svg&circle-token=b80134a1579275938f9bf86b7dde5df2fcfc1b5d)](https://circleci.com/gh/rutebanken/extime/tree/master)
 
 Components for fetching external timetable and realtime information from non compliant sources (non NeTEx nor SIRI)
 
