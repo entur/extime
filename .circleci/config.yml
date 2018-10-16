@@ -25,7 +25,7 @@ jobs:
         username: _json_key
         password: $GCLOUD_SERVICE_KEY
     environment:
-      TZ: "/usr/share/zoneinfo/Europe/London"
+      TZ: "/usr/share/zoneinfo/Europe/Helsinki"
       MAVEN_OPTS: -Xmx2G
     steps:
     - checkout
@@ -55,7 +55,7 @@ jobs:
         username: _json_key
         password: $GCLOUD_SERVICE_KEY
     environment:
-      TZ: "/usr/share/zoneinfo/Europe/London"
+      TZ: "/usr/share/zoneinfo/Europe/Helsinki"
       MAVEN_OPTS: -Xmx2G
     steps:
     - checkout
@@ -81,7 +81,7 @@ jobs:
         username: _json_key
         password: $GCLOUD_SERVICE_KEY
     environment:
-      TZ: "/usr/share/zoneinfo/Europe/London"
+      TZ: "/usr/share/zoneinfo/Europe/Helsinki"
       DEBIAN_FRONTEND: "noninteractive"
     steps:
     - attach_workspace:
