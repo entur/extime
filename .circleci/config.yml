@@ -18,14 +18,14 @@ aliases:
     echo 'export BUILD_STATUS_API_KEY="$BUILD_STATUS_API_KEY"' >> $BASH_ENV
     /tools/build_notify.sh
 jobs:
-  build:
+  test:
     docker:
     - image: eu.gcr.io/carbon-1287/circleci-toolbox-image
       auth:
         username: _json_key
         password: $GCLOUD_SERVICE_KEY
     environment:
-      MAVEN_OPTS: -Xmx3G
+      MAVEN_OPTS: -Xmx2G
     steps:
     - checkout
     - restore_cache:
@@ -36,7 +36,7 @@ jobs:
         - ~/.m2
         key: dep-cache-{{ checksum "pom.xml" }}
     # Cannot use -o because of snapshot dependencies.
-    - run: mvn install -s /tools/m2/settings.xml
+    - run: mvn test -s /tools/m2/settings.xml
     - run:
         name: Save test results
         command: |
@@ -47,6 +47,25 @@ jobs:
         path: ~/junit
     - store_artifacts:
         path: ~/junit
+  build:
+    docker:
+    - image: eu.gcr.io/carbon-1287/circleci-toolbox-image
+      auth:
+        username: _json_key
+        password: $GCLOUD_SERVICE_KEY
+    environment:
+      MAVEN_OPTS: -Xmx2G
+    steps:
+    - checkout
+    - restore_cache:
+        key: dep-cache-{{ checksum "pom.xml" }}
+    - run: mvn org.apache.maven.plugins:maven-dependency-plugin:3.1.0:go-offline -s /tools/m2/settings.xml
+    - save_cache:
+        paths:
+        - ~/.m2
+        key: dep-cache-{{ checksum "pom.xml" }}
+    # Cannot use -o because of snapshot dependencies.
+    - run: mvn install -s /tools/m2/settings.xml -DskipTest
     - persist_to_workspace:
         root: ~/project
         paths:
@@ -80,6 +99,8 @@ workflows:
     jobs:
     - build:
         context: org-carbon
+        requires:
+        - test
     - deploy-docker:
         context: org-carbon
         requires:
