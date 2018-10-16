@@ -12,7 +12,6 @@ import no.rutebanken.extime.util.NetexObjectIdTypes;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.rutebanken.netex.model.AllVehicleModesOfTransportEnumeration;
@@ -88,7 +87,6 @@ public class LineDataToNetexConverterTest {
         assertThat(serviceCalendarFrame.getId()).matches(id -> id.split(":")[1].equals(NetexObjectIdTypes.SERVICE_CALENDAR_FRAME_KEY), "ServiceCalendarFrame");
     }
 
-    @Ignore
     @Test
     public void testLineWithRoundTripRoutes() throws Exception {
         List<Pair<String, Integer>> routeJourneyPairs = Lists.newArrayList(Pair.of("OSL-BGO", 1), Pair.of("BGO-OSL", 1));
@@ -106,7 +104,6 @@ public class LineDataToNetexConverterTest {
         assertValidRoutes(serviceFrame.getRoutes(), lineDataSet, line);
     }
 
-    @Ignore
     @Test
     public void testLineWithStopoverRoutes() throws Exception {
         List<Pair<String, Integer>> routeJourneyPairs = Lists.newArrayList(Pair.of("TRD-OSL-BGO-MOL-SOG", 1), Pair.of("SOG-MOL-BGO-OSL-TRD", 1));
@@ -124,7 +121,6 @@ public class LineDataToNetexConverterTest {
         assertValidRoutes(serviceFrame.getRoutes(), lineDataSet, line);
     }
 
-    @Ignore
     @Test
     public void testDestinationDisplaysNoVias() throws Exception {
         List<Pair<String, Integer>> routeJourneyPairs = Lists.newArrayList(Pair.of("OSL-BGO", 1), Pair.of("BGO-OSL", 1));
@@ -161,7 +157,6 @@ public class LineDataToNetexConverterTest {
         }
     }
 
-    @Ignore
     @Test
     public void testDestinationDisplaysWithVias() throws Exception {
         List<Pair<String, Integer>> routeJourneyPairs = Lists.newArrayList(Pair.of("OSL-SOG-BGO", 1), Pair.of("BGO-SOG-OSL", 1));
@@ -204,7 +199,6 @@ public class LineDataToNetexConverterTest {
         }
     }
 
-    @Ignore
     @Test
     public void testServiceJourneyWithOperatingPeriodAndExclusions() throws Exception {
         LocalDate patternFrom = LocalDate.of(2017, 1, 3);
