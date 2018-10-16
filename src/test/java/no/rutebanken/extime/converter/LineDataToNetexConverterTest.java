@@ -283,6 +283,8 @@ public class LineDataToNetexConverterTest {
     private void assertValidPublicationDelivery(PublicationDeliveryStructure publicationDelivery, String lineName) {
         assertThat(publicationDelivery).isNotNull();
         assertThat(publicationDelivery.getVersion()).isEqualTo(NETEX_PROFILE_VERSION);
+        System.out.println(ZonedDateTime.now());
+        System.out.println(LocalDateTime.now());
         assertThat(publicationDelivery.getPublicationTimestamp()).isNotNull().isBefore(ZonedDateTime.now().toLocalDateTime());
         assertThat(publicationDelivery.getParticipantRef()).isEqualTo("Avinor");
         assertThat(publicationDelivery.getDescription()).isNotNull();
