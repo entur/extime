@@ -1,5 +1,6 @@
 package no.rutebanken.extime.converter;
 
+import no.rutebanken.extime.Constants;
 import no.rutebanken.extime.config.CamelRouteDisabler;
 import no.rutebanken.extime.model.AirportIATA;
 import no.rutebanken.extime.util.NetexObjectIdTypes;
@@ -15,10 +16,10 @@ import org.rutebanken.netex.model.StopAssignmentsInFrame_RelStructure;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 import static no.rutebanken.extime.Constants.NETEX_PROFILE_VERSION;
@@ -58,7 +59,7 @@ public class CommonDataWithoutSiteToNetexConverterTest {
     private void assertValidPublicationDelivery(PublicationDeliveryStructure publicationDelivery) {
         assertThat(publicationDelivery).isNotNull();
         assertThat(publicationDelivery.getVersion()).isEqualTo(NETEX_PROFILE_VERSION);
-        assertThat(publicationDelivery.getPublicationTimestamp()).isNotNull().isBefore(LocalDateTime.now());
+        assertThat(publicationDelivery.getPublicationTimestamp()).isNotNull().isBefore(ZonedDateTime.now(ZoneId.of(Constants.DEFAULT_ZONE_ID)).toLocalDateTime());
         assertThat(publicationDelivery.getParticipantRef()).isEqualTo("Avinor");
         assertThat(publicationDelivery.getDataObjects()).isNotNull();
     }
