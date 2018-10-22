@@ -41,7 +41,6 @@ public enum AirportIATA {
     OLA, // Ørland
     OSL, // Oslo lufthavn
     OSY, // Namsos lufthavn
-    QKX, // Kautokeino
     RET, // Røst lufthavn
     RRS, // Røros lufthavn
    // RYG, // Rygge

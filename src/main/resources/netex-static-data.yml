@@ -221,10 +221,6 @@ netex-data-sets:
       name: Namsos Lufthavn
       short-name: Namsos
       nsr-id: 1200
-    qkx:
-      name: Kautokeino Lufthavn
-      short-name: Kautokeino
-      nsr-id: 0
     ret:
       name: Røst Lufthavn
       short-name: Røst
