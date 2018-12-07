@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.rutebanken.superpom</groupId>
         <artifactId>superpom</artifactId>
-        <version>0.0.6</version>
+        <version>0.0.8-SNAPSHOT</version>
     </parent>
 
     <groupId>no.rutebanken.extime</groupId>
@@ -27,7 +27,7 @@
         <spring-boot.version>2.0.3.RELEASE</spring-boot.version>
         <camel.version>2.22.0</camel.version>
 
-        <docker.from>eu.gcr.io/carbon-1287/java-base-image</docker.from>
+        <docker.from>eu.gcr.io/carbon-1287/openjdk11-base-image</docker.from>
         <fabric8.dockerUser>carbon-1287/</fabric8.dockerUser>
         <docker.image>eu.gcr.io/${fabric8.dockerUser}${project.artifactId}:${project.version}</docker.image>
         <docker.cleanup>none</docker.cleanup>
@@ -50,6 +50,21 @@
     </dependencyManagement>
 
     <dependencies>
+        <dependency>
+            <groupId>com.sun.activation</groupId>
+            <artifactId>javax.activation</artifactId>
+            <version>1.2.0</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.xml.bind</groupId>
+            <artifactId>jaxb-api</artifactId>
+            <version>2.3.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jaxb</groupId>
+            <artifactId>jaxb-runtime</artifactId>
+            <version>2.3.0.1</version>
+        </dependency>
         <dependency>
             <groupId>net.logstash.logback</groupId>
             <artifactId>logstash-logback-encoder</artifactId>
@@ -277,7 +292,7 @@
             <plugin>
                 <groupId>org.jvnet.jaxb2.maven2</groupId>
                 <artifactId>maven-jaxb2-plugin</artifactId>
-                <version>0.13.1</version>
+                <version>0.14.0</version>
                 <executions>
                     <execution>
                         <id>xjc-scheduled</id>
