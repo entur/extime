@@ -23,9 +23,9 @@
 
         <!-- versions for use in mvn plugins as we cannot inherit them from a BOM -->
         <docker.maven.plugin.version>0.21.0</docker.maven.plugin.version>
-        <spring-boot-plugin.version>2.0.3.RELEASE</spring-boot-plugin.version>
-        <spring-boot.version>2.0.3.RELEASE</spring-boot.version>
-        <camel.version>2.22.0</camel.version>
+        <spring-boot-plugin.version>2.1.1.RELEASE</spring-boot-plugin.version>
+        <spring-boot.version>2.1.1.RELEASE</spring-boot.version>
+        <camel.version>2.23.0</camel.version>
 
         <docker.from>eu.gcr.io/carbon-1287/openjdk11-base-image</docker.from>
         <fabric8.dockerUser>carbon-1287/</fabric8.dockerUser>
@@ -68,7 +68,7 @@
         <dependency>
             <groupId>net.logstash.logback</groupId>
             <artifactId>logstash-logback-encoder</artifactId>
-            <version>4.11</version>
+            <version>5.2</version>
         </dependency>
 
         <dependency>
@@ -81,7 +81,7 @@
         <dependency>
             <groupId>org.jvnet.jaxb2_commons</groupId>
             <artifactId>jaxb2-basics-runtime</artifactId>
-            <version>0.11.1</version>
+            <version>1.11.1</version>
             <scope>compile</scope>
         </dependency>
 
@@ -150,8 +150,6 @@
         <dependency>
             <groupId>org.apache.activemq</groupId>
             <artifactId>activemq-camel</artifactId>
-            <!-- Holding back activemq version as newest version no long support spring wired broker config-->
-            <version>5.13.4</version>
         </dependency>
 
 
@@ -214,23 +212,23 @@
         <dependency>
             <groupId>org.zeroturnaround</groupId>
             <artifactId>zt-zip</artifactId>
-            <version>1.10</version>
+            <version>1.13</version>
             <type>jar</type>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-            <version>3.4</version>
+            <version>3.8.1</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-            <version>2.5</version>
+            <version>2.6</version>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>21.0</version>
+            <version>27.0-jre</version>
         </dependency>
         <dependency>
             <groupId>org.hibernate</groupId>
@@ -242,7 +240,7 @@
         <dependency>
             <groupId>net.sf.ehcache</groupId>
             <artifactId>ehcache</artifactId>
-            <version>2.10.1</version>
+            <version>2.10.6</version>
         </dependency>
 
         <!-- Testing -->
