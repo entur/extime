@@ -26,22 +26,22 @@
         <spring-boot-plugin.version>2.1.3.RELEASE</spring-boot-plugin.version>
         <spring-boot.version>2.1.3.RELEASE</spring-boot.version>
         <camel.version>2.23.1</camel.version>
-		<entur.helpers.version>0.0.5-SNAPSHOT</entur.helpers.version>
-		<logstash-logback-encoder.version>5.3</logstash-logback-encoder.version>
-		<guava.version>27.0-jre</guava.version>
-		<onebusaway-gtfs.version>1.3.4</onebusaway-gtfs.version>
-		<hibernate-validator.version>5.2.4.Final</hibernate-validator.version>
-		<jaxb2-basics-runtime.version>1.11.1</jaxb2-basics-runtime.version>
-		<jaxb-java-time-adapters>1.1.3</jaxb-java-time-adapters>
-		<zt-zip.version>1.13</zt-zip.version>
-		<commons-io.version>2.6</commons-io.version>
-		<siri-java-model.version>0.13-SNAPSHOT</siri-java-model.version>
-		<commons-collections4.version>4.2</commons-collections4.version>
-		<javax.activation.version>1.2.0</javax.activation.version>
-		<commons-beanutils.version>1.9.3</commons-beanutils.version>
-		<c3p0.version>0.9.5.4</c3p0.version>
-		<xerces.version>2.12.0</xerces.version>
-		<commons-beanutils.version>1.9.3</commons-beanutils.version>
+        <entur.helpers.version>0.0.5-SNAPSHOT</entur.helpers.version>
+        <logstash-logback-encoder.version>5.3</logstash-logback-encoder.version>
+        <guava.version>27.0-jre</guava.version>
+        <onebusaway-gtfs.version>1.3.4</onebusaway-gtfs.version>
+        <hibernate-validator.version>5.2.4.Final</hibernate-validator.version>
+        <jaxb2-basics-runtime.version>1.11.1</jaxb2-basics-runtime.version>
+        <jaxb-java-time-adapters>1.1.3</jaxb-java-time-adapters>
+        <zt-zip.version>1.13</zt-zip.version>
+        <commons-io.version>2.6</commons-io.version>
+        <siri-java-model.version>0.13-SNAPSHOT</siri-java-model.version>
+        <commons-collections4.version>4.2</commons-collections4.version>
+        <javax.activation.version>1.2.0</javax.activation.version>
+        <commons-beanutils.version>1.9.3</commons-beanutils.version>
+        <c3p0.version>0.9.5.4</c3p0.version>
+        <xerces.version>2.12.0</xerces.version>
+        <commons-beanutils.version>1.9.3</commons-beanutils.version>
         <docker.from>eu.gcr.io/carbon-1287/openjdk11-base-image</docker.from>
         <fabric8.dockerUser>carbon-1287/</fabric8.dockerUser>
         <docker.image>eu.gcr.io/${fabric8.dockerUser}${project.artifactId}:${project.version}</docker.image>
@@ -65,25 +65,25 @@
             
             <!-- security-related dependency management -->
             <!-- for camel-quarty -->
-			<dependency>
-			    <groupId>com.mchange</groupId>
-			    <artifactId>c3p0</artifactId>
-			    <version>${c3p0.version}</version>
-			</dependency>
-			
-			<!-- for camel-cache -->
-			<dependency>
-			    <groupId>xerces</groupId>
-			    <artifactId>xercesImpl</artifactId>
-			    <version>${xerces.version}</version>
-			</dependency>
+            <dependency>
+                <groupId>com.mchange</groupId>
+                <artifactId>c3p0</artifactId>
+                <version>${c3p0.version}</version>
+            </dependency>
+            
+            <!-- for camel-cache -->
+            <dependency>
+                <groupId>xerces</groupId>
+                <artifactId>xercesImpl</artifactId>
+                <version>${xerces.version}</version>
+            </dependency>
 
-			<!-- for onebusaway-gtfs -->
-			<dependency>
-			    <groupId>commons-beanutils</groupId>
-			    <artifactId>commons-beanutils</artifactId>
-			    <version>${commons-beanutils.version}</version>
-			</dependency>
+            <!-- for onebusaway-gtfs -->
+            <dependency>
+                <groupId>commons-beanutils</groupId>
+                <artifactId>commons-beanutils</artifactId>
+                <version>${commons-beanutils.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
