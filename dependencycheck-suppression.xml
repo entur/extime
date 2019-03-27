@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions
+	xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.2.xsd">
+
+	<suppress>
+		<gav regex="true">^org\.zeroturnaround:zt-zip:.*$</gav>
+		<cve>CVE-2004-0932</cve>
+		<cve>CVE-2004-0933</cve>
+		<cve>CVE-2004-0934</cve>
+		<cve>CVE-2004-0935</cve>
+		<cve>CVE-2004-0936</cve>
+		<cve>CVE-2004-0937</cve>
+	</suppress>
+	
+	<!-- relatert til noen svakheter i consolet til activemq -->
+	<suppress>
+	   <gav regex="true">^org\.apache\.activemq:activemq-.*:.*$</gav>
+	   <cpe>cpe:/a:apache:activemq</cpe>
+	</suppress>	
+</suppressions>
