@@ -109,7 +109,7 @@ public class NetexStaticDataSet {
 
         private String name;
         private String shortName;
-        private String nsrId;
+        private boolean international;
 
         public String getName() {
             return name;
@@ -127,12 +127,12 @@ public class NetexStaticDataSet {
             this.shortName = shortName;
         }
 
-        public String getNsrId() {
-            return nsrId;
+        public boolean isInternational() {
+            return international;
         }
 
-        public void setNsrId(String nsrId) {
-            this.nsrId = nsrId;
+        public void setInternational(boolean international) {
+            this.international = international;
         }
 
         @Override
@@ -140,9 +140,11 @@ public class NetexStaticDataSet {
             return MoreObjects.toStringHelper(this)
                     .add("name", name)
                     .add("shortName", shortName)
-                    .add("nsrId", nsrId)
+                    .add("international", international)
                     .toString();
         }
+
+
     }
 
 

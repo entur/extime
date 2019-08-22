@@ -60,9 +60,11 @@ public enum AirportIATA {
     VAW, // Vardø lufthavn
     VDB, // Fagernes lufthamn
     VDS, // Vadsø lufthavn
-    VRY;  // Værøy helikopterhavn
+    VRY,  // Værøy helikopterhavn
 
-    public static EnumSet<AirportIATA> LARGE_SIZED_AIRPORTS = EnumSet.of(OSL);
+    ARN; // Stockholm Arlanda Lufthavn
+
+    public static EnumSet<AirportIATA> LARGE_SIZED_AIRPORTS = EnumSet.of(OSL, ARN);
     public static EnumSet<AirportIATA> MEDIUM_SIZED_AIRPORTS = EnumSet.of(BGO, BOO, SVG, TRD);
 
 }

@@ -23,14 +23,13 @@
 
         <!-- versions for use in mvn plugins as we cannot inherit them from a BOM -->
         <docker.maven.plugin.version>0.21.0</docker.maven.plugin.version>
-        <spring-boot-plugin.version>2.1.3.RELEASE</spring-boot-plugin.version>
-        <spring-boot.version>2.1.3.RELEASE</spring-boot.version>
-        <camel.version>2.23.1</camel.version>
+        <spring-boot-plugin.version>2.1.7.RELEASE</spring-boot-plugin.version>
+        <spring-boot.version>2.1.7.RELEASE</spring-boot.version>
+        <camel.version>2.24.1</camel.version>
         <entur.helpers.version>0.0.5-SNAPSHOT</entur.helpers.version>
         <logstash-logback-encoder.version>5.3</logstash-logback-encoder.version>
         <guava.version>27.0-jre</guava.version>
         <onebusaway-gtfs.version>1.3.4</onebusaway-gtfs.version>
-        <hibernate-validator.version>5.2.4.Final</hibernate-validator.version>
         <jaxb2-basics-runtime.version>1.11.1</jaxb2-basics-runtime.version>
         <jaxb-java-time-adapters>1.1.3</jaxb-java-time-adapters>
         <zt-zip.version>1.13</zt-zip.version>
@@ -46,7 +45,7 @@
         <fabric8.dockerUser>carbon-1287/</fabric8.dockerUser>
         <docker.image>eu.gcr.io/${fabric8.dockerUser}${project.artifactId}:${project.version}</docker.image>
         <docker.cleanup>none</docker.cleanup>
-        <owasp-dependency-check.version>4.0.2</owasp-dependency-check.version>
+        <owasp-dependency-check.version>5.2.1</owasp-dependency-check.version>
 
         <!-- NB: Concious choice of using snapshot version. This is to keep in
             sync, and fail fast if incompatibilities -->
@@ -215,6 +214,11 @@
 
         <!-- Misc. -->
         <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.9.9.3</version>
+        </dependency>
+        <dependency>
             <groupId>com.migesok</groupId>
             <artifactId>jaxb-java-time-adapters</artifactId>
             <version>${jaxb-java-time-adapters}</version>
@@ -262,11 +266,6 @@
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>${guava.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-validator</artifactId>
-            <version>${hibernate-validator.version}</version>
         </dependency>
 
         <!-- Testing -->

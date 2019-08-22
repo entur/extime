@@ -75,7 +75,6 @@ import org.rutebanken.netex.model.StopPointInJourneyPatternRefStructure;
 import org.rutebanken.netex.model.TimetableFrame;
 import org.rutebanken.netex.model.TimetabledPassingTime;
 import org.rutebanken.netex.model.TimetabledPassingTimes_RelStructure;
-import org.rutebanken.netex.model.TypeOfFrameRefStructure;
 import org.rutebanken.netex.model.TypesOfValueInFrame_RelStructure;
 import org.rutebanken.netex.model.ValidityConditions_RelStructure;
 import org.rutebanken.netex.model.VersionFrameDefaultsStructure;
@@ -575,9 +574,20 @@ public class NetexObjectFactory {
                 .withId(lineId)
                 .withName(createMultilingualString(lineName))
                 .withTransportMode(AllVehicleModesOfTransportEnumeration.AIR)
-                .withTransportSubmode(objectFactory.createTransportSubmodeStructure().withAirSubmode(AirSubmodeEnumeration.DOMESTIC_FLIGHT))
+                .withTransportSubmode(objectFactory.createTransportSubmodeStructure().withAirSubmode(getAirSubmode(lineDesignation)))
                 // .withPublicCode(lineDesignation)
                 .withRepresentedByGroupRef(groupOfLinesRefStruct);
+    }
+
+    private AirSubmodeEnumeration getAirSubmode(String lineDesignation) {
+        Map<String, NetexStaticDataSet.StopPlaceDataSet> stopPlaceDataSets = netexStaticDataSet.getStopPlaces();
+
+        for(String airport: lineDesignation.split(DASH)) {
+            if(stopPlaceDataSets.get(airport.toLowerCase()).isInternational()) {
+                return AirSubmodeEnumeration.INTERNATIONAL_FLIGHT;
+            }
+        }
+        return AirSubmodeEnumeration.DOMESTIC_FLIGHT;
     }
 
     public Route createRoute(String lineId, String objectId, String routeName, PointsOnRoute_RelStructure pointsOnRoute) {

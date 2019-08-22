@@ -313,7 +313,7 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         Assertions.assertThat(flights)
                 .isNotNull()
                 .isNotEmpty()
-                .hasSize(8)
+                .hasSize(9)
                 .hasOnlyElementsOfType(Flight.class);
     }
 

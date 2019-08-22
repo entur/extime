@@ -80,220 +80,169 @@ netex-data-sets:
     aes:
       name: Ålesund Lufthavn
       short-name: Ålesund
-      nsr-id: 1173
     alf:
       name: Alta Lufthavn
       short-name: Alta
-      nsr-id: 1175
     anx:
       name: Andøya Lufthavn
       short-name: Andenes
-      nsr-id: 1176
     bdu:
       name: Bardufoss Lufthavn
       short-name: Bardufoss
-      nsr-id: 1178
     bgo:
       name: Bergen Lufthavn
       short-name: Bergen
-      nsr-id: 1179
     bjf:
       name: Båtsfjord Lufthavn
       short-name: Båtsfjord
-      nsr-id: 1177
     bnn:
       name: Brønnøysund Lufthavn
       short-name: Brønnøysund
-      nsr-id: 1182
     boo:
       name: Bodø Lufthavn
       short-name: Bodø
-      nsr-id: 1181
     bvg:
       name: Berlevåg Lufthavn
       short-name: Berlevåg
-      nsr-id: 1180
     dld:
       name: Geilo lufthavn Dagali
       short-name: Geilo
-      nsr-id: 0
     eve:
       name: Harstad/Narvik Lufthavn
       short-name: Harstad/Narvik
-      nsr-id: 1187
     fan:
       name: Farsund Lufthavn, Lista
       short-name: Farsund
-      nsr-id: 0
     fde:
       name: Førde Lufthamn
       short-name: Førde
-      nsr-id: 1183
     fro:
       name: Florø Lufthamn
       short-name: Florø
-      nsr-id: 1185
     gll:
       name: Gol Flyplass, Klanten
       short-name: Gol
-      nsr-id: 0
     haa:
       name: Hasvik Lufthavn
       short-name: Hasvik
-      nsr-id: 1188
     hau:
       name: Haugesund Lufthavn
       short-name: Haugesund
-      nsr-id: 1189
     hft:
       name: Hammerfest Lufthavn
       short-name: Hammerfest
-      nsr-id: 1186
     hmr:
       name: Hamar lufthavn
       short-name: Hamar
-      nsr-id: 0
     hov:
       name: Ørsta-Volda Lufthamn
       short-name: Ørsta/Volda
-      nsr-id: 1174
     hvg:
       name: Honningsvåg Lufthavn
       short-name: Honningsvåg
-      nsr-id: 1190
     kkn:
       name: Kirkenes Lufthavn
       short-name: Kirkenes
-      nsr-id: 1191
     krs:
       name: Kristiansand Lufthavn
       short-name: Kristiansand
-      nsr-id: 1192
     ksu:
       name: Kristiansund Lufthavn
       short-name: Kristiansund
-      nsr-id: 1193
     lkl:
       name: Lakselv Lufthavn
       short-name: Lakselv
-      nsr-id: 1194
     lkn:
       name: Leknes Lufthavn
       short-name: Leknes
-      nsr-id: 1195
     lyr:
       name: Svalbard Lufthavn
       short-name: Longyearbyen
-      nsr-id: 1212
     meh:
       name: Mehamn Lufthavn
       short-name: Mehamn
-      nsr-id: 1196
     mjf:
       name: Mosjøen Lufthavn
       short-name: Mosjøen
-      nsr-id: 1199
     mol:
       name: Molde Lufthavn
       short-name: Molde
-      nsr-id: 1198
     mqn:
       name: Mo i Rana Lufthavn
       short-name: Mo i Rana
-      nsr-id: 1197
     ntb:
       name: Notodden lufthavn
       short-name: Notodden
-      nsr-id: 0
     nvk:
       name: Narvik Lufthavn
       short-name: Narvik
-      nsr-id: 1201
     ola:
       name: Ørland Lufthavn
       short-name: Ørland
-      nsr-id: 1172
     osl:
       name: Oslo Lufthavn
       short-name: Oslo
-      nsr-id: 1202
     osy:
       name: Namsos Lufthavn
       short-name: Namsos
-      nsr-id: 1200
     ret:
       name: Røst Lufthavn
       short-name: Røst
-      nsr-id: 1205
     rrs:
       name: Røros Lufthavn
       short-name: Røros
-      nsr-id: 1203
     rvk:
       name: Rørvik Lufthavn
       short-name: Rørvik
-      nsr-id: 1204
     sdn:
       name: Sandane Lufthamn
       short-name: Sandane
-      nsr-id: 1207
     ske:
       name: Skien Lufthavn, Geiteryggen
       short-name: Skien
-      nsr-id: 0
     skn:
       name: Stokmarknes Lufthavn
       short-name: Stokmarknes
-      nsr-id: 1211
     sog:
       name: Sogndal Lufthamn
       short-name: Sogndal
-      nsr-id: 1209
     soj:
       name: Sørkjosen Lufthavn
       short-name: Sørkjosen
-      nsr-id: 1206
     srp:
       name: Stord Lufthavn, Sørstokken
       short-name: Stord
-      nsr-id: 0
     ssj:
       name: Sandnessjøen Lufthavn
       short-name: Sandnessjøen
-      nsr-id: 1208
     svg:
       name: Stavanger Lufthavn
       short-name: Stavanger
-      nsr-id: 1210
     svj:
       name: Svolvær Lufthavn
       short-name: Svolvær
-      nsr-id: 1213
     tos:
       name: Tromsø Lufthavn
       short-name: Tromsø
-      nsr-id: 1214
     trd:
       name: Trondheim Lufthavn
       short-name: Trondheim
-      nsr-id: 1215
     trf:
       name: Sandefjord Lufthavn
       short-name: Sandefjord
-      nsr-id: 58586
     vaw:
       name: Vardø Lufthavn
       short-name: Vardø
-      nsr-id: 1218
     vdb:
       name: Fagernes Lufthamn
       short-name: Fagernes
-      nsr-id: 1184
     vds:
       name: Vadsø Lufthavn
       short-name: Vadsø
-      nsr-id: 1217
     vry:
       name: Værøy Helikopterhavn
       short-name: Værøy
-      nsr-id: 1216
+    arn:
+      name: Stockholm Arlanda Lufthavn
+      short-name: Stockholm
+      international: true
