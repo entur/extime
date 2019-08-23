@@ -53,8 +53,8 @@ blobstore.gcs.provider.id=21
 
 spring.activemq.broker-url=vm://localhost?jms.useAsyncSend=true&broker.persistent=false
 spring.activemq.pooled=true
-spring.activemq.user=admin
-spring.activemq.password=***REMOVED***
+#spring.activemq.user=
+#spring.activemq.password=
 
 queue.upload.destination.name=MardukInboundTestQueue
 
