@@ -13,7 +13,7 @@ public abstract class BaseRouteBuilder extends RouteBuilder {
    
     @Override
     public void configure() throws Exception {
-        errorHandler(deadLetterChannel("activemq:queue:DeadLetterQueue")
+        errorHandler(deadLetterChannel("entur-google-pubsub:DeadLetterQueue")
             .maximumRedeliveries(3)
             .redeliveryDelay(3000));
 

@@ -4,6 +4,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import no.rutebanken.extime.Constants;
+import no.rutebanken.extime.ExtimeRouteBuilderIntegrationTestBase;
 import no.rutebanken.extime.config.CamelRouteDisabler;
 import no.rutebanken.extime.fixtures.LineDataSetFixture;
 import no.rutebanken.extime.model.FlightRoute;
@@ -58,9 +59,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SuppressWarnings("unchecked")
 @ActiveProfiles("test")
-@RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = {CamelRouteDisabler.class, LineDataToNetexConverter.class}, properties = "spring.config.name=application,netex-static-data")
-public class LineDataToNetexConverterTest {
+public class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationTestBase {
 
     @Autowired
     private LineDataToNetexConverter netexConverter;

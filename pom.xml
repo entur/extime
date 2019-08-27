@@ -25,7 +25,8 @@
         <spring-boot-plugin.version>2.1.7.RELEASE</spring-boot-plugin.version>
         <spring-boot.version>2.1.7.RELEASE</spring-boot.version>
         <camel.version>2.24.1</camel.version>
-        <entur.helpers.version>0.0.5-SNAPSHOT</entur.helpers.version>
+        <camel-entur-google-pubsub-version>0.0.6-SNAPSHOT</camel-entur-google-pubsub-version>
+        <entur.helpers.version>0.0.6-SNAPSHOT</entur.helpers.version>
         <logstash-logback-encoder.version>5.3</logstash-logback-encoder.version>
         <guava.version>27.0-jre</guava.version>
         <onebusaway-gtfs.version>1.3.4</onebusaway-gtfs.version>
@@ -178,6 +179,12 @@
         <dependency>
             <groupId>org.apache.activemq</groupId>
             <artifactId>activemq-camel</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.entur.helpers</groupId>
+            <artifactId>camel-entur-google-pubsub</artifactId>
+            <version>${camel-entur-google-pubsub-version}</version>
         </dependency>
 
 
@@ -467,6 +474,33 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-pubsub-emulator</id>
+                        <phase>test-compile</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <artifactItems>
+                        <artifactItem>
+                            <groupId>com.google.cloud</groupId>
+                            <artifactId>pubsub-emulator</artifactId>
+                            <version>0.1-SNAPSHOT</version>
+                            <type>jar</type>
+                            <overWrite>true</overWrite>
+                            <outputDirectory>${project.build.directory}/pubsub-emulator</outputDirectory>
+                        </artifactItem>
+                    </artifactItems>
+                </configuration>
+            </plugin>
+
 
             <plugin>
                 <groupId>org.owasp</groupId>

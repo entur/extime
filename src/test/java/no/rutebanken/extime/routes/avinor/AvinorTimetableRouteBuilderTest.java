@@ -1,86 +1,148 @@
 package no.rutebanken.extime.routes.avinor;
 
-import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.HEADER_EXTIME_HTTP_URI;
-import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.HEADER_EXTIME_RESOURCE_CODE;
-import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.HEADER_EXTIME_URI_PARAMETERS;
-import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEADER_LOWER_RANGE_ENDPOINT;
-import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEADER_TIMETABLE_LARGE_AIRPORT_RANGE;
-import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEADER_TIMETABLE_SMALL_AIRPORT_RANGE;
-import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEADER_TIMETABLE_STOP_VISIT_TYPE;
-import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEADER_UPPER_RANGE_ENDPOINT;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Range;
+import no.avinor.flydata.xjc.model.scheduled.Flight;
+import no.rutebanken.extime.ExtimeRouteBuilderIntegrationTestBase;
+import no.rutebanken.extime.model.AirportIATA;
+import no.rutebanken.extime.model.ScheduledFlight;
+import no.rutebanken.extime.model.StopVisitType;
+import no.rutebanken.extime.util.DateUtils;
+import org.apache.camel.EndpointInject;
+import org.apache.camel.Exchange;
+import org.apache.camel.Produce;
+import org.apache.camel.ProducerTemplate;
+import org.apache.camel.builder.AdviceWithRouteBuilder;
+import org.apache.camel.component.mock.MockEndpoint;
+import org.assertj.core.api.Assertions;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.rutebanken.netex.model.ObjectFactory;
+import org.rutebanken.netex.model.PublicationDeliveryStructure;
+import org.springframework.boot.test.context.SpringBootTest;
 
+import javax.xml.bind.JAXBElement;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.OffsetDateTime;
-import java.time.OffsetTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.function.Predicate;
 
-import javax.xml.bind.JAXBElement;
+import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.*;
+import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.*;
 
-import org.apache.camel.Exchange;
-import org.apache.camel.Processor;
-import org.apache.camel.Produce;
-import org.apache.camel.ProducerTemplate;
-import org.apache.camel.builder.AdviceWithRouteBuilder;
-import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.component.properties.DefaultPropertiesParser;
-import org.apache.camel.component.properties.PropertiesComponent;
-import org.apache.camel.impl.JndiRegistry;
-import org.apache.camel.model.ProcessorDefinition;
-import org.apache.camel.test.junit4.CamelTestSupport;
-import org.apache.camel.util.jndi.JndiContext;
-import org.apache.tomcat.jni.Local;
-import org.assertj.core.api.Assertions;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.rutebanken.netex.model.ObjectFactory;
-import org.rutebanken.netex.model.PublicationDeliveryStructure;
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = {AvinorTimetableRouteBuilder.class} , properties = {
+        "spring.config.name=application,netex-static-data",
+        "avinor.timetable.scheduler.consumer=direct:start",
+        "avinor.timetable.period.months=4",
+        "avinor.timetable.max.range=180",
+        "avinor.timetable.min.range=60",
+        "avinor.timetable.feed.endpoint=mock:timetableFeedEndpoint",
+        "avinor.airport.feed.endpoint=mock:airportFeedEndpoint",
+        "avinor.airports.small=EVE,KRS,MOL,SOG,TOS",
+        "avinor.airports.large=BGO,BOO,SVG,TRD",
+        "avinor.airline.feed.endpoint=mock:airlineFeedEndpoint",
+        "netex.generated.output.path=target/netex-mock",
+        "netex.compressed.output.path=target/marduk-mock",
+        "queue.upload.destination.name=MockMardukQueue",
+        "avinor.timetable.dump.enabled=false",
+        "avinor.timetable.dump.output.path=target/flights"
+} )
+public class AvinorTimetableRouteBuilderTest extends ExtimeRouteBuilderIntegrationTestBase {
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Range;
+    @EndpointInject(uri = "mock:direct:fetchAndCacheAirportName")
+    protected MockEndpoint mockFetchAndCacheAirportName;
 
-import no.avinor.flydata.xjc.model.scheduled.Flight;
-import no.rutebanken.extime.model.AirportIATA;
-import no.rutebanken.extime.model.ScheduledFlight;
-import no.rutebanken.extime.model.StopVisitType;
-import no.rutebanken.extime.util.DateUtils;
+    @EndpointInject(uri = "mock:fetchTimetable")
+    protected MockEndpoint mockFetchTimetable;
 
-@SuppressWarnings("unchecked")
-public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
+    @EndpointInject(uri = "mock:convertToScheduledFlights")
+    protected MockEndpoint mockConvertToScheduledFlights;
 
-    @Produce(uri = "direct:fetchAirportNameFromFeed")
-    private ProducerTemplate fetchAirportNameTemplate;
+    @EndpointInject(uri = "mock:direct:convertScheduledFlightsToNetex")
+    protected MockEndpoint mockConvertScheduledFlightsToNetex;
 
-    @Produce(uri = "direct:fetchAirlineNameFromFeed")
-    private ProducerTemplate fetchAirlineNameTemplate;
+    @EndpointInject(uri = "mock:fetchXmlFromHttp")
+    protected MockEndpoint mockFetchXmlFromHttp;
 
-    @Produce(uri = "direct:fetchTimetableForLargeAirport")
-    private ProducerTemplate fetchTimetableForLargeAirportTemplate;
+    @EndpointInject(uri = "mock:direct:addResourceToCache")
+    protected MockEndpoint mockAddResourceToCache;
+
+    @EndpointInject(uri = "mock:largeAirportLogger")
+    protected MockEndpoint mockLargeAirportLogger;
+
+    @EndpointInject(uri = "mock:smallAirportLogger")
+    protected MockEndpoint mockSmallAirportLogger;
+
+    @EndpointInject(uri = "mock:direct:fetchTimetableForAirportByRanges")
+    protected MockEndpoint mockFetchTimetableForAirportByRanges;
+
+    @EndpointInject(uri = "mock:direct:fetchTimetableForLargeAirport")
+    protected MockEndpoint mockFetchTimetableForLargeAirport;
+
+    @EndpointInject(uri = "mock:fetchAirportFlights")
+    protected MockEndpoint mockFetchAirportFlights;
+
+    @EndpointInject(uri = "mock:direct:fetchXmlStreamFromHttpFeed")
+    protected MockEndpoint mockFetchXmlStreamFromHttpFeed;
+
+    @EndpointInject(uri = "mock:splitAndJoinEndpoint")
+    protected MockEndpoint mockSplitAndJoinEndpoint;
+
+    @EndpointInject(uri = "mock:flightSplitWireTap")
+    protected MockEndpoint mockFlightSplitWireTap;
+
+    @EndpointInject(uri = "mock:airlineIataPreProcess")
+    protected MockEndpoint mockAirlineIataPreProcess;
+
+    @EndpointInject(uri = "mock:direct:retrieveAirlineNameResource")
+    protected MockEndpoint mockRetrieveAirlineNameResource;
+
+    @EndpointInject(uri = "mock:direct:enrichScheduledFlightWithAirportNames")
+    protected MockEndpoint mockEnrichScheduledFlightWithAirportNames;
+
+    @EndpointInject(uri = "mock:convertToNetex")
+    protected MockEndpoint mockConvertToNetex;
+
+    @EndpointInject(uri = "mock:generateFileName")
+    protected MockEndpoint mockGenerateFileName;
+
+    @EndpointInject(uri = "mock:file:target/netex")
+    protected MockEndpoint mockFileTargetNetex;
+    
+
+
+    @Produce(uri = "direct:fetchAndCacheAirportName")
+    protected ProducerTemplate fetchAndCacheAirportNameTemplate;
+
+    @Produce(uri = "direct:fetchAndCacheAirlineName")
+    protected ProducerTemplate fetchAndCacheAirlineNameTemplate;
+
+    @Produce(uri = "direct:fetchTimetableForAirport")
+    protected ProducerTemplate fetchTimetableForAirportTemplate;
+
+    @Produce(uri = "direct:fetchAirportFlightsByRangeAndStopVisitType")
+    protected ProducerTemplate fetchAirportFlightsByRangeAndStopVisitTypeTemplate;
+
+    @Produce(uri = "direct:convertScheduledFlightsToNetex")
+    protected ProducerTemplate convertScheduledFlightsToNetexTemplate;
+
+    @Produce(uri = "direct:start")
+    protected ProducerTemplate  startTemplate;
 
     @Produce(uri = "direct:fetchTimetableForAirportByRanges")
-    private ProducerTemplate fetchTimetableByRangesTemplate;
+    protected ProducerTemplate fetchTimetableByRangesTemplate;
 
     @Produce(uri = "direct:splitJoinIncomingFlightMessages")
-    private ProducerTemplate splitJoinFlightsTemplate;
+    protected ProducerTemplate splitJoinFlightsTemplate;
 
-    @Produce(uri = "direct:enrichScheduledStopoverFlightWithAirportNames")
-    private ProducerTemplate enrichStopoverFlightTemplate;
-
-    @Produce(uri = "direct:retrieveAirportNamesForStopovers")
-    private ProducerTemplate enrichStopoversTemplate;
-
-    DateUtils dateUtils = new DateUtils();
 
     @Test
     @Ignore // TODO fix test
@@ -104,16 +166,20 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         });
         context.start();
 
-        getMockEndpoint("mock:direct:fetchAndCacheAirportName").expectedMessageCount(3);
-        getMockEndpoint("mock:direct:fetchAndCacheAirportName").expectedHeaderValuesReceivedInAnyOrder(
+        mockFetchAndCacheAirportName.expectedMessageCount(3);
+        mockFetchAndCacheAirportName.expectedHeaderValuesReceivedInAnyOrder(
                 HEADER_EXTIME_RESOURCE_CODE, "OSL", "BGO", "EVE");
-        getMockEndpoint("mock:fetchTimetable").expectedMessageCount(3);
-        getMockEndpoint("mock:convertToScheduledFlights").expectedMessageCount(1);
-        getMockEndpoint("mock:direct:convertScheduledFlightsToNetex").expectedMessageCount(1);
+        mockFetchTimetable.expectedMessageCount(3);
+        mockConvertToScheduledFlights.expectedMessageCount(1);
+        mockConvertScheduledFlightsToNetex.expectedMessageCount(1);
 
-        template.sendBody("direct:start", null);
+        startTemplate.sendBody(null);
 
-        assertMockEndpointsSatisfied();
+        mockFetchAndCacheAirportName.assertIsSatisfied();
+        mockFetchTimetable.assertIsSatisfied();
+        mockConvertToScheduledFlights.assertIsSatisfied();
+        mockConvertScheduledFlightsToNetex.assertIsSatisfied();
+
     }
 
     @Test
@@ -131,15 +197,17 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         });
         context.start();
 
-        getMockEndpoint("mock:fetchXmlFromHttp").expectedMessageCount(1);
-        getMockEndpoint("mock:fetchXmlFromHttp").expectedHeaderReceived(HEADER_EXTIME_HTTP_URI, "mock:airportFeedEndpoint");
-        getMockEndpoint("mock:fetchXmlFromHttp").expectedHeaderReceived(HEADER_EXTIME_URI_PARAMETERS, "airport=OSL&shortname=Y&ukname=Y");
-        getMockEndpoint("mock:direct:addResourceToCache").expectedMessageCount(1);
-        getMockEndpoint("mock:direct:addResourceToCache").expectedHeaderReceived(HEADER_EXTIME_RESOURCE_CODE, "OSL");
+        mockFetchXmlFromHttp.expectedMessageCount(1);
+        mockFetchXmlFromHttp.expectedHeaderReceived(HEADER_EXTIME_HTTP_URI, "mock:airportFeedEndpoint");
+        mockFetchXmlFromHttp.expectedHeaderReceived(HEADER_EXTIME_URI_PARAMETERS, "airport=OSL&shortname=Y&ukname=Y");
+        mockAddResourceToCache.expectedMessageCount(1);
+        mockAddResourceToCache.expectedHeaderReceived(HEADER_EXTIME_RESOURCE_CODE, "OSL");
 
-        template.sendBodyAndHeader("direct:fetchAndCacheAirportName", null, HEADER_EXTIME_RESOURCE_CODE, "OSL");
+        fetchAndCacheAirportNameTemplate.sendBodyAndHeader(null, HEADER_EXTIME_RESOURCE_CODE, "OSL");
 
-        assertMockEndpointsSatisfied();
+        mockFetchXmlFromHttp.assertIsSatisfied();
+        mockAddResourceToCache.assertIsSatisfied();
+
     }
 
     @Test
@@ -157,15 +225,17 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         });
         context.start();
 
-        getMockEndpoint("mock:fetchXmlFromHttp").expectedMessageCount(1);
-        getMockEndpoint("mock:fetchXmlFromHttp").expectedHeaderReceived(HEADER_EXTIME_HTTP_URI, "mock:airlineFeedEndpoint");
-        getMockEndpoint("mock:fetchXmlFromHttp").expectedHeaderReceived(HEADER_EXTIME_URI_PARAMETERS, "airline=DY");
-        getMockEndpoint("mock:direct:addResourceToCache").expectedMessageCount(1);
-        getMockEndpoint("mock:direct:addResourceToCache").expectedHeaderReceived(HEADER_EXTIME_RESOURCE_CODE, "DY");
+        mockFetchXmlFromHttp.expectedMessageCount(1);
+        mockFetchXmlFromHttp.expectedHeaderReceived(HEADER_EXTIME_HTTP_URI, "mock:airlineFeedEndpoint");
+        mockFetchXmlFromHttp.expectedHeaderReceived(HEADER_EXTIME_URI_PARAMETERS, "airline=DY");
+        mockAddResourceToCache.expectedMessageCount(1);
+        mockAddResourceToCache.expectedHeaderReceived(HEADER_EXTIME_RESOURCE_CODE, "DY");
 
-        template.sendBodyAndHeader("direct:fetchAndCacheAirlineName", null, HEADER_EXTIME_RESOURCE_CODE, "DY");
+        fetchAndCacheAirlineNameTemplate.sendBodyAndHeader(null, HEADER_EXTIME_RESOURCE_CODE, "DY");
 
-        assertMockEndpointsSatisfied();
+        mockFetchXmlFromHttp.assertIsSatisfied();
+        mockAddResourceToCache.assertIsSatisfied();
+
     }
 
     @Test
@@ -179,8 +249,8 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         });
         context.start();
 
-        getMockEndpoint("mock:largeAirportLogger").expectedMessageCount(1);
-        getMockEndpoint("mock:direct:fetchTimetableForAirportByRanges").expectedMessageCount(1);
+        mockLargeAirportLogger.expectedMessageCount(1);
+        mockFetchTimetableForAirportByRanges.expectedMessageCount(1);
 
         List<Range<LocalDate>> ranges = Lists.newArrayList(
                 createRange("2017-01-01", "2017-01-14"),
@@ -190,9 +260,10 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         Map<String, Object> headers = Maps.newHashMap();
         headers.put(HEADER_EXTIME_RESOURCE_CODE, "BGO");
         headers.put(HEADER_TIMETABLE_LARGE_AIRPORT_RANGE, ranges);
-        template.sendBodyAndHeaders("direct:fetchTimetableForAirport", null, headers);
+        fetchTimetableForAirportTemplate.sendBodyAndHeaders(null, headers);
 
-        assertMockEndpointsSatisfied();
+        mockLargeAirportLogger.assertIsSatisfied();
+        mockFetchTimetableForAirportByRanges.assertIsSatisfied();
     }
 
     @Test
@@ -209,17 +280,21 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         });
         context.start();
 
-        getMockEndpoint("mock:direct:fetchTimetableForLargeAirport").expectedMessageCount(0);
-        getMockEndpoint("mock:smallAirportLogger").expectedMessageCount(1);
-        getMockEndpoint("mock:direct:fetchTimetableForAirportByRanges").expectedMessageCount(1);
+        mockFetchTimetableForLargeAirport.expectedMessageCount(0);
+        mockSmallAirportLogger.expectedMessageCount(1);
+        mockFetchTimetableForAirportByRanges.expectedMessageCount(1);
 
         Map<String, Object> headers = Maps.newHashMap();
         headers.put(HEADER_EXTIME_RESOURCE_CODE, "EVE");
         headers.put(HEADER_TIMETABLE_SMALL_AIRPORT_RANGE, Lists.newArrayList(createRange("2017-01-01", "2017-01-31")));
 
-        template.sendBodyAndHeaders("direct:fetchTimetableForAirport", null, headers);
+        fetchTimetableForAirportTemplate.sendBodyAndHeaders(null, headers);
 
-        assertMockEndpointsSatisfied();
+        mockFetchTimetableForLargeAirport.assertIsSatisfied();
+        mockSmallAirportLogger.assertIsSatisfied();
+        mockFetchTimetableForAirportByRanges.assertIsSatisfied();
+
+
     }
 
     @Test
@@ -235,12 +310,12 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         });
         context.start();
 
-        getMockEndpoint("mock:fetchAirportFlights").expectedMessageCount(3);
-        getMockEndpoint("mock:fetchAirportFlights").expectedHeaderReceived(
+        mockFetchAirportFlights.expectedMessageCount(3);
+        mockFetchAirportFlights.expectedHeaderReceived(
                 HEADER_EXTIME_HTTP_URI, "mock:timetableFeedEndpoint");
-        getMockEndpoint("mock:fetchAirportFlights").expectedHeaderValuesReceivedInAnyOrder(
+        mockFetchAirportFlights.expectedHeaderValuesReceivedInAnyOrder(
                 HEADER_LOWER_RANGE_ENDPOINT, "2017-01-01Z", "2017-01-09Z", "2017-01-17Z");
-        getMockEndpoint("mock:fetchAirportFlights").expectedHeaderValuesReceivedInAnyOrder(
+        mockFetchAirportFlights.expectedHeaderValuesReceivedInAnyOrder(
                 HEADER_UPPER_RANGE_ENDPOINT, "2017-01-08Z", "2017-01-16Z", "2017-01-24Z");
 
         List<Range<LocalDate>> ranges = Lists.newArrayList(
@@ -252,7 +327,7 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         List<Flight> resultBody = (List<Flight>) fetchTimetableByRangesTemplate.requestBodyAndHeader(
                 ranges, HEADER_EXTIME_RESOURCE_CODE, "BGO");
 
-        assertMockEndpointsSatisfied();
+        mockFetchAirportFlights.assertIsSatisfied();
 
         Assertions.assertThat(resultBody)
                 .isNotNull()
@@ -273,23 +348,24 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         });
         context.start();
 
-        getMockEndpoint("mock:direct:fetchXmlStreamFromHttpFeed").expectedMessageCount(2);
-        getMockEndpoint("mock:direct:fetchXmlStreamFromHttpFeed").expectedHeaderValuesReceivedInAnyOrder(
+        mockFetchXmlStreamFromHttpFeed.expectedMessageCount(2);
+        mockFetchXmlStreamFromHttpFeed.expectedHeaderValuesReceivedInAnyOrder(
                 HEADER_TIMETABLE_STOP_VISIT_TYPE, StopVisitType.ARRIVAL, StopVisitType.DEPARTURE);
-        getMockEndpoint("mock:direct:fetchXmlStreamFromHttpFeed").expectedHeaderValuesReceivedInAnyOrder(
+        mockFetchXmlStreamFromHttpFeed.expectedHeaderValuesReceivedInAnyOrder(
                 HEADER_EXTIME_URI_PARAMETERS,
                 "airport=TRD&direction=A&PeriodFrom=2017-01-01Z&PeriodTo=2017-01-31Z",
                 "airport=TRD&direction=D&PeriodFrom=2017-01-01Z&PeriodTo=2017-01-31Z");
-        getMockEndpoint("mock:splitAndJoinEndpoint").expectedMessageCount(2);
+        mockSplitAndJoinEndpoint.expectedMessageCount(2);
 
         Map<String, Object> headers = Maps.newHashMap();
         headers.put(HEADER_EXTIME_RESOURCE_CODE, "TRD");
         headers.put(HEADER_LOWER_RANGE_ENDPOINT, "2017-01-01Z");
         headers.put(HEADER_UPPER_RANGE_ENDPOINT, "2017-01-31Z");
 
-        template.sendBodyAndHeaders("direct:fetchAirportFlightsByRangeAndStopVisitType", null, headers);
+        fetchAirportFlightsByRangeAndStopVisitTypeTemplate.sendBodyAndHeaders( null, headers);
 
-        assertMockEndpointsSatisfied();
+        mockFetchXmlStreamFromHttpFeed.assertIsSatisfied();
+        mockSplitAndJoinEndpoint.assertIsSatisfied();
     }
 
     @Test
@@ -302,13 +378,13 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         });
         context.start();
 
-        getMockEndpoint("mock:flightSplitWireTap").expectedMessageCount(12);
+        mockFlightSplitWireTap.expectedMessageCount(12);
 
         InputStream inputStream = new FileInputStream("target/classes/xml/scheduled-flights.xml");
         List<Flight> flights = (List<Flight>) splitJoinFlightsTemplate.requestBodyAndHeader(
                 inputStream, HEADER_TIMETABLE_STOP_VISIT_TYPE, StopVisitType.DEPARTURE);
 
-        assertMockEndpointsSatisfied();
+        mockFlightSplitWireTap.assertIsSatisfied();
 
         Assertions.assertThat(flights)
                 .isNotNull()
@@ -327,13 +403,13 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         });
         context.start();
 
-        getMockEndpoint("mock:flightSplitWireTap").expectedMessageCount(24);
+        mockFlightSplitWireTap.expectedMessageCount(24);
 
         InputStream inputStream = new FileInputStream("target/classes/xml/scheduled-arrivals-trd.xml");
         List<Flight> flights = (List<Flight>) splitJoinFlightsTemplate.requestBodyAndHeader(
                 inputStream, HEADER_TIMETABLE_STOP_VISIT_TYPE, StopVisitType.ARRIVAL);
 
-        assertMockEndpointsSatisfied();
+        mockFlightSplitWireTap.assertIsSatisfied();
 
         Assertions.assertThat(flights)
                 .isNotNull()
@@ -365,26 +441,32 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         });
         context.start();
 
-        getMockEndpoint("mock:airlineIataPreProcess").expectedMessageCount(2);
-        getMockEndpoint("mock:direct:retrieveAirlineNameResource").expectedMessageCount(2);
-        getMockEndpoint("mock:direct:enrichScheduledFlightWithAirportNames").expectedMessageCount(2);
-        getMockEndpoint("mock:convertToNetex").expectedMessageCount(2);
-        getMockEndpoint("mock:generateFileName").expectedMessageCount(2);
+        mockAirlineIataPreProcess.expectedMessageCount(2);
+        mockRetrieveAirlineNameResource.expectedMessageCount(2);
+        mockEnrichScheduledFlightWithAirportNames.expectedMessageCount(2);
+        mockConvertToNetex.expectedMessageCount(2);
+        mockGenerateFileName.expectedMessageCount(2);
 
-        getMockEndpoint("mock:file:target/netex").expectedMessageCount(2);
-        getMockEndpoint("mock:file:target/netex").expectedHeaderReceived(Exchange.FILE_NAME, "067e6162-3b6f-4ae2-a171-2470b63dff00.xml");
-        getMockEndpoint("mock:file:target/netex").expectedHeaderReceived(Exchange.CONTENT_TYPE, "text/xml;charset=utf-8");
-        getMockEndpoint("mock:file:target/netex").expectedHeaderReceived(Exchange.CHARSET_NAME, "utf-8");
-        getMockEndpoint("mock:file:target/netex").expectedBodiesReceived(createPublicationDelivery(), createPublicationDelivery());
+        mockFileTargetNetex.expectedMessageCount(2);
+        mockFileTargetNetex.expectedHeaderReceived(Exchange.FILE_NAME, "067e6162-3b6f-4ae2-a171-2470b63dff00.xml");
+        mockFileTargetNetex.expectedHeaderReceived(Exchange.CONTENT_TYPE, "text/xml;charset=utf-8");
+        mockFileTargetNetex.expectedHeaderReceived(Exchange.CHARSET_NAME, "utf-8");
+        mockFileTargetNetex.expectedBodiesReceived(createPublicationDelivery(), createPublicationDelivery());
 
         List<ScheduledFlight> scheduledFlights = Lists.newArrayList(
                 createScheduledFlight("WF", "WF739", LocalDate.now()),
                 createScheduledFlight("SK", "SK1038", LocalDate.now())
         );
 
-        template.sendBody("direct:convertScheduledFlightsToNetex", scheduledFlights);
+        convertScheduledFlightsToNetexTemplate.sendBody(scheduledFlights);
 
-        assertMockEndpointsSatisfied();
+        mockAirlineIataPreProcess.assertIsSatisfied();
+        mockRetrieveAirlineNameResource.assertIsSatisfied();
+        mockEnrichScheduledFlightWithAirportNames.assertIsSatisfied();
+        mockConvertToNetex.assertIsSatisfied();
+        mockGenerateFileName.assertIsSatisfied();
+        mockFileTargetNetex.assertIsSatisfied();
+
     }
 
     private Range<LocalDate> createRange(String lower, String upper) {
@@ -408,8 +490,8 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         scheduledFlight.setDepartureAirportName("");
         scheduledFlight.setArrivalAirportIATA("");
         scheduledFlight.setArrivalAirportName("");
-        scheduledFlight.setTimeOfDeparture(LocalTime.of(0,0));
-        scheduledFlight.setTimeOfArrival(LocalTime.of(23,59));
+        scheduledFlight.setTimeOfDeparture(LocalTime.of(0, 0));
+        scheduledFlight.setTimeOfArrival(LocalTime.of(23, 59));
         return scheduledFlight;
     }
 
@@ -427,6 +509,7 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
         }};
     }
 
+
     private JAXBElement<PublicationDeliveryStructure> createPublicationDeliveryElement() {
         ObjectFactory objectFactory = new ObjectFactory();
         PublicationDeliveryStructure publicationDeliveryStructure1 = objectFactory.createPublicationDeliveryStructure()
@@ -442,63 +525,6 @@ public class AvinorTimetableRouteBuilderTest extends CamelTestSupport {
                 .withVersion("1.0")
                 .withPublicationTimestamp(DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse("2016-08-16T08:24:21Z", LocalDateTime::from))
                 .withParticipantRef("AVI");
-    }
-
-    @Override
-    public JndiRegistry createRegistry() throws Exception {
-        JndiRegistry jndiRegistry = new JndiRegistry(new JndiContext());
-        jndiRegistry.bind("dateUtils", dateUtils);
-        return jndiRegistry;
-    }
-
-    @Override
-    protected RouteBuilder createRouteBuilder() throws Exception {
-        PropertiesComponent pc = (PropertiesComponent) context.getComponent("properties");
-        pc.setPropertiesParser(new DefaultPropertiesParser() {
-            @Override
-            public String parseProperty(String key, String value, Properties properties) {
-                Map<String, String> testProperties = new HashMap<String, String>() {{
-                    put("avinor.timetable.scheduler.consumer", "direct:start");
-                    put("avinor.timetable.period.months", "4");
-                    put("avinor.timetable.max.range", "180");
-                    put("avinor.timetable.min.range", "60");
-                    put("avinor.timetable.feed.endpoint", "mock:timetableFeedEndpoint");
-                    put("avinor.airport.feed.endpoint", "mock:airportFeedEndpoint");
-                    put("avinor.airports.small", "EVE,KRS,MOL,SOG,TOS");
-                    put("avinor.airports.large", "BGO,BOO,SVG,TRD");
-                    put("avinor.airline.feed.endpoint", "mock:airlineFeedEndpoint");
-                    put("netex.generated.output.path", "target/netex-mock");
-                    put("netex.compressed.output.path", "target/marduk-mock");
-                    put("queue.upload.destination.name", "MockMardukQueue");
-                    put("avinor.timetable.dump.enabled", "false");
-                    put("avinor.timetable.dump.output.path", "target/flights");
-                }};
-                return testProperties.get(key);
-            }
-        });
-        return new AvinorTimetableRouteBuilder();
-    }
-
-    @Override
-    public boolean isUseAdviceWith() {
-        return true;
-    }
-
-    @Override
-    public boolean isUseDebugger() {
-        return true;
-    }
-
-    @Override
-    protected void debugBefore(Exchange exchange, Processor processor,
-                               ProcessorDefinition<?> definition, String id, String shortName) {
-        log.info("Before " + definition + " with body " + exchange.getIn().getBody());
-    }
-
-    @Override
-    protected void debugAfter(Exchange exchange, Processor processor,
-                              ProcessorDefinition<?> definition, String id, String label, long timeTaken) {
-        log.info("After " + definition + " with body " + exchange.getIn().getBody());
     }
 
 }

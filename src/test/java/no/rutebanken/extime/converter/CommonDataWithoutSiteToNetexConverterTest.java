@@ -1,6 +1,7 @@
 package no.rutebanken.extime.converter;
 
 import no.rutebanken.extime.Constants;
+import no.rutebanken.extime.ExtimeRouteBuilderIntegrationTestBase;
 import no.rutebanken.extime.config.CamelRouteDisabler;
 import no.rutebanken.extime.model.AirportIATA;
 import no.rutebanken.extime.util.NetexObjectIdTypes;
@@ -28,9 +29,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SuppressWarnings("unchecked")
 @ActiveProfiles("test")
-@RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = {CamelRouteDisabler.class, CommonDataToNetexConverter.class}, properties = "spring.config.name=application,netex-static-data")
-public class CommonDataWithoutSiteToNetexConverterTest {
+public class CommonDataWithoutSiteToNetexConverterTest extends ExtimeRouteBuilderIntegrationTestBase {
 
     @Autowired
     private CommonDataToNetexConverter netexConverter;
