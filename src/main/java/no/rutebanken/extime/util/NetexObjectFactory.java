@@ -497,6 +497,10 @@ public class NetexObjectFactory {
         NetexStaticDataSet.OrganisationDataSet airlineDataSet = netexStaticDataSet.getOrganisations()
                 .get(airlineIata.toLowerCase());
 
+        if(airlineDataSet == null) {
+            throw new IllegalArgumentException("Unknown airline: " + airlineIata);
+        }
+
         String operatorId = NetexObjectIdCreator.createOperatorId(AVINOR_XMLNS, airlineIata);
         String brandingId = NetexObjectIdCreator.createBrandingId(AVINOR_XMLNS, airlineIata);
 
