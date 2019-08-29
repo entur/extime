@@ -210,6 +210,9 @@ public class AvinorTimetableUtils {
         s = s.replace("ö", "oe");
         s = s.replace("é", "e");
 
+        s = s.replace("á", "a");
+
+
         return s;
     }
 
