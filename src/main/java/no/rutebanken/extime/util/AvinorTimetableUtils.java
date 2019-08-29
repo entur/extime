@@ -186,23 +186,33 @@ public class AvinorTimetableUtils {
             networkName = sf.getNetwork().getName().getValue();
         } else {
             String networkIdRef = line.getRepresentedByGroupRef().getRef();
-            String objectIdSuffix = NetexObjectIdCreator.getObjectIdSuffix(networkIdRef);
-            networkName = netexStaticDataSet.getOrganisations().get(objectIdSuffix.toLowerCase()).getName();
+            networkName = NetexObjectIdCreator.getObjectIdSuffix(networkIdRef);
         }
 
        // String publicCode = line.getPublicCode();
         String filename = networkName + "-" + line.getName().getValue().replace('/', '_');
 
-        return rewriteNorwegianCharacters(filename);
+        return rewriteNorwegianAndSwedishCharacters(filename);
     }
 
-    private String rewriteNorwegianCharacters(String s) {
+    private String rewriteNorwegianAndSwedishCharacters(String s) {
         s = s.replace("Å", "AA");
         s = s.replace("Ø", "OE");
         s = s.replace("Æ", "AE");
         s = s.replace("å", "aa");
         s = s.replace("ø", "oe");
         s = s.replace("æ", "ae");
+
+        s = s.replace("Ä", "AE");
+        s = s.replace("É", "E");
+        s = s.replace("Ö", "OE");
+        s = s.replace("ä", "ae");
+        s = s.replace("ö", "oe");
+        s = s.replace("é", "e");
+
+        s = s.replace("á", "a");
+
+
         return s;
     }
 

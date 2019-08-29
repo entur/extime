@@ -60,9 +60,19 @@ public enum AirportIATA {
     VAW, // Vardø lufthavn
     VDB, // Fagernes lufthamn
     VDS, // Vadsø lufthavn
-    VRY,  // Værøy helikopterhavn
+    VRY, // Værøy helikopterhavn
 
-    ARN; // Stockholm Arlanda Lufthavn
+    ARN, // Stockholm Arlanda Lufthavn
+    GOT, // Göteborg Landvetter flygplats
+    HEL, // Helsingfors-Vanda lufthavn
+    CPH, // Københavns lufthavn
+    VNO, // Vilnius internasjonale lufthavn
+    TLL, // Lennart Meri Tallinn lufthavn
+    RIX, // Riga internasjonale lufthavn
+    AAL, // Aalborg Lufthavn
+    BLL, // Billund Lufthavn
+    EBJ, // Esbjerg lufthavn
+    FAE; // Vága Floghavn
 
     public static EnumSet<AirportIATA> LARGE_SIZED_AIRPORTS = EnumSet.of(OSL, ARN);
     public static EnumSet<AirportIATA> MEDIUM_SIZED_AIRPORTS = EnumSet.of(BGO, BOO, SVG, TRD);

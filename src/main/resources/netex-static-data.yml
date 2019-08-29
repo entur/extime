@@ -69,7 +69,69 @@ netex-data-sets:
       phone: 0047 85 22 08 08
       url: http://www.flyviking.no/
       details:
-
+    ay:
+      company-number:
+      name: Finnair
+      legal-name: Finnair
+      phone:
+      url:
+      details:
+    bt:
+      company-number:
+      name: Air Baltic
+      legal-name: Air Baltic
+      phone:
+      url:
+      details:
+    fi:
+      company-number:
+      name: Icelandair
+      legal-name: Icelandair
+      phone:
+      url:
+      details:
+    d8:
+      company-number:
+      name: Norwegian
+      legal-name: Norwegian Air International
+      phone:
+      url:
+      details:
+    rc:
+      company-number:
+      name: Atlantic Airways
+      legal-name: Atlantic Airways
+      phone:
+      url:
+      details:
+    fr:
+      company-number:
+      name: Ryanair
+      legal-name: Ryanair
+      phone:
+      url:
+      details:
+    eju:
+      company-number:
+      name: EasyJet
+      legal-name: EasyJet
+      phone:
+      url:
+      details:
+    kl:
+      company-number:
+      name: KLM
+      legal-name: KLM
+      phone:
+      url:
+      details:
+    w2:
+      company-number:
+      name: Flexflight
+      legal-name: Flexflight
+      phone:
+      url:
+      details:
   # StopPlace types that, for now, corresponding directly to the actual airports. In future versions these can
   # be divided into actual gates at the airport, that will map directly to the Quay type in NeTEx.
 
@@ -242,7 +304,139 @@ netex-data-sets:
     vry:
       name: Værøy Helikopterhavn
       short-name: Værøy
+    # International airports
     arn:
       name: Stockholm Arlanda Lufthavn
       short-name: Stockholm
       international: true
+    got:
+      name: Göteborg Landvetter flygplats
+      short-name: Göteborg
+      international: true
+    hel:
+      name: Helsingfors-Vanda lufthavn
+      short-name: Helsingfors
+      international: true
+    cph:
+      name: Københavns lufthavn
+      short-name: København
+      international: true
+    vno:
+      name: Vilnius internasjonale lufthavn
+      short-name: Vilnius
+      international: true
+    tll:
+      name: Lennart Meri Tallinn lufthavn
+      short-name: Tallinn
+      international: true
+    rix:
+      name: Riga internasjonale lufthavn
+      short-name: Riga
+      international: true
+    aal:
+      name: Aalborg Lufthavn
+      short-name: Aalborg
+      international: true
+    bll:
+      name: Billund Lufthavn
+      short-name: Billund
+      international: true
+    ebj:
+      name: Esbjerg lufthavn
+      short-name: Esbjerg
+      international: true
+    fae:
+      name: Vága Floghavn
+      short-name: Vágar
+      international: true
+
+
+#    cdg:
+#      name: Paris-Charles-de-Gaulle Lufthavn
+#      short-name: Paris CDG
+#      international: true
+#    ory:
+#      name: Paris-Orly Lufthavn
+#      short-name: Paris Orly
+#      international: true
+#    kef:
+#      name: Reykjavík-Keflavík Lufthavn
+#      short-name: Reykjavík-Keflavík
+#      international: true
+#    ams:
+#      name: Amsterdam-Schiphol lufthavn
+#      short-name: Amsterdam-Schiphol
+#      international: true
+#    gdn:
+#      name: Gdańsk Lech Wałęsa lufthavn
+#      short-name: Gdansk
+#      international: true
+#    krk:
+#      name: Johannes Paul II lufthavn Kraków-Balice
+#      short-name: Kraków
+#      international: true
+#    waw:
+#      name: Frédéric Chopin lufthavn Warszawa-Okęcie
+#      short-name: Warszawa
+#      international: true
+#    ham:
+#      name: Hamburg lufthavn
+#      short-name: Hamburg
+#      international: true
+#    sxf:
+#      name: Berlin Schönefeld lufthavn
+#      short-name: Berlin-Schönefeld
+#      international: true
+#    txl:
+#      name: Berlin-Tegel internasjonale lufthavn
+#      short-name: Berlin-Tegel
+#      international: true
+#    abz:
+#      name: Aberdeen lufthavn
+#      short-name: Aberdeen
+#      international: true
+#    edi:
+#      name: Edinburgh lufthavn
+#      short-name: Edinburgh
+#      international: true
+#    lgw:
+#      name: London Gatwick lufthavn
+#      short-name: London-Gatwick
+#      international: true
+#    lhr:
+#      name: London Heathrow lufthavn
+#      short-name: London-Heathrow
+#      international: true
+#    ltn:
+#      name: London Luton lufthavn
+#      short-name: London-Luton
+#      international: true
+#    stn:
+#      name: London Stansted lufthavn
+#      short-name: London-Stansted
+#      international: true
+#    svo:
+#      name: Moska-Sjeremetjevo internasjonale lufthavn
+#      short-name: Moskva
+#      international: true
+#    fra:
+#      name: Frankfurt internasjonale lufthavn
+#      short-name: Frankfurt
+#      international: true
+#    kun:
+#      name: Kaunas internasjonale lufthavn
+#      short-name: Kaunas
+#      international: true
+#    bru:
+#      name:  Brussel-Nationaal luchthaven
+#      short-name: Brussel
+#      international: true
+#    luz:
+#      name:  Lublin lufthavn
+#      short-name: Lublin
+#      international: true
+
+
+
+
+
