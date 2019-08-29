@@ -138,10 +138,10 @@ public class AvinorTimetableUtilsTest {
 
     @Test
     public void testIsNotValidDepartureAndArrival() throws Exception {
-        boolean bothInvalid = AvinorTimetableUtils.isValidDepartureAndArrival("LHR", "EWR");
+        boolean bothInvalid = AvinorTimetableUtils.isValidDepartureAndArrival("AAA", "EWR");
         Assertions.assertThat(bothInvalid).isFalse();
 
-        boolean firstInvalid = AvinorTimetableUtils.isValidDepartureAndArrival("LHR", "OSL");
+        boolean firstInvalid = AvinorTimetableUtils.isValidDepartureAndArrival("AAA", "OSL");
         Assertions.assertThat(firstInvalid).isFalse();
 
         boolean lastInvalid = AvinorTimetableUtils.isValidDepartureAndArrival("OSL", "EWR");

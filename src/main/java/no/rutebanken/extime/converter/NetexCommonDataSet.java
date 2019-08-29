@@ -82,6 +82,11 @@ public class NetexCommonDataSet {
 
         for (AirportIATA airportIATA : airportIATAS) {
             NetexStaticDataSet.StopPlaceDataSet stopPlaceDataSet = stopPlaceDataSets.get(airportIATA.name().toLowerCase());
+
+            if(stopPlaceDataSet == null) {
+                throw new IllegalArgumentException("Unknow airport: " + airportIATA.name().toLowerCase());
+            }
+
             String stopPointId = NetexObjectIdCreator.createStopPointId(AVINOR_XMLNS, airportHashes.get(airportIATA.name()));
 
             ScheduledStopPoint stopPoint = objectFactory.createScheduledStopPoint()
