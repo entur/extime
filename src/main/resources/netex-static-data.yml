@@ -132,6 +132,70 @@ netex-data-sets:
       phone:
       url:
       details:
+    af:
+      company-number:
+      name: Air France
+      legal-name: Air France
+      phone:
+      url:
+      details:
+    ba:
+      company-number:
+      name: British Airways
+      legal-name: British Airways
+      phone:
+      url:
+      details:
+    lh:
+      company-number:
+      name: Lufthansa
+      legal-name: Lufthansa
+      phone:
+      url:
+      details:
+    lm:
+      company-number:
+      name: Livingston Energy Flight
+      legal-name: Livingston Energy Flight
+      phone:
+      url:
+      details:
+    lo:
+      company-number:
+      name: LOT Polish Airlines
+      legal-name: LOT Polish Airlines
+      phone:
+      url:
+      details:
+    sn:
+      company-number:
+      name: Brussels International Airlines
+      legal-name: Brussels International Airlines
+      phone:
+      url:
+      details:
+    su:
+      company-number:
+      name: Aeroflot Russian Airlines
+      legal-name: Aeroflot Russian Airlines
+      phone:
+      url:
+      details:
+    w6:
+      company-number:
+      name: Wizz Air
+      legal-name: Wizz Air
+      phone:
+      url:
+      details:
+    dk:
+      company-number:
+      name: Thomas Cook Airlines
+      legal-name: Thomas Cook Airlines
+      phone:
+      url:
+      details:
+
   # StopPlace types that, for now, corresponding directly to the actual airports. In future versions these can
   # be divided into actual gates at the airport, that will map directly to the Quay type in NeTEx.
 
@@ -350,91 +414,90 @@ netex-data-sets:
       short-name: Vágar
       international: true
 
-
-#    cdg:
-#      name: Paris-Charles-de-Gaulle Lufthavn
-#      short-name: Paris CDG
-#      international: true
-#    ory:
-#      name: Paris-Orly Lufthavn
-#      short-name: Paris Orly
-#      international: true
-#    kef:
-#      name: Reykjavík-Keflavík Lufthavn
-#      short-name: Reykjavík-Keflavík
-#      international: true
-#    ams:
-#      name: Amsterdam-Schiphol lufthavn
-#      short-name: Amsterdam-Schiphol
-#      international: true
-#    gdn:
-#      name: Gdańsk Lech Wałęsa lufthavn
-#      short-name: Gdansk
-#      international: true
-#    krk:
-#      name: Johannes Paul II lufthavn Kraków-Balice
-#      short-name: Kraków
-#      international: true
-#    waw:
-#      name: Frédéric Chopin lufthavn Warszawa-Okęcie
-#      short-name: Warszawa
-#      international: true
-#    ham:
-#      name: Hamburg lufthavn
-#      short-name: Hamburg
-#      international: true
-#    sxf:
-#      name: Berlin Schönefeld lufthavn
-#      short-name: Berlin-Schönefeld
-#      international: true
-#    txl:
-#      name: Berlin-Tegel internasjonale lufthavn
-#      short-name: Berlin-Tegel
-#      international: true
-#    abz:
-#      name: Aberdeen lufthavn
-#      short-name: Aberdeen
-#      international: true
-#    edi:
-#      name: Edinburgh lufthavn
-#      short-name: Edinburgh
-#      international: true
-#    lgw:
-#      name: London Gatwick lufthavn
-#      short-name: London-Gatwick
-#      international: true
-#    lhr:
-#      name: London Heathrow lufthavn
-#      short-name: London-Heathrow
-#      international: true
-#    ltn:
-#      name: London Luton lufthavn
-#      short-name: London-Luton
-#      international: true
-#    stn:
-#      name: London Stansted lufthavn
-#      short-name: London-Stansted
-#      international: true
-#    svo:
-#      name: Moska-Sjeremetjevo internasjonale lufthavn
-#      short-name: Moskva
-#      international: true
-#    fra:
-#      name: Frankfurt internasjonale lufthavn
-#      short-name: Frankfurt
-#      international: true
-#    kun:
-#      name: Kaunas internasjonale lufthavn
-#      short-name: Kaunas
-#      international: true
-#    bru:
-#      name:  Brussel-Nationaal luchthaven
-#      short-name: Brussel
-#      international: true
-#    luz:
-#      name:  Lublin lufthavn
-#      short-name: Lublin
-#      international: true
+    cdg:
+      name: Paris-Charles-de-Gaulle Lufthavn
+      short-name: Paris-CDG
+      international: true
+    ory:
+      name: Paris-Orly Lufthavn
+      short-name: Paris-Orly
+      international: true
+    kef:
+      name: Reykjavík-Keflavík Lufthavn
+      short-name: Reykjavík-Keflavík
+      international: true
+    ams:
+      name: Amsterdam-Schiphol lufthavn
+      short-name: Amsterdam-Schiphol
+      international: true
+    gdn:
+      name: Gdańsk Lech Wałęsa lufthavn
+      short-name: Gdansk
+      international: true
+    krk:
+      name: Johannes Paul II lufthavn Kraków-Balice
+      short-name: Kraków
+      international: true
+    waw:
+      name: Frédéric Chopin lufthavn Warszawa-Okęcie
+      short-name: Warszawa
+      international: true
+    ham:
+      name: Hamburg lufthavn
+      short-name: Hamburg
+      international: true
+    sxf:
+      name: Berlin Schönefeld lufthavn
+      short-name: Berlin-Schönefeld
+      international: true
+    txl:
+      name: Berlin-Tegel internasjonale lufthavn
+      short-name: Berlin-Tegel
+      international: true
+    abz:
+      name: Aberdeen lufthavn
+      short-name: Aberdeen
+      international: true
+    edi:
+      name: Edinburgh lufthavn
+      short-name: Edinburgh
+      international: true
+    lgw:
+      name: London Gatwick lufthavn
+      short-name: London-Gatwick
+      international: true
+    lhr:
+      name: London Heathrow lufthavn
+      short-name: London-Heathrow
+      international: true
+    ltn:
+      name: London Luton lufthavn
+      short-name: London-Luton
+      international: true
+    stn:
+      name: London Stansted lufthavn
+      short-name: London-Stansted
+      international: true
+    svo:
+      name: Moska-Sjeremetjevo internasjonale lufthavn
+      short-name: Moskva
+      international: true
+    fra:
+      name: Frankfurt internasjonale lufthavn
+      short-name: Frankfurt
+      international: true
+    kun:
+      name: Kaunas internasjonale lufthavn
+      short-name: Kaunas
+      international: true
+    bru:
+      name:  Brussel-Nationaal luchthaven
+      short-name: Brussel
+      international: true
+    luz:
+      name:  Lublin lufthavn
+      short-name: Lublin
+      international: true
 
 
 
