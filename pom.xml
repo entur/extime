@@ -506,7 +506,9 @@
                     <failBuildOnCVSS>7</failBuildOnCVSS>
                     <failOnError>false</failOnError>
                     <!-- see https://jeremylong.github.io/DependencyCheck/general/suppression.html -->
-                    <suppressionFiles>dependencycheck-suppression.xml</suppressionFiles>
+                    <suppressionFiles>
+                        <suppressionFile>dependencycheck-suppression.xml</suppressionFile>
+                    </suppressionFiles>
                 </configuration>
                 <executions>
                     <execution>
