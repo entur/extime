@@ -58,7 +58,6 @@ public class AvinorCommonRouteBuilder extends RouteBuilder {
 
                 .choice()
                     .when(header(CacheConstants.CACHE_ELEMENT_WAS_FOUND).isNull())
-                .process(e->System.out.println("e"))
                         .setHeader(HEADER_EXTIME_RESOURCE_CODE, body())
                         .toD("${header.ExtimeFetchResourceEndpoint}").id("DynamicFetchResourceProcessor")
                         .to("direct:getResourceFromCache")

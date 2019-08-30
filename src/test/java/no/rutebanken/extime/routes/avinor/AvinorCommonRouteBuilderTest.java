@@ -17,7 +17,10 @@ import java.util.Map;
 
 import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.*;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = {AvinorCommonRouteBuilder.class} , properties = "spring.config.name=application,netex-static-data")
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = {AvinorCommonRouteBuilder.class} , properties = {
+        "spring.config.name=application,netex-static-data",
+        "avinor.timetable.scheduler.consumer=direct:start"
+})
 public class AvinorCommonRouteBuilderTest extends ExtimeRouteBuilderIntegrationTestBase {
 
 

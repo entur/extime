@@ -51,22 +51,11 @@ blobstore.gcs.credential.path=$HOME/dev/config/Carbon-6120ee33c0d0.json
 blobstore.gcs.project.id=carbon-1287
 blobstore.gcs.provider.id=21
 
-spring.activemq.broker-url=vm://localhost?jms.useAsyncSend=true&broker.persistent=false
-spring.activemq.pooled=true
-#spring.activemq.user=
-#spring.activemq.password=
-
 queue.upload.destination.name=MardukInboundTestQueue
 
 logging.level.org.apache=INFO
 logging.level.org.apache.http.wire=INFO
 logging.level.no.rutebanken=DEBUG
-
-jolokia.config.debug=true
-
-endpoints.jolokia.enabled=true
-endpoints.jolokia.path=/jolokia
-endpoints.jmx.enabled=true
 
 spring.jmx.enabled=true
 
@@ -98,9 +87,9 @@ management.address=127.0.0.1
 ```
 * Docker image: `mvn -Pf8-build`
 * Run the docker image in docker on dev machine (you'll need to modify ports from 22 to 2224 and also to have the lamassu.pem file present in ~/.ssh):
-     * `docker run -it --name extime -e JAVA_OPTIONS="-Xmx1280m -Dspring.profiles.active=dev" --link activemq --add-host=lamassu:127.0.0.1 -v ~/.ssh/lamassu.pem:/opt/jboss/.ssh/lamassu.pem:ro rutebanken/extime:0.0.1-SNAPSHOT`
+     * `docker run -it --name extime -e JAVA_OPTIONS="-Xmx1280m -Dspring.profiles.active=dev" --add-host=lamassu:127.0.0.1 -v ~/.ssh/lamassu.pem:/opt/jboss/.ssh/lamassu.pem:ro rutebanken/extime:0.0.1-SNAPSHOT`
 * Run the docker image in docker inside vagrant:
-     * `docker run -it --name extime -e JAVA_OPTIONS="-Xmx1280m -Dspring.profiles.active=dev" --link activemq --link lamassu -v ~/.ssh/lamassu.pem:/opt/jboss/.ssh/lamassu.pem:ro rutebanken/extime:0.0.1-SNAPSHOT`
+     * `docker run -it --name extime -e JAVA_OPTIONS="-Xmx1280m -Dspring.profiles.active=dev" --link lamassu -v ~/.ssh/lamassu.pem:/opt/jboss/.ssh/lamassu.pem:ro rutebanken/extime:0.0.1-SNAPSHOT`
 * For more docker plugin goals, see: http://ro14nd.de/docker-maven-plugin/goals.html
 
 ## Readiness and liveness

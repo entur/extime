@@ -134,9 +134,6 @@ public class AvinorTimetableRouteBuilderTest extends ExtimeRouteBuilderIntegrati
     @Produce(uri = "direct:convertScheduledFlightsToNetex")
     protected ProducerTemplate convertScheduledFlightsToNetexTemplate;
 
-    @Produce(uri = "direct:start")
-    protected ProducerTemplate  startTemplate;
-
     @Produce(uri = "direct:fetchTimetableForAirportByRanges")
     protected ProducerTemplate fetchTimetableByRangesTemplate;
 
@@ -389,7 +386,7 @@ public class AvinorTimetableRouteBuilderTest extends ExtimeRouteBuilderIntegrati
         Assertions.assertThat(flights)
                 .isNotNull()
                 .isNotEmpty()
-                .hasSize(9)
+                .hasSize(10)
                 .hasOnlyElementsOfType(Flight.class);
     }
 

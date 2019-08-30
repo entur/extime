@@ -1,5 +1,7 @@
 package no.rutebanken.extime;
 
+import org.apache.camel.Produce;
+import org.apache.camel.ProducerTemplate;
 import org.apache.camel.model.ModelCamelContext;
 import org.apache.camel.test.spring.CamelSpringBootRunner;
 import org.apache.camel.test.spring.UseAdviceWith;
@@ -16,5 +18,8 @@ public abstract class ExtimeRouteBuilderIntegrationTestBase  {
 
     @Autowired
     protected ModelCamelContext context;
+
+    @Produce(uri = "direct:start")
+    protected ProducerTemplate startTemplate;
 
 }

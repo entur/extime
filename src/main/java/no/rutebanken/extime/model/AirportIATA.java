@@ -60,11 +60,43 @@ public enum AirportIATA {
     VAW, // Vardø lufthavn
     VDB, // Fagernes lufthamn
     VDS, // Vadsø lufthavn
-    VRY,  // Værøy helikopterhavn
+    VRY, // Værøy helikopterhavn
 
-    ARN; // Stockholm Arlanda Lufthavn
+    ARN, // Stockholm Arlanda Lufthavn
+    GOT, // Göteborg Landvetter flygplats
+    HEL, // Helsingfors-Vanda lufthavn
+    CPH, // Københavns lufthavn
+    VNO, // Vilnius internasjonale lufthavn
+    TLL, // Lennart Meri Tallinn lufthavn
+    RIX, // Riga internasjonale lufthavn
+    AAL, // Aalborg Lufthavn
+    BLL, // Billund Lufthavn
+    EBJ, // Esbjerg lufthavn
+    FAE, // Vága Floghavn
 
-    public static EnumSet<AirportIATA> LARGE_SIZED_AIRPORTS = EnumSet.of(OSL, ARN);
+    CDG, // Paris-Charles-de-Gaulle Lufthavn
+    ORY, // Paris-Orly Lufthavn
+    KEF, // Reykjavík-Keflavík Lufthavn
+    AMS, // Amsterdam-Schiphol lufthavn
+    GDN, // Gdańsk Lech Wałęsa lufthavn
+    KRK, // Johannes Paul II lufthavn Kraków-Balice
+    WAW, // Frédéric Chopin lufthavn Warszawa-Okęcie
+    HAM, // Hamburg lufthavn
+    SXF, // Berlin Schönefeld lufthavn
+    TXL, // Berlin-Tegel internasjonale lufthavn
+    ABZ, // Aberdeen lufthavn
+    EDI, // Edinburgh lufthavn
+    LGW, // London Gatwick lufthavn
+    LHR, // London Heathrow lufthavn
+    LTN, // London Luton lufthavn
+    STN, // London Stansted lufthavn
+    SVO, // Moska-Sjeremetjevo internasjonale lufthavn
+    FRA, // Frankfurt internasjonale lufthavn
+    KUN, // Kaunas internasjonale lufthavn
+    BRU, // Brussel-Nationaal luchthaven
+    LUZ; // Lublin lufthavn
+
+    public static EnumSet<AirportIATA> LARGE_SIZED_AIRPORTS = EnumSet.of(OSL, ARN, CDG, ORY, HAM, AMS, SXF, TXL, LGW, LHR, FRA);
     public static EnumSet<AirportIATA> MEDIUM_SIZED_AIRPORTS = EnumSet.of(BGO, BOO, SVG, TRD);
 
 }

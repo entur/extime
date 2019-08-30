@@ -1,9 +1,8 @@
 package no.rutebanken.extime.util;
 
-import no.rutebanken.extime.config.CamelRouteDisabler;
+import no.rutebanken.extime.ExtimeRouteBuilderIntegrationTestBase;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.rutebanken.netex.model.DayTypeRefStructure;
 import org.rutebanken.netex.model.MultilingualString;
 import org.rutebanken.netex.model.OperatorRefStructure;
@@ -18,17 +17,16 @@ import org.rutebanken.netex.model.StopPointInJourneyPatternRefStructure;
 import org.rutebanken.netex.model.TimetabledPassingTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.math.BigInteger;
 
 import static no.rutebanken.extime.Constants.VERSION_ONE;
 
-@ActiveProfiles("test")
-@RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(classes = {CamelRouteDisabler.class, NetexObjectFactory.class}, properties = "spring.config.name=application,netex-static-data")
-public class NetexObjectFactoryTest {
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = {NetexObjectFactory.class}, properties = {
+        "spring.config.name=application,netex-static-data",
+        "avinor.timetable.scheduler.consumer=direct:start"
+} )
+public class NetexObjectFactoryTest extends ExtimeRouteBuilderIntegrationTestBase {
 
     @Autowired
     private NetexObjectFactory netexObjectFactory;

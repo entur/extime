@@ -1,20 +1,21 @@
 package no.rutebanken.extime.util;
 
 import no.avinor.flydata.xjc.model.scheduled.Flight;
-import no.rutebanken.extime.config.CamelRouteDisabler;
+import no.rutebanken.extime.ExtimeRouteBuilderIntegrationTestBase;
 import no.rutebanken.extime.model.StopVisitType;
+import org.apache.camel.Produce;
+import org.apache.camel.ProducerTemplate;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-@ActiveProfiles("test")
-@RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(classes = {CamelRouteDisabler.class, AvinorTimetableUtils.class}, properties = "spring.config.name=application,netex-static-data")
-public class AvinorTimetableUtilsTest {
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = {AvinorTimetableUtils.class}, properties = {
+        "spring.config.name=application,netex-static-data",
+        "avinor.timetable.scheduler.consumer=direct:start"
+})
+public class AvinorTimetableUtilsTest  extends ExtimeRouteBuilderIntegrationTestBase {
 
     @Autowired
     private AvinorTimetableUtils avinorTimetableUtils;
@@ -138,10 +139,10 @@ public class AvinorTimetableUtilsTest {
 
     @Test
     public void testIsNotValidDepartureAndArrival() throws Exception {
-        boolean bothInvalid = AvinorTimetableUtils.isValidDepartureAndArrival("LHR", "EWR");
+        boolean bothInvalid = AvinorTimetableUtils.isValidDepartureAndArrival("AAA", "EWR");
         Assertions.assertThat(bothInvalid).isFalse();
 
-        boolean firstInvalid = AvinorTimetableUtils.isValidDepartureAndArrival("LHR", "OSL");
+        boolean firstInvalid = AvinorTimetableUtils.isValidDepartureAndArrival("AAA", "OSL");
         Assertions.assertThat(firstInvalid).isFalse();
 
         boolean lastInvalid = AvinorTimetableUtils.isValidDepartureAndArrival("OSL", "EWR");

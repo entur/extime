@@ -11,10 +11,5 @@
         <cve>CVE-2004-0936</cve>
         <cve>CVE-2004-0937</cve>
     </suppress>
-    
-    <!-- relatert til noen svakheter i consolet til activemq -->
-    <suppress>
-       <gav regex="true">^org\.apache\.activemq:activemq-.*:.*$</gav>
-       <cpe>cpe:/a:apache:activemq</cpe>
-    </suppress>
+
 </suppressions>

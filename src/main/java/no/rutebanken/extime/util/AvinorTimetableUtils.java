@@ -38,6 +38,7 @@ import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
+import java.text.StringCharacterIterator;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -186,24 +187,96 @@ public class AvinorTimetableUtils {
             networkName = sf.getNetwork().getName().getValue();
         } else {
             String networkIdRef = line.getRepresentedByGroupRef().getRef();
-            String objectIdSuffix = NetexObjectIdCreator.getObjectIdSuffix(networkIdRef);
-            networkName = netexStaticDataSet.getOrganisations().get(objectIdSuffix.toLowerCase()).getName();
+            networkName = NetexObjectIdCreator.getObjectIdSuffix(networkIdRef);
         }
 
        // String publicCode = line.getPublicCode();
         String filename = networkName + "-" + line.getName().getValue().replace('/', '_');
 
-        return rewriteNorwegianCharacters(filename);
+        return utftoasci(filename);
     }
 
-    private String rewriteNorwegianCharacters(String s) {
-        s = s.replace("Å", "AA");
-        s = s.replace("Ø", "OE");
-        s = s.replace("Æ", "AE");
-        s = s.replace("å", "aa");
-        s = s.replace("ø", "oe");
-        s = s.replace("æ", "ae");
-        return s;
+    private static String utftoasci(String s) {
+        final StringBuffer sb = new StringBuffer(s.length() * 2);
+
+        final StringCharacterIterator iterator = new StringCharacterIterator(s);
+
+        char ch = iterator.current();
+
+        while (ch != StringCharacterIterator.DONE) {
+            if (Character.getNumericValue(ch) > 0) {
+                sb.append(ch);
+            } else {
+
+                if (Character.toString(ch).equals("Ê")) {
+                    sb.append("E");
+                } else if (Character.toString(ch).equals("È")) {
+                    sb.append("E");
+                } else if (Character.toString(ch).equals("ë")) {
+                    sb.append("e");
+                } else if (Character.toString(ch).equals("é")) {
+                    sb.append("e");
+                } else if (Character.toString(ch).equals("è")) {
+                    sb.append("e");
+                } else if (Character.toString(ch).equals("è")) {
+                    sb.append("e");
+                } else if (Character.toString(ch).equals("Â")) {
+                    sb.append("A");
+                } else if (Character.toString(ch).equals("ä")) {
+                    sb.append("a");
+                } else if (Character.toString(ch).equals("ß")) {
+                    sb.append("ss");
+                } else if (Character.toString(ch).equals("Ç")) {
+                    sb.append("C");
+                } else if (Character.toString(ch).equals("Ö")) {
+                    sb.append("O");
+                } else if (Character.toString(ch).equals("º")) {
+                    sb.append("");
+                } else if (Character.toString(ch).equals("Ó")) {
+                    sb.append("O");
+                } else if (Character.toString(ch).equals("ª")) {
+                    sb.append("");
+                } else if (Character.toString(ch).equals("º")) {
+                    sb.append("");
+                } else if (Character.toString(ch).equals("Ñ")) {
+                    sb.append("N");
+                } else if (Character.toString(ch).equals("É")) {
+                    sb.append("E");
+                } else if (Character.toString(ch).equals("Ä")) {
+                    sb.append("A");
+                } else if (Character.toString(ch).equals("Å")) {
+                    sb.append("A");
+                } else if (Character.toString(ch).equals("å")) {
+                    sb.append("a");
+                } else if (Character.toString(ch).equals("ä")) {
+                    sb.append("a");
+                } else if (Character.toString(ch).equals("Ü")) {
+                    sb.append("U");
+                } else if (Character.toString(ch).equals("ö")) {
+                    sb.append("o");
+                } else if (Character.toString(ch).equals("ü")) {
+                    sb.append("u");
+                } else if (Character.toString(ch).equals("á")) {
+                    sb.append("a");
+                } else if (Character.toString(ch).equals("Ó")) {
+                    sb.append("O");
+                } else if (Character.toString(ch).equals("É")) {
+                    sb.append("E");
+                } else if (Character.toString(ch).equals("Æ")) {
+                    sb.append("E");
+                } else if (Character.toString(ch).equals("æ")) {
+                    sb.append("e");
+                } else if (Character.toString(ch).equals("Ø")) {
+                    sb.append("O");
+                } else if (Character.toString(ch).equals("ø")) {
+                    sb.append("o");
+                } else {
+                    sb.append(ch);
+                }
+            }
+            ch = iterator.next();
+        }
+        return sb.toString().replaceAll("[^\\p{ASCII}]", "");
     }
 
     public void compressNetexFiles(Exchange exchange, @Header(Exchange.FILE_NAME) String compressedFileName) throws Exception {

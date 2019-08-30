@@ -2,11 +2,9 @@ package no.rutebanken.extime.converter;
 
 import no.rutebanken.extime.Constants;
 import no.rutebanken.extime.ExtimeRouteBuilderIntegrationTestBase;
-import no.rutebanken.extime.config.CamelRouteDisabler;
 import no.rutebanken.extime.model.AirportIATA;
 import no.rutebanken.extime.util.NetexObjectIdTypes;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.rutebanken.netex.model.CompositeFrame;
 import org.rutebanken.netex.model.Network;
 import org.rutebanken.netex.model.PublicationDeliveryStructure;
@@ -16,8 +14,6 @@ import org.rutebanken.netex.model.SiteFrame;
 import org.rutebanken.netex.model.StopAssignmentsInFrame_RelStructure;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -28,8 +24,10 @@ import static no.rutebanken.extime.Constants.VERSION_ONE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SuppressWarnings("unchecked")
-@ActiveProfiles("test")
-@SpringBootTest(classes = {CamelRouteDisabler.class, CommonDataToNetexConverter.class}, properties = "spring.config.name=application,netex-static-data")
+@SpringBootTest(classes = {CommonDataToNetexConverter.class}, properties = {
+        "spring.config.name=application,netex-static-data",
+        "avinor.timetable.scheduler.consumer=direct:start"
+})
 public class CommonDataWithoutSiteToNetexConverterTest extends ExtimeRouteBuilderIntegrationTestBase {
 
     @Autowired
