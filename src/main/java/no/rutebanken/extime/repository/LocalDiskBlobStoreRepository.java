@@ -7,7 +7,6 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -17,7 +16,7 @@ import java.nio.file.Paths;
 
 /**
  * Simple file-based blob store repository for testing purpose.
- * The system property blobstore.local.folder specifies the target files location.
+ * The system property blobstore.local.folder specifies the target file location.
  */
 @Component
 @Primary
@@ -33,7 +32,7 @@ public class LocalDiskBlobStoreRepository implements BlobStoreRepository {
     @Override
     public void uploadBlob(String compressedFileName, String compressedFilePath, String correlationId) {
 
-        logger.debug("upload blob called in local-disk blob store");
+        logger.debug("upload blob called in local-disk blob store on " + compressedFilePath );
         try {
 
             Path sourceFilePath = Paths.get(compressedFilePath);
