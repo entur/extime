@@ -1,21 +1,59 @@
 package no.rutebanken.extime.routes.avinor;
 
 import com.google.common.collect.Maps;
+import no.rutebanken.extime.ExtimeRouteBuilderIntegrationTestBase;
+import org.apache.camel.EndpointInject;
 import org.apache.camel.Exchange;
-import org.apache.camel.Processor;
+import org.apache.camel.Produce;
+import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.AdviceWithRouteBuilder;
-import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.cache.CacheConstants;
 import org.apache.camel.component.http4.HttpMethods;
-import org.apache.camel.model.ProcessorDefinition;
-import org.apache.camel.test.junit4.CamelTestSupport;
+import org.apache.camel.component.mock.MockEndpoint;
 import org.junit.Test;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.Map;
 
 import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.*;
 
-public class AvinorCommonRouteBuilderTest extends CamelTestSupport {
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = {AvinorCommonRouteBuilder.class} , properties = {
+        "spring.config.name=application,netex-static-data",
+        "avinor.timetable.scheduler.consumer=direct:start"
+})
+public class AvinorCommonRouteBuilderTest extends ExtimeRouteBuilderIntegrationTestBase {
+
+
+    @EndpointInject(uri = "mock:cacheAdd")
+    protected MockEndpoint mockCacheAdd;
+
+    @EndpointInject(uri = "mock:cacheGet")
+    protected MockEndpoint mockCacheGet;
+
+    @EndpointInject(uri = "mock:fetchFromHttpEndpoint")
+    protected MockEndpoint mockFetchFromHttpEndpoint;
+
+    @EndpointInject(uri = "mock:cacheCheck")
+    protected MockEndpoint mockCacheCheck;
+
+    @EndpointInject(uri = "mock:fetchResource")
+    protected MockEndpoint mockFetchResource;
+
+    @EndpointInject(uri = "mock:direct:getResourceFromCache")
+    protected MockEndpoint mockGetResourceFromCache;
+
+    @Produce(uri = "direct:addResourceToCache")
+    protected ProducerTemplate addResourceToCacheTemplate;
+
+    @Produce(uri = "direct:getResourceFromCache")
+    protected ProducerTemplate getResourceFromCacheTemplate;
+
+
+    @Produce(uri = "direct:retrieveResource")
+    protected ProducerTemplate retrieveResourceTemplate;
+
+    @Produce(uri = "direct:fetchXmlStreamFromHttpFeed")
+    protected ProducerTemplate fetchXmlStreamFromHttpFeedTemplate;
 
     @Test
     public void testAddResourceToCache() throws Exception {
@@ -27,15 +65,15 @@ public class AvinorCommonRouteBuilderTest extends CamelTestSupport {
         });
         context.start();
 
-        getMockEndpoint("mock:cacheAdd").expectedMessageCount(1);
-        getMockEndpoint("mock:cacheAdd").expectedHeaderReceived(HEADER_EXTIME_RESOURCE_CODE, "OSL");
-        getMockEndpoint("mock:cacheAdd").expectedHeaderReceived(CacheConstants.CACHE_OPERATION, CacheConstants.CACHE_OPERATION_ADD);
-        getMockEndpoint("mock:cacheAdd").expectedHeaderReceived(CacheConstants.CACHE_KEY, "OSL");
-        getMockEndpoint("mock:cacheAdd").expectedBodiesReceived("Oslo");
+        mockCacheAdd.expectedMessageCount(1);
+        mockCacheAdd.expectedHeaderReceived(HEADER_EXTIME_RESOURCE_CODE, "OSL");
+        mockCacheAdd.expectedHeaderReceived(CacheConstants.CACHE_OPERATION, CacheConstants.CACHE_OPERATION_ADD);
+        mockCacheAdd.expectedHeaderReceived(CacheConstants.CACHE_KEY, "OSL");
+        mockCacheAdd.expectedBodiesReceived("Oslo");
 
-        template.sendBodyAndHeader("direct:addResourceToCache", "Oslo", HEADER_EXTIME_RESOURCE_CODE, "OSL");
+        addResourceToCacheTemplate.sendBodyAndHeader("Oslo", HEADER_EXTIME_RESOURCE_CODE, "OSL");
 
-        assertMockEndpointsSatisfied();
+        mockCacheAdd.assertIsSatisfied();
     }
 
     @Test
@@ -48,14 +86,14 @@ public class AvinorCommonRouteBuilderTest extends CamelTestSupport {
         });
         context.start();
 
-        getMockEndpoint("mock:cacheGet").expectedMessageCount(1);
-        getMockEndpoint("mock:cacheGet").expectedHeaderReceived(CacheConstants.CACHE_OPERATION, CacheConstants.CACHE_OPERATION_GET);
-        getMockEndpoint("mock:cacheGet").expectedHeaderReceived(CacheConstants.CACHE_KEY, "OSL");
-        getMockEndpoint("mock:cacheGet").expectedBodiesReceived("OSL");
+       mockCacheGet.expectedMessageCount(1);
+       mockCacheGet.expectedHeaderReceived(CacheConstants.CACHE_OPERATION, CacheConstants.CACHE_OPERATION_GET);
+       mockCacheGet.expectedHeaderReceived(CacheConstants.CACHE_KEY, "OSL");
+       mockCacheGet.expectedBodiesReceived("OSL");
 
-        template.sendBody("direct:getResourceFromCache", "OSL");
+       getResourceFromCacheTemplate.sendBody("OSL");
 
-        assertMockEndpointsSatisfied();
+       mockCacheGet.assertIsSatisfied();
     }
 
     @Test
@@ -71,16 +109,18 @@ public class AvinorCommonRouteBuilderTest extends CamelTestSupport {
         });
         context.start();
 
-        getMockEndpoint("mock:cacheCheck").expectedMessageCount(1);
-        getMockEndpoint("mock:cacheCheck").expectedHeaderReceived(CacheConstants.CACHE_OPERATION, CacheConstants.CACHE_OPERATION_CHECK);
-        getMockEndpoint("mock:cacheCheck").expectedHeaderReceived(CacheConstants.CACHE_KEY, "OSL");
-        getMockEndpoint("mock:fetchResource").expectedMessageCount(0);
-        getMockEndpoint("mock:direct:getResourceFromCache").expectedMessageCount(1);
-        getMockEndpoint("mock:direct:getResourceFromCache").expectedBodiesReceived("OSL");
+        mockCacheCheck.expectedMessageCount(1);
+        mockCacheCheck.expectedHeaderReceived(CacheConstants.CACHE_OPERATION, CacheConstants.CACHE_OPERATION_CHECK);
+        mockCacheCheck.expectedHeaderReceived(CacheConstants.CACHE_KEY, "OSL");
+        mockFetchResource.expectedMessageCount(0);
+        mockGetResourceFromCache.expectedMessageCount(1);
+        mockGetResourceFromCache.expectedBodiesReceived("OSL");
 
-        template.sendBodyAndHeader("direct:retrieveResource", "OSL", HEADER_EXTIME_FETCH_RESOURCE_ENDPOINT, "direct:fetchAndCacheAirportName");
+        retrieveResourceTemplate.sendBodyAndHeader("OSL", HEADER_EXTIME_FETCH_RESOURCE_ENDPOINT, "direct:fetchAndCacheAirportName");
 
-        assertMockEndpointsSatisfied();
+        mockCacheCheck.assertIsSatisfied();
+        mockFetchResource.assertIsSatisfied();
+        mockGetResourceFromCache.assertIsSatisfied();
     }
 
     @Test
@@ -96,18 +136,22 @@ public class AvinorCommonRouteBuilderTest extends CamelTestSupport {
         });
         context.start();
 
-        getMockEndpoint("mock:cacheCheck").expectedMessageCount(1);
-        getMockEndpoint("mock:cacheCheck").expectedHeaderReceived(CacheConstants.CACHE_OPERATION, CacheConstants.CACHE_OPERATION_CHECK);
-        getMockEndpoint("mock:cacheCheck").expectedHeaderReceived(CacheConstants.CACHE_KEY, "OSL");
-        getMockEndpoint("mock:fetchResource").expectedMessageCount(1);
-        getMockEndpoint("mock:fetchResource").expectedHeaderReceived(HEADER_EXTIME_RESOURCE_CODE, "OSL");
-        getMockEndpoint("mock:fetchResource").expectedHeaderReceived(HEADER_EXTIME_FETCH_RESOURCE_ENDPOINT, "direct:fetchAndCacheAirportName");
-        getMockEndpoint("mock:direct:getResourceFromCache").expectedMessageCount(1);
-        getMockEndpoint("mock:direct:getResourceFromCache").expectedBodiesReceived("OSL");
+        mockCacheCheck.expectedMessageCount(1);
+        mockCacheCheck.expectedHeaderReceived(CacheConstants.CACHE_OPERATION, CacheConstants.CACHE_OPERATION_CHECK);
+        mockCacheCheck.expectedHeaderReceived(CacheConstants.CACHE_KEY, "OSL");
+        mockFetchResource.expectedMessageCount(1);
+        mockFetchResource.expectedHeaderReceived(HEADER_EXTIME_RESOURCE_CODE, "OSL");
+        mockFetchResource.expectedHeaderReceived(HEADER_EXTIME_FETCH_RESOURCE_ENDPOINT, "direct:fetchAndCacheAirportName");
+        mockGetResourceFromCache.expectedMessageCount(1);
+        mockGetResourceFromCache.expectedBodiesReceived("OSL");
 
-        template.sendBodyAndHeader("direct:retrieveResource", "OSL", HEADER_EXTIME_FETCH_RESOURCE_ENDPOINT, "direct:fetchAndCacheAirportName");
+        retrieveResourceTemplate.sendBodyAndHeader("OSL", HEADER_EXTIME_FETCH_RESOURCE_ENDPOINT, "direct:fetchAndCacheAirportName");
 
-        assertMockEndpointsSatisfied();
+        mockCacheCheck.assertIsSatisfied();
+        mockFetchResource.assertIsSatisfied();
+        mockGetResourceFromCache.assertIsSatisfied();
+
+
     }
 
     @Test
@@ -120,45 +164,20 @@ public class AvinorCommonRouteBuilderTest extends CamelTestSupport {
         });
         context.start();
 
-        getMockEndpoint("mock:fetchFromHttpEndpoint").expectedMessageCount(1);
-        getMockEndpoint("mock:fetchFromHttpEndpoint").expectedHeaderReceived(Exchange.HTTP_METHOD, HttpMethods.GET);
-        getMockEndpoint("mock:fetchFromHttpEndpoint").expectedHeaderReceived(
+        mockFetchFromHttpEndpoint.expectedMessageCount(1);
+        mockFetchFromHttpEndpoint.expectedHeaderReceived(Exchange.HTTP_METHOD, HttpMethods.GET);
+        mockFetchFromHttpEndpoint.expectedHeaderReceived(
                 Exchange.HTTP_QUERY, "airport=TRD&direction=D&PeriodFrom=2017-01-01Z&PeriodTo=2017-01-31Z");
-        getMockEndpoint("mock:fetchFromHttpEndpoint").expectedHeaderReceived(
+        mockFetchFromHttpEndpoint.expectedHeaderReceived(
                 HEADER_EXTIME_HTTP_URI, "http4://195.69.13.136/XmlFeedScheduled.asp");
 
         Map<String,Object> headers = Maps.newHashMap();
         headers.put(HEADER_EXTIME_HTTP_URI, "http://195.69.13.136/XmlFeedScheduled.asp");
         headers.put(HEADER_EXTIME_URI_PARAMETERS, "airport=TRD&direction=D&PeriodFrom=2017-01-01Z&PeriodTo=2017-01-31Z");
 
-        template.sendBodyAndHeaders("direct:fetchXmlStreamFromHttpFeed", null, headers);
+        fetchXmlStreamFromHttpFeedTemplate.sendBodyAndHeaders(null, headers);
 
-        assertMockEndpointsSatisfied();
-    }
-
-    @Override
-    protected RouteBuilder createRouteBuilder() throws Exception {
-        return new AvinorCommonRouteBuilder();
-    }
-
-    @Override
-    public boolean isUseAdviceWith() {
-        return true;
-    }
-
-    @Override
-    public boolean isUseDebugger() {
-        return true;
-    }
-
-    @Override
-    protected void debugBefore(Exchange exchange, Processor processor, ProcessorDefinition<?> definition, String id, String shortName) {
-        log.info("Before " + definition + " with body " + exchange.getIn().getBody());
-    }
-
-    @Override
-    protected void debugAfter(Exchange exchange, Processor processor, ProcessorDefinition<?> definition, String id, String label, long timeTaken) {
-        log.info("After " + definition + " with body " + exchange.getIn().getBody());
+        mockFetchFromHttpEndpoint.assertIsSatisfied();
     }
 
 }

@@ -4,7 +4,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import no.rutebanken.extime.Constants;
-import no.rutebanken.extime.config.CamelRouteDisabler;
+import no.rutebanken.extime.ExtimeRouteBuilderIntegrationTestBase;
 import no.rutebanken.extime.fixtures.LineDataSetFixture;
 import no.rutebanken.extime.model.FlightRoute;
 import no.rutebanken.extime.model.LineDataSet;
@@ -14,7 +14,6 @@ import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Assert;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.rutebanken.netex.model.AllVehicleModesOfTransportEnumeration;
 import org.rutebanken.netex.model.Common_VersionFrameStructure;
 import org.rutebanken.netex.model.DayOfWeekEnumeration;
@@ -37,8 +36,6 @@ import org.rutebanken.netex.model.StopPointInJourneyPattern;
 import org.rutebanken.netex.model.TimetableFrame;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import javax.xml.bind.JAXBElement;
 import java.time.DayOfWeek;
@@ -57,10 +54,11 @@ import static no.rutebanken.extime.Constants.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SuppressWarnings("unchecked")
-@ActiveProfiles("test")
-@RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(classes = {CamelRouteDisabler.class, LineDataToNetexConverter.class}, properties = "spring.config.name=application,netex-static-data")
-public class LineDataToNetexConverterTest {
+@SpringBootTest(classes = {LineDataToNetexConverter.class}, properties = {
+        "spring.config.name=application,netex-static-data",
+        "avinor.timetable.scheduler.consumer=direct:start"
+})
+public class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationTestBase {
 
     @Autowired
     private LineDataToNetexConverter netexConverter;

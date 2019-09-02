@@ -411,7 +411,7 @@ netex-data-sets:
       international: true
     fae:
       name: Vága Floghavn
-      short-name: Vágar
+      short-name: Vága
       international: true
 
     cdg:

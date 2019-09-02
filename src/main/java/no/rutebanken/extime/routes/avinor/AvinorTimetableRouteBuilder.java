@@ -292,7 +292,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .setBody(constant(null))
 
                 .log(LoggingLevel.INFO, this.getClass().getName(), "Notifying marduk queue about NeTEx export")
-                .to("activemq:queue:{{queue.upload.destination.name}}?exchangePattern=InOnly")
+                .to("entur-google-pubsub:{{queue.upload.destination.name}}")
 
                 .process(exchange -> {
                     Thread stop = new Thread(() -> {
@@ -322,7 +322,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .setBody(constant(null))
 
                 .log(LoggingLevel.INFO, this.getClass().getName(), "Notifying marduk queue about NeTEx export")
-                .to("activemq:queue:{{queue.upload.destination.name}}?exchangePattern=InOnly")
+                .to("entur-google-pubsub:{{queue.upload.destination.name}}")
         ;
 
         from("direct:dumpFetchedFlightsToFile")
