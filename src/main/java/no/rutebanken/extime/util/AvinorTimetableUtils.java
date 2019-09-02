@@ -1,6 +1,5 @@
 package no.rutebanken.extime.util;
 
-import com.google.cloud.storage.Storage;
 import com.google.common.collect.Lists;
 import no.avinor.flydata.xjc.model.scheduled.Flight;
 import no.avinor.flydata.xjc.model.scheduled.Flights;
@@ -10,11 +9,11 @@ import no.rutebanken.extime.model.AirlineDesignator;
 import no.rutebanken.extime.model.AirportIATA;
 import no.rutebanken.extime.model.ServiceType;
 import no.rutebanken.extime.model.StopVisitType;
+import no.rutebanken.extime.repository.BlobStoreRepository;
 import org.apache.camel.Exchange;
 import org.apache.camel.ExchangeProperty;
 import org.apache.camel.Header;
 import org.apache.commons.lang3.EnumUtils;
-import org.rutebanken.helper.gcp.BlobStoreHelper;
 import org.rutebanken.netex.model.CompositeFrame;
 import org.rutebanken.netex.model.Line;
 import org.rutebanken.netex.model.PublicationDeliveryStructure;
@@ -32,7 +31,6 @@ import javax.xml.bind.JAXBException;
 import javax.xml.transform.stream.StreamSource;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
@@ -68,23 +66,11 @@ public class AvinorTimetableUtils {
     @Value("${avinor.timetable.period.months}")
     private int numberOfMonthsInPeriod;
 
-    @Value("${blobstore.gcs.credential.path}")
-    private String credentialPath;
-
-    @Value("${blobstore.gcs.bucket.name}")
-    private String bucketName;
-
-    @Value("${blobstore.gcs.blob.path}")
-    private String blobPath;
-
-    @Value("${blobstore.gcs.project.id}")
-    private String projectId;
-
-    @Value("${blobstore.gcs.provider.id}")
-    private String providerId;
-
     @Autowired
     private NetexStaticDataSet netexStaticDataSet;
+
+    @Autowired
+    BlobStoreRepository blobStoreRepository;
 
     public String useHttp4Client(@Header(HEADER_EXTIME_HTTP_URI) String httpUri) {
         return httpUri.replace("https:", "https4:").replace("http:","http4:");
@@ -309,25 +295,8 @@ public class AvinorTimetableUtils {
 
     public void uploadBlobToStorage(@Header(Exchange.FILE_NAME) String compressedFileName,
                                     @Header(Exchange.FILE_NAME_PRODUCED) String compressedFilePath,
-                                    @Header(HEADER_MESSAGE_CORRELATION_ID) String correlationId) throws Exception {
-        try {
-            Path filePath = Paths.get(compressedFilePath);
-            LOG.info("Placing file '{}' from provider with id '{}' and correlation id '{}' in blob store.",
-                    compressedFileName, providerId, correlationId);
-
-            String blobIdName = blobPath + compressedFileName;
-            LOG.info("Created blob : {}", blobIdName);
-
-            LOG.info("Created blob : {}", blobIdName);
-            Storage storage = BlobStoreHelper.getStorage(credentialPath, projectId);
-
-            try (InputStream inputStream = Files.newInputStream(filePath)) {
-                BlobStoreHelper.uploadBlobWithRetry(storage, bucketName, blobIdName, inputStream, false);
-                LOG.info("Stored blob with name '{}' and size '{}' in bucket '{}'", filePath.getFileName().toString(), Files.size(filePath), bucketName);
-            }
-        } catch (RuntimeException e) {
-            LOG.warn("Failed to put file '{}' in blobstore", compressedFileName, e);
-        }
+                                    @Header(HEADER_MESSAGE_CORRELATION_ID) String correlationId)  {
+        blobStoreRepository.uploadBlob(compressedFileName, compressedFilePath, correlationId);
     }
 
     public static boolean isValidFlight(StopVisitType stopVisitType, Flight newFlight) {
