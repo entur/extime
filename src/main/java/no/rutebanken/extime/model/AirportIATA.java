@@ -60,9 +60,11 @@ public enum AirportIATA {
     VAW, // Vardø lufthavn
     VDB, // Fagernes lufthamn
     VDS, // Vadsø lufthavn
-    VRY, // Værøy helikopterhavn
+    VRY; // Værøy helikopterhavn
 
+    /*
     ARN, // Stockholm Arlanda Lufthavn
+
     GOT, // Göteborg Landvetter flygplats
     HEL, // Helsingfors-Vanda lufthavn
     CPH, // Københavns lufthavn
@@ -95,8 +97,9 @@ public enum AirportIATA {
     KUN, // Kaunas internasjonale lufthavn
     BRU, // Brussel-Nationaal luchthaven
     LUZ; // Lublin lufthavn
+    */
 
-    public static EnumSet<AirportIATA> LARGE_SIZED_AIRPORTS = EnumSet.of(OSL, ARN, CDG, ORY, HAM, AMS, SXF, TXL, LGW, LHR, FRA);
+    public static EnumSet<AirportIATA> LARGE_SIZED_AIRPORTS = EnumSet.of(OSL);
     public static EnumSet<AirportIATA> MEDIUM_SIZED_AIRPORTS = EnumSet.of(BGO, BOO, SVG, TRD);
 
 }
