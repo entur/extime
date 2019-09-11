@@ -1,69 +1,90 @@
-# extime [![CircleCI](https://circleci.com/gh/rutebanken/extime/tree/master.svg?style=svg&circle-token=b80134a1579275938f9bf86b7dde5df2fcfc1b5d)](https://circleci.com/gh/rutebanken/extime/tree/master)
+# extime [![CircleCI](https://circleci.com/gh/entur/extime/tree/master.svg?style=svg)](https://circleci.com/gh/rutebanken/extime/tree/master)
 
-Components for fetching external timetable and realtime information from non compliant sources (non NeTEx nor SIRI)
+Extime fetches flights information provided by [Avinor](https://avinor.no), the company operating most Norwegian airports, and converts them into NeTEx-compliant timetables.
 
-For details, see the
-initial project setup location:
-  https://github.com/fabric8io/ipaas-quickstarts/
+Avinor publishes flights information through its [flight data web service portal](https://avinor.no/konsern/tjenester/flydata), using a custom XML format.
 
-## Configuration
+These dataset are downloaded, combined and converted into NeTEx timetables compliant with the [Nordic NeTEx Profile](https://enturas.atlassian.net/wiki/spaces/PUBLIC/pages/728891481/Nordic+NeTEx+Profile).
+Ultimately the flight timetables are injected into the [Norwegian National Journey Planner](https://en-tur.no) and used to provide multi-modal journey planning. 
 
-The application is unable to run without configuration. This must be defined externally to the application in a .properties file.
-Copy application.properties from the project in test/resources, to a local directory, e.g. {user.home}/config/extime_application.properties.
-Customize the the local runtime behavior by changing the values in your local configuration file instead of chaning values in the project application.properties.
+# Dataflows
 
-Typical application properties for dev environment:
+## Input
+Extime makes use of the following dataset provided by Avinor:
+- Flights timetables: https://flydata.avinor.no/XmlFeed.asp
+- Airport names: https://flydata.avinor.no/airportNames.asp
+- Airline names: https://flydata.avinor.no/airlineNames.asp
 
+## Output
+Extimes converts the flight data into a set of NeTEx documents packaged as a zip file following the [Nordic NeTEx Profile delivery format](https://enturas.atlassian.net/wiki/spaces/PUBLIC/pages/728563782/General+information+NeTEx#Generalinformation:NeTEx-PublicationDeliveryExchanginginformation).
+
+# Scope
+Extime extracts and converts only a subset of the flights published by Avinor. Flight are filtered through a whitelist of airports and a whitelist of airlines.
+ 
+# Reference data
+Extime generates NeTEx timetables that reference airports as NeTEx **StopPlaces** and **Quays**. These StopPlaces and Quays should be declared in the [Norwegian Stop Place Register](https://stoppested.entur.org).
+
+By convention, flights arrive/depart from a **Quay** identified in the Stop Register  by a local reference following the format:
 ```
-spring.main.sources=no.rutebanken.extime
+AVI:Quay:[Airport code]
+```
+where [Airport code] is the IATA code of the corresponding airport.
 
-camel.springboot.name=extime
-
-avinor.airports.large=BGO,BOO,SVG,TRD
-
-avinor.timetable.scheduler.consumer=quartz2://avinorTimetableScheduler?fireNow=true&trigger.repeatCount=0
-avinor.timetable.period.months=1
-avinor.timetable.max.range=180
-avinor.timetable.min.range=60
-avinor.timetable.feed.endpoint=http://195.69.13.136/XmlFeedScheduled.asp
-
-avinor.timetable.dump.enabled=false
-avinor.timetable.dump.output.path=$HOME/dev/git/extime/target/flights
-
-avinor.realtime.scheduler.options=quartz2://avinorRealtimeScheduler?fireNow=true&trigger.repeatCount=0
-avinor.realtime.feed.endpoint=http4://flydata.avinor.no/XmlFeed.asp
-avinor.realtime.departures.timefrom=0
-avinor.realtime.departures.timeto=72
-avinor.realtime.arrivals.timefrom=0
-avinor.realtime.arrivals.timeto=96
-
-avinor.airport.feed.endpoint=http://flydata.avinor.no/airportNames.asp
-avinor.airline.feed.endpoint=http://flydata.avinor.no/airlineNames.asp
-
-netex.generated.output.path=$HOME/dev/git/extime/target/netex
-#netex.generated.output.path=$HOME/dev/temp/netex
-netex.compressed.output.path=$HOME/dev/git/extime/target/marduk
-netex.compressed.file.prefix=avinor-netex_
-
-blobstore.gcs.bucket.name=marduk-test-exchange
-blobstore.gcs.blob.path=inbound/received/avi/
-blobstore.gcs.credential.path=$HOME/dev/config/Carbon-6120ee33c0d0.json
-blobstore.gcs.project.id=carbon-1287
-blobstore.gcs.provider.id=21
-
-queue.upload.destination.name=MardukInboundTestQueue
-
-logging.level.org.apache=INFO
-logging.level.org.apache.http.wire=INFO
-logging.level.no.rutebanken=DEBUG
-
-spring.jmx.enabled=true
-
-management.port=9001
-management.address=127.0.0.1
+Example for Oslo airport:
+```
+AVI:Quay:OSL
 ```
 
-## Building and running
+# Configuration
+
+## Airport and airlines
+Airports and airlines are configured in:
+
+- `no.rutebanken.extime.model.AirportIATA`: Airports whitelist
+
+- `no.rutebanken.extime.model.AirlineIATA`: Airlines whitelist
+
+- `no.rutebanken.extime.model.AirlineDesignator`: Airlines whitelist
+
+- `netex-static-data.yml`: Metadata for airports and airlines
+ 
+## General Application configuration
+General application configuration parameters are set in the Spring Boot configuration file `application.properties`
+
+Main parameters:
+
+| Parameter name                     | Description                 | 
+| -------------                      |:-------------:              |
+| avinor.timetable.feed.endpoint     | Flights timetables endpoint |
+| avinor.airport.feed.endpoint       | Airport names endpoint      |
+| avinor.airline.feed.endpoint       | Airline names endpoint      |
+| avinor.timetable.scheduler.consumer| Configuration of the frequency of the Flight information import|
+| avinor.timetable.period.months     | Time window in months for which flight data are imported|
+
+## System integration
+
+### Production environment
+
+In the production environment, Extime uploads the generated NeTEx archive in a common storage area on Google Storage.
+
+Once the archive is uploaded, Extime notifies [Marduk](https://github.com/entur/marduk) that a new delivery is available by publishing a message on a Google PubSub topic.
+
+Access to Google Storage and Google PubSub is configured through the properties `blobstore.gcs.*` and `spring.cloud.gcp.pubsub.*` respectively.
+
+### Development environment 
+In a development environment:
+ - Google Storage can be substituted by the local file system. Use the following properties:
+```
+spring.profiles.active=local-disk-blobstore
+blobstore.local.folder=/path/to/local/directory
+```
+ 
+ - Google PubSub can be substituted by Google PubSub emulator. Use the following property:
+```
+spring.cloud.gcp.pubsub.emulatorHost=localhost:8085
+```
+
+# Building and running
 
 * Build: `mvn clean install`
 * Local run, three different run modes are available: 
@@ -85,14 +106,10 @@ management.address=127.0.0.1
     <jvmArguments>-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005</jvmArguments>
 </configuration>
 ```
-* Docker image: `mvn -Pf8-build`
-* Run the docker image in docker on dev machine (you'll need to modify ports from 22 to 2224 and also to have the lamassu.pem file present in ~/.ssh):
-     * `docker run -it --name extime -e JAVA_OPTIONS="-Xmx1280m -Dspring.profiles.active=dev" --add-host=lamassu:127.0.0.1 -v ~/.ssh/lamassu.pem:/opt/jboss/.ssh/lamassu.pem:ro rutebanken/extime:0.0.1-SNAPSHOT`
-* Run the docker image in docker inside vagrant:
-     * `docker run -it --name extime -e JAVA_OPTIONS="-Xmx1280m -Dspring.profiles.active=dev" --link lamassu -v ~/.ssh/lamassu.pem:/opt/jboss/.ssh/lamassu.pem:ro rutebanken/extime:0.0.1-SNAPSHOT`
-* For more docker plugin goals, see: http://ro14nd.de/docker-maven-plugin/goals.html
-
-## Readiness and liveness
+* Run the docker image in docker on dev machine:
+     * `docker run -it --name extime -e JAVA_OPTIONS="-Xmx1280m -Dspring.profiles.active=dev" rutebanken/extime:0.0.1-SNAPSHOT`
+* 
+# Readiness and liveness
 
 For now, use the following health endpoint:
 
