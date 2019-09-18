@@ -386,7 +386,7 @@ public class AvinorTimetableRouteBuilderTest extends ExtimeRouteBuilderIntegrati
         Assertions.assertThat(flights)
                 .isNotNull()
                 .isNotEmpty()
-                .hasSize(8)
+                .hasSize(9)
                 .hasOnlyElementsOfType(Flight.class);
     }
 
