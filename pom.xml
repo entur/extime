@@ -15,8 +15,15 @@
 
     <name>extime</name>
     <description>
-        Spring boot camel routes for fetching of timetable and realtime data from non compliant sources (NeTEx/SIRI)
+        Fetches flights information provided by Avinor and converts them into NeTEx-compliant timetables.
     </description>
+    <licenses>
+        <license>
+            <name>EUPL-1.2 with modifications</name>
+            <url>https://joinup.ec.europa.eu/software/page/eupl</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
