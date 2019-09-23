@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.rutebanken.superpom</groupId>
         <artifactId>superpom</artifactId>
-        <version>0.0.8-SNAPSHOT</version>
+        <version>0.0.9-SNAPSHOT</version>
     </parent>
 
     <groupId>no.rutebanken.extime</groupId>
@@ -26,17 +26,11 @@
     </licenses>
 
     <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-
-        <!-- versions for use in mvn plugins as we cannot inherit them from a BOM -->
-        <spring-boot-plugin.version>2.1.8.RELEASE</spring-boot-plugin.version>
-        <spring-boot.version>2.1.8.RELEASE</spring-boot.version>
         <camel.version>2.24.1</camel.version>
-        <camel-entur-google-pubsub-version>0.0.6-SNAPSHOT</camel-entur-google-pubsub-version>
         <entur.helpers.version>0.0.6-SNAPSHOT</entur.helpers.version>
         <logstash-logback-encoder.version>5.3</logstash-logback-encoder.version>
-        <guava.version>27.0-jre</guava.version>
+        <guava.version>28.1-jre</guava.version>
         <onebusaway-gtfs.version>1.3.4</onebusaway-gtfs.version>
         <jaxb2-basics-runtime.version>1.11.1</jaxb2-basics-runtime.version>
         <jaxb-java-time-adapters>1.1.3</jaxb-java-time-adapters>
@@ -45,10 +39,12 @@
         <siri-java-model.version>0.13-SNAPSHOT</siri-java-model.version>
         <commons-collections4.version>4.4</commons-collections4.version>
         <javax.activation.version>1.2.0</javax.activation.version>
+
+        <!-- temporary security-related dependency management -->
+        <!-- should be removed when transitive dependencies are fixed -->
         <commons-beanutils.version>1.9.4</commons-beanutils.version>
         <c3p0.version>0.9.5.4</c3p0.version>
         <xerces.version>2.12.0</xerces.version>
-        <owasp-dependency-check.version>5.2.1</owasp-dependency-check.version>
 
         <!-- NB: Concious choice of using snapshot version. This is to keep in
             sync, and fail fast if incompatibilities -->
@@ -57,15 +53,8 @@
 
     <dependencyManagement>
         <dependencies>
-            <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-dependencies</artifactId>
-                <version>${spring-boot.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-            
-            <!-- security-related dependency management -->
+
+            <!-- temporary security-related dependency management -->
             <!-- for camel-quarty -->
             <dependency>
                 <groupId>com.mchange</groupId>
@@ -73,14 +62,7 @@
                 <version>${c3p0.version}</version>
             </dependency>
 
-            <!-- security-related dependency management -->
-            <!-- for spring-boot-loader-tools -->
-            <dependency>
-                <groupId>org.apache.commons</groupId>
-                <artifactId>commons-compress</artifactId>
-                <version>1.19</version>
-            </dependency>
-            
+            <!-- temporary security-related dependency management -->
             <!-- for camel-cache -->
             <dependency>
                 <groupId>xerces</groupId>
@@ -88,11 +70,20 @@
                 <version>${xerces.version}</version>
             </dependency>
 
+            <!-- temporary security-related dependency management -->
             <!-- for onebusaway-gtfs -->
             <dependency>
                 <groupId>commons-beanutils</groupId>
                 <artifactId>commons-beanutils</artifactId>
                 <version>${commons-beanutils.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.camel</groupId>
+                <artifactId>camel-bom</artifactId>
+                <version>${camel.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -134,27 +125,22 @@
         <dependency>
             <groupId>org.apache.camel</groupId>
             <artifactId>camel-core</artifactId>
-            <version>${camel.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.camel</groupId>
             <artifactId>camel-spring-boot</artifactId>
-            <version>${camel.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.camel</groupId>
             <artifactId>camel-spring</artifactId>
-            <version>${camel.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.camel</groupId>
             <artifactId>camel-metrics</artifactId>
-            <version>${camel.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.camel</groupId>
             <artifactId>camel-http4</artifactId>
-            <version>${camel.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.apache.geronimo.specs</groupId>
@@ -165,33 +151,28 @@
         <dependency>
             <groupId>org.apache.camel</groupId>
             <artifactId>camel-quartz2</artifactId>
-            <version>${camel.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.camel</groupId>
             <artifactId>camel-jaxb</artifactId>
-            <version>${camel.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.camel</groupId>
             <artifactId>camel-stax</artifactId>
-            <version>${camel.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.camel</groupId>
             <artifactId>camel-cache</artifactId>
-            <version>${camel.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.camel</groupId>
             <artifactId>camel-zipfile</artifactId>
-            <version>${camel.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.entur.helpers</groupId>
             <artifactId>camel-entur-google-pubsub</artifactId>
-            <version>${camel-entur-google-pubsub-version}</version>
+            <version>${entur.helpers.version}</version>
         </dependency>
 
 
@@ -280,13 +261,11 @@
         <dependency>
             <groupId>org.apache.camel</groupId>
             <artifactId>camel-test</artifactId>
-            <version>${camel.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.camel</groupId>
             <artifactId>camel-test-spring</artifactId>
-            <version>${camel.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -448,7 +427,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.18.1</version>
                 <inherited>true</inherited>
                 <configuration>
                     <excludes>
@@ -460,7 +438,6 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-                <version>${spring-boot-plugin.version}</version>
 <!--
                 <configuration>
                     <jvmArguments>
@@ -507,7 +484,6 @@
             <plugin>
                 <groupId>org.owasp</groupId>
                 <artifactId>dependency-check-maven</artifactId>
-                <version>${owasp-dependency-check.version}</version>
                 <configuration>
                     <failBuildOnCVSS>7</failBuildOnCVSS>
                     <failOnError>false</failOnError>
