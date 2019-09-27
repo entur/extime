@@ -49,9 +49,11 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
     static final String HEADER_UPPER_RANGE_ENDPOINT = "UpperRangeEndpoint";
 
     private static final String HEADER_FILE_NAME_GENERATED = "FileNameGenerated";
-    private static final String HEADER_MESSAGE_PROVIDER_ID = "RutebankenProviderId";
-    private static final String HEADER_MESSAGE_FILE_HANDLE = "RutebankenFileHandle";
-    private static final String HEADER_MESSAGE_FILE_NAME = "RutebankenFileName";
+
+    public static final String HEADER_MESSAGE_PROVIDER_ID = "RutebankenProviderId";
+    public static final String HEADER_MESSAGE_FILE_HANDLE = "RutebankenFileHandle";
+    public static final String HEADER_MESSAGE_FILE_NAME = "RutebankenFileName";
+
     private static final String PROPERTY_LINE_DATASET_ORIGINAL_BODY = "LineDataSetOriginalBody";
     private static final String PROPERTY_LINE_DATASETS_LIST_ORIGINAL_BODY = "LineDataSetsListOriginalBody";
 
@@ -286,8 +288,8 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 // .bean(AvinorTimetableUtils.class, "uploadBlobToStorage").id("UploadZipToBlobStore")
                 .log(LoggingLevel.INFO, this.getClass().getName(), "Done storage upload of file : ${header.CamelFileName}")
 
-                .setHeader(HEADER_MESSAGE_PROVIDER_ID, simple("${properties:blobstore.gcs.provider.id}", Long.class))
-                .setHeader(HEADER_MESSAGE_FILE_HANDLE, simple("${properties:blobstore.gcs.blob.path}${header.CamelFileName}"))
+                .setHeader(HEADER_MESSAGE_PROVIDER_ID, simple("${properties:blobstore.provider.id}", Long.class))
+                .setHeader(HEADER_MESSAGE_FILE_HANDLE, simple("${properties:blobstore.blob.path}${header.CamelFileName}"))
                 .setHeader(HEADER_MESSAGE_FILE_NAME, simple("${header.CamelFileName}"))
                 .setBody(constant(null))
 
@@ -316,8 +318,8 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .bean(AvinorTimetableUtils.class, "uploadBlobToStorage").id("UploadZipToBlobStore")
                 .log(LoggingLevel.INFO, this.getClass().getName(), "Done storage upload of file : ${header.CamelFileName}")
 
-                .setHeader(HEADER_MESSAGE_PROVIDER_ID, simple("${properties:blobstore.gcs.provider.id}", Long.class))
-                .setHeader(HEADER_MESSAGE_FILE_HANDLE, simple("${properties:blobstore.gcs.blob.path}${header.CamelFileName}"))
+                .setHeader(HEADER_MESSAGE_PROVIDER_ID, simple("${properties:blobstore.provider.id}", Long.class))
+                .setHeader(HEADER_MESSAGE_FILE_HANDLE, simple("${properties:blobstore.blob.path}${header.CamelFileName}"))
                 .setHeader(HEADER_MESSAGE_FILE_NAME, simple("${header.CamelFileName}"))
                 .setBody(constant(null))
 

@@ -5,6 +5,7 @@ import org.rutebanken.helper.gcp.BlobStoreHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.io.InputStream;
@@ -16,6 +17,7 @@ import java.nio.file.Paths;
  * Blob store repository targeting Google Cloud Storage.
  */
 @Component
+@Profile("gcs-blobstore")
 public class GcsBlobStoreRepository implements BlobStoreRepository {
 
     private static Logger log = LoggerFactory.getLogger(GcsBlobStoreRepository.class);
@@ -27,13 +29,13 @@ public class GcsBlobStoreRepository implements BlobStoreRepository {
     @Value("${blobstore.gcs.bucket.name}")
     private String bucketName;
 
-    @Value("${blobstore.gcs.blob.path}")
+    @Value("${blobstore.blob.path}")
     private String blobPath;
 
     @Value("${blobstore.gcs.project.id}")
     private String projectId;
 
-    @Value("${blobstore.gcs.provider.id}")
+    @Value("${blobstore.provider.id}")
     private String providerId;
 
     @Override

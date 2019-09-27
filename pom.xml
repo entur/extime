@@ -494,8 +494,9 @@
                 </configuration>
                 <executions>
                     <execution>
-                        <!-- run only using explicit command -->
-                        <phase>none</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>            
