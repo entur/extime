@@ -60,12 +60,12 @@ public enum AirportIATA {
     VAW, // Vardø lufthavn
     VDB, // Fagernes lufthamn
     VDS, // Vadsø lufthavn
-    VRY, // Værøy helikopterhavn
+    VRY; // Værøy helikopterhavn
 
-
-    ARN; // Stockholm Arlanda Lufthavn
 
     /*
+    ARN; // Stockholm Arlanda Lufthavn
+
     GOT, // Göteborg Landvetter flygplats
 
     HEL, // Helsingfors-Vanda lufthavn
