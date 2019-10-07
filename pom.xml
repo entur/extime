@@ -175,7 +175,6 @@
             <version>${entur.helpers.version}</version>
         </dependency>
 
-
         <!-- Spring -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
