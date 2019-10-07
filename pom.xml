@@ -201,6 +201,12 @@
             </exclusions>
         </dependency>
 
+        <!--Used by Spring Actuator to expose metrics to Prometheus-->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
+
         <!-- Misc. -->
         <dependency>
             <groupId>com.migesok</groupId>
