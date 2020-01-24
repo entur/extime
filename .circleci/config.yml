@@ -121,7 +121,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace:
-          at: .
+          at: ~/project
       - run: *get-new-image-version
       - run: *update-helm-chart
       - run: *GCP-auth
@@ -133,7 +133,7 @@ jobs:
     executor: slack/alpine
     steps:
       - attach_workspace:
-          at: .
+          at: ~/project
       - run: *get-new-image-version
       - slack/approval:
           webhook: *team-ror-releases-slackhook

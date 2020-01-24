@@ -1,4 +1,5 @@
 apiVersion: v1
+# template for application version, the actual version number is set at build time
 appVersion: "0.1.99.1"
 description: AVINOR flights information importer
 name: extime
