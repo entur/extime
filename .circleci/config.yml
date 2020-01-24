@@ -183,7 +183,7 @@ workflows:
             only: master
     - deploy-helm:
         name: deploy-dev-release
-        context: stage
+        context: dev
         requires:
           - push-release
     - slack-approval:
