@@ -1,0 +1,3 @@
+avinorTimetableSchedulerCron: 0+0+5+*+*+?
+gcsBucketName: marduk-exchange-stage
+gcpProjectId: radon-1287
