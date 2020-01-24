@@ -126,6 +126,8 @@ jobs:
       - docker/check
       - docker/build:
           image: extime
+          tag: $CIRCLE_BRANCH-v$CIRCLE_BUILD_NUM-$(echo -n $CIRCLE_SHA1 | tail -c 8)
+          registry: eu.gcr.io/entur-system-1287
       - docker/push:
           image: extime
           tag: $CIRCLE_BRANCH-v$CIRCLE_BUILD_NUM-$(echo -n $CIRCLE_SHA1 | tail -c 8)
