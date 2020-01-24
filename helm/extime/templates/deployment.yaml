@@ -76,7 +76,7 @@ spec:
             - mountPath: /etc/application-config
               name: application-config
               readOnly: true
-            - mountPath: /etc/exchange/
+            - mountPath: /etc/exchange
               name: marduk-exchange-key
             - mountPath: /etc/marduk-pubsub-account
               name: marduk-pubsub-key

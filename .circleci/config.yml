@@ -29,7 +29,7 @@ aliases:
   name: Set version in helm dir to $APP_VERSION
   command: |
     echo "Setting helm versions to $APP_VERSION"
-    pushd helm/otp2
+    pushd helm/extime
     sed -i "s/version:.*$/version: '$APP_VERSION'/g"  ./Chart.yaml
     sed -i "s/appVersion:.*$/appVersion: '$APP_VERSION'/g"  ./Chart.yaml
     popd
@@ -102,6 +102,8 @@ jobs:
         command: |
           mkdir -p ~/junit/
           find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} ~/junit/ \;
+          find . -type f -regex ".*/target/surefire-reports/.*dumpstream" -exec cp {} ~/junit/ \;
+          find . -type f -regex ".*/target/surefire-reports/.*log" -exec cp {} ~/junit/ \;
         when: always
     - store_test_results:
         path: ~/junit
