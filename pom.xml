@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.rutebanken.superpom</groupId>
         <artifactId>superpom</artifactId>
-        <version>0.0.10-SNAPSHOT</version>
+        <version>0.0.13-SNAPSHOT</version>
     </parent>
 
     <groupId>no.rutebanken.extime</groupId>
@@ -27,8 +27,8 @@
 
     <properties>
 
-        <camel.version>2.24.1</camel.version>
-        <entur.helpers.version>0.0.6-SNAPSHOT</entur.helpers.version>
+        <camel.version>2.24.3</camel.version>
+        <entur.helpers.version>0.0.9-SNAPSHOT</entur.helpers.version>
         <logstash-logback-encoder.version>5.3</logstash-logback-encoder.version>
         <guava.version>28.1-jre</guava.version>
         <onebusaway-gtfs.version>1.3.4</onebusaway-gtfs.version>
@@ -38,13 +38,13 @@
         <commons-io.version>2.6</commons-io.version>
         <siri-java-model.version>0.13-SNAPSHOT</siri-java-model.version>
         <commons-collections4.version>4.4</commons-collections4.version>
-        <javax.activation.version>1.2.0</javax.activation.version>
 
         <!-- temporary security-related dependency management -->
         <!-- should be removed when transitive dependencies are fixed -->
         <commons-beanutils.version>1.9.4</commons-beanutils.version>
-        <c3p0.version>0.9.5.4</c3p0.version>
         <xerces.version>2.12.0</xerces.version>
+
+        <entur.google.pubsub.emulator.download.skip>false</entur.google.pubsub.emulator.download.skip>
 
         <!-- NB: Concious choice of using snapshot version. This is to keep in
             sync, and fail fast if incompatibilities -->
@@ -53,14 +53,6 @@
 
     <dependencyManagement>
         <dependencies>
-
-            <!-- temporary security-related dependency management -->
-            <!-- for camel-quarty -->
-            <dependency>
-                <groupId>com.mchange</groupId>
-                <artifactId>c3p0</artifactId>
-                <version>${c3p0.version}</version>
-            </dependency>
 
             <!-- temporary security-related dependency management -->
             <!-- for camel-cache -->
@@ -80,20 +72,17 @@
 
             <dependency>
                 <groupId>org.apache.camel</groupId>
-                <artifactId>camel-bom</artifactId>
+                <artifactId>camel-spring-boot-dependencies</artifactId>
                 <version>${camel.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+
+
         </dependencies>
     </dependencyManagement>
 
     <dependencies>
-        <dependency>
-            <groupId>com.sun.activation</groupId>
-            <artifactId>javax.activation</artifactId>
-            <version>${javax.activation.version}</version>
-        </dependency>
         <dependency>
             <groupId>javax.xml.bind</groupId>
             <artifactId>jaxb-api</artifactId>
@@ -443,13 +432,6 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-<!--
-                <configuration>
-                    <jvmArguments>
-                        -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005
-                    </jvmArguments>
-                </configuration>
--->
                 <executions>
                     <execution>
                         <goals>
@@ -460,39 +442,11 @@
             </plugin>
 
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>copy-pubsub-emulator</id>
-                        <phase>test-compile</phase>
-                        <goals>
-                            <goal>copy</goal>
-                        </goals>
-                        <configuration>
-                            <artifactItems>
-                                <artifactItem>
-                                    <groupId>com.google.cloud</groupId>
-                                    <artifactId>pubsub-emulator</artifactId>
-                                    <version>0.1-SNAPSHOT</version>
-                                    <type>jar</type>
-                                    <overWrite>true</overWrite>
-                                    <outputDirectory>${project.build.directory}/pubsub-emulator</outputDirectory>
-                                </artifactItem>
-                            </artifactItems>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
-
-            <plugin>
                 <groupId>org.owasp</groupId>
                 <artifactId>dependency-check-maven</artifactId>
                 <configuration>
                     <failBuildOnCVSS>7</failBuildOnCVSS>
                     <failOnError>false</failOnError>
-                    <!-- see https://jeremylong.github.io/DependencyCheck/general/suppression.html -->
                     <suppressionFiles>
                         <suppressionFile>dependencycheck-suppression.xml</suppressionFile>
                     </suppressionFiles>
