@@ -123,7 +123,6 @@ jobs:
           at: ~/project
       - setup_remote_docker:
           docker_layer_caching: true
-      - docker/check
       - docker/build:
           image: extime
           tag: $CIRCLE_BRANCH-v$CIRCLE_BUILD_NUM-$(echo -n $CIRCLE_SHA1 | tail -c 8)
@@ -170,9 +169,6 @@ workflows:
           - build-release
         post-steps:
           - save-image-name
-        filters:
-          branches:
-            only: master
     - deploy-helm:
         name: deploy-dev-release
         context: dev
