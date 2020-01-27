@@ -32,6 +32,6 @@ chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
 release: {{ .Release.Name }}
 team: ror
 slack: talk-ror
-type: geocoder
+type: backend
 namespace: {{ .Release.Namespace }}
 {{- end }}
