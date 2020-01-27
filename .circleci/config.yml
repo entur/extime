@@ -20,6 +20,11 @@ aliases:
     gcloud auth activate-service-account --key-file ${HOME}/account-auth.json
     gcloud beta container clusters get-credentials $CLOUDSDK_CONTAINER_CLUSTER --region $CLOUDSDK_COMPUTE_ZONE --project $CLOUDSDK_CORE_PROJECT
 
+- &docker-login
+  name: Docker login
+  command: |
+    docker login -u _json_key --password-stdin https://eu.gcr.io \<<< "${DOCKER_PASSWORD}"
+
 - &get-new-image-version
   name: Getting release version from app_version file
   command: |
@@ -123,6 +128,7 @@ jobs:
           at: ~/project
       - setup_remote_docker:
           docker_layer_caching: true
+      - run: *docker-login
       - docker/build:
           image: extime
           tag: $CIRCLE_BRANCH-v$CIRCLE_BUILD_NUM-$(echo -n $CIRCLE_SHA1 | tail -c 8)
