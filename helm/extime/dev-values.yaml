@@ -1,3 +1,4 @@
 avinorTimetableSchedulerCron: 0+4+3+*+*+?
 gcsBucketName: marduk-exchange
 gcpProjectId: carbon-1287
+gcpExchangeKeyName: marduk-exchange-carbon-storage-key
