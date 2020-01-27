@@ -45,11 +45,6 @@ spec:
                 -Dfile.encoding=UTF-8
             - name: TZ
               value: Europe/Oslo
-            - name: SPRING_ACTIVEMQ_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  key: password
-                  name: extime-activemq-password
           image: eu.gcr.io/entur-system-1287/extime:{{ .Chart.AppVersion }}
           imagePullPolicy: Always
           name: extime
