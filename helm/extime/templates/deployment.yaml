@@ -1,17 +1,17 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  name: {{ template "extime.name" . }}
+  namespace: {{ .Release.Namespace }}
   labels:
-    name: extime
-  name: extime
-  namespace: default
+        {{- include "common.labels" . | indent 4 }}
 spec:
   progressDeadlineSeconds: 600
   replicas: 1
   revisionHistoryLimit: 10
   selector:
     matchLabels:
-      name: extime
+      app: {{ template "extime.name" . }}
   strategy:
     rollingUpdate:
       maxSurge: 1
@@ -36,7 +36,7 @@ spec:
             }
           }
       labels:
-        name: extime
+          {{- include "common.labels" . | indent 8 }}
     spec:
       containers:
         - env:
@@ -45,11 +45,6 @@ spec:
                 -Dfile.encoding=UTF-8
             - name: TZ
               value: Europe/Oslo
-            - name: SPRING_ACTIVEMQ_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  key: password
-                  name: extime-activemq-password
           image: eu.gcr.io/entur-system-1287/extime:{{ .Chart.AppVersion }}
           imagePullPolicy: Always
           name: extime
