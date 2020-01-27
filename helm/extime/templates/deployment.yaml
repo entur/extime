@@ -91,7 +91,7 @@ spec:
         - name: marduk-exchange-key
           secret:
             defaultMode: 420
-            secretName: marduk-exchange-neon-storage-key
+            secretName: {{ .Values.gcpExchangeKeyName}}
         - name: marduk-pubsub-key
           secret:
             defaultMode: 420
