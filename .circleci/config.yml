@@ -30,6 +30,14 @@ aliases:
   command: |
     docker login -u _json_key --password-stdin https://eu.gcr.io \<<< "${DOCKER_PASSWORD}"
 
+- &tag-git-version
+  name: Tag git commit with build version and push to github
+  command: |
+    git config --global user.email "circleci@entur.no"
+    git config --global user.name "circleci"
+    git tag $APP_VERSION
+    git push origin $APP_VERSION
+
 - &get-new-image-version
   name: Getting release version from app_version file
   command: |
@@ -119,6 +127,7 @@ jobs:
         path: ~/junit
     - store_artifacts:
         path: ~/junit
+    - run: *tag-git-version
     - persist_to_workspace:
         root: ~/project
         paths:
