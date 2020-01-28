@@ -12,6 +12,11 @@ executors:
     environment:
       DEBIAN_FRONTEND: "noninteractive"
       MAVEN_OPTS: -Xmx3G
+
+  entur-cci-toolbox:
+    docker:
+      - image: entur/cci-toolbox:2.0
+
 aliases:
 - &GCP-auth
   name: GCP Authentication for Google Cloud Deploy
@@ -122,7 +127,7 @@ jobs:
         - .circleci
 
   deploy-docker:
-    executor: cci-toolbox-java11
+    executor: entur-cci-toolbox
     steps:
       - attach_workspace:
           at: ~/project
@@ -139,7 +144,7 @@ jobs:
           registry: eu.gcr.io/entur-system-1287
 
   deploy-helm:
-    executor: cci-toolbox-java11
+    executor: entur-cci-toolbox
     steps:
       - checkout
       - attach_workspace:
