@@ -39,11 +39,6 @@
         <siri-java-model.version>0.13-SNAPSHOT</siri-java-model.version>
         <commons-collections4.version>4.4</commons-collections4.version>
 
-        <!-- temporary security-related dependency management -->
-        <!-- should be removed when transitive dependencies are fixed -->
-        <commons-beanutils.version>1.9.4</commons-beanutils.version>
-        <xerces.version>2.12.0</xerces.version>
-
         <entur.google.pubsub.emulator.download.skip>false</entur.google.pubsub.emulator.download.skip>
 
         <!-- NB: Concious choice of using snapshot version. This is to keep in
@@ -54,14 +49,6 @@
     <dependencyManagement>
         <dependencies>
 
-            <!-- temporary security-related dependency management -->
-            <!-- for onebusaway-gtfs -->
-            <dependency>
-                <groupId>commons-beanutils</groupId>
-                <artifactId>commons-beanutils</artifactId>
-                <version>${commons-beanutils.version}</version>
-            </dependency>
-
             <dependency>
                 <groupId>org.apache.camel</groupId>
                 <artifactId>camel-spring-boot-dependencies</artifactId>
@@ -69,7 +56,6 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-
 
         </dependencies>
     </dependencyManagement>
@@ -105,23 +91,11 @@
         <!-- Camel -->
         <dependency>
             <groupId>org.apache.camel</groupId>
-            <artifactId>camel-core</artifactId>
+            <artifactId>camel-metrics-starter</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.camel</groupId>
-            <artifactId>camel-spring-boot</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.camel</groupId>
-            <artifactId>camel-spring</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.camel</groupId>
-            <artifactId>camel-metrics</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.camel</groupId>
-            <artifactId>camel-http4</artifactId>
+            <artifactId>camel-http4-starter</artifactId>
             <exclusions>
                 <exclusion>
                     <groupId>org.apache.geronimo.specs</groupId>
@@ -131,15 +105,15 @@
         </dependency>
         <dependency>
             <groupId>org.apache.camel</groupId>
-            <artifactId>camel-quartz2</artifactId>
+            <artifactId>camel-quartz2-starter</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.camel</groupId>
-            <artifactId>camel-jaxb</artifactId>
+            <artifactId>camel-jaxb-starter</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.camel</groupId>
-            <artifactId>camel-stax</artifactId>
+            <artifactId>camel-stax-starter</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.camel</groupId>
@@ -147,7 +121,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.camel</groupId>
-            <artifactId>camel-zipfile</artifactId>
+            <artifactId>camel-zipfile-starter</artifactId>
         </dependency>
 
         <dependency>
@@ -192,11 +166,6 @@
             <groupId>com.migesok</groupId>
             <artifactId>jaxb-java-time-adapters</artifactId>
             <version>${jaxb-java-time-adapters}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.onebusaway</groupId>
-            <artifactId>onebusaway-gtfs</artifactId>
-            <version>${onebusaway-gtfs.version}</version>
         </dependency>
         <dependency>
             <groupId>org.entur</groupId>
