@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.rutebanken.superpom</groupId>
         <artifactId>superpom</artifactId>
-        <version>0.0.13-SNAPSHOT</version>
+        <version>0.0.15-SNAPSHOT</version>
     </parent>
 
     <groupId>no.rutebanken.extime</groupId>
@@ -27,8 +27,8 @@
 
     <properties>
 
-        <camel.version>2.24.3</camel.version>
-        <entur.helpers.version>0.0.9-SNAPSHOT</entur.helpers.version>
+        <camel.version>2.25.0</camel.version>
+        <entur.helpers.version>0.0.10-SNAPSHOT</entur.helpers.version>
         <logstash-logback-encoder.version>5.3</logstash-logback-encoder.version>
         <guava.version>28.1-jre</guava.version>
         <onebusaway-gtfs.version>1.3.4</onebusaway-gtfs.version>
@@ -53,14 +53,6 @@
 
     <dependencyManagement>
         <dependencies>
-
-            <!-- temporary security-related dependency management -->
-            <!-- for camel-cache -->
-            <dependency>
-                <groupId>xerces</groupId>
-                <artifactId>xercesImpl</artifactId>
-                <version>${xerces.version}</version>
-            </dependency>
 
             <!-- temporary security-related dependency management -->
             <!-- for onebusaway-gtfs -->

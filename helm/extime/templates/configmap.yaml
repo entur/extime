@@ -39,6 +39,7 @@ data:
     spring.cloud.gcp.pubsub.subscriber.parallel-pull-count=1
     spring.cloud.gcp.pubsub.subscriber.executor-threads=30
     spring.cloud.gcp.pubsub.subscriber.max-ack-extension-period=36000
+    entur.pubsub.subscriber.autocreate=false
     management.server.port=9001
     management.endpoints.enabled-by-default=false
     management.endpoint.info.enabled=true
