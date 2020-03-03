@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.rutebanken.superpom</groupId>
         <artifactId>superpom</artifactId>
-        <version>0.0.15-SNAPSHOT</version>
+        <version>1.0.1</version>
     </parent>
 
     <groupId>no.rutebanken.extime</groupId>
@@ -28,7 +28,7 @@
     <properties>
 
         <camel.version>2.25.0</camel.version>
-        <entur.helpers.version>0.0.10-SNAPSHOT</entur.helpers.version>
+        <entur.helpers.version>1.0.1</entur.helpers.version>
         <logstash-logback-encoder.version>5.3</logstash-logback-encoder.version>
         <guava.version>28.1-jre</guava.version>
         <onebusaway-gtfs.version>1.3.4</onebusaway-gtfs.version>
@@ -405,13 +405,6 @@
             <plugin>
                 <groupId>org.owasp</groupId>
                 <artifactId>dependency-check-maven</artifactId>
-                <configuration>
-                    <failBuildOnCVSS>7</failBuildOnCVSS>
-                    <failOnError>false</failOnError>
-                    <suppressionFiles>
-                        <suppressionFile>dependencycheck-suppression.xml</suppressionFile>
-                    </suppressionFiles>
-                </configuration>
                 <executions>
                     <execution>
                         <goals>
