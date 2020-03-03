@@ -5,5 +5,9 @@
         <cve>CVE-2016-7079</cve>
         <cve>CVE-2016-7080</cve>
         <cve>CVE-2015-2156</cve>
+        <cve>CVE-2014-4199</cve>
+        <cve>CVE-2014-4200</cve>
+        <cve>CVE-2015-5191</cve>
+        <cve>CVE-2016-5328</cve>
     </suppress>
 </suppressions>
