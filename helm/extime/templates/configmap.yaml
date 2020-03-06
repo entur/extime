@@ -9,17 +9,17 @@ data:
     blobstore.provider.id=21
     blobstore.blob.path=inbound/received/avi/
     logging.level.com=INFO
-    netex.generated.output.path=/deployments/data/netex
+    netex.generated.output.path=/tmp/extime/data/netex
     avinor.timetable.feed.endpoint=https://flydata.avinor.no/XmlFeedScheduled.asp
     server.port=8776
     avinor.realtime.scheduler.options=cron=2+*/3+*+*+*+*+?&trigger.timeZone=Europe/Oslo
     avinor.airport.feed.endpoint=https://flydata.avinor.no/airportNames.asp
-    avinor.timetable.dump.output.path=/deployments/data/dump
+    avinor.timetable.dump.output.path=/tmp/extime/data/dump
     camel.springboot.name=extime
     avinor.realtime.arrivals.timefrom=0
     spring.jmx.enabled=true
     queue.upload.destination.name=MardukInboundQueue
-    netex.compressed.output.path=/deployments/data/zip
+    netex.compressed.output.path=/tmp/extime/data/zip
     avinor.timetable.min.range=7
     logging.level.no.rutebanken=DEBUG
     avinor.timetable.period.months=4
@@ -45,7 +45,6 @@ data:
     management.endpoint.info.enabled=true
     management.endpoint.health.enabled=true
     management.endpoint.prometheus.enabled=true
-    management.endpoints.web.base-path=/
     management.endpoints.web.exposure.include=info,health,prometheus
 kind: ConfigMap
 metadata:

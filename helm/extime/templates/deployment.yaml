@@ -20,7 +20,7 @@ spec:
   template:
     metadata:
       annotations:
-        prometheus.io/path: /prometheus
+        prometheus.io/path: /actuator/prometheus
         prometheus.io/port: "9001"
         prometheus.io/scrape: "true"
         scheduler.alpha.kubernetes.io/affinity: |
@@ -48,10 +48,20 @@ spec:
           image: eu.gcr.io/entur-system-1287/extime:{{ .Chart.AppVersion }}
           imagePullPolicy: Always
           name: extime
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /actuator/health
+              port: 9001
+              scheme: HTTP
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 30
           readinessProbe:
             failureThreshold: 3
             httpGet:
-              path: /health
+              path: /actuator/health
               port: 9001
               scheme: HTTP
             initialDelaySeconds: 2
