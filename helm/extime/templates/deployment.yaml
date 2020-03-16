@@ -45,7 +45,7 @@ spec:
                 -Dfile.encoding=UTF-8
             - name: TZ
               value: Europe/Oslo
-          image: eu.gcr.io/entur-system-1287/extime:{{ .Chart.AppVersion }}
+          image: {{ .Values.image.identifier }}
           imagePullPolicy: Always
           name: extime
           livenessProbe:

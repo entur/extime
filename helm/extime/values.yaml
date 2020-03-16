@@ -1,0 +1,3 @@
+image:
+  identifier: ${artifact.metadata.image}
+  imagePullPolicy: Always
