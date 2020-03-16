@@ -1,41 +1,40 @@
 apiVersion: v1
 data:
   application.properties: |+
-    avinor.timetable.scheduler.consumer=quartz2://avinorTimetableScheduler?cron={{ .Values.avinorTimetableSchedulerCron }}
-    avinor.airports.large=BGO,BOO,SVG,TRD
-    blobstore.gcs.bucket.name={{ .Values.gcsBucketName}}
-    avinor.realtime.arrivals.timeto=96
     spring.profiles.active=gcs-blobstore
+    camel.springboot.name=extime
+    blobstore.gcs.bucket.name={{ .Values.gcsBucketName}}
     blobstore.provider.id=21
     blobstore.blob.path=inbound/received/avi/
-    logging.level.com=INFO
+    blobstore.gcs.credential.path=/etc/extime-service-account/credentials.json
+    blobstore.gcs.project.id={{ .Values.gcpProjectId }}
     netex.generated.output.path=/tmp/extime/data/netex
-    avinor.timetable.feed.endpoint=https://flydata.avinor.no/XmlFeedScheduled.asp
-    server.port=8776
-    avinor.realtime.scheduler.options=cron=2+*/3+*+*+*+*+?&trigger.timeZone=Europe/Oslo
     avinor.airport.feed.endpoint=https://flydata.avinor.no/airportNames.asp
+    avinor.airports.large=BGO,BOO,SVG,TRD
+    avinor.airline.feed.endpoint=https://flydata.avinor.no/airlineNames.asp
+    avinor.timetable.scheduler.consumer=quartz2://avinorTimetableScheduler?cron={{ .Values.avinorTimetableSchedulerCron }}
     avinor.timetable.dump.output.path=/tmp/extime/data/dump
-    camel.springboot.name=extime
+    avinor.timetable.min.range=7
+    avinor.timetable.period.months=4
+    avinor.timetable.dump.enabled=false
+    avinor.timetable.max.range=180
+    avinor.realtime.scheduler.options=cron=2+*/3+*+*+*+*+?&trigger.timeZone=Europe/Oslo
     avinor.realtime.arrivals.timefrom=0
-    spring.jmx.enabled=true
+    avinor.realtime.arrivals.timeto=96
+    avinor.realtime.departures.timefrom=0
+    avinor.realtime.feed.endpoint=https://flydata.avinor.no/XmlFeed.asp
+    avinor.realtime.departures.timeto=72
     queue.upload.destination.name=MardukInboundQueue
     netex.compressed.output.path=/tmp/extime/data/zip
-    avinor.timetable.min.range=7
-    logging.level.no.rutebanken=DEBUG
-    avinor.timetable.period.months=4
-    blobstore.gcs.credential.path=/etc/exchange/marduk-exchange-blobstore-credentials.json
-    avinor.realtime.departures.timefrom=0
-    endpoints.jmx.enabled=true
-    avinor.airline.feed.endpoint=https://flydata.avinor.no/airlineNames.asp
-    blobstore.gcs.project.id={{ .Values.gcpProjectId }}
-    avinor.realtime.feed.endpoint=https://flydata.avinor.no/XmlFeed.asp
-    avinor.timetable.dump.enabled=false
+    logging.level.com=INFO
     logging.level.org=INFO
-    avinor.realtime.departures.timeto=72
+    logging.level.no.rutebanken=DEBUG
+    server.port=8776
+    endpoints.jmx.enabled=true
+    spring.jmx.enabled=true
     spring.main.sources=no.rutebanken.extime
-    avinor.timetable.max.range=180
     spring.cloud.gcp.pubsub.project-id={{ .Values.gcpProjectId }}
-    spring.cloud.gcp.pubsub.credentials.location=file:/etc/marduk-pubsub-account/marduk-pubsub-credentials.json
+    spring.cloud.gcp.pubsub.credentials.location=file:/etc/extime-service-account/credentials.json
     spring.cloud.gcp.pubsub.subscriber.parallel-pull-count=1
     spring.cloud.gcp.pubsub.subscriber.executor-threads=30
     spring.cloud.gcp.pubsub.subscriber.max-ack-extension-period=36000

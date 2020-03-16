@@ -78,29 +78,21 @@ spec:
           terminationMessagePath: /dev/termination-log
           terminationMessagePolicy: File
           volumeMounts:
+            - mountPath: /etc/extime-service-account
+              name: extime-service-account
             - mountPath: /etc/application-config
               name: application-config
               readOnly: true
-            - mountPath: /etc/exchange
-              name: marduk-exchange-key
-            - mountPath: /etc/marduk-pubsub-account
-              name: marduk-pubsub-key
       dnsPolicy: ClusterFirst
-      imagePullSecrets:
-        - name: rutebanken-registry-key
       restartPolicy: Always
       schedulerName: default-scheduler
       securityContext: {}
       terminationGracePeriodSeconds: 30
       volumes:
-        - name: marduk-exchange-key
+        - name: extime-service-account
           secret:
             defaultMode: 420
-            secretName: {{ .Values.gcpExchangeKeyName}}
-        - name: marduk-pubsub-key
-          secret:
-            defaultMode: 420
-            secretName: marduk-pubsub-key
+            secretName: ror-extime-sa
         - configMap:
             defaultMode: 420
             name: extime-config
