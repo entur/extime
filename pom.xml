@@ -27,7 +27,7 @@
 
     <properties>
 
-        <camel.version>2.25.0</camel.version>
+        <camel.version>2.25.1</camel.version>
         <entur.helpers.version>1.0.11</entur.helpers.version>
         <guava.version>28.1-jre</guava.version>
         <onebusaway-gtfs.version>1.3.4</onebusaway-gtfs.version>
