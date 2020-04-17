@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.rutebanken.superpom</groupId>
         <artifactId>superpom</artifactId>
-        <version>1.0.1</version>
+        <version>1.0.8</version>
     </parent>
 
     <groupId>no.rutebanken.extime</groupId>
@@ -27,8 +27,8 @@
 
     <properties>
 
-        <camel.version>2.25.0</camel.version>
-        <entur.helpers.version>1.0.10</entur.helpers.version>
+        <camel.version>2.25.1</camel.version>
+        <entur.helpers.version>1.0.11</entur.helpers.version>
         <guava.version>28.1-jre</guava.version>
         <onebusaway-gtfs.version>1.3.4</onebusaway-gtfs.version>
         <jaxb2-basics-runtime.version>1.11.1</jaxb2-basics-runtime.version>
