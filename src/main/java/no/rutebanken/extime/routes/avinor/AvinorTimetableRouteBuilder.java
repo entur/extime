@@ -113,7 +113,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .bean(ScheduledFlightConverter.class, "convertToLineCentricDataSets").id("ConvertToLineDataSetsBeanProcessor")
                 .setProperty(PROPERTY_LINE_DATASETS_LIST_ORIGINAL_BODY, body())
                 .to("direct:convertCommonDataToNetex")
-                .setBody(simpleF("exchangeProperty[%s]", List.class, PROPERTY_LINE_DATASETS_LIST_ORIGINAL_BODY))
+                .setBody(simpleF("${exchangeProperty[%s]}", List.class, PROPERTY_LINE_DATASETS_LIST_ORIGINAL_BODY))
                 .to("direct:convertLineDataSetsToNetex")
                 .to("direct:compressNetexAndSendToStorage")
         ;
