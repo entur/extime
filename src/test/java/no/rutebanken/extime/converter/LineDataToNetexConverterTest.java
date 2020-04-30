@@ -35,7 +35,6 @@ import org.rutebanken.netex.model.ServiceJourney;
 import org.rutebanken.netex.model.StopPointInJourneyPattern;
 import org.rutebanken.netex.model.TimetableFrame;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import javax.xml.bind.JAXBElement;
 import java.time.DayOfWeek;
@@ -50,14 +49,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static no.rutebanken.extime.Constants.*;
+import static no.rutebanken.extime.Constants.NETEX_PROFILE_VERSION;
+import static no.rutebanken.extime.Constants.UNDERSCORE;
+import static no.rutebanken.extime.Constants.VERSION_ONE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SuppressWarnings("unchecked")
-@SpringBootTest(classes = {LineDataToNetexConverter.class}, properties = {
-        "spring.config.name=application,netex-static-data",
-        "avinor.timetable.scheduler.consumer=direct:start"
-})
 public class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationTestBase {
 
     @Autowired

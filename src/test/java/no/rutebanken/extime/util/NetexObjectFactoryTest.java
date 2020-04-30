@@ -16,16 +16,11 @@ import org.rutebanken.netex.model.StopPointInJourneyPattern;
 import org.rutebanken.netex.model.StopPointInJourneyPatternRefStructure;
 import org.rutebanken.netex.model.TimetabledPassingTime;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import java.math.BigInteger;
 
 import static no.rutebanken.extime.Constants.VERSION_ONE;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = {NetexObjectFactory.class}, properties = {
-        "spring.config.name=application,netex-static-data",
-        "avinor.timetable.scheduler.consumer=direct:start"
-} )
 public class NetexObjectFactoryTest extends ExtimeRouteBuilderIntegrationTestBase {
 
     @Autowired

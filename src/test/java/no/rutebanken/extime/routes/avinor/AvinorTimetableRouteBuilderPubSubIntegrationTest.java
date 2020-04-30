@@ -1,7 +1,7 @@
 package no.rutebanken.extime.routes.avinor;
 
 import com.google.pubsub.v1.PubsubMessage;
-import no.rutebanken.extime.ExtimeRouteBuilderIntegrationTestBase;
+import no.rutebanken.extime.ExtimeCamelRouteBuilderIntegrationTestBase;
 import org.apache.camel.Exchange;
 import org.apache.camel.Produce;
 import org.apache.camel.ProducerTemplate;
@@ -34,7 +34,7 @@ import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEA
         "avinor.timetable.dump.enabled=false",
         "avinor.timetable.dump.output.path=target/flights"
 })
-public class AvinorTimetableRouteBuilderPubSubIntegrationTest extends ExtimeRouteBuilderIntegrationTestBase {
+public class AvinorTimetableRouteBuilderPubSubIntegrationTest extends ExtimeCamelRouteBuilderIntegrationTestBase {
 
     @Value("${queue.upload.destination.name}")
     private String notificationQueue;
