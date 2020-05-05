@@ -6,7 +6,7 @@ public class AvailabilityPeriod {
     private LocalDateTime periodFromDateTime;
     private LocalDateTime periodToDateTime;
 
-    public AvailabilityPeriod(LocalDateTime periodFromDateTime, LocalDateTime periodToDateTime) throws IllegalArgumentException {
+    public AvailabilityPeriod(LocalDateTime periodFromDateTime, LocalDateTime periodToDateTime) {
         if (periodFromDateTime.isAfter(periodToDateTime)) {
             throw new IllegalArgumentException("From date cannot be after to date");
         }

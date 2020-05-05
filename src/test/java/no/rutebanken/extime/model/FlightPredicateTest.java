@@ -1,23 +1,21 @@
 package no.rutebanken.extime.model;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import no.avinor.flydata.xjc.model.scheduled.Flight;
+import no.rutebanken.extime.util.DateUtils;
+import org.junit.Test;
 
 import java.math.BigInteger;
-import java.time.OffsetDateTime;
 import java.time.LocalTime;
 import java.time.OffsetTime;
 import java.time.ZonedDateTime;
 import java.util.function.Predicate;
 
-import org.junit.Test;
-
-import no.avinor.flydata.xjc.model.scheduled.Flight;
-import no.rutebanken.extime.util.DateUtils;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class FlightPredicateTest {
 
     @Test
-    public void testFullMatchOFPreviousFlight() throws Exception {
+    public void testFullMatchOFPreviousFlight() {
         Flight flight1 = createFlight(2L, "SK", "4455", DateUtils.parseDate("2017-01-01"), "BGO",
                 OffsetTime.parse("08:00:00Z").toLocalTime(), "HOV", OffsetTime.parse("08:30:00Z").toLocalTime());
 
@@ -29,7 +27,7 @@ public class FlightPredicateTest {
     }
 
     @Test
-    public void testFullMatchOFNextFlight() throws Exception {
+    public void testFullMatchOFNextFlight() {
         Flight flight1 = createFlight(1L, "WF", "149", DateUtils.parseDate("2016-12-24"), "OSL",
                 OffsetTime.parse("06:55:00Z").toLocalTime(), "HOV", OffsetTime.parse("07:30:00Z").toLocalTime());
 
@@ -41,7 +39,7 @@ public class FlightPredicateTest {
     }
 
     @Test
-    public void testMatchPreviousFlightId() throws Exception {
+    public void testMatchPreviousFlightId() {
         Flight flight1 = createFlight(2L, "SK", "4455", DateUtils.parseDate("2017-01-01"), "BGO",
                 OffsetTime.parse("08:00:00Z").toLocalTime(), "OSL", OffsetTime.parse("08:30:00Z").toLocalTime());
         Flight flight2 = createFlight(1L, "SK", "4455", DateUtils.parseDate("2017-01-01"), "OSL",
@@ -52,7 +50,7 @@ public class FlightPredicateTest {
     }
 
     @Test
-    public void testDoNotMatchPreviousFlightId() throws Exception {
+    public void testDoNotMatchPreviousFlightId() {
         Flight flight1 = createFlight(10L, "SK", "4455", DateUtils.parseDate("2017-01-01"), "BGO",
                 OffsetTime.parse("08:00:00Z").toLocalTime(), "OSL", OffsetTime.parse("08:30:00Z").toLocalTime());
         Flight flight2 = createFlight(2L, "SK", "4455", DateUtils.parseDate("2017-01-01"), "OSL",
@@ -63,7 +61,7 @@ public class FlightPredicateTest {
     }
 
     @Test
-    public void testMatchNextFlightId() throws Exception {
+    public void testMatchNextFlightId() {
         Flight flight1 = createFlight(1L, "SK", "4455", DateUtils.parseDate("2017-01-01"), "BGO",
                 OffsetTime.parse("08:00:00Z").toLocalTime(), "OSL", OffsetTime.parse("08:30:00Z").toLocalTime());
         Flight flight2 = createFlight(2L, "SK", "4455", DateUtils.parseDate("2017-01-01"), "OSL",
@@ -74,7 +72,7 @@ public class FlightPredicateTest {
     }
 
     @Test
-    public void testDoNotMatchNextFlightId() throws Exception {
+    public void testDoNotMatchNextFlightId() {
         Flight flight1 = createFlight(2L, "SK", "4455", DateUtils.parseDate("2017-01-01"), "BGO",
                 OffsetTime.parse("08:00:00Z").toLocalTime(), "OSL", OffsetTime.parse("08:30:00Z").toLocalTime());
         Flight flight2 = createFlight(1L, "SK", "4455", DateUtils.parseDate("2017-01-01"), "OSL",
@@ -85,7 +83,7 @@ public class FlightPredicateTest {
     }
 
     @Test
-    public void testMatchPreviousIata() throws Exception {
+    public void testMatchPreviousIata() {
         Flight flight1 = createFlight(2L, "SK", "4455", DateUtils.parseDate("2017-01-01"), "BGO",
                 OffsetTime.parse("08:00:00Z").toLocalTime(), "OSL", OffsetTime.parse("08:30:00Z").toLocalTime());
         Flight flight2 = createFlight(1L, "SK", "4455", DateUtils.parseDate("2017-01-01"), "OSL",
@@ -96,7 +94,7 @@ public class FlightPredicateTest {
     }
 
     @Test
-    public void testDoNotMatchPreviousIata() throws Exception {
+    public void testDoNotMatchPreviousIata() {
         Flight flight1 = createFlight(10L, "SK", "4455", DateUtils.parseDate("2017-01-01"), "BGO",
                 OffsetTime.parse("08:00:00Z").toLocalTime(), "OSL", OffsetTime.parse("08:30:00Z").toLocalTime());
         Flight flight2 = createFlight(2L, "SK", "4455", DateUtils.parseDate("2017-01-01"), "TOS",
@@ -107,7 +105,7 @@ public class FlightPredicateTest {
     }
 
     @Test
-    public void testMatchNextIata() throws Exception {
+    public void testMatchNextIata() {
         Flight flight1 = createFlight(1L, "SK", "4455", DateUtils.parseDate("2017-01-01"), "TRD",
                 OffsetTime.parse("08:00:00Z").toLocalTime(), "OSL", OffsetTime.parse("08:30:00Z").toLocalTime());
         Flight flight2 = createFlight(2L, "SK", "4455", DateUtils.parseDate("2017-01-01"), "OSL",
@@ -118,7 +116,7 @@ public class FlightPredicateTest {
     }
 
     @Test
-    public void testDoNotMatchNextIata() throws Exception {
+    public void testDoNotMatchNextIata() {
         Flight flight1 = createFlight(2L, "SK", "4455", DateUtils.parseDate("2017-01-01"), "BGO",
                 OffsetTime.parse("08:00:00Z").toLocalTime(), "TRD", OffsetTime.parse("08:30:00Z").toLocalTime());
         Flight flight2 = createFlight(1L, "SK", "4455", DateUtils.parseDate("2017-01-01"), "OSL",
@@ -129,7 +127,7 @@ public class FlightPredicateTest {
     }
 
     @Test
-    public void testMatchPreviousTime() throws Exception {
+    public void testMatchPreviousTime() {
         Flight flight1 = createFlight(2L, "SK", "4455", DateUtils.parseDate("2017-01-01"), "BGO",
                 OffsetTime.parse("09:00:00Z").toLocalTime(), "OSL", OffsetTime.parse("08:30:00Z").toLocalTime());
         Flight flight2 = createFlight(1L, "SK", "4455", DateUtils.parseDate("2017-01-01"), "OSL",
@@ -140,7 +138,7 @@ public class FlightPredicateTest {
     }
 
     @Test
-    public void testDoNotMatchPreviousTime() throws Exception {
+    public void testDoNotMatchPreviousTime() {
         Flight flight1 = createFlight(10L, "SK", "4455", DateUtils.parseDate("2017-01-01"), "BGO",
                 OffsetTime.parse("08:00:00Z").toLocalTime(), "OSL", OffsetTime.parse("08:30:00Z").toLocalTime());
         Flight flight2 = createFlight(2L, "SK", "4455", DateUtils.parseDate("2017-01-01"), "TOS",
@@ -151,7 +149,7 @@ public class FlightPredicateTest {
     }
 
     @Test
-    public void testMatchNextTime() throws Exception {
+    public void testMatchNextTime() {
         Flight flight1 = createFlight(1L, "SK", "4455", DateUtils.parseDate("2017-01-01"), "TRD",
                 OffsetTime.parse("08:00:00Z").toLocalTime(), "OSL", OffsetTime.parse("08:30:00Z").toLocalTime());
         Flight flight2 = createFlight(2L, "SK", "4455", DateUtils.parseDate("2017-01-01"), "OSL",
@@ -162,7 +160,7 @@ public class FlightPredicateTest {
     }
 
     @Test
-    public void testDoNotMatchNextTime() throws Exception {
+    public void testDoNotMatchNextTime() {
         Flight flight1 = createFlight(2L, "SK", "4455", DateUtils.parseDate("2017-01-01"), "BGO",
                 OffsetTime.parse("08:00:00Z").toLocalTime(), "OSL", OffsetTime.parse("08:30:00Z").toLocalTime());
         Flight flight2 = createFlight(1L, "SK", "4455", DateUtils.parseDate("2017-01-01"), "OSL",
@@ -173,7 +171,7 @@ public class FlightPredicateTest {
     }
 
     @Test
-    public void testMatchDesignator() throws Exception {
+    public void testMatchDesignator() {
         Flight flight1 = createFlight(1L, "SK", "4455", DateUtils.parseDate("2017-01-01"), "BGO",
                 OffsetTime.parse("08:00:00Z").toLocalTime(), "OSL", OffsetTime.parse("08:30:00Z").toLocalTime());
         Flight flight2 = createFlight(2L, "SK", "4455", DateUtils.parseDate("2017-01-01"), "OSL",
@@ -184,7 +182,7 @@ public class FlightPredicateTest {
     }
 
     @Test
-    public void testDoNotMatchDesignator() throws Exception {
+    public void testDoNotMatchDesignator() {
         Flight flight1 = createFlight(1L, "SK", "4455", DateUtils.parseDate("2017-01-01"), "BGO",
                 OffsetTime.parse("08:00:00Z").toLocalTime(), "OSL", OffsetTime.parse("08:30:00Z").toLocalTime());
         Flight flight2 = createFlight(2L, "DY", "8899", DateUtils.parseDate("2017-01-01"), "OSL",
@@ -195,7 +193,7 @@ public class FlightPredicateTest {
     }
 
     @Test
-    public void testMatchFlightNumber() throws Exception {
+    public void testMatchFlightNumber() {
         Flight flight1 = createFlight(1L, "SK", "4455", DateUtils.parseDate("2017-01-01"), "BGO",
                 OffsetTime.parse("08:00:00Z").toLocalTime(), "OSL", OffsetTime.parse("08:30:00Z").toLocalTime());
         Flight flight2 = createFlight(2L, "SK", "4455", DateUtils.parseDate("2017-01-01"), "OSL",
@@ -206,7 +204,7 @@ public class FlightPredicateTest {
     }
 
     @Test
-    public void testDoNotMatchFlightNumber() throws Exception {
+    public void testDoNotMatchFlightNumber() {
         Flight flight1 = createFlight(1L, "SK", "4455", DateUtils.parseDate("2017-01-01"), "BGO",
                 OffsetTime.parse("08:00:00Z").toLocalTime(), "OSL", OffsetTime.parse("08:30:00Z").toLocalTime());
         Flight flight2 = createFlight(2L, "DY", "8899", DateUtils.parseDate("2017-01-01"), "OSL",
@@ -217,7 +215,7 @@ public class FlightPredicateTest {
     }
 
     @Test
-    public void testMatchDateOfOperation() throws Exception {
+    public void testMatchDateOfOperation() {
         Flight flight1 = createFlight(1L, "SK", "4455", DateUtils.parseDate("2017-01-01"), "BGO",
                 OffsetTime.parse("08:00:00Z").toLocalTime(), "OSL", OffsetTime.parse("08:30:00Z").toLocalTime());
         Flight flight2 = createFlight(2L, "SK", "4455", DateUtils.parseDate("2017-01-01"), "OSL",
@@ -228,7 +226,7 @@ public class FlightPredicateTest {
     }
 
     @Test
-    public void testDoNotMatchDateOfOperation() throws Exception {
+    public void testDoNotMatchDateOfOperation() {
         Flight flight1 = createFlight(1L, "SK", "4455", DateUtils.parseDate("2017-01-01Z"), "BGO",
                 OffsetTime.parse("08:00:00Z").toLocalTime(), "OSL", OffsetTime.parse("08:30:00Z").toLocalTime());
         Flight flight2 = createFlight(2L, "DY", "8899", DateUtils.parseDate("2018-01-01"), "OSL",

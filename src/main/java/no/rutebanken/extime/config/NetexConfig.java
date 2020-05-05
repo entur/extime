@@ -8,7 +8,9 @@ import org.springframework.context.annotation.Configuration;
 public class NetexConfig {
 
     @Bean
-    public ObjectFactory objectFactory() {return new ObjectFactory();}
+    public ObjectFactory objectFactory() {
+        return new ObjectFactory();
+    }
 
 
 }

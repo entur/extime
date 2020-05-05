@@ -27,7 +27,7 @@ import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEA
 @Component(value = "dateUtils")
 public class DateUtils {
 
-	private final static DateTimeFormatter formatter = new DateTimeFormatterBuilder().appendPattern("yyyy-MM-dd")
+	private static final DateTimeFormatter formatter = new DateTimeFormatterBuilder().appendPattern("yyyy-MM-dd")
 			.optionalStart().appendPattern("XXXXX").optionalEnd()
             .parseDefaulting(ChronoField.HOUR_OF_DAY, 0)
             .parseDefaulting(ChronoField.MINUTE_OF_HOUR, 0)
@@ -68,7 +68,7 @@ public class DateUtils {
         exchange.getIn().setHeader(HEADER_TIMETABLE_LARGE_AIRPORT_RANGE, generateDateRanges(minRangeDays));
     }
 
-    public List<Range<LocalDate>> generateDateRanges(int numberOfDaysInRange) {
+    public List<Range<LocalDate>> generateDateRanges(long numberOfDaysInRange) {
         LocalDate rangeStartDate = LocalDate.now(ZoneId.of(DEFAULT_ZONE_ID));
         List<Range<LocalDate>> dateRanges = Lists.newArrayList();
         LocalDate periodEndDate = rangeStartDate.plusMonths(numberOfMonthsInPeriod);
@@ -92,6 +92,9 @@ public class DateUtils {
     }
 
     public static class WorkDays {
+        private WorkDays() {
+            throw new IllegalStateException("Utility class - should not be instantiated");
+        }
         public static boolean isWorkDay(TemporalAccessor date) {
             int day = date.get(ChronoField.DAY_OF_WEEK);
             return day >= 1 && day <= 5;
@@ -99,6 +102,9 @@ public class DateUtils {
     }
 
     public static class WeekendDays {
+        private WeekendDays() {
+            throw new IllegalStateException("Utility class - should not be instantiated");
+        }
         public static boolean isWeekendkDay(TemporalAccessor date) {
             int day = date.get(ChronoField.DAY_OF_WEEK);
             return day >= 6 && day <= 7;

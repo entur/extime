@@ -1,7 +1,21 @@
 package no.rutebanken.extime.converter;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import no.avinor.flydata.xjc.model.scheduled.Flight;
+import no.avinor.flydata.xjc.model.scheduled.Flights;
+import no.rutebanken.extime.model.FlightPredicate;
+import no.rutebanken.extime.model.StopVisitType;
+import no.rutebanken.extime.util.DateUtils;
+import org.apache.commons.lang3.tuple.Triple;
+import org.assertj.core.api.Assertions;
+import org.junit.Before;
+import org.junit.Test;
+
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.transform.stream.StreamSource;
 import java.math.BigInteger;
-import java.time.OffsetDateTime;
 import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.util.Collections;
@@ -12,35 +26,17 @@ import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.transform.stream.StreamSource;
-
-import org.apache.commons.lang3.tuple.Triple;
-import org.assertj.core.api.Assertions;
-import org.junit.Before;
-import org.junit.Test;
-
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-
-import no.avinor.flydata.xjc.model.scheduled.Flight;
-import no.avinor.flydata.xjc.model.scheduled.Flights;
-import no.rutebanken.extime.model.FlightPredicate;
-import no.rutebanken.extime.model.StopVisitType;
-import no.rutebanken.extime.util.DateUtils;
-
 public class ScheduledFlightConverterTest {
 
     private ScheduledFlightConverter clazzUnderTest;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         clazzUnderTest = new ScheduledFlightConverter();
     }
 
     @Test
-    public void extractNoStopoversFromFlights() throws Exception {
+    public void extractNoStopoversFromFlights() {
         List<Triple<StopVisitType, String, LocalTime>> triples =
                 clazzUnderTest.extractStopoversFromFlights(Collections.emptyList());
         Assertions.assertThat(triples)
@@ -49,7 +45,7 @@ public class ScheduledFlightConverterTest {
     }
 
     @Test
-    public void extractStopoversFromFlights() throws Exception {
+    public void extractStopoversFromFlights() {
         List<Triple<StopVisitType, String, LocalTime>> triples =
                 clazzUnderTest.extractStopoversFromFlights(createDummyFlights());
 
@@ -70,7 +66,7 @@ public class ScheduledFlightConverterTest {
     }
 
     @Test
-    public void testIsMultiLegFlightRoute() throws Exception {
+    public void testIsMultiLegFlightRoute() {
         List<Flight> flightLegs = Lists.newArrayList(
                 createFlight(1002L, "WF", "149", DateUtils.parseDate("2017-01-01"), "HOV",
                         LocalTime.parse("07:00:00"), "SOG", LocalTime.parse("07:30:00")),
@@ -84,7 +80,7 @@ public class ScheduledFlightConverterTest {
     }
 
     @Test
-    public void testIsNotMultiLegFlightRoute() throws Exception {
+    public void testIsNotMultiLegFlightRoute() {
         List<Flight> flightLegs = Lists.newArrayList(
                 createFlight(1002L, "WF", "149", DateUtils.parseDate("2017-01-01"), "HOV",
                         LocalTime.parse("07:00:00"), "SOG", LocalTime.parse("07:30:00"))
@@ -96,7 +92,7 @@ public class ScheduledFlightConverterTest {
     }
 
     @Test
-    public void testIsDirectFlightRoute() throws Exception {
+    public void testIsDirectFlightRoute() {
         List<Flight> flightLegs = Lists.newArrayList(
                 createFlight(1002L, "WF", "149", DateUtils.parseDate("2017-01-01"), "HOV",
                         LocalTime.parse("07:00:00"), "SOG", LocalTime.parse("07:30:00"))
@@ -108,7 +104,7 @@ public class ScheduledFlightConverterTest {
     }
 
     @Test
-    public void testIsNotDirectFlightRoute() throws Exception {
+    public void testIsNotDirectFlightRoute() {
         List<Flight> flightLegs = Lists.newArrayList(
                 createFlight(1002L, "WF", "149", DateUtils.parseDate("2017-01-01"), "HOV",
                         LocalTime.parse("07:00:00"), "SOG", LocalTime.parse("07:30:00")),
@@ -122,7 +118,7 @@ public class ScheduledFlightConverterTest {
     }
 
     @Test
-    public void testAssertNullWhenLegPreviouslyProcessed() throws Exception {
+    public void testAssertNullWhenLegPreviouslyProcessed() throws JAXBException {
         List<Flight> wf149FlightLegs = generateObjectsFromXml("/xml/wf149.xml", Flights.class).getFlight();
         Map<String, List<Flight>> flightsByDepartureAirport = wf149FlightLegs.stream()
                 .collect(Collectors.groupingBy(Flight::getDepartureStation));
@@ -139,7 +135,7 @@ public class ScheduledFlightConverterTest {
     }
 
     @Test
-    public void testCollectedFlightLegIds() throws Exception {
+    public void testCollectedFlightLegIds() {
         List<Flight> flightLegs = Lists.newArrayList(
                 createFlight(1002L, "WF", "149", DateUtils.parseDate("2017-01-01"), "HOV",
                         LocalTime.parse("07:00:00"), "SOG", LocalTime.parse("07:30:00")),
@@ -174,7 +170,7 @@ public class ScheduledFlightConverterTest {
     }
 
     @Test
-    public void testFindConnectingFlightLegsForFirstLeg() throws Exception {
+    public void testFindConnectingFlightLegsForFirstLeg() {
         List<Flight> flightLegs = Lists.newArrayList(
                 createFlight(1002L, "WF", "149", DateUtils.parseDate("2017-01-01"), "HOV",
                         LocalTime.parse("07:00:00"), "SOG", LocalTime.parse("07:30:00")),
@@ -207,7 +203,7 @@ public class ScheduledFlightConverterTest {
     }
 
     @Test
-    public void testFindConnectingFlightLegsForLastLeg() throws Exception {
+    public void testFindConnectingFlightLegsForLastLeg() {
         List<Flight> flightLegs = Lists.newArrayList(
                 createFlight(1001L, "WF", "149", DateUtils.parseDate("2017-01-01"), "OSL",
                         LocalTime.parse("06:00:00"), "HOV", LocalTime.parse("06:30:00")),
@@ -240,7 +236,7 @@ public class ScheduledFlightConverterTest {
     }
 
     @Test
-    public void testFindConnectingFlightLegsForMiddleLeg() throws Exception {
+    public void testFindConnectingFlightLegsForMiddleLeg() {
         List<Flight> flightLegs = Lists.newArrayList(
                 createFlight(1001L, "WF", "149", DateUtils.parseDate("2017-01-01"), "OSL",
                         LocalTime.parse("06:00:00"), "HOV", LocalTime.parse("06:30:00")),
@@ -273,7 +269,7 @@ public class ScheduledFlightConverterTest {
     }
 
     @Test
-    public void testFindConnectingFlightLegsForArbitraryLeg() throws Exception {
+    public void testFindConnectingFlightLegsForArbitraryLeg() {
         List<Flight> flightLegs = Lists.newArrayList(
                 createFlight(1001L, "WF", "199", DateUtils.parseDate("2017-01-01"), "OSL",
                         LocalTime.parse("06:00:00"), "TRD", LocalTime.parse("06:30:00")),
@@ -317,7 +313,7 @@ public class ScheduledFlightConverterTest {
     }
 
     @Test
-    public void testFindNextFlightLegsForLastLeg() throws Exception {
+    public void testFindNextFlightLegsForLastLeg() {
         List<Flight> flightLegs = Lists.newArrayList(
                 createFlight(1099L, "SK", "4455", DateUtils.parseDate("2017-01-30"), "BGO",
                         LocalTime.parse("07:00:00"), "OSL", LocalTime.parse("07:30:00"))
@@ -337,7 +333,7 @@ public class ScheduledFlightConverterTest {
     }
 
     @Test
-    public void testFindNextFlightLegs() throws Exception {
+    public void testFindNextFlightLegs() {
         List<Flight> flightLegs = Lists.newArrayList(
                 createFlight(1002L, "WF", "149", DateUtils.parseDate("2017-01-01"), "HOV",
                         LocalTime.parse("09:00:00"), "SOG", LocalTime.parse("09:30:00")),
@@ -362,7 +358,7 @@ public class ScheduledFlightConverterTest {
                 .containsOnly(flightLegs.get(0), flightLegs.get(1));
     }
     @Test
-    public void testFindPreviousFlightLegsForFirstLeg() throws Exception {
+    public void testFindPreviousFlightLegsForFirstLeg() {
         List<Flight> flightLegs = Lists.newArrayList(
                 createFlight(1099L, "SK", "4455", DateUtils.parseDate("2017-01-30"), "TRD",
                         LocalTime.parse("07:00:00"), "OSL", LocalTime.parse("07:30:00"))
@@ -382,7 +378,7 @@ public class ScheduledFlightConverterTest {
     }
 
     @Test
-    public void testFindPreviousFlightLegs() throws Exception {
+    public void testFindPreviousFlightLegs() {
         List<Flight> flightLegs = Lists.newArrayList(
                 createFlight(1001L, "WF", "149", DateUtils.parseDate("2017-01-01"), "OSL",
                         LocalTime.parse("06:00:00"), "HOV", LocalTime.parse("06:30:00")),
@@ -408,7 +404,7 @@ public class ScheduledFlightConverterTest {
     }
 
     @Test
-    public void testFindOptionalConnectingFlightLeg() throws Exception {
+    public void testFindOptionalConnectingFlightLeg() {
         Flight currentFlightLeg = createFlight(1003L, "WF", "149", DateUtils.parseDate("2017-01-01"),
                 "SOG", LocalTime.parse("09:00:00"), "BGO", LocalTime.parse("09:30:00"));
         Predicate<Flight> previousFlightPredicate = FlightPredicate.matchPreviousFlight(currentFlightLeg);
@@ -428,7 +424,7 @@ public class ScheduledFlightConverterTest {
     }
 
     @Test
-    public void testDoNotFindOptionalConnectingFlightLeg() throws Exception {
+    public void testDoNotFindOptionalConnectingFlightLeg() {
         Flight currentFlightLeg = createFlight(1001L, "WF", "149", DateUtils.parseDate("2017-01-01"),
                 "OSL", LocalTime.parse("07:00:00"), "HOV", LocalTime.parse("07:30:00"));
         Predicate<Flight> previousFlightPredicate = FlightPredicate.matchPreviousFlight(currentFlightLeg);

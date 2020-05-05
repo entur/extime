@@ -500,16 +500,17 @@ public class AvinorTimetableRouteBuilderTest extends ExtimeCamelRouteBuilderInte
 
     private Flight createDummyFlight(long dummyId, String dummyDesignator, String dummyFlightNumber, ZonedDateTime dummyDateOfOperation,
                                      String dummyDepartureStation, LocalTime dummyDepartureTime, String dummyArrivalStation, LocalTime dummyArrivalTime) {
-        return new Flight() {{
-            setId(BigInteger.valueOf(dummyId));
-            setAirlineDesignator(dummyDesignator);
-            setFlightNumber(dummyFlightNumber);
-            setDateOfOperation(dummyDateOfOperation);
-            setDepartureStation(dummyDepartureStation);
-            setStd(dummyDepartureTime);
-            setArrivalStation(dummyArrivalStation);
-            setSta(dummyArrivalTime);
-        }};
+        Flight flight = new Flight();
+        flight.setId(BigInteger.valueOf(dummyId));
+        flight.setAirlineDesignator(dummyDesignator);
+        flight.setFlightNumber(dummyFlightNumber);
+        flight.setDateOfOperation(dummyDateOfOperation);
+        flight.setDepartureStation(dummyDepartureStation);
+        flight.setStd(dummyDepartureTime);
+        flight.setArrivalStation(dummyArrivalStation);
+        flight.setSta(dummyArrivalTime);
+
+        return flight;
     }
 
 

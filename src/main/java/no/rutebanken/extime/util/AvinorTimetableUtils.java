@@ -1,6 +1,7 @@
 package no.rutebanken.extime.util;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import no.avinor.flydata.xjc.model.scheduled.Flight;
 import no.avinor.flydata.xjc.model.scheduled.Flights;
 import no.avinor.flydata.xjc.model.scheduled.ObjectFactory;
@@ -36,12 +37,14 @@ import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
+import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -53,7 +56,7 @@ import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.PRO
 @Component
 public class AvinorTimetableUtils {
 
-    private static Logger LOG = LoggerFactory.getLogger(AvinorTimetableUtils.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AvinorTimetableUtils.class);
 
     private static final String XML_GLOB = "glob:*.xml";
 
@@ -72,16 +75,38 @@ public class AvinorTimetableUtils {
     @Autowired
     BlobStoreRepository blobStoreRepository;
 
-    public String useHttp4Client(@Header(HEADER_EXTIME_HTTP_URI) String httpUri) {
-        return httpUri.replace("https:", "https4:").replace("http:","http4:");
+    private static final Map<String, String> SPECIAL_ASCII_MAPPING = Maps.newHashMap();
+    static {
+        SPECIAL_ASCII_MAPPING.put("Ê", "E");
+        SPECIAL_ASCII_MAPPING.put("È", "E");
+        SPECIAL_ASCII_MAPPING.put("É", "E");
+        SPECIAL_ASCII_MAPPING.put("ë", "e");
+        SPECIAL_ASCII_MAPPING.put("é", "e");
+        SPECIAL_ASCII_MAPPING.put("è", "e");
+        SPECIAL_ASCII_MAPPING.put("Â", "A");
+        SPECIAL_ASCII_MAPPING.put("Ä", "A");
+        SPECIAL_ASCII_MAPPING.put("Å", "A");
+        SPECIAL_ASCII_MAPPING.put("ä", "a");
+        SPECIAL_ASCII_MAPPING.put("å", "a");
+        SPECIAL_ASCII_MAPPING.put("á", "a");
+        SPECIAL_ASCII_MAPPING.put("ß", "ss");
+        SPECIAL_ASCII_MAPPING.put("Ç", "C");
+        SPECIAL_ASCII_MAPPING.put("Ö", "O");
+        SPECIAL_ASCII_MAPPING.put("Ó", "O");
+        SPECIAL_ASCII_MAPPING.put("Ø", "O");
+        SPECIAL_ASCII_MAPPING.put("ø", "o");
+        SPECIAL_ASCII_MAPPING.put("ö", "o");
+        SPECIAL_ASCII_MAPPING.put("ª", "");
+        SPECIAL_ASCII_MAPPING.put("º", "");
+        SPECIAL_ASCII_MAPPING.put("Ñ", "N");
+        SPECIAL_ASCII_MAPPING.put("Ü", "U");
+        SPECIAL_ASCII_MAPPING.put("ü", "u");
+        SPECIAL_ASCII_MAPPING.put("Æ", "E");
+        SPECIAL_ASCII_MAPPING.put("æ", "e");
     }
 
-    public void findUniqueAirlines(List<Flight> flights) {
-        flights.stream()
-                .map(Flight::getAirlineDesignator)
-                .distinct()
-                .sorted()
-                .forEach(System.out::println);
+    public String useHttp4Client(@Header(HEADER_EXTIME_HTTP_URI) String httpUri) {
+        return httpUri.replace("https:", "https4:").replace("http:","http4:");
     }
 
     public JAXBElement<Flights> createFlightsElement(List<Flight> flightList) {
@@ -93,7 +118,7 @@ public class AvinorTimetableUtils {
         return objectFactory.createFlights(flights);
     }
 
-    public List<Flight> generateFlightsFromFeedDump(@ExchangeProperty(PROPERTY_STATIC_FLIGHTS_XML_FILE) String xmlFile) throws Exception {
+    public List<Flight> generateFlightsFromFeedDump(@ExchangeProperty(PROPERTY_STATIC_FLIGHTS_XML_FILE) String xmlFile) throws JAXBException {
         ArrayList<Flight> generatedFlights = Lists.newArrayList();
         Flights flightStructure = generateObjectsFromXml(xmlFile, Flights.class);
         List<Flight> flights = flightStructure.getFlight();
@@ -101,7 +126,7 @@ public class AvinorTimetableUtils {
         return generatedFlights;
     }
 
-    public List<Flight> generateStaticFlights() throws Exception {
+    public List<Flight> generateStaticFlights() throws JAXBException {
         AirportIATA[] airportIATAs = Arrays.stream(AirportIATA.values())
                 .filter(iata -> !iata.equals(AirportIATA.OSL))
                 .toArray(AirportIATA[]::new);
@@ -125,20 +150,20 @@ public class AvinorTimetableUtils {
         return filteredFlights;
     }
 
-    public void cleanNetexOutputPath() throws Exception {
+    public void cleanNetexOutputPath() {
         Path netexOutputPath = Paths.get(generatedOutputPath);
         PathMatcher matcher = netexOutputPath.getFileSystem().getPathMatcher(XML_GLOB);
-        Predicate<Path> isRegularFile = path -> Files.isRegularFile(path);
+        Predicate<Path> isRegularFile = Files::isRegularFile;
 
         if (Files.exists(netexOutputPath) && Files.isDirectory(netexOutputPath)) {
             try (Stream<Path> stream = Files.list(netexOutputPath)) {
-                stream.filter(isRegularFile.and(path -> matcher.matches(path.getFileName()))).forEach((path) -> {
+                stream.filter(isRegularFile.and(path -> matcher.matches(path.getFileName()))).forEach(path -> {
                     try {
-                        LOG.info("Deleting '{}'", path.getFileName().toString());
+                        LOG.info("Deleting '{}'", path.getFileName());
                         Files.delete(path);
                     } catch (IOException e) {
                         LOG.info("Failed to delete '{}'", path.toAbsolutePath());
-                        throw new RuntimeException("File path delete error : " + path.getFileName().toString());
+                        throw new RuntimeException("File path delete error : " + path.getFileName());
                     }
                 });
             } catch (IOException e) {
@@ -176,96 +201,36 @@ public class AvinorTimetableUtils {
             networkName = NetexObjectIdCreator.getObjectIdSuffix(networkIdRef);
         }
 
-       // String publicCode = line.getPublicCode();
         String filename = networkName + "-" + line.getName().getValue().replace('/', '_');
 
         return utftoasci(filename);
     }
 
     private static String utftoasci(String s) {
-        final StringBuffer sb = new StringBuffer(s.length() * 2);
+        final StringBuilder sb = new StringBuilder(s.length() * 2);
 
         final StringCharacterIterator iterator = new StringCharacterIterator(s);
 
         char ch = iterator.current();
 
-        while (ch != StringCharacterIterator.DONE) {
-            if (Character.getNumericValue(ch) > 0) {
-                sb.append(ch);
-            } else {
-
-                if (Character.toString(ch).equals("Ê")) {
-                    sb.append("E");
-                } else if (Character.toString(ch).equals("È")) {
-                    sb.append("E");
-                } else if (Character.toString(ch).equals("ë")) {
-                    sb.append("e");
-                } else if (Character.toString(ch).equals("é")) {
-                    sb.append("e");
-                } else if (Character.toString(ch).equals("è")) {
-                    sb.append("e");
-                } else if (Character.toString(ch).equals("è")) {
-                    sb.append("e");
-                } else if (Character.toString(ch).equals("Â")) {
-                    sb.append("A");
-                } else if (Character.toString(ch).equals("ä")) {
-                    sb.append("a");
-                } else if (Character.toString(ch).equals("ß")) {
-                    sb.append("ss");
-                } else if (Character.toString(ch).equals("Ç")) {
-                    sb.append("C");
-                } else if (Character.toString(ch).equals("Ö")) {
-                    sb.append("O");
-                } else if (Character.toString(ch).equals("º")) {
-                    sb.append("");
-                } else if (Character.toString(ch).equals("Ó")) {
-                    sb.append("O");
-                } else if (Character.toString(ch).equals("ª")) {
-                    sb.append("");
-                } else if (Character.toString(ch).equals("º")) {
-                    sb.append("");
-                } else if (Character.toString(ch).equals("Ñ")) {
-                    sb.append("N");
-                } else if (Character.toString(ch).equals("É")) {
-                    sb.append("E");
-                } else if (Character.toString(ch).equals("Ä")) {
-                    sb.append("A");
-                } else if (Character.toString(ch).equals("Å")) {
-                    sb.append("A");
-                } else if (Character.toString(ch).equals("å")) {
-                    sb.append("a");
-                } else if (Character.toString(ch).equals("ä")) {
-                    sb.append("a");
-                } else if (Character.toString(ch).equals("Ü")) {
-                    sb.append("U");
-                } else if (Character.toString(ch).equals("ö")) {
-                    sb.append("o");
-                } else if (Character.toString(ch).equals("ü")) {
-                    sb.append("u");
-                } else if (Character.toString(ch).equals("á")) {
-                    sb.append("a");
-                } else if (Character.toString(ch).equals("Ó")) {
-                    sb.append("O");
-                } else if (Character.toString(ch).equals("É")) {
-                    sb.append("E");
-                } else if (Character.toString(ch).equals("Æ")) {
-                    sb.append("E");
-                } else if (Character.toString(ch).equals("æ")) {
-                    sb.append("e");
-                } else if (Character.toString(ch).equals("Ø")) {
-                    sb.append("O");
-                } else if (Character.toString(ch).equals("ø")) {
-                    sb.append("o");
-                } else {
-                    sb.append(ch);
-                }
-            }
+        while (ch != CharacterIterator.DONE) {
+            sb.append(convertToAsciiChar(ch));
             ch = iterator.next();
         }
         return sb.toString().replaceAll("[^\\p{ASCII}]", "");
     }
 
-    public void compressNetexFiles(Exchange exchange, @Header(Exchange.FILE_NAME) String compressedFileName) throws Exception {
+    private static String convertToAsciiChar(char ch) {
+        if (Character.getNumericValue(ch) <= 0) {
+            final String s = Character.toString(ch);
+            if (SPECIAL_ASCII_MAPPING.containsKey(s)) {
+                return SPECIAL_ASCII_MAPPING.get(s);
+            }
+        }
+        return Character.toString(ch);
+    }
+
+    public void compressNetexFiles(Exchange exchange, @Header(Exchange.FILE_NAME) String compressedFileName) {
         Path netexOutputPath = Paths.get(generatedOutputPath);
         Path zipOutputPath = Paths.get(compressedOutputPath);
         Path zipOutputFilePath = Paths.get(zipOutputPath.toString(), compressedFileName);
@@ -304,11 +269,10 @@ public class AvinorTimetableUtils {
             return false;
         }
 
-        switch (stopVisitType) {
-            case ARRIVAL:
-                return AirportIATA.OSL.name().equalsIgnoreCase(newFlight.getDepartureStation());
-            case DEPARTURE:
-                return isDomesticFlight(newFlight);
+        if (stopVisitType == StopVisitType.ARRIVAL) {
+            return AirportIATA.OSL.name().equalsIgnoreCase(newFlight.getDepartureStation());
+        } else if (stopVisitType == StopVisitType.DEPARTURE) {
+            return isDomesticFlight(newFlight);
         }
 
         return false;
@@ -337,7 +301,7 @@ public class AvinorTimetableUtils {
             AirlineDesignator designator = AirlineDesignator.valueOf(airlineIata.toUpperCase());
             boolean isCommonDesignator= AirlineDesignator.commonDesignators.contains(designator);
             if (!isCommonDesignator) {
-                LOG.info("Received uncommon airline.designator: " + airlineIata);
+                LOG.info("Received uncommon airline.designator: {}", airlineIata);
             }
             return isCommonDesignator;
         }

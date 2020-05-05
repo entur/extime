@@ -30,7 +30,7 @@ public class LocalDiskBlobStoreRepository implements BlobStoreRepository {
     @Override
     public void uploadBlob(String compressedFileName, String compressedFilePath, String correlationId) {
 
-        logger.debug("upload blob called in local-disk blob store on " + compressedFilePath );
+        logger.debug("upload blob called in local-disk blob store on {}", compressedFilePath );
         try {
 
             Path sourceFilePath = Paths.get(compressedFilePath);

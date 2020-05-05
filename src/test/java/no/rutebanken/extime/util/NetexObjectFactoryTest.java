@@ -27,7 +27,7 @@ public class NetexObjectFactoryTest extends ExtimeRouteBuilderIntegrationTestBas
     private NetexObjectFactory netexObjectFactory;
 
     @Test
-    public void createPointOnRoute() throws Exception {
+    public void createPointOnRoute() {
         PointOnRoute pointOnRoute = netexObjectFactory.createPointOnRoute("59963891", "AVI:ScheduledStopPoint:17733643",7);
 
         Assertions.assertThat(pointOnRoute)
@@ -50,7 +50,7 @@ public class NetexObjectFactoryTest extends ExtimeRouteBuilderIntegrationTestBas
     }
 
     @Test
-    public void createStopPointInJourneyPattern() throws Exception {
+    public void createStopPointInJourneyPattern() {
         StopPointInJourneyPattern stopPointInJourneyPattern = netexObjectFactory.createStopPointInJourneyPattern(
                 "99999991",
                 BigInteger.ONE,
@@ -77,7 +77,7 @@ public class NetexObjectFactoryTest extends ExtimeRouteBuilderIntegrationTestBas
     }
 
     @Test
-    public void createMultilingualString() throws Exception {
+    public void createMultilingualString() {
         MultilingualString multilingualString = netexObjectFactory.createMultilingualString("TEST");
 
         Assertions.assertThat(multilingualString)
@@ -91,7 +91,7 @@ public class NetexObjectFactoryTest extends ExtimeRouteBuilderIntegrationTestBas
     }
 
     @Test
-    public void createTimetabledPassingTime() throws Exception {
+    public void createTimetabledPassingTime() {
         TimetabledPassingTime timetabledPassingTime = netexObjectFactory.createTimetabledPassingTime(
                 "AVI:StopPointInJourneyPattern:14398341");
 
@@ -108,7 +108,7 @@ public class NetexObjectFactoryTest extends ExtimeRouteBuilderIntegrationTestBas
     // reference structures testing
 
     @Test
-    public void createOperatorRefStructure() throws Exception {
+    public void createOperatorRefStructure() {
         // TODO also test the case where validation for references is disabled
         OperatorRefStructure operatorRefStructure = netexObjectFactory.createOperatorRefStructure("AVI:Operator:WF", Boolean.TRUE);
 
@@ -128,7 +128,7 @@ public class NetexObjectFactoryTest extends ExtimeRouteBuilderIntegrationTestBas
     }
 
     @Test
-    public void createRouteRefStructure() throws Exception {
+    public void createRouteRefStructure() {
         RouteRefStructure routeRefStructure = netexObjectFactory.createRouteRefStructure("AVI:Route:WF716");
 
         Assertions.assertThat(routeRefStructure)
@@ -147,7 +147,7 @@ public class NetexObjectFactoryTest extends ExtimeRouteBuilderIntegrationTestBas
     }
 
     @Test
-    public void createStopPlaceRefStructure() throws Exception {
+    public void createStopPlaceRefStructure() {
         // TODO also test the case where validation for references is disabled
         StopPlaceRefStructure stopPlaceRefStructure = netexObjectFactory.createStopPlaceRefStructure("AVI:StopPlace:TRD");
 
@@ -162,7 +162,7 @@ public class NetexObjectFactoryTest extends ExtimeRouteBuilderIntegrationTestBas
     }
 
     @Test
-    public void createScheduledStopPointRefStructure() throws Exception {
+    public void createScheduledStopPointRefStructure() {
         // TODO also test the case where validation for references is disabled
         ScheduledStopPointRefStructure scheduledStopPointRefStructure = netexObjectFactory
                 .createScheduledStopPointRefStructure("AVI:ScheduledStopPoint:77777771", Boolean.TRUE);
@@ -183,7 +183,7 @@ public class NetexObjectFactoryTest extends ExtimeRouteBuilderIntegrationTestBas
     }
 
     @Test
-    public void createStopPointInJourneyPatternRefStructure() throws Exception {
+    public void createStopPointInJourneyPatternRefStructure() {
         StopPointInJourneyPatternRefStructure stopPointInJourneyPatternRefStructure =
                 netexObjectFactory.createStopPointInJourneyPatternRefStructure("AVI:StopPointInJourneyPattern:14398341");
 
@@ -203,7 +203,7 @@ public class NetexObjectFactoryTest extends ExtimeRouteBuilderIntegrationTestBas
     }
 
     @Test
-    public void createPointRefStructure() throws Exception {
+    public void createPointRefStructure() {
         // TODO also test the case where validation for references is disabled
         PointRefStructure pointRefStructure = netexObjectFactory.createPointRefStructure("AVI:ScheduledStopPoint:77777771", Boolean.TRUE);
 
@@ -223,7 +223,7 @@ public class NetexObjectFactoryTest extends ExtimeRouteBuilderIntegrationTestBas
     }
 
     @Test
-    public void createRoutePointRefStructure() throws Exception {
+    public void createRoutePointRefStructure() {
         RoutePointRefStructure routePointRefStructure = netexObjectFactory.createRoutePointRefStructure("AVI:ScheduledStopPoint:77777771");
 
         Assertions.assertThat(routePointRefStructure)
@@ -237,7 +237,7 @@ public class NetexObjectFactoryTest extends ExtimeRouteBuilderIntegrationTestBas
     }
 
     @Test
-    public void createDayTypeRefStructure() throws Exception {
+    public void createDayTypeRefStructure() {
         DayTypeRefStructure dayTypeRefStructure = netexObjectFactory.createDayTypeRefStructure("WF716:DayType:weekday");
 
         Assertions.assertThat(dayTypeRefStructure)

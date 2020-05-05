@@ -24,7 +24,7 @@ public class DateUtilsTest {
     private Exchange exchange;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         clazzUnderTest = new DateUtils();
         exchange = new DefaultExchange(new DefaultCamelContext());
         clazzUnderTest.numberOfMonthsInPeriod = 3;

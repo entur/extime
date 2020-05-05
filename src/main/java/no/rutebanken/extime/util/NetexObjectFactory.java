@@ -91,6 +91,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -98,7 +99,17 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import static no.rutebanken.extime.Constants.*;
+import static no.rutebanken.extime.Constants.AVINOR_XMLNS;
+import static no.rutebanken.extime.Constants.AVINOR_XMLNSURL;
+import static no.rutebanken.extime.Constants.DASH;
+import static no.rutebanken.extime.Constants.DEFAULT_END_EXCLUSIVE;
+import static no.rutebanken.extime.Constants.DEFAULT_LANGUAGE;
+import static no.rutebanken.extime.Constants.DEFAULT_START_INCLUSIVE;
+import static no.rutebanken.extime.Constants.DEFAULT_ZONE_ID;
+import static no.rutebanken.extime.Constants.NETEX_PROFILE_VERSION;
+import static no.rutebanken.extime.Constants.NSR_XMLNS;
+import static no.rutebanken.extime.Constants.NSR_XMLNSURL;
+import static no.rutebanken.extime.Constants.VERSION_ONE;
 import static no.rutebanken.extime.util.AvinorTimetableUtils.isCommonDesignator;
 
 @Component(value = "netexObjectFactory")
@@ -113,15 +124,7 @@ public class NetexObjectFactory {
     @Autowired
     private DateUtils dateUtils;
 
-    private static final String WORK_DAYS_DISPLAY_NAME = "Ukedager (mandag til fredag)";
-    private static final String SATURDAY_DISPLAY_NAME = "Helgdag (lørdag)";
-    private static final String SUNDAY_DISPLAY_NAME = "Helgdag (søndag)";
-
-    private static final String WORK_DAYS_LABEL = "weekday";
-    private static final String SATURDAY_LABEL = "saturday";
-    private static final String SUNDAY_LABEL = "sunday";
-
-    private static final Map<DayOfWeek, DayOfWeekEnumeration> dayOfWeekMap = new HashMap<>();
+    private static final Map<DayOfWeek, DayOfWeekEnumeration> dayOfWeekMap = new EnumMap<>(DayOfWeek.class);
 
     static {
         dayOfWeekMap.put(DayOfWeek.MONDAY, DayOfWeekEnumeration.MONDAY);
@@ -151,7 +154,7 @@ public class NetexObjectFactory {
     }
 
     public JAXBElement<PublicationDeliveryStructure> createPublicationDeliveryStructureElement(
-            Instant publicationTimestamp, JAXBElement<CompositeFrame> compositeFrame, String description) {
+            Instant publicationTimestamp, JAXBElement<CompositeFrame> compositeFrame) {
 
         NetexStaticDataSet.OrganisationDataSet avinorDataSet = netexStaticDataSet.getOrganisations().get(AVINOR_XMLNS.toLowerCase());
 
@@ -162,7 +165,6 @@ public class NetexObjectFactory {
                 .withVersion(NETEX_PROFILE_VERSION)
                 .withPublicationTimestamp(dateUtils.toExportLocalDateTime(publicationTimestamp))
                 .withParticipantRef(avinorDataSet.getName())
-                //.withDescription(createMultilingualString(description)) // TODO find out if needed
                 .withDataObjects(dataObjects);
 
         return objectFactory.createPublicationDelivery(publicationDeliveryStructure);
@@ -456,7 +458,6 @@ public class NetexObjectFactory {
                 .withId(networkId)
                 .withName(createMultilingualString(airlineName))
                 .withTransportOrganisationRef(objectFactory.createAuthorityRef(authorityRefStruct));
-        //.withGroupsOfLines(groupsOfLinesStruct);
     }
 
     public JAXBElement<Authority> createAvinorAuthorityElement() {
@@ -564,7 +565,7 @@ public class NetexObjectFactory {
     }
 
     public Line createLine(String airlineIata, String lineDesignation, String lineName) {
-        String lineId = NetexObjectIdCreator.createLineId(AVINOR_XMLNS, new String[]{airlineIata, lineDesignation});
+        String lineId = NetexObjectIdCreator.createLineId(AVINOR_XMLNS, airlineIata, lineDesignation);
 
         GroupOfLinesRefStructure groupOfLinesRefStruct = objectFactory.createGroupOfLinesRefStructure()
                 .withRef(NetexObjectIdCreator.createNetworkId(AVINOR_XMLNS, airlineIata));
@@ -647,7 +648,7 @@ public class NetexObjectFactory {
         if (destinationDisplays.containsKey(objectId)) {
             return destinationDisplays.get(objectId);
         } else {
-            throw new RuntimeException("Missing reference to destination display");
+            throw new IllegalArgumentException("Missing reference to destination display");
         }
     }
 

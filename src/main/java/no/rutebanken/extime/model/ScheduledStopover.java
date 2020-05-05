@@ -2,7 +2,6 @@ package no.rutebanken.extime.model;
 
 import java.math.BigInteger;
 import java.time.LocalTime;
-import java.time.OffsetTime;
 
 public class ScheduledStopover {
 

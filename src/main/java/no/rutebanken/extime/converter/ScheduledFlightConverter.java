@@ -105,7 +105,7 @@ public class ScheduledFlightConverter {
         // TODO check for codeshare flights here, use the infrequent designator enumset group, to only check international airlines
 
         List<Flight> filteredFlights;
-        if (offlineMode) {
+        if (Boolean.TRUE.equals(offlineMode)) {
             //filteredFlights = scheduledFlights;
             filteredFlights = filterFlightsWithInfrequentDesignator(scheduledFlights); // TODO temp fix removing flights with infrequent airline designators
         } else {
@@ -142,7 +142,7 @@ public class ScheduledFlightConverter {
                 ScheduledFlight directFlight = convertToScheduledFlight(flight, null);
                 mergedScheduledFlights.add(directFlight);
             } else {
-                logger.error("Flight with unique id: {}, and flightId: {} is NOT a valid flight",
+                logger.error("Flight with unique id: {}, and flightId: {}-{} is NOT a valid flight",
                         flight.getId(),
                         flight.getAirlineDesignator(),
                         flight.getFlightNumber());

@@ -13,6 +13,10 @@ import static no.rutebanken.extime.Constants.UNDERSCORE;
 
 public class NetexObjectIdCreator {
 
+    private NetexObjectIdCreator() {
+        // Utility class - should not be instantiated
+    }
+
     // frame structure ids
 
     public static String createCompositeFrameId(String objectIdPrefix, String objectId) {
@@ -65,7 +69,7 @@ public class NetexObjectIdCreator {
         return NetexObjectIdCreator.composeNetexObjectId(objectIdPrefix, NetexObjectIdTypes.GROUP_OF_LINES_KEY, objectId);
     }
 
-    public static String createLineId(String objectIdPrefix, Object[] parts) {
+    public static String createLineId(String objectIdPrefix, String... parts) {
         String objectId = Joiner.on(UNDERSCORE).skipNulls().join(parts);
         return NetexObjectIdCreator.composeNetexObjectId(objectIdPrefix, NetexObjectIdTypes.LINE_KEY, objectId);
     }

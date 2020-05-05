@@ -1,6 +1,5 @@
 package no.rutebanken.extime;
 
-import no.rutebanken.extime.App;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
