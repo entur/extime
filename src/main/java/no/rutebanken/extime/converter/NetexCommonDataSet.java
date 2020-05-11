@@ -20,7 +20,6 @@ import org.rutebanken.netex.model.ScheduledStopPointRefStructure;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Component;
 
@@ -31,7 +30,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static no.rutebanken.extime.Constants.*;
+import static no.rutebanken.extime.Constants.AVINOR_XMLNS;
+import static no.rutebanken.extime.Constants.DEFAULT_ID_SEPARATOR;
+import static no.rutebanken.extime.Constants.VERSION_ONE;
 
 @Component(value = "netexCommonDataSet")
 @DependsOn("netexStaticDataSet")

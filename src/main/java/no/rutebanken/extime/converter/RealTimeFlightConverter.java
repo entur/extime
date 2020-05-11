@@ -8,14 +8,17 @@ import org.apache.camel.Body;
 import org.springframework.stereotype.Component;
 
 import java.math.BigInteger;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Component(value = "realTimeFlightConverter")
 public class RealTimeFlightConverter {
 
-    public List<FlightRouteDataSet> convertToRealTimeFlights(@Body HashMap<String, AirportFlightDataSet> airportFlightsMap) {
+    public List<FlightRouteDataSet> convertToRealTimeFlights(@Body Map<String, AirportFlightDataSet> airportFlightsMap) {
         Map<String, AirportName> airportNameCache = airportFlightsMap.entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().getAirportName()));
 
@@ -50,7 +53,6 @@ public class RealTimeFlightConverter {
                     flightRouteDataSet.setArrivalAirportName(airportNameCache.get(departureFlight.getAirport()));
                     flightRouteDataSet.setDepartureFlight(departureFlight);
                     flightRouteDataSet.setArrivalFlight(matchingArrivalFlight);
-                    //flightRouteDataSet.setStopovers(null);
                     flightRouteDataSetList.add(flightRouteDataSet);
                 }
             });

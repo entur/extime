@@ -7,24 +7,26 @@ import java.util.function.Predicate;
 
 public class FlightPredicate {
 
+    private FlightPredicate() {
+        // Should not be instantiated
+    }
+
     public static Predicate<Flight> matchPreviousFlight(Flight currentFlight) {
-        Predicate<Flight> fullMatchPredicate = matchPreviousFlightId(currentFlight)
+        return matchPreviousFlightId(currentFlight)
                 .and(matchDesignator(currentFlight))
                 .and(matchFlightNumber(currentFlight))
                 .and(matchDateOfOperation(currentFlight))
                 .and(matchPreviousByIata(currentFlight))
                 .and(matchPreviousByTime(currentFlight));
-        return fullMatchPredicate;
     }
 
     public static Predicate<Flight> matchNextFlight(Flight currentFlight) {
-        Predicate<Flight> fullMatchPredicate = matchNextFlightId(currentFlight)
+        return matchNextFlightId(currentFlight)
                 .and(matchDesignator(currentFlight))
                 .and(matchFlightNumber(currentFlight))
                 .and(matchDateOfOperation(currentFlight))
                 .and(matchNextByIata(currentFlight))
                 .and(matchNextByTime(currentFlight));
-        return fullMatchPredicate;
     }
 
     public static Predicate<Flight> matchPreviousFlightId(Flight currentFlight) {

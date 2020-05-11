@@ -1,7 +1,7 @@
 package no.rutebanken.extime.routes.avinor;
 
 import com.google.common.collect.Maps;
-import no.rutebanken.extime.ExtimeRouteBuilderIntegrationTestBase;
+import no.rutebanken.extime.ExtimeCamelRouteBuilderIntegrationTestBase;
 import org.apache.camel.EndpointInject;
 import org.apache.camel.Exchange;
 import org.apache.camel.Produce;
@@ -15,13 +15,16 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.Map;
 
-import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.*;
+import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.HEADER_EXTIME_FETCH_RESOURCE_ENDPOINT;
+import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.HEADER_EXTIME_HTTP_URI;
+import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.HEADER_EXTIME_RESOURCE_CODE;
+import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.HEADER_EXTIME_URI_PARAMETERS;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = {AvinorCommonRouteBuilder.class} , properties = {
         "spring.config.name=application,netex-static-data",
         "avinor.timetable.scheduler.consumer=direct:start"
 })
-public class AvinorCommonRouteBuilderTest extends ExtimeRouteBuilderIntegrationTestBase {
+public class AvinorCommonRouteBuilderTest extends ExtimeCamelRouteBuilderIntegrationTestBase {
 
 
     @EndpointInject(uri = "mock:cacheAdd")

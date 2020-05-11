@@ -78,7 +78,11 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
-import static no.rutebanken.extime.Constants.*;
+import static no.rutebanken.extime.Constants.AVINOR_XMLNS;
+import static no.rutebanken.extime.Constants.COLON;
+import static no.rutebanken.extime.Constants.DASH;
+import static no.rutebanken.extime.Constants.DAY_TYPE_PATTERN;
+import static no.rutebanken.extime.Constants.UNDERSCORE;
 import static no.rutebanken.extime.util.AvinorTimetableUtils.isCommonDesignator;
 import static no.rutebanken.extime.util.NetexObjectIdCreator.hashObjectId;
 import static no.rutebanken.extime.util.NetexObjectIdTypes.DESTINATION_DISPLAY;
@@ -110,11 +114,10 @@ public class LineDataToNetexConverter {
     private NetexObjectFactory netexObjectFactory;
 
 
-    public JAXBElement<PublicationDeliveryStructure> convertToNetex(LineDataSet lineDataSet) throws Exception {
+    public JAXBElement<PublicationDeliveryStructure> convertToNetex(LineDataSet lineDataSet) {
         try {
-            if (netexObjectFactory != null) {
-                netexObjectFactory.clearReferentials();
-            }
+
+            netexObjectFactory.clearReferentials();
 
             localContext.put(AIRLINE_IATA, lineDataSet.getAirlineIata());
             localContext.put(LINE_DESIGNATION, lineDataSet.getLineDesignation());
@@ -204,7 +207,6 @@ public class LineDataToNetexConverter {
             }
         }
 
-        //routes.sort(Comparator.comparing(Route::getId));
         return routes;
     }
 
@@ -229,7 +231,7 @@ public class LineDataToNetexConverter {
                 String pointOnRouteIdSuffix = NetexObjectIdCreator.getObjectIdSuffix(pointOnRoute.getId());
 
                 StopPointInJourneyPattern stopPointInJourneyPattern = netexObjectFactory.createStopPointInJourneyPattern(
-                        pointOnRouteIdSuffix, BigInteger.valueOf(i + 1), scheduledStopPoint.getId());
+                        pointOnRouteIdSuffix, BigInteger.valueOf((long)i + 1), scheduledStopPoint.getId());
 
                 if (i == 0) {
                     stopPointInJourneyPattern.setForAlighting(false);
@@ -328,13 +330,12 @@ public class LineDataToNetexConverter {
                 patternDestinationDisplay.setVias(viasStruct);
             }
             
-            if(viaTexts.size() > 0) {
+            if(!viaTexts.isEmpty()) {
             	String newName = patternDestinationDisplay.getName().getValue()+" (via "+StringUtils.join(viaTexts," ")+")";
             	patternDestinationDisplay.setName(netexObjectFactory.createMultilingualString(newName));
             }
             
             destinationDisplays.add(patternDestinationDisplay);
-            //journeyPattern.setDestinationDisplayRef(destinationDisplayRefStruct);
         }
         return destinationDisplays;
     }
@@ -358,6 +359,11 @@ public class LineDataToNetexConverter {
 
             if (routeDesignationPatternMap.containsKey(routeDesignation)) {
                 journeyPattern = routeDesignationPatternMap.get(routeDesignation);
+            } else {
+                /*
+                 * TODO: What to do if JourneyPattern is not found?
+                 *  Currently this will lead to NullPointerException when creating ServiceJourneys
+                 */
             }
 
             Map<String, List<ScheduledFlight>> flightsById = entry.getValue();
@@ -469,7 +475,7 @@ public class LineDataToNetexConverter {
     }
 
     private CalendarPattern findPattern(List<ScheduledFlight> flights) {
-        Set<LocalDate> operationDates = flights.stream().map(f -> f.getDateOfOperation()).collect(Collectors.toSet());
+        Set<LocalDate> operationDates = flights.stream().map(ScheduledFlight::getDateOfOperation).collect(Collectors.toSet());
         return new CalendarPatternAnalyzer().computeCalendarPattern(operationDates);
     }
 
@@ -514,7 +520,7 @@ public class LineDataToNetexConverter {
         String operatingPeriodId = addOperatingPeriod(pattern);
 
         for (Set<DayOfWeek> distinctPattern : splitDaysOfWeekPatternAccordingToProfile(pattern.significantDays)) {
-            SortedSet<DayOfWeekEnumeration> daysOfWeek = distinctPattern.stream().map(sd -> toDayOfWeekEnumeration(sd)).collect(Collectors.toCollection(TreeSet::new));
+            SortedSet<DayOfWeekEnumeration> daysOfWeek = distinctPattern.stream().map(this::toDayOfWeekEnumeration).collect(Collectors.toCollection(TreeSet::new));
             String dayTypeIdSuffix = createDayTypeIdSuffix(pattern, daysOfWeek);
             collectDayTypesFromPattern(operatingPeriodId, dayTypeIdSuffix, dayTypeStructure, daysOfWeek);
         }

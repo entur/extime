@@ -1,22 +1,19 @@
 package no.rutebanken.extime.model;
 
-import static no.rutebanken.extime.Constants.DASH;
-import static no.rutebanken.extime.Constants.EMPTY;
-
-import java.math.BigInteger;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.OffsetDateTime;
-import java.time.OffsetTime;
-import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
+
+import java.math.BigInteger;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static no.rutebanken.extime.Constants.DASH;
+import static no.rutebanken.extime.Constants.EMPTY;
 
 public class ScheduledFlight {
 
@@ -160,7 +157,7 @@ public class ScheduledFlight {
     }
 
     public boolean hasStopovers() {
-        return this.scheduledStopovers != null && this.scheduledStopovers.size() > 0;
+        return this.scheduledStopovers != null && !this.scheduledStopovers.isEmpty();
     }
 
     public String getOperatingLine() {

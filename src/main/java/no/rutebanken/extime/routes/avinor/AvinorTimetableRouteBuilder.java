@@ -30,13 +30,21 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 
-import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.*;
+import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.HEADER_EXTIME_FETCH_RESOURCE_ENDPOINT;
+import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.HEADER_EXTIME_HTTP_URI;
+import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.HEADER_EXTIME_RESOURCE_CODE;
+import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.HEADER_EXTIME_URI_PARAMETERS;
 import static org.apache.camel.component.stax.StAXBuilder.stax;
 
 @Component
-public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRouteBuilder {
+public class AvinorTimetableRouteBuilder extends RouteBuilder {
 
     public static final String HEADER_TIMETABLE_SMALL_AIRPORT_RANGE = "TimetableSmallAirportRange";
     public static final String HEADER_TIMETABLE_LARGE_AIRPORT_RANGE = "TimetableLargeAirportRange";
@@ -59,8 +67,6 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
 
     @Override
     public void configure() throws Exception {
-        //super.configure();
-        //getContext().setTracing(true);
 
         JaxbDataFormat jaxbDataFormat = new JaxbDataFormat();
         jaxbDataFormat.setContextPath(PublicationDeliveryStructure.class.getPackage().getName());
@@ -130,7 +136,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
 
                 .process(exchange -> {
                     List<AirportName> airportNames = exchange.getIn().getBody(AirportNames.class).getAirportName();
-                    exchange.getIn().setBody((airportNames != null && airportNames.size() > 0) ? airportNames.get(0).getName() :
+                    exchange.getIn().setBody((airportNames != null && !airportNames.isEmpty()) ? airportNames.get(0).getName() :
                             exchange.getIn().getHeader(HEADER_EXTIME_RESOURCE_CODE), String.class);
                 })
 
@@ -147,7 +153,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
 
                 .process(exchange -> {
                     List<AirlineName> airlineNames = exchange.getIn().getBody(AirlineNames.class).getAirlineName();
-                    exchange.getIn().setBody((airlineNames != null && airlineNames.size() > 0) ? airlineNames.get(0).getName() :
+                    exchange.getIn().setBody((airlineNames != null && !airlineNames.isEmpty()) ? airlineNames.get(0).getName() :
                             exchange.getIn().getHeader(HEADER_EXTIME_RESOURCE_CODE), String.class);
                 })
 
@@ -212,6 +218,9 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                  .process(e -> {/* Do nothing. WireTap used by test. This should not have been implemented as split - aggregate */} )
                  .routeId("DoNothingFlightSplitWireTap");
 
+        final String contentType = "text/xml;charset=utf-8";
+        final String charsetName = "utf-8";
+
         from("direct:convertCommonDataToNetex")
                 .routeId("CommonDataToNetexConverter")
                 .log(LoggingLevel.INFO, "Converting common line data to NeTEx")
@@ -227,8 +236,8 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 //.log(LoggingLevel.DEBUG, this.getClass().getName(), "${body}")
                 .process(exchange -> exchange.getIn().setHeader(HEADER_FILE_NAME_GENERATED, "_avinor_common_elements")).id("GenerateCommonFileNameProcessor")
                 .setHeader(Exchange.FILE_NAME, simpleF("${header.%s}.xml", HEADER_FILE_NAME_GENERATED))
-                .setHeader(Exchange.CONTENT_TYPE, constant("text/xml;charset=utf-8"))
-                .setHeader(Exchange.CHARSET_NAME, constant("utf-8"))
+                .setHeader(Exchange.CONTENT_TYPE, constant(contentType))
+                .setHeader(Exchange.CHARSET_NAME, constant(charsetName))
                 .to("file:{{netex.generated.output.path}}")
         ;
 
@@ -247,8 +256,8 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                     .setHeader(HEADER_FILE_NAME_GENERATED, simple("${bean:avinorTimetableUtils?method=generateFilename}"))
                     .marshal(jaxbDataFormat)
                     .setHeader(Exchange.FILE_NAME, simpleF("${header.%s}.xml", HEADER_FILE_NAME_GENERATED))
-                    .setHeader(Exchange.CONTENT_TYPE, constant("text/xml;charset=utf-8"))
-                    .setHeader(Exchange.CHARSET_NAME, constant("utf-8"))
+                    .setHeader(Exchange.CONTENT_TYPE, constant(contentType))
+                    .setHeader(Exchange.CHARSET_NAME, constant(charsetName))
                     .to("file:{{netex.generated.output.path}}")
                 .end()
         ;
@@ -301,6 +310,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                         try {
                             exchange.getContext().stopRoute(exchange.getFromRouteId());
                         } catch (Exception ignored) {
+                            // Ignore
                         }
                     });
                     stop.start();
@@ -334,8 +344,8 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder { //extends BaseRo
                 .bean(AvinorTimetableUtils.class, "createFlightsElement")
                 .marshal(flightsJaxbDataFormat)
                 .setHeader(Exchange.FILE_NAME, simple("avinor-flights_${bean:dateUtils.timestamp()}.xml"))
-                .setHeader(Exchange.CONTENT_TYPE, constant("text/xml;charset=utf-8"))
-                .setHeader(Exchange.CHARSET_NAME, constant("utf-8"))
+                .setHeader(Exchange.CONTENT_TYPE, constant(contentType))
+                .setHeader(Exchange.CHARSET_NAME, constant(charsetName))
                 .to("file:{{avinor.timetable.dump.output.path}}")
                 .log(LoggingLevel.INFO, "Successfully dumped all flights to file : ${header.CamelFileNameProduced}")
         ;

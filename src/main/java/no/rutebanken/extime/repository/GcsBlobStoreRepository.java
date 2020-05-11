@@ -53,7 +53,7 @@ public class GcsBlobStoreRepository implements BlobStoreRepository {
             try (InputStream inputStream = Files.newInputStream(filePath)) {
                 BlobStoreHelper.uploadBlobWithRetry(storage, bucketName, blobIdName, inputStream, false);
             }
-            log.info("Stored blob with name '{}' and size '{}' in bucket '{}'", filePath.getFileName().toString(), Files.size(filePath), bucketName);
+            log.info("Stored blob with name '{}' and size '{}' in bucket '{}'", filePath.getFileName(), Files.size(filePath), bucketName);
         } catch (Exception e) {
             log.warn("Failed to put file '{}' in blobstore", compressedFileName, e);
         }

@@ -55,7 +55,7 @@ public class FlightDataProducerRouteBuilder extends RouteBuilder {
 
         from("direct:fetchFlightsFromFeed")
                 .routeId("FetchFlightsFromFeed")
-                .process(exchange -> {exchange.getIn().setBody(StopVisitType.values());})
+                .process(exchange -> exchange.getIn().setBody(StopVisitType.values()))
                 .split(body())
                     .setHeader("CurrentStopVisitType", body())
                     .setHeader("FeedUriParameters", simpleF("airport=${header.%s}&direction=${body.code}&PeriodFrom=${header.%s}&PeriodTo=${header.%s}",

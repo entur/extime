@@ -1,6 +1,7 @@
 package no.rutebanken.extime.model;
 
 import java.util.EnumSet;
+import java.util.Set;
 
 public enum AirportIATA {
 
@@ -101,7 +102,7 @@ public enum AirportIATA {
     LUZ; // Lublin lufthavn
     */
 
-    public static EnumSet<AirportIATA> LARGE_SIZED_AIRPORTS = EnumSet.of(OSL);
-    public static EnumSet<AirportIATA> MEDIUM_SIZED_AIRPORTS = EnumSet.of(BGO, BOO, SVG, TRD);
+    public static final Set<AirportIATA> LARGE_SIZED_AIRPORTS = EnumSet.of(OSL);
+    public static final Set<AirportIATA> MEDIUM_SIZED_AIRPORTS = EnumSet.of(BGO, BOO, SVG, TRD);
 
 }

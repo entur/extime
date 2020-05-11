@@ -14,12 +14,15 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.http4.HttpMethods;
 import org.apache.camel.processor.aggregate.AggregationStrategy;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static org.apache.camel.component.stax.StAXBuilder.stax;
 
-//@Component
-public class AvinorRealTimeRouteBuilder extends RouteBuilder {//extends BaseRouteBuilder {
+public class AvinorRealTimeRouteBuilder extends RouteBuilder {
 
     static final String HEADER_REALTIME_AIRPORT_IATA = "RealTimeAirportIATA";
     static final String HEADER_FLIGHTS_DIRECTION = "FlightsDirection";
@@ -30,27 +33,17 @@ public class AvinorRealTimeRouteBuilder extends RouteBuilder {//extends BaseRout
 
     @Override
     public void configure() throws Exception {
-        //super.configure();
-        //getContext().setTracing(true);
 
         from("quartz2://avinorRealtimeScheduler?{{avinor.realtime.scheduler.options}}")
                 .routeId("AvinorRealTimeSchedulerStarter")
                 .autoStartup(false)
-                .process(exchange -> {exchange.getIn().setBody(AirportIATA.values());}).id("RealTimeAirportIATAProcessor")
+                .process(exchange -> exchange.getIn().setBody(AirportIATA.values())).id("RealTimeAirportIATAProcessor")
                 .split(body(), new AirportFlightAggregationStrategy()).parallelProcessing()
                     .log(LoggingLevel.DEBUG, this.getClass().getName(), "Processing airport: ${body}")
                     .setHeader(HEADER_REALTIME_AIRPORT_IATA, simple("${body}"))
                     .to("mock:direct:fetchRealTimeFlightsForAirport").id("FetchRealTimeDataProcessor")
                 .end()
                 .bean(RealTimeFlightConverter.class, "convertToRealTimeFlights")
-/*
-                .bean(RealTimeFlightConverter.class, "findMatchingFlightRoutes")
-                .split(body())
-                    .convertBodyTo(String.class)
-                    .log(LoggingLevel.DEBUG, this.getClass().getName(), "Generated NeTEx XML: ${body}")
-                    .to("mock:jmsQueue")
-                .end()
-*/
         ;
 
         from("direct:fetchRealTimeFlightsForAirport")
@@ -65,7 +58,7 @@ public class AvinorRealTimeRouteBuilder extends RouteBuilder {//extends BaseRout
 
         from("direct:fetchAirportDepartures")
                 .routeId("DepartureFlightsFetcher")
-                .process(exchange -> {exchange.getIn().setHeader(HEADER_FLIGHTS_DIRECTION, StopVisitType.DEPARTURE.getCode());})
+                .process(exchange -> exchange.getIn().setHeader(HEADER_FLIGHTS_DIRECTION, StopVisitType.DEPARTURE.getCode()))
                 .setHeader(HEADER_FLIGHTS_TIMEFROM, simple("${properties:avinor.realtime.departures.timefrom}"))
                 .setHeader(HEADER_FLIGHTS_TIMETO, simple("${properties:avinor.realtime.departures.timeto}"))
                 .to("direct:fetchAirportFlights")
@@ -74,7 +67,7 @@ public class AvinorRealTimeRouteBuilder extends RouteBuilder {//extends BaseRout
 
         from("direct:fetchAirportArrivals")
                 .routeId("ArrivalFlightsFetcher")
-                .process(exchange -> {exchange.getIn().setHeader(HEADER_FLIGHTS_DIRECTION, StopVisitType.ARRIVAL.getCode());})
+                .process(exchange -> exchange.getIn().setHeader(HEADER_FLIGHTS_DIRECTION, StopVisitType.ARRIVAL.getCode()))
                 .setHeader(HEADER_FLIGHTS_TIMEFROM, simple("${properties:avinor.realtime.arrivals.timefrom}"))
                 .setHeader(HEADER_FLIGHTS_TIMETO, simple("${properties:avinor.realtime.arrivals.timeto}"))
                 .to("direct:fetchAirportFlights")

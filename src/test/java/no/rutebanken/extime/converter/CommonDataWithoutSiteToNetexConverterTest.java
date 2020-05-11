@@ -13,7 +13,6 @@ import org.rutebanken.netex.model.ServiceFrame;
 import org.rutebanken.netex.model.SiteFrame;
 import org.rutebanken.netex.model.StopAssignmentsInFrame_RelStructure;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -24,10 +23,6 @@ import static no.rutebanken.extime.Constants.VERSION_ONE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SuppressWarnings("unchecked")
-@SpringBootTest(classes = {CommonDataToNetexConverter.class}, properties = {
-        "spring.config.name=application,netex-static-data",
-        "avinor.timetable.scheduler.consumer=direct:start"
-})
 public class CommonDataWithoutSiteToNetexConverterTest extends ExtimeRouteBuilderIntegrationTestBase {
 
     @Autowired

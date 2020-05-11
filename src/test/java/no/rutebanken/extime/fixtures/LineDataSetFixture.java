@@ -3,25 +3,26 @@ package no.rutebanken.extime.fixtures;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
-import no.rutebanken.extime.model.*;
+import no.rutebanken.extime.model.AvailabilityPeriod;
+import no.rutebanken.extime.model.FlightRoute;
+import no.rutebanken.extime.model.LineDataSet;
+import no.rutebanken.extime.model.ScheduledFlight;
+import no.rutebanken.extime.model.ScheduledStopover;
 import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.tomcat.jni.Local;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.OffsetDateTime;
-import java.time.OffsetTime;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
-import java.time.temporal.ChronoField;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalUnit;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 import java.util.stream.Collectors;
 
-import static no.rutebanken.extime.Constants.*;
+import static no.rutebanken.extime.Constants.DASH;
 
 public final class LineDataSetFixture {
 

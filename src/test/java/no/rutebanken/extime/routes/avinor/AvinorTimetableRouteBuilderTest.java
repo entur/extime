@@ -4,7 +4,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Range;
 import no.avinor.flydata.xjc.model.scheduled.Flight;
-import no.rutebanken.extime.ExtimeRouteBuilderIntegrationTestBase;
+import no.rutebanken.extime.ExtimeCamelRouteBuilderIntegrationTestBase;
 import no.rutebanken.extime.model.AirportIATA;
 import no.rutebanken.extime.model.ScheduledFlight;
 import no.rutebanken.extime.model.StopVisitType;
@@ -35,8 +35,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 
-import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.*;
-import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.*;
+import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.HEADER_EXTIME_HTTP_URI;
+import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.HEADER_EXTIME_RESOURCE_CODE;
+import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.HEADER_EXTIME_URI_PARAMETERS;
+import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEADER_LOWER_RANGE_ENDPOINT;
+import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEADER_TIMETABLE_LARGE_AIRPORT_RANGE;
+import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEADER_TIMETABLE_SMALL_AIRPORT_RANGE;
+import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEADER_TIMETABLE_STOP_VISIT_TYPE;
+import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEADER_UPPER_RANGE_ENDPOINT;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = {AvinorTimetableRouteBuilder.class} , properties = {
         "spring.config.name=application,netex-static-data",
@@ -55,7 +61,7 @@ import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.*;
         "avinor.timetable.dump.enabled=false",
         "avinor.timetable.dump.output.path=target/flights"
 } )
-public class AvinorTimetableRouteBuilderTest extends ExtimeRouteBuilderIntegrationTestBase {
+public class AvinorTimetableRouteBuilderTest extends ExtimeCamelRouteBuilderIntegrationTestBase {
 
     @EndpointInject(uri = "mock:direct:fetchAndCacheAirportName")
     protected MockEndpoint mockFetchAndCacheAirportName;
@@ -494,16 +500,17 @@ public class AvinorTimetableRouteBuilderTest extends ExtimeRouteBuilderIntegrati
 
     private Flight createDummyFlight(long dummyId, String dummyDesignator, String dummyFlightNumber, ZonedDateTime dummyDateOfOperation,
                                      String dummyDepartureStation, LocalTime dummyDepartureTime, String dummyArrivalStation, LocalTime dummyArrivalTime) {
-        return new Flight() {{
-            setId(BigInteger.valueOf(dummyId));
-            setAirlineDesignator(dummyDesignator);
-            setFlightNumber(dummyFlightNumber);
-            setDateOfOperation(dummyDateOfOperation);
-            setDepartureStation(dummyDepartureStation);
-            setStd(dummyDepartureTime);
-            setArrivalStation(dummyArrivalStation);
-            setSta(dummyArrivalTime);
-        }};
+        Flight flight = new Flight();
+        flight.setId(BigInteger.valueOf(dummyId));
+        flight.setAirlineDesignator(dummyDesignator);
+        flight.setFlightNumber(dummyFlightNumber);
+        flight.setDateOfOperation(dummyDateOfOperation);
+        flight.setDepartureStation(dummyDepartureStation);
+        flight.setStd(dummyDepartureTime);
+        flight.setArrivalStation(dummyArrivalStation);
+        flight.setSta(dummyArrivalTime);
+
+        return flight;
     }
 
 

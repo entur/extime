@@ -4,6 +4,7 @@ import no.avinor.flydata.xjc.model.airport.AirportName;
 import no.avinor.flydata.xjc.model.feed.Flight;
 
 import java.util.List;
+import java.util.Objects;
 
 public class FlightRouteDataSet {
 
@@ -80,17 +81,17 @@ public class FlightRouteDataSet {
 
         FlightRouteDataSet that = (FlightRouteDataSet) o;
 
-        if (flightId != null ? !flightId.equals(that.flightId) : that.flightId != null) return false;
-        if (airlineIATA != null ? !airlineIATA.equals(that.airlineIATA) : that.airlineIATA != null) return false;
-        if (departureAirportName != null ? !departureAirportName.equals(that.departureAirportName) : that.departureAirportName != null)
+        if (!Objects.equals(flightId, that.flightId)) return false;
+        if (!Objects.equals(airlineIATA, that.airlineIATA)) return false;
+        if (!Objects.equals(departureAirportName, that.departureAirportName))
             return false;
-        if (arrivalAirportName != null ? !arrivalAirportName.equals(that.arrivalAirportName) : that.arrivalAirportName != null)
+        if (!Objects.equals(arrivalAirportName, that.arrivalAirportName))
             return false;
-        if (departureFlight != null ? !departureFlight.equals(that.departureFlight) : that.departureFlight != null)
+        if (!Objects.equals(departureFlight, that.departureFlight))
             return false;
-        if (arrivalFlight != null ? !arrivalFlight.equals(that.arrivalFlight) : that.arrivalFlight != null)
+        if (!Objects.equals(arrivalFlight, that.arrivalFlight))
             return false;
-        return stopovers != null ? stopovers.equals(that.stopovers) : that.stopovers == null;
+        return Objects.equals(stopovers, that.stopovers);
 
     }
 

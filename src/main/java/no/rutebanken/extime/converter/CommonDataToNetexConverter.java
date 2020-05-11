@@ -32,7 +32,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static no.rutebanken.extime.Constants.*;
+import static no.rutebanken.extime.Constants.AVINOR_XMLNS;
+import static no.rutebanken.extime.Constants.AVINOR_XMLNSURL;
+import static no.rutebanken.extime.Constants.NSR_XMLNS;
+import static no.rutebanken.extime.Constants.NSR_XMLNSURL;
 
 @Component(value = "commonDataToNetexConverter")
 public class CommonDataToNetexConverter {
@@ -54,7 +57,7 @@ public class CommonDataToNetexConverter {
     @Value("${avinor.timetable.period.months}")
     private int numberOfMonthsInPeriod;
 
-    public JAXBElement<PublicationDeliveryStructure> convertToNetex() throws Exception {
+    public JAXBElement<PublicationDeliveryStructure> convertToNetex() {
         logger.info("Converting common data to NeTEx");
         Instant publicationTimestamp = Instant.now();
 
@@ -118,7 +121,7 @@ public class CommonDataToNetexConverter {
 
         logger.info("Done converting common data to NeTEx");
 
-        return netexObjectFactory.createPublicationDeliveryStructureElement(publicationTimestamp, compositeFrameElement, "Description");
+        return netexObjectFactory.createPublicationDeliveryStructureElement(publicationTimestamp, compositeFrameElement);
     }
 
 }
