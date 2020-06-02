@@ -1,4 +1,5 @@
 gcp_project            = "radon-1287"
+gcp_pubsub_project            = "entur-ror-test"
 kube_namespace = "staging"
 bucket_instance_name= "marduk-exchange-stage"
 location = "europe-west1"

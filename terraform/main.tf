@@ -24,11 +24,19 @@ resource "google_storage_bucket_iam_member" "storage_bucket_iam_member" {
   member = "serviceAccount:${google_service_account.extime_service_account.email}"
 }
 
-# add service account as member to the pubsub
-resource "google_project_iam_member" "project" {
+# add service account as member to pubsub service in the resources project
+resource "google_project_iam_member" "pubsub_iam_member" {
+  project = var.gcp_pubsub_project
+  role    = var.service_account_pubsub_role
+  member = "serviceAccount:${google_service_account.marduk_service_account.email}"
+}
+
+# add service account as member to pubsub service in the workload project
+# TODO to be removed after cluster migration
+resource "google_project_iam_member" "pubsub_iam_member" {
   project = var.gcp_project
   role    = var.service_account_pubsub_role
-  member = "serviceAccount:${google_service_account.extime_service_account.email}"
+  member = "serviceAccount:${google_service_account.marduk_service_account.email}"
 }
 
 # create key for service account
