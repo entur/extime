@@ -3,11 +3,11 @@ data:
   application.properties: |+
     spring.profiles.active=gcs-blobstore
     camel.springboot.name=extime
-    blobstore.gcs.bucket.name={{ .Values.gcsBucketName}}
+    blobstore.gcs.bucket.name={{ .Values.gcp.bucketName}}
     blobstore.provider.id=21
     blobstore.blob.path=inbound/received/avi/
     blobstore.gcs.credential.path=/etc/extime-service-account/credentials.json
-    blobstore.gcs.project.id={{ .Values.gcpProjectId }}
+    blobstore.gcs.project.id={{ .Values.gcp.blobstoreProjectId }}
     netex.generated.output.path=/tmp/extime/data/netex
     avinor.airport.feed.endpoint=https://flydata.avinor.no/airportNames.asp
     avinor.airports.large=BGO,BOO,SVG,TRD
@@ -34,7 +34,7 @@ data:
     endpoints.jmx.enabled=true
     spring.jmx.enabled=true
     spring.main.sources=no.rutebanken.extime
-    spring.cloud.gcp.pubsub.project-id={{ .Values.gcpProjectId }}
+    spring.cloud.gcp.pubsub.project-id={{ .Values.gcp.pubsubProjectId }}
     spring.cloud.gcp.pubsub.credentials.location=file:/etc/extime-service-account/credentials.json
     spring.cloud.gcp.pubsub.subscriber.parallel-pull-count=1
     spring.cloud.gcp.pubsub.subscriber.executor-threads=30
