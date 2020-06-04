@@ -1,0 +1,6 @@
+gcp_project = "entur-prod-1287"
+gcp_pubsub_project = "neon-1287"
+kube_namespace = "production"
+bucket_instance_name = "marduk-exchange-production"
+location = "europe-west1"
+service_account_bucket_role = "roles/storage.admin"
