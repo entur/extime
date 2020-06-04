@@ -4,7 +4,7 @@ metadata:
   name: {{ template "extime.name" . }}
   namespace: {{ .Release.Namespace }}
   labels:
-        {{- include "common.labels" . | indent 4 }}
+  {{- include "common.labels" . | indent 4 }}
 spec:
   progressDeadlineSeconds: 600
   replicas: 1
@@ -36,7 +36,7 @@ spec:
             }
           }
       labels:
-          {{- include "common.labels" . | indent 8 }}
+    {{- include "common.labels" . | indent 8 }}
     spec:
       containers:
         - env:
