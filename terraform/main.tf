@@ -14,7 +14,7 @@ provider "kubernetes" {
 resource "google_service_account" "extime_service_account" {
   account_id = "ror-extime-sa"
   display_name = "ror-extime-sa service account"
-  project = var.gcp_project
+  project = var.gcp_pubsub_project
 }
 
 # add service account as member to the bucket
