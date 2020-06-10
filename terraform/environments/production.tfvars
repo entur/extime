@@ -1,5 +1,5 @@
 gcp_project = "entur-1287"
-gcp_pubsub_project = "neon-1287"
+gcp_pubsub_project = "entur-ror-prod"
 kube_namespace = "production"
 bucket_instance_name = "marduk-exchange-production"
 location = "europe-west1"
