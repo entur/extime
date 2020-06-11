@@ -34,7 +34,7 @@ resource "google_project_iam_member" "pubsub_project_iam_member" {
 # add service account as member to pubsub service in the workload project
 # TODO to be removed after cluster migration
 resource "google_project_iam_member" "pubsub_iam_member" {
-  project = var.gcp_project
+  project = var.gcp_legacy_project
   role = var.service_account_pubsub_role
   member = "serviceAccount:${google_service_account.extime_service_account.email}"
 }

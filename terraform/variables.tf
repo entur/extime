@@ -7,6 +7,10 @@ variable "gcp_pubsub_project" {
   description = "The GCP project hosting the PubSub resources"
 }
 
+variable "gcp_legacy_project" {
+  description = "The legacy GCP project "
+}
+
 variable "location" {
   description = "GCP bucket location"
 }
