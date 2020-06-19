@@ -388,7 +388,7 @@
                     <excludes>
                         <exclude>**/*KT.java</exclude>
                     </excludes>
-                    <argLine>@{argLine} -Xmx1500m</argLine>
+                    <argLine>@{argLine} -Xms500m -Xmx500m -Xss256k</argLine>
                 </configuration>
             </plugin>
             <plugin>
