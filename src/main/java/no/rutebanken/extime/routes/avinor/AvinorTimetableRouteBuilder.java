@@ -105,11 +105,11 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder {
                 .process(new AirportIataProcessor()).id("TimetableAirportIATAProcessor")
                 .bean(DateUtils.class, "generateDateRanges").id("TimetableDateRangeProcessor")
                 .split(body(), new ScheduledFlightListAggregationStrategy()).parallelProcessing()
-                    .log(LoggingLevel.DEBUG, this.getClass().getName(), "==========================================")
-                    .log(LoggingLevel.DEBUG, this.getClass().getName(), "Processing airport with IATA code: ${body}")
+                    .log(LoggingLevel.INFO, this.getClass().getName(), "==========================================")
+                    .log(LoggingLevel.INFO, this.getClass().getName(), "Processing airport with IATA code: ${body}")
                     .setHeader(HEADER_EXTIME_RESOURCE_CODE, simple("${body}"))
                     .to("direct:fetchTimetableForAirport").id("FetchTimetableProcessor")
-                    .log(LoggingLevel.DEBUG, this.getClass().getName(), "Flights fetched for ${header.ExtimeResourceCode}")
+                    .log(LoggingLevel.INFO, this.getClass().getName(), "Flights fetched for ${header.ExtimeResourceCode}")
                 .end()
         ;
 
