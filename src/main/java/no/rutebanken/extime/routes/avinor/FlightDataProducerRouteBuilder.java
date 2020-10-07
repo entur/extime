@@ -47,8 +47,8 @@ public class FlightDataProducerRouteBuilder extends RouteBuilder {
                 .routeId("FetchTimetableByRanges")
                 .setHeader("ExtimeHttpUri", simple("{{avinor.timetable.feed.endpoint}}"))
                 .split(body())
-                    .setHeader("DataFeedLowerRange", simple("${bean:dateUtils.format(body.lowerEndpoint())}Z"))
-                    .setHeader("DataFeedUpperRange", simple("${bean:dateUtils.format(body.upperEndpoint())}Z"))
+                    .setHeader("DataFeedLowerRange", simple("${bean:dateUtils.format(${body.lowerEndpoint()})}Z"))
+                    .setHeader("DataFeedUpperRange", simple("${bean:dateUtils.format(${body.upperEndpoint()})}Z"))
                     .to("direct:fetchFlightsFromFeed")
                 .end()
         ;
