@@ -62,7 +62,6 @@ public class AvinorCommonRouteBuilder extends RouteBuilder {
         from("direct:fetchXmlStreamFromHttpFeed")
                 .routeId("FetchXmlFromHttpFeed")
                 .setHeader(Exchange.HTTP_METHOD, constant(HttpMethods.GET))
-                .setHeader(HEADER_EXTIME_HTTP_URI).method(AvinorTimetableUtils.class, "useHttp4Client")
                 .setHeader(Exchange.HTTP_QUERY, simpleF("${header.%s}", HEADER_EXTIME_URI_PARAMETERS))
                 .log(LoggingLevel.DEBUG, this.getClass().getName(), String.format("HTTP URI HEADER: ${header.%s}", HEADER_EXTIME_HTTP_URI))
                 .log(LoggingLevel.DEBUG, this.getClass().getName(), String.format("HTTP QUERY HEADER: ${header.%s}", Exchange.HTTP_QUERY))

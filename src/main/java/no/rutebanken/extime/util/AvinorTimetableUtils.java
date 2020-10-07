@@ -105,10 +105,6 @@ public class AvinorTimetableUtils {
         SPECIAL_ASCII_MAPPING.put("æ", "e");
     }
 
-    public String useHttp4Client(@Header(HEADER_EXTIME_HTTP_URI) String httpUri) {
-        return httpUri.replace("https:", "https4:").replace("http:","http4:");
-    }
-
     public JAXBElement<Flights> createFlightsElement(List<Flight> flightList) {
         ObjectFactory objectFactory = new ObjectFactory();
         Flights flights = objectFactory.createFlights();

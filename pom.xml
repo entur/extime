@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.rutebanken.superpom</groupId>
         <artifactId>superpom</artifactId>
-        <version>1.0.13</version>
+        <version>1.0.14-SNAPSHOT</version>
     </parent>
 
     <groupId>no.rutebanken.extime</groupId>
@@ -33,7 +33,7 @@
     <properties>
 
         <camel.version>3.4.4</camel.version>
-        <entur.helpers.version>1.0.25</entur.helpers.version>
+        <entur.helpers.version>1.0.26-SNAPSHOT</entur.helpers.version>
         <guava.version>28.1-jre</guava.version>
         <jaxb2-basics-runtime.version>1.11.1</jaxb2-basics-runtime.version>
         <jaxb-java-time-adapters>1.1.3</jaxb-java-time-adapters>
@@ -133,7 +133,7 @@
         <dependency>
             <groupId>org.entur.helpers</groupId>
             <artifactId>camel3-entur-google-pubsub</artifactId>
-            <version>1.0.26-SNAPSHOT</version>
+            <version>${entur.helpers.version}</version>
         </dependency>
 
         <!-- Spring -->
