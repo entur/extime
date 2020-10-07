@@ -241,7 +241,7 @@ public class AvinorTimetableRouteBuilderTest extends ExtimeCamelRouteBuilderInte
     @Test
     public void testFetchTimetableForLargeAirport() throws Exception {
 
-        AdviceWithRouteBuilder.adviceWith(context, "FetchAndCacheAirlineName", a -> {
+        AdviceWithRouteBuilder.adviceWith(context, "FetchTimetableForAirport", a -> {
             a.weaveById("LargeAirportLogProcessor").replace().to("mock:largeAirportLogger");
             a.mockEndpointsAndSkip("direct:fetchTimetableForAirportByRanges");
         });

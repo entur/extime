@@ -102,7 +102,7 @@ public class AvinorCommonRouteBuilderTest extends ExtimeCamelRouteBuilderIntegra
 
         AdviceWithRouteBuilder.adviceWith(context, "ResourceRetriever", a -> {
             a.weaveById("ResourceCacheCheckProcessor").replace().to("mock:cacheCheck");
-            a.interceptSendToEndpoint("mock:cacheCheck").process(exchange -> exchange.getIn().setHeader(EhcacheConstants.ACTION_SUCCEEDED, 1));
+            a.interceptSendToEndpoint("mock:cacheCheck").process(exchange -> exchange.getIn().setHeader(EhcacheConstants.ACTION_HAS_RESULT, true));
             a.weaveById("DynamicFetchResourceProcessor").replace().to("mock:fetchResource");
             a.mockEndpointsAndSkip("direct:getResourceFromCache");
         });
@@ -110,7 +110,7 @@ public class AvinorCommonRouteBuilderTest extends ExtimeCamelRouteBuilderIntegra
         context.start();
 
         mockCacheCheck.expectedMessageCount(1);
-        mockCacheCheck.expectedHeaderReceived(EhcacheConstants.ACTION, EhcacheConstants.ACTION_HAS_RESULT);
+        mockCacheCheck.expectedHeaderReceived(EhcacheConstants.ACTION, EhcacheConstants.ACTION_GET);
         mockCacheCheck.expectedHeaderReceived(EhcacheConstants.KEY, "OSL");
         mockFetchResource.expectedMessageCount(0);
         mockGetResourceFromCache.expectedMessageCount(1);
@@ -128,7 +128,7 @@ public class AvinorCommonRouteBuilderTest extends ExtimeCamelRouteBuilderIntegra
 
         AdviceWithRouteBuilder.adviceWith(context, "ResourceRetriever", a -> {
             a.weaveById("ResourceCacheCheckProcessor").replace().to("mock:cacheCheck");
-            a.interceptSendToEndpoint("mock:cacheCheck").process(exchange -> exchange.getIn().setHeader(EhcacheConstants.ACTION_SUCCEEDED, null));
+            a.interceptSendToEndpoint("mock:cacheCheck").process(exchange -> exchange.getIn().setHeader(EhcacheConstants.ACTION_HAS_RESULT, false));
             a.weaveById("DynamicFetchResourceProcessor").replace().to("mock:fetchResource");
             a.mockEndpointsAndSkip("direct:getResourceFromCache");
         });
@@ -136,7 +136,7 @@ public class AvinorCommonRouteBuilderTest extends ExtimeCamelRouteBuilderIntegra
         context.start();
 
         mockCacheCheck.expectedMessageCount(1);
-        mockCacheCheck.expectedHeaderReceived(EhcacheConstants.ACTION, EhcacheConstants.ACTION_HAS_RESULT);
+        mockCacheCheck.expectedHeaderReceived(EhcacheConstants.ACTION, EhcacheConstants.ACTION_GET);
         mockCacheCheck.expectedHeaderReceived(EhcacheConstants.KEY, "OSL");
         mockFetchResource.expectedMessageCount(1);
         mockFetchResource.expectedHeaderReceived(HEADER_EXTIME_RESOURCE_CODE, "OSL");
@@ -167,7 +167,7 @@ public class AvinorCommonRouteBuilderTest extends ExtimeCamelRouteBuilderIntegra
         mockFetchFromHttpEndpoint.expectedHeaderReceived(
                 Exchange.HTTP_QUERY, "airport=TRD&direction=D&PeriodFrom=2017-01-01Z&PeriodTo=2017-01-31Z");
         mockFetchFromHttpEndpoint.expectedHeaderReceived(
-                HEADER_EXTIME_HTTP_URI, "http4://195.69.13.136/XmlFeedScheduled.asp");
+                HEADER_EXTIME_HTTP_URI, "http://195.69.13.136/XmlFeedScheduled.asp");
 
         Map<String,Object> headers = Maps.newHashMap();
         headers.put(HEADER_EXTIME_HTTP_URI, "http://195.69.13.136/XmlFeedScheduled.asp");

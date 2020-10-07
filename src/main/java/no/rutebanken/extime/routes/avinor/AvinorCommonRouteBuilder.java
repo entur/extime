@@ -23,7 +23,7 @@ public class AvinorCommonRouteBuilder extends RouteBuilder {
     @Override
     public void configure() throws Exception {
 
-        from("ehcache://avinorResourceCache")
+        from("ehcache://avinorResourceCache?configurationUri=ehcache-extime.xml")
                 .routeId("AvinorResourceCache")
                 .log(LoggingLevel.DEBUG, this.getClass().getName(), "${header.CamelCacheKey}:${body}")
         ;
@@ -48,9 +48,8 @@ public class AvinorCommonRouteBuilder extends RouteBuilder {
                 .setHeader(EhcacheConstants.ACTION, constant(EhcacheConstants.ACTION_GET))
                 .setHeader(EhcacheConstants.KEY, body())
                 .to("ehcache://avinorResourceCache").id("ResourceCacheCheckProcessor")
-
                 .choice()
-                    .when(header(EhcacheConstants.ACTION_HAS_RESULT))
+                    .when(header(EhcacheConstants.ACTION_HAS_RESULT).isEqualTo(false))
                         .setHeader(HEADER_EXTIME_RESOURCE_CODE, body())
                         .toD("${header.ExtimeFetchResourceEndpoint}").id("DynamicFetchResourceProcessor")
                         .to("direct:getResourceFromCache")
