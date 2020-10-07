@@ -6,7 +6,7 @@ import no.rutebanken.extime.util.AvinorTimetableUtils;
 import no.rutebanken.extime.util.DateUtils;
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.component.http4.HttpMethods;
+import org.apache.camel.component.http.HttpMethods;
 
 import java.util.Arrays;
 
@@ -15,7 +15,7 @@ public class FlightDataProducerRouteBuilder extends RouteBuilder {
 
     @Override
     public void configure() throws Exception {
-        from("quartz2://flightDataScheduler?fireNow=true&trigger.repeatCount=0")
+        from("quartz://flightDataScheduler?fireNow=true&trigger.repeatCount=0")
                 .routeId("FlightDataProducerStarter")
                 .autoStartup(false)
                 .process(exchange -> {

@@ -7,12 +7,12 @@ import no.rutebanken.extime.model.AirportFlightDataSet;
 import no.rutebanken.extime.model.AirportIATA;
 import no.rutebanken.extime.model.FlightType;
 import no.rutebanken.extime.model.StopVisitType;
+import org.apache.camel.AggregationStrategy;
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.component.http4.HttpMethods;
-import org.apache.camel.processor.aggregate.AggregationStrategy;
+import org.apache.camel.component.http.HttpMethods;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -34,7 +34,7 @@ public class AvinorRealTimeRouteBuilder extends RouteBuilder {
     @Override
     public void configure() throws Exception {
 
-        from("quartz2://avinorRealtimeScheduler?{{avinor.realtime.scheduler.options}}")
+        from("quartz://avinorRealtimeScheduler?{{avinor.realtime.scheduler.options}}")
                 .routeId("AvinorRealTimeSchedulerStarter")
                 .autoStartup(false)
                 .process(exchange -> exchange.getIn().setBody(AirportIATA.values())).id("RealTimeAirportIATAProcessor")

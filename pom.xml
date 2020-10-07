@@ -32,7 +32,7 @@
 
     <properties>
 
-        <camel.version>2.25.2</camel.version>
+        <camel.version>3.4.4</camel.version>
         <entur.helpers.version>1.0.25</entur.helpers.version>
         <guava.version>28.1-jre</guava.version>
         <jaxb2-basics-runtime.version>1.11.1</jaxb2-basics-runtime.version>
@@ -57,7 +57,7 @@
         <dependencies>
 
             <dependency>
-                <groupId>org.apache.camel</groupId>
+                <groupId>org.apache.camel.springboot</groupId>
                 <artifactId>camel-spring-boot-dependencies</artifactId>
                 <version>${camel.version}</version>
                 <type>pom</type>
@@ -96,12 +96,12 @@
 
         <!-- Camel -->
         <dependency>
-            <groupId>org.apache.camel</groupId>
+            <groupId>org.apache.camel.springboot</groupId>
             <artifactId>camel-metrics-starter</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.camel</groupId>
-            <artifactId>camel-http4-starter</artifactId>
+            <groupId>org.apache.camel.springboot</groupId>
+            <artifactId>camel-http-starter</artifactId>
             <exclusions>
                 <exclusion>
                     <groupId>org.apache.geronimo.specs</groupId>
@@ -110,30 +110,30 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>org.apache.camel</groupId>
-            <artifactId>camel-quartz2-starter</artifactId>
+            <groupId>org.apache.camel.springboot</groupId>
+            <artifactId>camel-quartz-starter</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.camel</groupId>
+            <groupId>org.apache.camel.springboot</groupId>
             <artifactId>camel-jaxb-starter</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.camel</groupId>
+            <groupId>org.apache.camel.springboot</groupId>
             <artifactId>camel-stax-starter</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.camel</groupId>
-            <artifactId>camel-cache</artifactId>
+            <groupId>org.apache.camel.springboot</groupId>
+            <artifactId>camel-ehcache-starter</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.camel</groupId>
+            <groupId>org.apache.camel.springboot</groupId>
             <artifactId>camel-zipfile-starter</artifactId>
         </dependency>
 
         <dependency>
             <groupId>org.entur.helpers</groupId>
-            <artifactId>camel-entur-google-pubsub</artifactId>
-            <version>${entur.helpers.version}</version>
+            <artifactId>camel3-entur-google-pubsub</artifactId>
+            <version>1.0.26-SNAPSHOT</version>
         </dependency>
 
         <!-- Spring -->
@@ -214,11 +214,6 @@
         </dependency>
 
         <!-- Testing -->
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
         <dependency>
             <groupId>org.apache.camel</groupId>
             <artifactId>camel-test</artifactId>

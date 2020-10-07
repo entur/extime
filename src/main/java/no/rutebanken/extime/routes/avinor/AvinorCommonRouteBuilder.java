@@ -4,8 +4,8 @@ import no.rutebanken.extime.util.AvinorTimetableUtils;
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.component.cache.CacheConstants;
-import org.apache.camel.component.http4.HttpMethods;
+import org.apache.camel.component.ehcache.EhcacheConstants;
+import org.apache.camel.component.http.HttpMethods;
 import org.springframework.stereotype.Component;
 
 import javax.xml.transform.stream.StreamSource;
@@ -23,41 +23,34 @@ public class AvinorCommonRouteBuilder extends RouteBuilder {
     @Override
     public void configure() throws Exception {
 
-        from("cache://avinorResourceCache" +
-                "?maxElementsInMemory=1000" +
-                "&overflowToDisk=true" +
-                "&eternal=true" +
-                "&timeToLiveSeconds=300" +
-                "&overflowToDisk=true" +
-                "&diskPersistent=true" +
-                "&diskExpiryThreadIntervalSeconds=300")
+        from("ehcache://avinorResourceCache")
                 .routeId("AvinorResourceCache")
                 .log(LoggingLevel.DEBUG, this.getClass().getName(), "${header.CamelCacheKey}:${body}")
         ;
 
         from("direct:addResourceToCache")
                 .routeId("AddResourceToCache")
-                .setHeader(CacheConstants.CACHE_OPERATION, constant(CacheConstants.CACHE_OPERATION_ADD))
-                .setHeader(CacheConstants.CACHE_KEY, simpleF("${header.%s}", HEADER_EXTIME_RESOURCE_CODE))
-                .log(LoggingLevel.DEBUG, this.getClass().getName(), String.format("Adding resource to cache: ${header.%s}:${body}", CacheConstants.CACHE_KEY))
-                .to("cache://avinorResourceCache").id("CacheAddResourceProcessor")
+                .setHeader(EhcacheConstants.ACTION, constant(EhcacheConstants.ACTION_PUT))
+                .setHeader(EhcacheConstants.KEY, simpleF("${header.%s}", HEADER_EXTIME_RESOURCE_CODE))
+                .log(LoggingLevel.DEBUG, this.getClass().getName(), String.format("Adding resource to ehcache: ${header.%s}:${body}", EhcacheConstants.KEY))
+                .to("ehcache://avinorResourceCache").id("CacheAddResourceProcessor")
         ;
 
         from("direct:getResourceFromCache")
                 .routeId("GetResourceFromCache")
-                .setHeader(CacheConstants.CACHE_OPERATION, constant(CacheConstants.CACHE_OPERATION_GET))
-                .setHeader(CacheConstants.CACHE_KEY, body())
-                .to("cache://avinorResourceCache").id("CacheGetResourceProcessor")
+                .setHeader(EhcacheConstants.ACTION, constant(EhcacheConstants.ACTION_GET))
+                .setHeader(EhcacheConstants.KEY, body())
+                .to("ehcache://avinorResourceCache").id("CacheGetResourceProcessor")
         ;
 
         from("direct:retrieveResource")
                 .routeId("ResourceRetriever")
-                .setHeader(CacheConstants.CACHE_OPERATION, constant(CacheConstants.CACHE_OPERATION_CHECK))
-                .setHeader(CacheConstants.CACHE_KEY, body())
-                .to("cache://avinorResourceCache").id("ResourceCacheCheckProcessor")
+                .setHeader(EhcacheConstants.ACTION, constant(EhcacheConstants.ACTION_GET))
+                .setHeader(EhcacheConstants.KEY, body())
+                .to("ehcache://avinorResourceCache").id("ResourceCacheCheckProcessor")
 
                 .choice()
-                    .when(header(CacheConstants.CACHE_ELEMENT_WAS_FOUND).isNull())
+                    .when(header(EhcacheConstants.ACTION_HAS_RESULT))
                         .setHeader(HEADER_EXTIME_RESOURCE_CODE, body())
                         .toD("${header.ExtimeFetchResourceEndpoint}").id("DynamicFetchResourceProcessor")
                         .to("direct:getResourceFromCache")
