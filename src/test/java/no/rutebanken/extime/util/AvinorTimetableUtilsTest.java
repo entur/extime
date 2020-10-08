@@ -4,12 +4,12 @@ import no.avinor.flydata.xjc.model.scheduled.Flight;
 import no.rutebanken.extime.ExtimeRouteBuilderIntegrationTestBase;
 import no.rutebanken.extime.model.StopVisitType;
 import org.assertj.core.api.Assertions;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class AvinorTimetableUtilsTest  extends ExtimeRouteBuilderIntegrationTestBase {
+class AvinorTimetableUtilsTest  extends ExtimeRouteBuilderIntegrationTestBase {
 
     @Test
-    public void testIsValidFlight() {
+    void testIsValidFlight() {
         Flight flight = new Flight();
         flight.setDepartureStation("OSL");
         flight.setArrivalStation("BGO");
@@ -21,7 +21,7 @@ public class AvinorTimetableUtilsTest  extends ExtimeRouteBuilderIntegrationTest
     }
 
     @Test
-    public void testIsValidArrivalToOslFlight() {
+    void testIsValidArrivalToOslFlight() {
         Flight flight = new Flight();
         flight.setDepartureStation("OSL");
         flight.setArrivalStation("BGO");
@@ -33,7 +33,7 @@ public class AvinorTimetableUtilsTest  extends ExtimeRouteBuilderIntegrationTest
     }
 
     @Test
-    public void testIsNotValidArrivalToOslFlight()  {
+    void testIsNotValidArrivalToOslFlight()  {
         Flight flight = new Flight();
         flight.setDepartureStation("BGO");
         flight.setArrivalStation("OSL");
@@ -45,7 +45,7 @@ public class AvinorTimetableUtilsTest  extends ExtimeRouteBuilderIntegrationTest
     }
 
     @Test
-    public void testIsNotValidCharterFlight()  {
+    void testIsNotValidCharterFlight()  {
         Flight flight = new Flight();
         flight.setDepartureStation("OSL");
         flight.setArrivalStation("BGO");
@@ -57,7 +57,7 @@ public class AvinorTimetableUtilsTest  extends ExtimeRouteBuilderIntegrationTest
     }
 
     @Test
-    public void testIsNotValidInternationalFlight()  {
+    void testIsNotValidInternationalFlight()  {
         Flight flight = new Flight();
         flight.setDepartureStation("LHR");
         flight.setArrivalStation("EWR");
@@ -69,7 +69,7 @@ public class AvinorTimetableUtilsTest  extends ExtimeRouteBuilderIntegrationTest
     }
 
     @Test
-    public void testIsScheduledPassengerFlight()  {
+    void testIsScheduledPassengerFlight()  {
         Flight flight = new Flight();
         flight.setServiceType("J");
 
@@ -79,7 +79,7 @@ public class AvinorTimetableUtilsTest  extends ExtimeRouteBuilderIntegrationTest
     }
 
     @Test
-    public void testIsNotScheduledPassengerFlight()  {
+    void testIsNotScheduledPassengerFlight()  {
         Flight flight = new Flight();
         flight.setServiceType("C");
 
@@ -89,7 +89,7 @@ public class AvinorTimetableUtilsTest  extends ExtimeRouteBuilderIntegrationTest
     }
 
     @Test
-    public void testIsValidDomesticFlight()  {
+    void testIsValidDomesticFlight()  {
         Flight flight = new Flight();
         flight.setDepartureStation("OSL");
         flight.setArrivalStation("BGO");
@@ -100,7 +100,7 @@ public class AvinorTimetableUtilsTest  extends ExtimeRouteBuilderIntegrationTest
     }
 
     @Test
-    public void testIsNotValidDomesticFlight()  {
+    void testIsNotValidDomesticFlight()  {
         Flight flight = new Flight();
         flight.setDepartureStation("LHR");
         flight.setArrivalStation("EWR");
@@ -111,13 +111,13 @@ public class AvinorTimetableUtilsTest  extends ExtimeRouteBuilderIntegrationTest
     }
 
     @Test
-    public void testIsValidDepartureAndArrival()  {
+    void testIsValidDepartureAndArrival()  {
         boolean bothValid = AvinorTimetableUtils.isValidDepartureAndArrival("OSL", "BGO");
         Assertions.assertThat(bothValid).isTrue();
     }
 
     @Test
-    public void testIsNotValidDepartureAndArrival()  {
+    void testIsNotValidDepartureAndArrival()  {
         boolean bothInvalid = AvinorTimetableUtils.isValidDepartureAndArrival("AAA", "EWR");
         Assertions.assertThat(bothInvalid).isFalse();
 

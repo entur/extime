@@ -5,8 +5,8 @@ import org.apache.camel.Exchange;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.support.DefaultExchange;
 import org.assertj.core.api.Assertions;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -18,13 +18,13 @@ import java.util.function.Predicate;
 import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEADER_TIMETABLE_LARGE_AIRPORT_RANGE;
 import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEADER_TIMETABLE_SMALL_AIRPORT_RANGE;
 
-public class DateUtilsTest {
+class DateUtilsTest {
 
     private DateUtils clazzUnderTest;
     private Exchange exchange;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         clazzUnderTest = new DateUtils();
         exchange = new DefaultExchange(new DefaultCamelContext());
         clazzUnderTest.numberOfMonthsInPeriod = 3;
@@ -34,7 +34,7 @@ public class DateUtilsTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    public void testGenerateDateRangesInHeaders() {
+    void testGenerateDateRangesInHeaders() {
         clazzUnderTest.generateDateRanges(exchange);
 
         List smallAirportRanges = exchange.getIn().getHeader(HEADER_TIMETABLE_SMALL_AIRPORT_RANGE, List.class);
@@ -51,7 +51,7 @@ public class DateUtilsTest {
     }
 
     @Test
-    public void testGenerateDateRangeListForSmallAirport() {
+    void testGenerateDateRangeListForSmallAirport() {
         List<Range<LocalDate>> dateRanges = clazzUnderTest.generateDateRanges(180);
         Assertions.assertThat(dateRanges)
                 .isNotNull()
@@ -64,7 +64,7 @@ public class DateUtilsTest {
     }
 
     @Test
-    public void testGenerateDateRangeListForMediumAirport() {
+    void testGenerateDateRangeListForMediumAirport() {
         List<Range<LocalDate>> dateRanges = clazzUnderTest.generateDateRanges(60);
         Assertions.assertThat(dateRanges)
                 .isNotNull()
@@ -73,7 +73,7 @@ public class DateUtilsTest {
     }
 
     @Test
-    public void testGenerateDateRangeListForLargeAirport() {
+    void testGenerateDateRangeListForLargeAirport() {
         List<Range<LocalDate>> dateRanges = clazzUnderTest.generateDateRanges(7);
         Assertions.assertThat(dateRanges)
                 .isNotNull()
@@ -82,7 +82,7 @@ public class DateUtilsTest {
     }
 
     @Test
-    public void testFormatLocalDate() {
+    void testFormatLocalDate() {
         String localDateFormat = clazzUnderTest.format(LocalDate.parse("2017-01-01"));
         Assertions.assertThat(localDateFormat)
                 .isNotNull()
@@ -91,7 +91,7 @@ public class DateUtilsTest {
     }
 
     @Test
-    public void testIsWorkDays() {
+    void testIsWorkDays() {
         List<DayOfWeek> workDays = Arrays.asList(
                 DayOfWeek.MONDAY,
                 DayOfWeek.TUESDAY,
@@ -114,7 +114,7 @@ public class DateUtilsTest {
     }
 
     @Test
-    public void testIsNotWorkDays() {
+    void testIsNotWorkDays() {
         List<DayOfWeek> weekendDays = Arrays.asList(
                 DayOfWeek.SATURDAY,
                 DayOfWeek.SUNDAY
@@ -134,7 +134,7 @@ public class DateUtilsTest {
     }
 
     @Test
-    public void testIsNotWeekendDays() {
+    void testIsNotWeekendDays() {
         List<DayOfWeek> workDays = Arrays.asList(
                 DayOfWeek.MONDAY,
                 DayOfWeek.TUESDAY,
@@ -157,7 +157,7 @@ public class DateUtilsTest {
     }
 
     @Test
-    public void testIsWeekendDays() {
+    void testIsWeekendDays() {
         List<DayOfWeek> weekendDays = Arrays.asList(
                 DayOfWeek.SATURDAY,
                 DayOfWeek.SUNDAY

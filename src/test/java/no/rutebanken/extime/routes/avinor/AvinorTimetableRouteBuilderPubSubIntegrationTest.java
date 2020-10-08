@@ -5,8 +5,8 @@ import no.rutebanken.extime.ExtimeCamelRouteBuilderIntegrationTestBase;
 import org.apache.camel.Exchange;
 import org.apache.camel.Produce;
 import org.apache.camel.ProducerTemplate;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -34,30 +34,30 @@ import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEA
         "avinor.timetable.dump.enabled=false",
         "avinor.timetable.dump.output.path=target/flights"
 })
-public class AvinorTimetableRouteBuilderPubSubIntegrationTest extends ExtimeCamelRouteBuilderIntegrationTestBase {
+class AvinorTimetableRouteBuilderPubSubIntegrationTest extends ExtimeCamelRouteBuilderIntegrationTestBase {
 
     @Value("${queue.upload.destination.name}")
     private String notificationQueue;
 
 
-    @Produce(uri = "direct:compressNetexAndSendToStorage")
+    @Produce("direct:compressNetexAndSendToStorage")
     protected ProducerTemplate compressNetexAndSendToStorageTemplate;
 
     @Test
-    public void testNotifyMarduk() throws Exception {
+    void testNotifyMarduk() throws Exception {
 
         context.start();
         compressNetexAndSendToStorageTemplate.sendBody("");
 
         List<PubsubMessage> messages = pubSubTemplate.pullAndAck(notificationQueue, 1, false);
-        Assert.assertEquals(messages.size(), 1);
+        Assertions.assertEquals(1, messages.size());
         PubsubMessage pubsubMessage = messages.get(0);
-        Assert.assertTrue(pubsubMessage.getData().size() == 0);
+        Assertions.assertTrue(pubsubMessage.getData().isEmpty());
         Map<String, String> headers = pubsubMessage.getAttributesMap();
-        Assert.assertNotNull(headers.get(Exchange.FILE_NAME));
-        Assert.assertNotNull(headers.get(HEADER_MESSAGE_PROVIDER_ID));
-        Assert.assertNotNull(headers.get(HEADER_MESSAGE_FILE_HANDLE));
-        Assert.assertNotNull(headers.get(HEADER_MESSAGE_FILE_NAME));
+        Assertions.assertNotNull(headers.get(Exchange.FILE_NAME));
+        Assertions.assertNotNull(headers.get(HEADER_MESSAGE_PROVIDER_ID));
+        Assertions.assertNotNull(headers.get(HEADER_MESSAGE_FILE_HANDLE));
+        Assertions.assertNotNull(headers.get(HEADER_MESSAGE_FILE_NAME));
 
     }
 

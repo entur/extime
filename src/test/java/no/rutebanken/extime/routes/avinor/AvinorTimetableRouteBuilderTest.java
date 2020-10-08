@@ -16,8 +16,8 @@ import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.AdviceWithRouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.assertj.core.api.Assertions;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.rutebanken.netex.model.ObjectFactory;
 import org.rutebanken.netex.model.PublicationDeliveryStructure;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -61,95 +61,95 @@ import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEA
         "avinor.timetable.dump.enabled=false",
         "avinor.timetable.dump.output.path=target/flights"
 } )
-public class AvinorTimetableRouteBuilderTest extends ExtimeCamelRouteBuilderIntegrationTestBase {
+class AvinorTimetableRouteBuilderTest extends ExtimeCamelRouteBuilderIntegrationTestBase {
 
-    @EndpointInject(uri = "mock:direct:fetchAndCacheAirportName")
+    @EndpointInject("mock:direct:fetchAndCacheAirportName")
     protected MockEndpoint mockFetchAndCacheAirportName;
 
-    @EndpointInject(uri = "mock:fetchTimetable")
+    @EndpointInject("mock:fetchTimetable")
     protected MockEndpoint mockFetchTimetable;
 
-    @EndpointInject(uri = "mock:convertToScheduledFlights")
+    @EndpointInject("mock:convertToScheduledFlights")
     protected MockEndpoint mockConvertToScheduledFlights;
 
-    @EndpointInject(uri = "mock:direct:convertScheduledFlightsToNetex")
+    @EndpointInject("mock:direct:convertScheduledFlightsToNetex")
     protected MockEndpoint mockConvertScheduledFlightsToNetex;
 
-    @EndpointInject(uri = "mock:fetchXmlFromHttp")
+    @EndpointInject("mock:fetchXmlFromHttp")
     protected MockEndpoint mockFetchXmlFromHttp;
 
-    @EndpointInject(uri = "mock:direct:addResourceToCache")
+    @EndpointInject("mock:direct:addResourceToCache")
     protected MockEndpoint mockAddResourceToCache;
 
-    @EndpointInject(uri = "mock:largeAirportLogger")
+    @EndpointInject("mock:largeAirportLogger")
     protected MockEndpoint mockLargeAirportLogger;
 
-    @EndpointInject(uri = "mock:smallAirportLogger")
+    @EndpointInject("mock:smallAirportLogger")
     protected MockEndpoint mockSmallAirportLogger;
 
-    @EndpointInject(uri = "mock:direct:fetchTimetableForAirportByRanges")
+    @EndpointInject("mock:direct:fetchTimetableForAirportByRanges")
     protected MockEndpoint mockFetchTimetableForAirportByRanges;
 
-    @EndpointInject(uri = "mock:direct:fetchTimetableForLargeAirport")
+    @EndpointInject("mock:direct:fetchTimetableForLargeAirport")
     protected MockEndpoint mockFetchTimetableForLargeAirport;
 
-    @EndpointInject(uri = "mock:fetchAirportFlights")
+    @EndpointInject("mock:fetchAirportFlights")
     protected MockEndpoint mockFetchAirportFlights;
 
-    @EndpointInject(uri = "mock:direct:fetchXmlStreamFromHttpFeed")
+    @EndpointInject("mock:direct:fetchXmlStreamFromHttpFeed")
     protected MockEndpoint mockFetchXmlStreamFromHttpFeed;
 
-    @EndpointInject(uri = "mock:splitAndJoinEndpoint")
+    @EndpointInject("mock:splitAndJoinEndpoint")
     protected MockEndpoint mockSplitAndJoinEndpoint;
 
-    @EndpointInject(uri = "mock:flightSplitWireTap")
+    @EndpointInject("mock:flightSplitWireTap")
     protected MockEndpoint mockFlightSplitWireTap;
 
-    @EndpointInject(uri = "mock:airlineIataPreProcess")
+    @EndpointInject("mock:airlineIataPreProcess")
     protected MockEndpoint mockAirlineIataPreProcess;
 
-    @EndpointInject(uri = "mock:direct:retrieveAirlineNameResource")
+    @EndpointInject("mock:direct:retrieveAirlineNameResource")
     protected MockEndpoint mockRetrieveAirlineNameResource;
 
-    @EndpointInject(uri = "mock:direct:enrichScheduledFlightWithAirportNames")
+    @EndpointInject("mock:direct:enrichScheduledFlightWithAirportNames")
     protected MockEndpoint mockEnrichScheduledFlightWithAirportNames;
 
-    @EndpointInject(uri = "mock:convertToNetex")
+    @EndpointInject("mock:convertToNetex")
     protected MockEndpoint mockConvertToNetex;
 
-    @EndpointInject(uri = "mock:generateFileName")
+    @EndpointInject("mock:generateFileName")
     protected MockEndpoint mockGenerateFileName;
 
-    @EndpointInject(uri = "mock:file:target/netex")
+    @EndpointInject("mock:file:target/netex")
     protected MockEndpoint mockFileTargetNetex;
     
 
 
-    @Produce(uri = "direct:fetchAndCacheAirportName")
+    @Produce("direct:fetchAndCacheAirportName")
     protected ProducerTemplate fetchAndCacheAirportNameTemplate;
 
-    @Produce(uri = "direct:fetchAndCacheAirlineName")
+    @Produce("direct:fetchAndCacheAirlineName")
     protected ProducerTemplate fetchAndCacheAirlineNameTemplate;
 
-    @Produce(uri = "direct:fetchTimetableForAirport")
+    @Produce("direct:fetchTimetableForAirport")
     protected ProducerTemplate fetchTimetableForAirportTemplate;
 
-    @Produce(uri = "direct:fetchAirportFlightsByRangeAndStopVisitType")
+    @Produce("direct:fetchAirportFlightsByRangeAndStopVisitType")
     protected ProducerTemplate fetchAirportFlightsByRangeAndStopVisitTypeTemplate;
 
-    @Produce(uri = "direct:convertScheduledFlightsToNetex")
+    @Produce("direct:convertScheduledFlightsToNetex")
     protected ProducerTemplate convertScheduledFlightsToNetexTemplate;
 
-    @Produce(uri = "direct:fetchTimetableForAirportByRanges")
+    @Produce("direct:fetchTimetableForAirportByRanges")
     protected ProducerTemplate fetchTimetableByRangesTemplate;
 
-    @Produce(uri = "direct:splitJoinIncomingFlightMessages")
+    @Produce("direct:splitJoinIncomingFlightMessages")
     protected ProducerTemplate splitJoinFlightsTemplate;
 
 
     @Test
-    @Ignore // TODO fix test
-    public void testTimetableScheduler() throws Exception {
+    @Disabled // TODO fix test
+    void testTimetableScheduler() throws Exception {
 
         AdviceWithRouteBuilder.adviceWith(context, "AvinorTimetableSchedulerStarter", a -> {
             a.weaveById("TimetableAirportIATAProcessor").replace().to("mock:setupIataCodes");
@@ -185,7 +185,7 @@ public class AvinorTimetableRouteBuilderTest extends ExtimeCamelRouteBuilderInte
     }
 
     @Test
-    public void testFetchAndCacheAirportName() throws Exception {
+    void testFetchAndCacheAirportName() throws Exception {
 
         AdviceWithRouteBuilder.adviceWith(context, "FetchAndCacheAirportName", a -> {
             a.weaveById("FetchAirportNameFromHttpFeedProcessor").replace().to("mock:fetchXmlFromHttp");
@@ -212,7 +212,7 @@ public class AvinorTimetableRouteBuilderTest extends ExtimeCamelRouteBuilderInte
     }
 
     @Test
-    public void testFetchAndCacheAirlineName() throws Exception {
+    void testFetchAndCacheAirlineName() throws Exception {
 
         AdviceWithRouteBuilder.adviceWith(context, "FetchAndCacheAirlineName", a -> {
             a.weaveById("FetchAirlineNameFromHttpFeedProcessor").replace().to("mock:fetchXmlFromHttp");
@@ -239,7 +239,7 @@ public class AvinorTimetableRouteBuilderTest extends ExtimeCamelRouteBuilderInte
     }
 
     @Test
-    public void testFetchTimetableForLargeAirport() throws Exception {
+    void testFetchTimetableForLargeAirport() throws Exception {
 
         AdviceWithRouteBuilder.adviceWith(context, "FetchTimetableForAirport", a -> {
             a.weaveById("LargeAirportLogProcessor").replace().to("mock:largeAirportLogger");
@@ -267,7 +267,7 @@ public class AvinorTimetableRouteBuilderTest extends ExtimeCamelRouteBuilderInte
     }
 
     @Test
-    public void testFetchTimetableForSmallAirport() throws Exception {
+    void testFetchTimetableForSmallAirport() throws Exception {
 
         AdviceWithRouteBuilder.adviceWith(context, "FetchTimetableForAirport", a -> {
             a.weaveById("SmallAirportLogProcessor").replace().to("mock:smallAirportLogger");
@@ -297,7 +297,7 @@ public class AvinorTimetableRouteBuilderTest extends ExtimeCamelRouteBuilderInte
     }
 
     @Test
-    public void testFetchTimetableForAirportByRanges() throws Exception {
+    void testFetchTimetableForAirportByRanges() throws Exception {
 
         AdviceWithRouteBuilder.adviceWith(context, "FetchTimetableForAirportByDateRanges", a -> {
             a.weaveById("FetchFlightsByRangeAndStopVisitTypeProcessor").replace().to("mock:fetchAirportFlights");
@@ -335,7 +335,7 @@ public class AvinorTimetableRouteBuilderTest extends ExtimeCamelRouteBuilderInte
     }
 
     @Test
-    public void testFetchAirportFlightsByRangeAndStopVisitType() throws Exception {
+    void testFetchAirportFlightsByRangeAndStopVisitType() throws Exception {
 
         AdviceWithRouteBuilder.adviceWith(context, "FetchFlightsByRangeAndStopVisitType", a -> {
             a.mockEndpointsAndSkip("direct:fetchXmlStreamFromHttpFeed");
@@ -366,7 +366,7 @@ public class AvinorTimetableRouteBuilderTest extends ExtimeCamelRouteBuilderInte
     }
 
     @Test
-    public void testSplitAndAggregateDepartureFlights() throws Exception {
+    void testSplitAndAggregateDepartureFlights() throws Exception {
 
         AdviceWithRouteBuilder.adviceWith(context, "FlightSplitterJoiner", a -> {
             a.weaveById("FlightSplitWireTap").replace().to("mock:flightSplitWireTap");
@@ -390,7 +390,7 @@ public class AvinorTimetableRouteBuilderTest extends ExtimeCamelRouteBuilderInte
     }
 
     @Test
-    public void testSplitAndAggregateArrivalFlights() throws Exception {
+    void testSplitAndAggregateArrivalFlights() throws Exception {
 
         AdviceWithRouteBuilder.adviceWith(context, "FlightSplitterJoiner", a -> {
             a.weaveById("FlightSplitWireTap").replace().to("mock:flightSplitWireTap");
@@ -416,8 +416,8 @@ public class AvinorTimetableRouteBuilderTest extends ExtimeCamelRouteBuilderInte
     }
 
     @Test
-    @Ignore
-    public void testConvertScheduledFlightsToNetex() throws Exception {
+    @Disabled
+    void testConvertScheduledFlightsToNetex() throws Exception {
 
         AdviceWithRouteBuilder.adviceWith(context, "LineDataSetsToNetexConverter", a -> {
                     a.weaveById("AirlineIataPreEnrichProcessor").replace().to("mock:airlineIataPreProcess");
