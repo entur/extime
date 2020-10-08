@@ -27,22 +27,22 @@ import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.HEADER
 class AvinorCommonRouteBuilderTest extends ExtimeCamelRouteBuilderIntegrationTestBase {
 
 
-    @EndpointInject(uri = "mock:cacheAdd")
+    @EndpointInject("mock:cacheAdd")
     protected MockEndpoint mockCacheAdd;
 
-    @EndpointInject(uri = "mock:cacheGet")
+    @EndpointInject("mock:cacheGet")
     protected MockEndpoint mockCacheGet;
 
-    @EndpointInject(uri = "mock:fetchFromHttpEndpoint")
+    @EndpointInject("mock:fetchFromHttpEndpoint")
     protected MockEndpoint mockFetchFromHttpEndpoint;
 
-    @EndpointInject(uri = "mock:cacheCheck")
+    @EndpointInject("mock:cacheCheck")
     protected MockEndpoint mockCacheCheck;
 
-    @EndpointInject(uri = "mock:fetchResource")
+    @EndpointInject("mock:fetchResource")
     protected MockEndpoint mockFetchResource;
 
-    @EndpointInject(uri = "mock:direct:getResourceFromCache")
+    @EndpointInject("mock:direct:getResourceFromCache")
     protected MockEndpoint mockGetResourceFromCache;
 
     @Produce(uri = "direct:addResourceToCache")

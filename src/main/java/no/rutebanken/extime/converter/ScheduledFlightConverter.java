@@ -82,7 +82,7 @@ public class ScheduledFlightConverter {
     @Autowired
     private ProducerTemplate producerTemplate;
 
-    @EndpointInject(uri = "direct:fetchXmlStreamFromHttpFeed")
+    @EndpointInject("direct:fetchXmlStreamFromHttpFeed")
     private Endpoint feedEndpoint;
 
     @Value("${avinor.timetable.feed.endpoint}")

@@ -63,64 +63,64 @@ import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEA
 } )
 class AvinorTimetableRouteBuilderTest extends ExtimeCamelRouteBuilderIntegrationTestBase {
 
-    @EndpointInject(uri = "mock:direct:fetchAndCacheAirportName")
+    @EndpointInject("mock:direct:fetchAndCacheAirportName")
     protected MockEndpoint mockFetchAndCacheAirportName;
 
-    @EndpointInject(uri = "mock:fetchTimetable")
+    @EndpointInject("mock:fetchTimetable")
     protected MockEndpoint mockFetchTimetable;
 
-    @EndpointInject(uri = "mock:convertToScheduledFlights")
+    @EndpointInject("mock:convertToScheduledFlights")
     protected MockEndpoint mockConvertToScheduledFlights;
 
-    @EndpointInject(uri = "mock:direct:convertScheduledFlightsToNetex")
+    @EndpointInject("mock:direct:convertScheduledFlightsToNetex")
     protected MockEndpoint mockConvertScheduledFlightsToNetex;
 
-    @EndpointInject(uri = "mock:fetchXmlFromHttp")
+    @EndpointInject("mock:fetchXmlFromHttp")
     protected MockEndpoint mockFetchXmlFromHttp;
 
-    @EndpointInject(uri = "mock:direct:addResourceToCache")
+    @EndpointInject("mock:direct:addResourceToCache")
     protected MockEndpoint mockAddResourceToCache;
 
-    @EndpointInject(uri = "mock:largeAirportLogger")
+    @EndpointInject("mock:largeAirportLogger")
     protected MockEndpoint mockLargeAirportLogger;
 
-    @EndpointInject(uri = "mock:smallAirportLogger")
+    @EndpointInject("mock:smallAirportLogger")
     protected MockEndpoint mockSmallAirportLogger;
 
-    @EndpointInject(uri = "mock:direct:fetchTimetableForAirportByRanges")
+    @EndpointInject("mock:direct:fetchTimetableForAirportByRanges")
     protected MockEndpoint mockFetchTimetableForAirportByRanges;
 
-    @EndpointInject(uri = "mock:direct:fetchTimetableForLargeAirport")
+    @EndpointInject("mock:direct:fetchTimetableForLargeAirport")
     protected MockEndpoint mockFetchTimetableForLargeAirport;
 
-    @EndpointInject(uri = "mock:fetchAirportFlights")
+    @EndpointInject("mock:fetchAirportFlights")
     protected MockEndpoint mockFetchAirportFlights;
 
-    @EndpointInject(uri = "mock:direct:fetchXmlStreamFromHttpFeed")
+    @EndpointInject("mock:direct:fetchXmlStreamFromHttpFeed")
     protected MockEndpoint mockFetchXmlStreamFromHttpFeed;
 
-    @EndpointInject(uri = "mock:splitAndJoinEndpoint")
+    @EndpointInject("mock:splitAndJoinEndpoint")
     protected MockEndpoint mockSplitAndJoinEndpoint;
 
-    @EndpointInject(uri = "mock:flightSplitWireTap")
+    @EndpointInject("mock:flightSplitWireTap")
     protected MockEndpoint mockFlightSplitWireTap;
 
-    @EndpointInject(uri = "mock:airlineIataPreProcess")
+    @EndpointInject("mock:airlineIataPreProcess")
     protected MockEndpoint mockAirlineIataPreProcess;
 
-    @EndpointInject(uri = "mock:direct:retrieveAirlineNameResource")
+    @EndpointInject("mock:direct:retrieveAirlineNameResource")
     protected MockEndpoint mockRetrieveAirlineNameResource;
 
-    @EndpointInject(uri = "mock:direct:enrichScheduledFlightWithAirportNames")
+    @EndpointInject("mock:direct:enrichScheduledFlightWithAirportNames")
     protected MockEndpoint mockEnrichScheduledFlightWithAirportNames;
 
-    @EndpointInject(uri = "mock:convertToNetex")
+    @EndpointInject("mock:convertToNetex")
     protected MockEndpoint mockConvertToNetex;
 
-    @EndpointInject(uri = "mock:generateFileName")
+    @EndpointInject("mock:generateFileName")
     protected MockEndpoint mockGenerateFileName;
 
-    @EndpointInject(uri = "mock:file:target/netex")
+    @EndpointInject("mock:file:target/netex")
     protected MockEndpoint mockFileTargetNetex;
     
 
