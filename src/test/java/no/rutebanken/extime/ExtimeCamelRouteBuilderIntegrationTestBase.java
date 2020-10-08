@@ -26,7 +26,7 @@ public abstract class ExtimeCamelRouteBuilderIntegrationTestBase {
     @Autowired
     protected PubSubTemplate pubSubTemplate;
 
-    @Produce(uri = "direct:start")
+    @Produce("direct:start")
     protected ProducerTemplate startTemplate;
 
 }

@@ -40,7 +40,7 @@ class AvinorTimetableRouteBuilderPubSubIntegrationTest extends ExtimeCamelRouteB
     private String notificationQueue;
 
 
-    @Produce(uri = "direct:compressNetexAndSendToStorage")
+    @Produce("direct:compressNetexAndSendToStorage")
     protected ProducerTemplate compressNetexAndSendToStorageTemplate;
 
     @Test

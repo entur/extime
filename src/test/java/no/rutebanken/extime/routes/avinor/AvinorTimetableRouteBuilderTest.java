@@ -125,25 +125,25 @@ class AvinorTimetableRouteBuilderTest extends ExtimeCamelRouteBuilderIntegration
     
 
 
-    @Produce(uri = "direct:fetchAndCacheAirportName")
+    @Produce("direct:fetchAndCacheAirportName")
     protected ProducerTemplate fetchAndCacheAirportNameTemplate;
 
-    @Produce(uri = "direct:fetchAndCacheAirlineName")
+    @Produce("direct:fetchAndCacheAirlineName")
     protected ProducerTemplate fetchAndCacheAirlineNameTemplate;
 
-    @Produce(uri = "direct:fetchTimetableForAirport")
+    @Produce("direct:fetchTimetableForAirport")
     protected ProducerTemplate fetchTimetableForAirportTemplate;
 
-    @Produce(uri = "direct:fetchAirportFlightsByRangeAndStopVisitType")
+    @Produce("direct:fetchAirportFlightsByRangeAndStopVisitType")
     protected ProducerTemplate fetchAirportFlightsByRangeAndStopVisitTypeTemplate;
 
-    @Produce(uri = "direct:convertScheduledFlightsToNetex")
+    @Produce("direct:convertScheduledFlightsToNetex")
     protected ProducerTemplate convertScheduledFlightsToNetexTemplate;
 
-    @Produce(uri = "direct:fetchTimetableForAirportByRanges")
+    @Produce("direct:fetchTimetableForAirportByRanges")
     protected ProducerTemplate fetchTimetableByRangesTemplate;
 
-    @Produce(uri = "direct:splitJoinIncomingFlightMessages")
+    @Produce("direct:splitJoinIncomingFlightMessages")
     protected ProducerTemplate splitJoinFlightsTemplate;
 
 

@@ -313,12 +313,12 @@ class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationTestBase
                 .collect(Collectors.toList());
         assertThat(routes).hasSize(lineDataSet.getFlightRoutes().size());
 
-        assertThat(routes).extracting(Route::getId).containsOnlyElementsOf(getRouteIds(lineDataSet));
+        assertThat(routes).extracting(Route::getId).containsAll(getRouteIds(lineDataSet));
 
         Set<String> routeNames = lineDataSet.getFlightRoutes().stream()
                 .map(FlightRoute::getRouteName)
                 .collect(Collectors.toSet());
-        assertThat(routes).extracting("name.value").containsOnlyElementsOf(routeNames);
+        assertThat(routes).extracting("name.value").containsAll(routeNames);
 
         assertThat(routes).extracting("lineRef.value.ref").contains(line.getId());
     }
@@ -332,8 +332,8 @@ class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationTestBase
                 .collect(Collectors.toList());
         assertThat(journeyPatterns).hasSize(lineDataSet.getFlightRoutes().size());
 
-        assertThat(journeyPatterns).extracting(JourneyPattern::getId).containsOnlyElementsOf(getJourneyPatternIds(lineDataSet));
-        assertThat(journeyPatterns).extracting("routeRef.ref").containsOnlyElementsOf(getRouteIds(lineDataSet));
+        assertThat(journeyPatterns).extracting(JourneyPattern::getId).containsAll(getJourneyPatternIds(lineDataSet));
+        assertThat(journeyPatterns).extracting("routeRef.ref").containsAll(getRouteIds(lineDataSet));
 
         for(JourneyPattern jp : journeyPatterns) {
         	StopPointInJourneyPattern stopPoint = (StopPointInJourneyPattern) jp.getPointsInSequence().getPointInJourneyPatternOrStopPointInJourneyPatternOrTimingPointInJourneyPattern().get(0);

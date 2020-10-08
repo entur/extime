@@ -45,17 +45,17 @@ class AvinorCommonRouteBuilderTest extends ExtimeCamelRouteBuilderIntegrationTes
     @EndpointInject("mock:direct:getResourceFromCache")
     protected MockEndpoint mockGetResourceFromCache;
 
-    @Produce(uri = "direct:addResourceToCache")
+    @Produce("direct:addResourceToCache")
     protected ProducerTemplate addResourceToCacheTemplate;
 
-    @Produce(uri = "direct:getResourceFromCache")
+    @Produce("direct:getResourceFromCache")
     protected ProducerTemplate getResourceFromCacheTemplate;
 
 
-    @Produce(uri = "direct:retrieveResource")
+    @Produce("direct:retrieveResource")
     protected ProducerTemplate retrieveResourceTemplate;
 
-    @Produce(uri = "direct:fetchXmlStreamFromHttpFeed")
+    @Produce("direct:fetchXmlStreamFromHttpFeed")
     protected ProducerTemplate fetchXmlStreamFromHttpFeedTemplate;
 
     @Test
