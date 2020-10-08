@@ -1,6 +1,5 @@
 package no.rutebanken.extime.routes.avinor;
 
-import no.rutebanken.extime.util.AvinorTimetableUtils;
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.builder.RouteBuilder;

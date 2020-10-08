@@ -2,7 +2,6 @@ package no.rutebanken.extime.routes.avinor;
 
 import no.rutebanken.extime.model.AirportIATA;
 import no.rutebanken.extime.model.StopVisitType;
-import no.rutebanken.extime.util.AvinorTimetableUtils;
 import no.rutebanken.extime.util.DateUtils;
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
