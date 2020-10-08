@@ -55,13 +55,13 @@ import static no.rutebanken.extime.Constants.VERSION_ONE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SuppressWarnings("unchecked")
-public class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationTestBase {
+class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationTestBase {
 
     @Autowired
     private LineDataToNetexConverter netexConverter;
 
     @Test
-    public void verifyFrameAttributes() throws Exception {
+    void verifyFrameAttributes() throws Exception {
         List<Pair<String, Integer>> routeJourneyPairs = Lists.newArrayList(Pair.of("OSL-BGO", 1), Pair.of("BGO-OSL", 1));
         LineDataSet lineDataSet = LineDataSetFixture.createLineDataSet("DY", "OSL-BGO", routeJourneyPairs);
         PublicationDeliveryStructure publicationDelivery = netexConverter.convertToNetex(lineDataSet).getValue();
@@ -79,7 +79,7 @@ public class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationT
     }
 
     @Test
-    public void testLineWithRoundTripRoutes() throws Exception {
+    void testLineWithRoundTripRoutes() throws Exception {
         List<Pair<String, Integer>> routeJourneyPairs = Lists.newArrayList(Pair.of("OSL-BGO", 1), Pair.of("BGO-OSL", 1));
         LineDataSet lineDataSet = LineDataSetFixture.createLineDataSet("DY", "OSL-BGO", routeJourneyPairs);
 
@@ -96,7 +96,7 @@ public class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationT
     }
 
     @Test
-    public void testLineWithStopoverRoutes() throws Exception {
+    void testLineWithStopoverRoutes() throws Exception {
         List<Pair<String, Integer>> routeJourneyPairs = Lists.newArrayList(Pair.of("TRD-OSL-BGO-MOL-SOG", 1), Pair.of("SOG-MOL-BGO-OSL-TRD", 1));
         LineDataSet lineDataSet = LineDataSetFixture.createLineDataSet("WF", "TRD-SOG", routeJourneyPairs);
 
@@ -113,7 +113,7 @@ public class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationT
     }
 
     @Test
-    public void testDestinationDisplaysNoVias() throws Exception {
+    void testDestinationDisplaysNoVias() throws Exception {
         List<Pair<String, Integer>> routeJourneyPairs = Lists.newArrayList(Pair.of("OSL-BGO", 1), Pair.of("BGO-OSL", 1));
         LineDataSet lineDataSet = LineDataSetFixture.createLineDataSet("DY", "OSL-BGO", routeJourneyPairs);
 
@@ -149,7 +149,7 @@ public class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationT
     }
 
     @Test
-    public void testDestinationDisplaysWithVias() throws Exception {
+    void testDestinationDisplaysWithVias() throws Exception {
         List<Pair<String, Integer>> routeJourneyPairs = Lists.newArrayList(Pair.of("OSL-SOG-BGO", 1), Pair.of("BGO-SOG-OSL", 1));
         LineDataSet lineDataSet = LineDataSetFixture.createLineDataSet("DY", "OSL-BGO", routeJourneyPairs);
 
@@ -191,7 +191,7 @@ public class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationT
     }
 
     @Test
-    public void testServiceJourneyWithOperatingPeriodAndExclusions() throws Exception {
+    void testServiceJourneyWithOperatingPeriodAndExclusions() throws Exception {
         LocalDate patternFrom = LocalDate.of(2017, 1, 3);
         LocalDate patternTo = patternFrom.plusDays(70);
         Set<DayOfWeek> pattern = Sets.newHashSet(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY, DayOfWeek.SATURDAY);

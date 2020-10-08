@@ -23,13 +23,13 @@ import static no.rutebanken.extime.Constants.VERSION_ONE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SuppressWarnings("unchecked")
-public class CommonDataWithoutSiteToNetexConverterTest extends ExtimeRouteBuilderIntegrationTestBase {
+class CommonDataWithoutSiteToNetexConverterTest extends ExtimeRouteBuilderIntegrationTestBase {
 
     @Autowired
     private CommonDataToNetexConverter netexConverter;
 
     @Test
-    public void verifyPublicationDelivery() throws Exception {
+    void verifyPublicationDelivery() throws Exception {
         PublicationDeliveryStructure publicationDelivery = netexConverter.convertToNetex().getValue();
         assertValidPublicationDelivery(publicationDelivery);
 

@@ -11,11 +11,11 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
 
-public class DateTimeUnmarshallerTest {
+class DateTimeUnmarshallerTest {
 
 
     @Test
-    public void unmarshalScheduledFlight() throws Exception {
+    void unmarshalScheduledFlight() throws Exception {
         List<Flight> flights = new AvinorTimetableUtils().generateFlightsFromFeedDump("/xml/scheduled-flights.xml");
 
         Flight first = flights.get(0);

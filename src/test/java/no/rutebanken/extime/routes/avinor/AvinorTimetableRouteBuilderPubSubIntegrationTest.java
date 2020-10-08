@@ -34,7 +34,7 @@ import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEA
         "avinor.timetable.dump.enabled=false",
         "avinor.timetable.dump.output.path=target/flights"
 })
-public class AvinorTimetableRouteBuilderPubSubIntegrationTest extends ExtimeCamelRouteBuilderIntegrationTestBase {
+class AvinorTimetableRouteBuilderPubSubIntegrationTest extends ExtimeCamelRouteBuilderIntegrationTestBase {
 
     @Value("${queue.upload.destination.name}")
     private String notificationQueue;
@@ -44,15 +44,15 @@ public class AvinorTimetableRouteBuilderPubSubIntegrationTest extends ExtimeCame
     protected ProducerTemplate compressNetexAndSendToStorageTemplate;
 
     @Test
-    public void testNotifyMarduk() throws Exception {
+    void testNotifyMarduk() throws Exception {
 
         context.start();
         compressNetexAndSendToStorageTemplate.sendBody("");
 
         List<PubsubMessage> messages = pubSubTemplate.pullAndAck(notificationQueue, 1, false);
-        Assertions.assertEquals(messages.size(), 1);
+        Assertions.assertEquals(1, messages.size());
         PubsubMessage pubsubMessage = messages.get(0);
-        Assertions.assertTrue(pubsubMessage.getData().size() == 0);
+        Assertions.assertTrue(pubsubMessage.getData().isEmpty());
         Map<String, String> headers = pubsubMessage.getAttributesMap();
         Assertions.assertNotNull(headers.get(Exchange.FILE_NAME));
         Assertions.assertNotNull(headers.get(HEADER_MESSAGE_PROVIDER_ID));
