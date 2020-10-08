@@ -4,7 +4,7 @@ import no.avinor.flydata.xjc.model.scheduled.Flight;
 import no.rutebanken.extime.ExtimeRouteBuilderIntegrationTestBase;
 import no.rutebanken.extime.model.StopVisitType;
 import org.assertj.core.api.Assertions;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class AvinorTimetableUtilsTest  extends ExtimeRouteBuilderIntegrationTestBase {
 

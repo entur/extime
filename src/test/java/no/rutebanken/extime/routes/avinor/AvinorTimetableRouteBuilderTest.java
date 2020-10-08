@@ -16,8 +16,8 @@ import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.AdviceWithRouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.assertj.core.api.Assertions;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.rutebanken.netex.model.ObjectFactory;
 import org.rutebanken.netex.model.PublicationDeliveryStructure;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -148,7 +148,7 @@ public class AvinorTimetableRouteBuilderTest extends ExtimeCamelRouteBuilderInte
 
 
     @Test
-    @Ignore // TODO fix test
+    @Disabled // TODO fix test
     public void testTimetableScheduler() throws Exception {
 
         AdviceWithRouteBuilder.adviceWith(context, "AvinorTimetableSchedulerStarter", a -> {
@@ -416,7 +416,7 @@ public class AvinorTimetableRouteBuilderTest extends ExtimeCamelRouteBuilderInte
     }
 
     @Test
-    @Ignore
+    @Disabled
     public void testConvertScheduledFlightsToNetex() throws Exception {
 
         AdviceWithRouteBuilder.adviceWith(context, "LineDataSetsToNetexConverter", a -> {

@@ -2,7 +2,7 @@ package no.rutebanken.extime.model;
 
 import no.avinor.flydata.xjc.model.scheduled.Flight;
 import no.rutebanken.extime.util.DateUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.math.BigInteger;
 import java.time.LocalTime;

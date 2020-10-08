@@ -9,8 +9,8 @@ import no.rutebanken.extime.model.StopVisitType;
 import no.rutebanken.extime.util.DateUtils;
 import org.apache.commons.lang3.tuple.Triple;
 import org.assertj.core.api.Assertions;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -30,7 +30,7 @@ public class ScheduledFlightConverterTest {
 
     private ScheduledFlightConverter clazzUnderTest;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         clazzUnderTest = new ScheduledFlightConverter();
     }

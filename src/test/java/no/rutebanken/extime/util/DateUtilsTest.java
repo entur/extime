@@ -5,8 +5,8 @@ import org.apache.camel.Exchange;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.support.DefaultExchange;
 import org.assertj.core.api.Assertions;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -23,7 +23,7 @@ public class DateUtilsTest {
     private DateUtils clazzUnderTest;
     private Exchange exchange;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         clazzUnderTest = new DateUtils();
         exchange = new DefaultExchange(new DefaultCamelContext());

@@ -2,7 +2,7 @@ package no.rutebanken.extime.util;
 
 import no.rutebanken.extime.ExtimeRouteBuilderIntegrationTestBase;
 import org.assertj.core.api.Assertions;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.rutebanken.netex.model.DayTypeRefStructure;
 import org.rutebanken.netex.model.MultilingualString;
 import org.rutebanken.netex.model.OperatorRefStructure;

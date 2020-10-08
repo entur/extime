@@ -3,7 +3,7 @@ package no.rutebanken.extime.xml;
 import no.avinor.flydata.xjc.model.scheduled.Flight;
 import no.rutebanken.extime.util.AvinorTimetableUtils;
 import org.assertj.core.api.Assertions;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
 import java.time.LocalTime;

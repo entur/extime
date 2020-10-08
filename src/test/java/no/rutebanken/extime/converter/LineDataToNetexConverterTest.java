@@ -12,8 +12,8 @@ import no.rutebanken.extime.util.NetexObjectIdCreator;
 import no.rutebanken.extime.util.NetexObjectIdTypes;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.rutebanken.netex.model.AllVehicleModesOfTransportEnumeration;
 import org.rutebanken.netex.model.Common_VersionFrameStructure;
 import org.rutebanken.netex.model.DayOfWeekEnumeration;
@@ -226,15 +226,15 @@ public class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationT
 
         for (String dayTypeRef : dayTypeRefs) {
             DayTypeAssignment assignment = dayTimeAssignments.get(dayTypeRef);
-            Assert.assertNotNull(assignment);
+            Assertions.assertNotNull(assignment);
             DayType dayType = dayTypes.get(assignment.getDayTypeRef().getValue().getRef());
-            Assert.assertNotNull(dayType);
+            Assertions.assertNotNull(dayType);
 
             if (assignment.getDate() == null) {
                 OperatingPeriod_VersionStructure operatingPeriod = operatingPeriods.get(assignment.getOperatingPeriodRef().getRef());
-                Assert.assertNotNull(operatingPeriod);
-                Assert.assertEquals(patternFrom.atStartOfDay(), operatingPeriod.getFromDate());
-                Assert.assertEquals(patternTo.atStartOfDay(), operatingPeriod.getToDate());
+                Assertions.assertNotNull(operatingPeriod);
+                Assertions.assertEquals(patternFrom.atStartOfDay(), operatingPeriod.getFromDate());
+                Assertions.assertEquals(patternTo.atStartOfDay(), operatingPeriod.getToDate());
 
                 weekDayPatternFound |= ListUtils.isEqualList(
                         dayType.getProperties().getPropertyOfDay().get(0).getDaysOfWeek(), Arrays.asList(DayOfWeekEnumeration.MONDAY,
@@ -243,14 +243,14 @@ public class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationT
                 saturdayPatternFound |= ListUtils.isEqualList(
                         dayType.getProperties().getPropertyOfDay().get(0).getDaysOfWeek(), Arrays.asList(DayOfWeekEnumeration.SATURDAY));
             } else {
-                Assert.assertFalse(assignment.isIsAvailable());
-                Assert.assertNull(assignment.getOperatingPeriodRef());
-                Assert.assertTrue(expectedExclusions.remove(assignment.getDate().toLocalDate()));
+                Assertions.assertFalse(assignment.isIsAvailable());
+                Assertions.assertNull(assignment.getOperatingPeriodRef());
+                Assertions.assertTrue(expectedExclusions.remove(assignment.getDate().toLocalDate()));
             }
         }
-        Assert.assertTrue("Did not find expected pattern for week days", weekDayPatternFound);
-        Assert.assertTrue("Did not find expected pattern for saturdays", saturdayPatternFound);
-        Assert.assertTrue("Not all expected exclusion dates found", expectedExclusions.isEmpty());
+        Assertions.assertTrue( weekDayPatternFound, "Did not find expected pattern for week days");
+        Assertions.assertTrue(saturdayPatternFound, "Did not find expected pattern for saturdays");
+        Assertions.assertTrue(expectedExclusions.isEmpty(), "Not all expected exclusion dates found");
     }
 
     private List<LocalDate> generatePattern(LocalDate start, LocalDate end, Set<DayOfWeek> daysOfWeek, int... exclusionArray) {

@@ -4,7 +4,7 @@ import no.rutebanken.extime.Constants;
 import no.rutebanken.extime.ExtimeRouteBuilderIntegrationTestBase;
 import no.rutebanken.extime.model.AirportIATA;
 import no.rutebanken.extime.util.NetexObjectIdTypes;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.rutebanken.netex.model.CompositeFrame;
 import org.rutebanken.netex.model.Network;
 import org.rutebanken.netex.model.PassengerStopAssignment;
