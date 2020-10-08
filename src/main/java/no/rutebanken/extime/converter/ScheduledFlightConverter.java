@@ -38,7 +38,6 @@ import java.io.InputStream;
 import java.math.BigInteger;
 import java.time.LocalTime;
 import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -58,7 +57,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static no.rutebanken.extime.Constants.DASH;
-import static no.rutebanken.extime.Constants.DEFAULT_DATE_TIME_PATTERN;
+import static no.rutebanken.extime.Constants.DEFAULT_DATE_TIME_FORMATTER;
 import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.HEADER_EXTIME_HTTP_URI;
 import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.HEADER_EXTIME_URI_PARAMETERS;
 import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.PROPERTY_OFFLINE_MODE;
@@ -67,8 +66,6 @@ import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.PRO
 public class ScheduledFlightConverter {
 
     private static final Logger logger = LoggerFactory.getLogger(ScheduledFlightConverter.class);
-
-    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern(DEFAULT_DATE_TIME_PATTERN);
 
     @Autowired
     private NetexStaticDataSet netexStaticDataSet;
@@ -379,7 +376,7 @@ public class ScheduledFlightConverter {
     }
 
     private boolean isInternationalDepartureFound(Flight currentFlight) {
-        String dateOfOperation = currentFlight.getDateOfOperation().format(DATE_TIME_FORMATTER);
+        String dateOfOperation = currentFlight.getDateOfOperation().format(DEFAULT_DATE_TIME_FORMATTER);
 
         String uriParameters = String.format(uriParametersFormat,
                 currentFlight.getDepartureStation(), StopVisitType.ARRIVAL.getCode(),
@@ -392,7 +389,7 @@ public class ScheduledFlightConverter {
     }
 
     private boolean isInternationalArrivalFound(Flight currentFlight) {
-        String dateOfOperation = currentFlight.getDateOfOperation().format(DATE_TIME_FORMATTER);
+        String dateOfOperation = currentFlight.getDateOfOperation().format(DEFAULT_DATE_TIME_FORMATTER);
 
         String uriParameters = String.format(uriParametersFormat,
                 currentFlight.getDepartureStation(), StopVisitType.DEPARTURE.getCode(),

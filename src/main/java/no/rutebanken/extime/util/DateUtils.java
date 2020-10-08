@@ -2,6 +2,7 @@ package no.rutebanken.extime.util;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Range;
+import no.rutebanken.extime.Constants;
 import no.rutebanken.extime.model.AvailabilityPeriod;
 import org.apache.camel.Exchange;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,32 +12,23 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
 import java.util.List;
 
+import static no.rutebanken.extime.Constants.DEFAULT_DATE_TIME_FORMATTER;
 import static no.rutebanken.extime.Constants.DEFAULT_ZONE_ID;
+import static no.rutebanken.extime.Constants.TIMESTAMP_FORMATTER;
 import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEADER_TIMETABLE_LARGE_AIRPORT_RANGE;
 import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEADER_TIMETABLE_SMALL_AIRPORT_RANGE;
 
 @Component(value = "dateUtils")
 public class DateUtils {
 
-	private static final DateTimeFormatter formatter = new DateTimeFormatterBuilder().appendPattern("yyyy-MM-dd")
-			.optionalStart().appendPattern("XXXXX").optionalEnd()
-            .parseDefaulting(ChronoField.HOUR_OF_DAY, 0)
-            .parseDefaulting(ChronoField.MINUTE_OF_HOUR, 0)
-            .parseDefaulting(ChronoField.SECOND_OF_MINUTE, 0)
-            .parseDefaulting(ChronoField.OFFSET_SECONDS,OffsetDateTime.now().getLong(ChronoField.OFFSET_SECONDS) )
-            .toFormatter();
-
-	public static ZonedDateTime parseDate(String dateWithZone) {
-		return ZonedDateTime.parse(dateWithZone, formatter);
+    public static ZonedDateTime parseDate(String dateWithZone) {
+		return ZonedDateTime.parse(dateWithZone, Constants.ZONED_DATE_TIME_FORMATTER);
 	}
 	
     @Value("${avinor.timetable.period.months}") int numberOfMonthsInPeriod;
@@ -84,11 +76,11 @@ public class DateUtils {
     }
 
     public String format(LocalDate localDate) {
-        return localDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        return localDate.format(DEFAULT_DATE_TIME_FORMATTER);
     }
 
     public String timestamp() {
-        return LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"));
+        return LocalDateTime.now().format(TIMESTAMP_FORMATTER);
     }
 
     public static class WorkDays {

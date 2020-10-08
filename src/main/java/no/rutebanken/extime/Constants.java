@@ -1,5 +1,11 @@
 package no.rutebanken.extime;
 
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.temporal.ChronoField;
+import java.util.Locale;
+
 public final class Constants {
 
     private Constants() {}
@@ -15,8 +21,18 @@ public final class Constants {
     public static final int DEFAULT_END_EXCLUSIVE = 8888888;
 
     // date/period specific constants
-    public static final String DEFAULT_DATE_TIME_PATTERN = "yyyy-MM-dd";
-    public static final String DAY_TYPE_PATTERN = "MMM_EEE_dd";
+    // The English locale is set explicitly so that day and month patterns (MON, TUE,...) are output in English even if the runtime environment has a different locale.
+    public static final Locale DEFAULT_DATE_TIME_FORMATTER_LOCALE = Locale.ENGLISH;
+    public static final DateTimeFormatter DEFAULT_DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd").withLocale(DEFAULT_DATE_TIME_FORMATTER_LOCALE);
+    public static final DateTimeFormatter DAY_TYPE_FORMATTER = DateTimeFormatter.ofPattern("MMM_EEE_dd").withLocale(DEFAULT_DATE_TIME_FORMATTER_LOCALE);
+    public static final DateTimeFormatter TIMESTAMP_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss").withLocale(DEFAULT_DATE_TIME_FORMATTER_LOCALE);
+    public static final DateTimeFormatter ZONED_DATE_TIME_FORMATTER = new DateTimeFormatterBuilder().append(DEFAULT_DATE_TIME_FORMATTER)
+            .optionalStart().appendPattern("XXXXX").optionalEnd()
+            .parseDefaulting(ChronoField.HOUR_OF_DAY, 0)
+            .parseDefaulting(ChronoField.MINUTE_OF_HOUR, 0)
+            .parseDefaulting(ChronoField.SECOND_OF_MINUTE, 0)
+            .parseDefaulting(ChronoField.OFFSET_SECONDS, OffsetDateTime.now().getLong(ChronoField.OFFSET_SECONDS) )
+            .toFormatter().withLocale(DEFAULT_DATE_TIME_FORMATTER_LOCALE);
 
     // netex specific constants
     public static final String NETEX_PROFILE_VERSION = "1.08:NO-NeTEx-networktimetable:1.1";

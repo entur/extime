@@ -65,7 +65,6 @@ import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -81,7 +80,7 @@ import java.util.stream.Collectors;
 import static no.rutebanken.extime.Constants.AVINOR_XMLNS;
 import static no.rutebanken.extime.Constants.COLON;
 import static no.rutebanken.extime.Constants.DASH;
-import static no.rutebanken.extime.Constants.DAY_TYPE_PATTERN;
+import static no.rutebanken.extime.Constants.DAY_TYPE_FORMATTER;
 import static no.rutebanken.extime.Constants.UNDERSCORE;
 import static no.rutebanken.extime.util.AvinorTimetableUtils.isCommonDesignator;
 import static no.rutebanken.extime.util.NetexObjectIdCreator.hashObjectId;
@@ -493,7 +492,7 @@ public class LineDataToNetexConverter {
             LocalDate dateOfOperation = datesOfOperation.get(i);
 
             String dayTypeIdLinePart = getIdLinePart();
-            String dayTypeIdSuffix = Joiner.on(DASH).skipNulls().join(dayTypeIdLinePart, dateOfOperation.format(DateTimeFormatter.ofPattern(DAY_TYPE_PATTERN)), available ? null : "X");
+            String dayTypeIdSuffix = Joiner.on(DASH).skipNulls().join(dayTypeIdLinePart, dateOfOperation.format(DAY_TYPE_FORMATTER), available ? null : "X");
             String dayTypeId = NetexObjectIdCreator.createDayTypeId(AVINOR_XMLNS, dayTypeIdSuffix);
 
             DayType dayType;
@@ -604,7 +603,7 @@ public class LineDataToNetexConverter {
     }
 
     private String format(LocalDate localDate) {
-        return localDate.format(DateTimeFormatter.ofPattern(DAY_TYPE_PATTERN));
+        return localDate.format(DAY_TYPE_FORMATTER);
     }
 
     private DayOfWeekEnumeration toDayOfWeekEnumeration(DayOfWeek dayOfWeek) {
