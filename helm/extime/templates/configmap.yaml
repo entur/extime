@@ -13,7 +13,7 @@ data:
     avinor.airports.large=BGO,BOO,SVG,TRD
     avinor.airline.feed.endpoint=https://flydata.avinor.no/airlineNames.asp
     avinor.timetable.feed.endpoint=https://flydata.avinor.no/XmlFeedScheduled.asp
-    avinor.timetable.scheduler.consumer=quartz2://avinorTimetableScheduler?cron={{ .Values.avinorTimetableSchedulerCron }}
+    avinor.timetable.scheduler.consumer=quartz://avinorTimetableScheduler?cron={{ .Values.avinorTimetableSchedulerCron }}
     avinor.timetable.dump.output.path=/tmp/extime/data/dump
     avinor.timetable.min.range=7
     avinor.timetable.period.months=4
