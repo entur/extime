@@ -3,7 +3,7 @@ package no.rutebanken.extime.util;
 import com.google.common.collect.Range;
 import org.apache.camel.Exchange;
 import org.apache.camel.impl.DefaultCamelContext;
-import org.apache.camel.impl.DefaultExchange;
+import org.apache.camel.support.DefaultExchange;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;

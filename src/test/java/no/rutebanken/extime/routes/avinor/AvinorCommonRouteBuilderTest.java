@@ -7,8 +7,8 @@ import org.apache.camel.Exchange;
 import org.apache.camel.Produce;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.AdviceWithRouteBuilder;
-import org.apache.camel.component.cache.CacheConstants;
-import org.apache.camel.component.http4.HttpMethods;
+import org.apache.camel.component.ehcache.EhcacheConstants;
+import org.apache.camel.component.http.HttpMethods;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.junit.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -60,18 +60,17 @@ public class AvinorCommonRouteBuilderTest extends ExtimeCamelRouteBuilderIntegra
 
     @Test
     public void testAddResourceToCache() throws Exception {
-        context.getRouteDefinition("AddResourceToCache").adviceWith(context, new AdviceWithRouteBuilder() {
-            @Override
-            public void configure() throws Exception {
-                weaveById("CacheAddResourceProcessor").replace().to("mock:cacheAdd");
-            }
-        });
+
+        AdviceWithRouteBuilder.adviceWith(context, "AddResourceToCache", a -> {
+            a.weaveById("CacheAddResourceProcessor").replace().to("mock:cacheAdd");
+                });
+
         context.start();
 
         mockCacheAdd.expectedMessageCount(1);
         mockCacheAdd.expectedHeaderReceived(HEADER_EXTIME_RESOURCE_CODE, "OSL");
-        mockCacheAdd.expectedHeaderReceived(CacheConstants.CACHE_OPERATION, CacheConstants.CACHE_OPERATION_ADD);
-        mockCacheAdd.expectedHeaderReceived(CacheConstants.CACHE_KEY, "OSL");
+        mockCacheAdd.expectedHeaderReceived(EhcacheConstants.ACTION, EhcacheConstants.ACTION_PUT);
+        mockCacheAdd.expectedHeaderReceived(EhcacheConstants.KEY, "OSL");
         mockCacheAdd.expectedBodiesReceived("Oslo");
 
         addResourceToCacheTemplate.sendBodyAndHeader("Oslo", HEADER_EXTIME_RESOURCE_CODE, "OSL");
@@ -81,17 +80,16 @@ public class AvinorCommonRouteBuilderTest extends ExtimeCamelRouteBuilderIntegra
 
     @Test
     public void testGetResourceFromCache() throws Exception {
-        context.getRouteDefinition("GetResourceFromCache").adviceWith(context, new AdviceWithRouteBuilder() {
-            @Override
-            public void configure() throws Exception {
-                weaveById("CacheGetResourceProcessor").replace().to("mock:cacheGet");
-            }
+
+        AdviceWithRouteBuilder.adviceWith(context, "GetResourceFromCache", a -> {
+            a.weaveById("CacheGetResourceProcessor").replace().to("mock:cacheGet");
         });
+
         context.start();
 
        mockCacheGet.expectedMessageCount(1);
-       mockCacheGet.expectedHeaderReceived(CacheConstants.CACHE_OPERATION, CacheConstants.CACHE_OPERATION_GET);
-       mockCacheGet.expectedHeaderReceived(CacheConstants.CACHE_KEY, "OSL");
+       mockCacheGet.expectedHeaderReceived(EhcacheConstants.ACTION, EhcacheConstants.ACTION_GET);
+       mockCacheGet.expectedHeaderReceived(EhcacheConstants.KEY, "OSL");
        mockCacheGet.expectedBodiesReceived("OSL");
 
        getResourceFromCacheTemplate.sendBody("OSL");
@@ -101,20 +99,19 @@ public class AvinorCommonRouteBuilderTest extends ExtimeCamelRouteBuilderIntegra
 
     @Test
     public void testRetrieveResourceWhenInCache() throws Exception {
-        context.getRouteDefinition("ResourceRetriever").adviceWith(context, new AdviceWithRouteBuilder() {
-            @Override
-            public void configure() throws Exception {
-                weaveById("ResourceCacheCheckProcessor").replace().to("mock:cacheCheck");
-                interceptSendToEndpoint("mock:cacheCheck").process(exchange -> exchange.getIn().setHeader(CacheConstants.CACHE_ELEMENT_WAS_FOUND, 1));
-                weaveById("DynamicFetchResourceProcessor").replace().to("mock:fetchResource");
-                mockEndpointsAndSkip("direct:getResourceFromCache");
-            }
+
+        AdviceWithRouteBuilder.adviceWith(context, "ResourceRetriever", a -> {
+            a.weaveById("ResourceCacheCheckProcessor").replace().to("mock:cacheCheck");
+            a.interceptSendToEndpoint("mock:cacheCheck").process(exchange -> exchange.getIn().setHeader(EhcacheConstants.ACTION_HAS_RESULT, true));
+            a.weaveById("DynamicFetchResourceProcessor").replace().to("mock:fetchResource");
+            a.mockEndpointsAndSkip("direct:getResourceFromCache");
         });
+
         context.start();
 
         mockCacheCheck.expectedMessageCount(1);
-        mockCacheCheck.expectedHeaderReceived(CacheConstants.CACHE_OPERATION, CacheConstants.CACHE_OPERATION_CHECK);
-        mockCacheCheck.expectedHeaderReceived(CacheConstants.CACHE_KEY, "OSL");
+        mockCacheCheck.expectedHeaderReceived(EhcacheConstants.ACTION, EhcacheConstants.ACTION_GET);
+        mockCacheCheck.expectedHeaderReceived(EhcacheConstants.KEY, "OSL");
         mockFetchResource.expectedMessageCount(0);
         mockGetResourceFromCache.expectedMessageCount(1);
         mockGetResourceFromCache.expectedBodiesReceived("OSL");
@@ -128,20 +125,19 @@ public class AvinorCommonRouteBuilderTest extends ExtimeCamelRouteBuilderIntegra
 
     @Test
     public void testRetrieveResourceWhenNotInCache() throws Exception {
-        context.getRouteDefinition("ResourceRetriever").adviceWith(context, new AdviceWithRouteBuilder() {
-            @Override
-            public void configure() throws Exception {
-                weaveById("ResourceCacheCheckProcessor").replace().to("mock:cacheCheck");
-                interceptSendToEndpoint("mock:cacheCheck").process(exchange -> exchange.getIn().setHeader(CacheConstants.CACHE_ELEMENT_WAS_FOUND, null));
-                weaveById("DynamicFetchResourceProcessor").replace().to("mock:fetchResource");
-                mockEndpointsAndSkip("direct:getResourceFromCache");
-            }
+
+        AdviceWithRouteBuilder.adviceWith(context, "ResourceRetriever", a -> {
+            a.weaveById("ResourceCacheCheckProcessor").replace().to("mock:cacheCheck");
+            a.interceptSendToEndpoint("mock:cacheCheck").process(exchange -> exchange.getIn().setHeader(EhcacheConstants.ACTION_HAS_RESULT, false));
+            a.weaveById("DynamicFetchResourceProcessor").replace().to("mock:fetchResource");
+            a.mockEndpointsAndSkip("direct:getResourceFromCache");
         });
+
         context.start();
 
         mockCacheCheck.expectedMessageCount(1);
-        mockCacheCheck.expectedHeaderReceived(CacheConstants.CACHE_OPERATION, CacheConstants.CACHE_OPERATION_CHECK);
-        mockCacheCheck.expectedHeaderReceived(CacheConstants.CACHE_KEY, "OSL");
+        mockCacheCheck.expectedHeaderReceived(EhcacheConstants.ACTION, EhcacheConstants.ACTION_GET);
+        mockCacheCheck.expectedHeaderReceived(EhcacheConstants.KEY, "OSL");
         mockFetchResource.expectedMessageCount(1);
         mockFetchResource.expectedHeaderReceived(HEADER_EXTIME_RESOURCE_CODE, "OSL");
         mockFetchResource.expectedHeaderReceived(HEADER_EXTIME_FETCH_RESOURCE_ENDPOINT, "direct:fetchAndCacheAirportName");
@@ -159,12 +155,11 @@ public class AvinorCommonRouteBuilderTest extends ExtimeCamelRouteBuilderIntegra
 
     @Test
     public void testFetchFromHttpResource() throws Exception {
-        context.getRouteDefinition("FetchXmlFromHttpFeed").adviceWith(context, new AdviceWithRouteBuilder() {
-            @Override
-            public void configure() throws Exception {
-                weaveById("FetchXmlFromHttpFeedProcessor").replace().to("mock:fetchFromHttpEndpoint");
-            }
+
+        AdviceWithRouteBuilder.adviceWith(context, "FetchXmlFromHttpFeed", a -> {
+            a. weaveById("FetchXmlFromHttpFeedProcessor").replace().to("mock:fetchFromHttpEndpoint");
         });
+
         context.start();
 
         mockFetchFromHttpEndpoint.expectedMessageCount(1);
@@ -172,7 +167,7 @@ public class AvinorCommonRouteBuilderTest extends ExtimeCamelRouteBuilderIntegra
         mockFetchFromHttpEndpoint.expectedHeaderReceived(
                 Exchange.HTTP_QUERY, "airport=TRD&direction=D&PeriodFrom=2017-01-01Z&PeriodTo=2017-01-31Z");
         mockFetchFromHttpEndpoint.expectedHeaderReceived(
-                HEADER_EXTIME_HTTP_URI, "http4://195.69.13.136/XmlFeedScheduled.asp");
+                HEADER_EXTIME_HTTP_URI, "http://195.69.13.136/XmlFeedScheduled.asp");
 
         Map<String,Object> headers = Maps.newHashMap();
         headers.put(HEADER_EXTIME_HTTP_URI, "http://195.69.13.136/XmlFeedScheduled.asp");

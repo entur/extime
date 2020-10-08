@@ -2,11 +2,10 @@ package no.rutebanken.extime.routes.avinor;
 
 import no.rutebanken.extime.model.AirportIATA;
 import no.rutebanken.extime.model.StopVisitType;
-import no.rutebanken.extime.util.AvinorTimetableUtils;
 import no.rutebanken.extime.util.DateUtils;
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.component.http4.HttpMethods;
+import org.apache.camel.component.http.HttpMethods;
 
 import java.util.Arrays;
 
@@ -15,7 +14,7 @@ public class FlightDataProducerRouteBuilder extends RouteBuilder {
 
     @Override
     public void configure() throws Exception {
-        from("quartz2://flightDataScheduler?fireNow=true&trigger.repeatCount=0")
+        from("quartz://flightDataScheduler?fireNow=true&trigger.repeatCount=0")
                 .routeId("FlightDataProducerStarter")
                 .autoStartup(false)
                 .process(exchange -> {
@@ -47,8 +46,8 @@ public class FlightDataProducerRouteBuilder extends RouteBuilder {
                 .routeId("FetchTimetableByRanges")
                 .setHeader("ExtimeHttpUri", simple("{{avinor.timetable.feed.endpoint}}"))
                 .split(body())
-                    .setHeader("DataFeedLowerRange", simple("${bean:dateUtils.format(body.lowerEndpoint())}Z"))
-                    .setHeader("DataFeedUpperRange", simple("${bean:dateUtils.format(body.upperEndpoint())}Z"))
+                    .setHeader("DataFeedLowerRange", simple("${bean:dateUtils.format(${body.lowerEndpoint()})}Z"))
+                    .setHeader("DataFeedUpperRange", simple("${bean:dateUtils.format(${body.upperEndpoint()})}Z"))
                     .to("direct:fetchFlightsFromFeed")
                 .end()
         ;
@@ -68,7 +67,6 @@ public class FlightDataProducerRouteBuilder extends RouteBuilder {
                 .routeId("FetchFromHttpFeedEndpoint")
                 .setHeader(Exchange.HTTP_METHOD, constant(HttpMethods.GET))
                 .setHeader(Exchange.HTTP_QUERY, simpleF("${header.%s}", "FeedUriParameters"))
-                .setHeader("ExtimeHttpUri").method(AvinorTimetableUtils.class, "useHttp4Client")
                 .setBody(constant(null))
                 .toD("${header.ExtimeHttpUri}")
                 .convertBodyTo(String.class, "iso-8859-1")
