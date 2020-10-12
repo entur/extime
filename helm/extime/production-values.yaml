@@ -1,5 +1,5 @@
 avinorTimetableSchedulerCron: 0+58+2+*+*+?
 gcp:
-  bucketName: marduk-exchange-production
-  blobstoreProjectId: neon-1287
+  bucketName: ror-marduk-exchange-production
+  blobstoreProjectId: entur-ror-prod
   pubsubProjectId: neon-1287
