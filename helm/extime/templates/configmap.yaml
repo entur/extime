@@ -29,7 +29,7 @@ data:
     netex.compressed.output.path=/tmp/extime/data/zip
     logging.level.com=INFO
     logging.level.org=INFO
-    logging.level.no.rutebanken=DEBUG
+    logging.level.no.rutebanken=INFO
     server.port=8776
     endpoints.jmx.enabled=true
     spring.jmx.enabled=true
