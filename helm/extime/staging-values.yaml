@@ -2,4 +2,4 @@ avinorTimetableSchedulerCron: 0+0+5+*+*+?
 gcp:
   bucketName: ror-marduk-exchange-test
   blobstoreProjectId: entur-ror-test
-  pubsubProjectId: radon-1287
+  pubsubProjectId: entur-ror-test
