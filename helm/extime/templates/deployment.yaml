@@ -90,7 +90,7 @@ spec:
         - name: extime-service-account
           secret:
             defaultMode: 420
-            secretName: ror-extime-sa
+            secretName: ror-extime-sa-key
         - configMap:
             defaultMode: 420
             name: extime-config

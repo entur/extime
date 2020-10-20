@@ -1,7 +1,4 @@
-#Enviroment variables
-variable "gcp_project" {
-  description = "The GCP project id"
-}
+#Environment variables
 
 variable "gcp_resources_project" {
   description = "The GCP project hosting the GCP resources"
