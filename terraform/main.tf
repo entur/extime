@@ -12,9 +12,9 @@ provider "kubernetes" {
 
 # create service account
 resource "google_service_account" "extime_service_account" {
-  account_id = "ror-extime-sa"
-  display_name = "ror-extime-sa service account"
-  project = var.gcp_pubsub_project
+  account_id = "${var.labels.team}-${var.labels.app}-sa"
+  display_name = "${var.labels.team}-${var.labels.app} service account"
+  project = var.gcp_resources_project
 }
 
 # add service account as member to the bucket
@@ -26,7 +26,7 @@ resource "google_storage_bucket_iam_member" "storage_bucket_iam_member" {
 
 # add service account as member to pubsub service in the resources project
 resource "google_pubsub_topic_iam_member" "pubsub_topic_iam_member" {
-  project = var.gcp_pubsub_project
+  project = var.gcp_resources_project
   topic = var.pubsub_topic_name
   role = var.service_account_pubsub_role
   member = "serviceAccount:${google_service_account.extime_service_account.email}"
@@ -40,7 +40,7 @@ resource "google_service_account_key" "extime_service_account_key" {
 # Add SA key to to k8s
 resource "kubernetes_secret" "extime_service_account_credentials" {
   metadata {
-    name = "ror-extime-sa"
+    name = "${var.labels.team}-${var.labels.app}-sa-key"
     namespace = var.kube_namespace
   }
   data = {

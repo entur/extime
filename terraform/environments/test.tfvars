@@ -1,4 +1,4 @@
 gcp_project = "entur-test-1287"
-gcp_pubsub_project = "entur-ror-test"
+gcp_resources_project = "entur-ror-test"
 kube_namespace = "staging"
 bucket_instance_name = "ror-marduk-exchange-test"

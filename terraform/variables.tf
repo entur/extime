@@ -3,8 +3,8 @@ variable "gcp_project" {
   description = "The GCP project id"
 }
 
-variable "gcp_pubsub_project" {
-  description = "The GCP project hosting the PubSub resources"
+variable "gcp_resources_project" {
+  description = "The GCP project hosting the GCP resources"
 }
 
 variable "kube_namespace" {
