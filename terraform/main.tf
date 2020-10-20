@@ -4,7 +4,7 @@ terraform {
 }
 
 provider "google" {
-  version = "~> 2.19"
+  version = "~> 3.43"
 }
 provider "kubernetes" {
   load_config_file = var.load_config_file
@@ -44,6 +44,6 @@ resource "kubernetes_secret" "extime_service_account_credentials" {
     namespace = var.kube_namespace
   }
   data = {
-    "credentials.json" = "${base64decode(google_service_account_key.extime_service_account_key.private_key)}"
+    "credentials.json" = base64decode(google_service_account_key.extime_service_account_key.private_key)
   }
 }
