@@ -7,10 +7,6 @@ variable "gcp_pubsub_project" {
   description = "The GCP project hosting the PubSub resources"
 }
 
-variable "gcp_legacy_project" {
-  description = "The legacy GCP project "
-}
-
 variable "kube_namespace" {
   description = "The Kubernetes namespace"
 }
@@ -28,6 +24,11 @@ variable "labels" {
 
 variable "bucket_instance_name" {
   description = "Storage Bucket name"
+}
+
+variable "pubsub_topic_name" {
+  description = "PubSub Topic name"
+  default = "MardukInboundQueue"
 }
 
 variable "service_account_bucket_role" {
