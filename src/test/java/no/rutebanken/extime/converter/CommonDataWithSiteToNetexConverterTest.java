@@ -4,7 +4,7 @@ import no.rutebanken.extime.Constants;
 import no.rutebanken.extime.ExtimeRouteBuilderIntegrationTestBase;
 import no.rutebanken.extime.model.AirportIATA;
 import no.rutebanken.extime.util.NetexObjectIdTypes;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.rutebanken.netex.model.CompositeFrame;
 import org.rutebanken.netex.model.Network;
 import org.rutebanken.netex.model.PassengerStopAssignment;
@@ -26,13 +26,13 @@ import static no.rutebanken.extime.Constants.VERSION_ONE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SuppressWarnings("unchecked")
-public class CommonDataWithSiteToNetexConverterTest extends ExtimeRouteBuilderIntegrationTestBase {
+class CommonDataWithSiteToNetexConverterTest extends ExtimeRouteBuilderIntegrationTestBase {
 
     @Autowired
     private CommonDataToNetexConverter netexConverter;
 
     @Test
-    public void verifyPublicationDelivery() throws Exception {
+    void verifyPublicationDelivery() throws Exception {
         PublicationDeliveryStructure publicationDelivery = netexConverter.convertToNetex().getValue();
         assertValidPublicationDelivery(publicationDelivery);
 

@@ -12,8 +12,8 @@ import no.rutebanken.extime.util.NetexObjectIdCreator;
 import no.rutebanken.extime.util.NetexObjectIdTypes;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.rutebanken.netex.model.AllVehicleModesOfTransportEnumeration;
 import org.rutebanken.netex.model.Common_VersionFrameStructure;
 import org.rutebanken.netex.model.DayOfWeekEnumeration;
@@ -55,13 +55,13 @@ import static no.rutebanken.extime.Constants.VERSION_ONE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SuppressWarnings("unchecked")
-public class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationTestBase {
+class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationTestBase {
 
     @Autowired
     private LineDataToNetexConverter netexConverter;
 
     @Test
-    public void verifyFrameAttributes() throws Exception {
+    void verifyFrameAttributes() throws Exception {
         List<Pair<String, Integer>> routeJourneyPairs = Lists.newArrayList(Pair.of("OSL-BGO", 1), Pair.of("BGO-OSL", 1));
         LineDataSet lineDataSet = LineDataSetFixture.createLineDataSet("DY", "OSL-BGO", routeJourneyPairs);
         PublicationDeliveryStructure publicationDelivery = netexConverter.convertToNetex(lineDataSet).getValue();
@@ -79,7 +79,7 @@ public class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationT
     }
 
     @Test
-    public void testLineWithRoundTripRoutes() throws Exception {
+    void testLineWithRoundTripRoutes() throws Exception {
         List<Pair<String, Integer>> routeJourneyPairs = Lists.newArrayList(Pair.of("OSL-BGO", 1), Pair.of("BGO-OSL", 1));
         LineDataSet lineDataSet = LineDataSetFixture.createLineDataSet("DY", "OSL-BGO", routeJourneyPairs);
 
@@ -96,7 +96,7 @@ public class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationT
     }
 
     @Test
-    public void testLineWithStopoverRoutes() throws Exception {
+    void testLineWithStopoverRoutes() throws Exception {
         List<Pair<String, Integer>> routeJourneyPairs = Lists.newArrayList(Pair.of("TRD-OSL-BGO-MOL-SOG", 1), Pair.of("SOG-MOL-BGO-OSL-TRD", 1));
         LineDataSet lineDataSet = LineDataSetFixture.createLineDataSet("WF", "TRD-SOG", routeJourneyPairs);
 
@@ -113,7 +113,7 @@ public class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationT
     }
 
     @Test
-    public void testDestinationDisplaysNoVias() throws Exception {
+    void testDestinationDisplaysNoVias() throws Exception {
         List<Pair<String, Integer>> routeJourneyPairs = Lists.newArrayList(Pair.of("OSL-BGO", 1), Pair.of("BGO-OSL", 1));
         LineDataSet lineDataSet = LineDataSetFixture.createLineDataSet("DY", "OSL-BGO", routeJourneyPairs);
 
@@ -149,7 +149,7 @@ public class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationT
     }
 
     @Test
-    public void testDestinationDisplaysWithVias() throws Exception {
+    void testDestinationDisplaysWithVias() throws Exception {
         List<Pair<String, Integer>> routeJourneyPairs = Lists.newArrayList(Pair.of("OSL-SOG-BGO", 1), Pair.of("BGO-SOG-OSL", 1));
         LineDataSet lineDataSet = LineDataSetFixture.createLineDataSet("DY", "OSL-BGO", routeJourneyPairs);
 
@@ -191,7 +191,7 @@ public class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationT
     }
 
     @Test
-    public void testServiceJourneyWithOperatingPeriodAndExclusions() throws Exception {
+    void testServiceJourneyWithOperatingPeriodAndExclusions() throws Exception {
         LocalDate patternFrom = LocalDate.of(2017, 1, 3);
         LocalDate patternTo = patternFrom.plusDays(70);
         Set<DayOfWeek> pattern = Sets.newHashSet(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY, DayOfWeek.SATURDAY);
@@ -226,15 +226,15 @@ public class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationT
 
         for (String dayTypeRef : dayTypeRefs) {
             DayTypeAssignment assignment = dayTimeAssignments.get(dayTypeRef);
-            Assert.assertNotNull(assignment);
+            Assertions.assertNotNull(assignment);
             DayType dayType = dayTypes.get(assignment.getDayTypeRef().getValue().getRef());
-            Assert.assertNotNull(dayType);
+            Assertions.assertNotNull(dayType);
 
             if (assignment.getDate() == null) {
                 OperatingPeriod_VersionStructure operatingPeriod = operatingPeriods.get(assignment.getOperatingPeriodRef().getRef());
-                Assert.assertNotNull(operatingPeriod);
-                Assert.assertEquals(patternFrom.atStartOfDay(), operatingPeriod.getFromDate());
-                Assert.assertEquals(patternTo.atStartOfDay(), operatingPeriod.getToDate());
+                Assertions.assertNotNull(operatingPeriod);
+                Assertions.assertEquals(patternFrom.atStartOfDay(), operatingPeriod.getFromDate());
+                Assertions.assertEquals(patternTo.atStartOfDay(), operatingPeriod.getToDate());
 
                 weekDayPatternFound |= ListUtils.isEqualList(
                         dayType.getProperties().getPropertyOfDay().get(0).getDaysOfWeek(), Arrays.asList(DayOfWeekEnumeration.MONDAY,
@@ -243,14 +243,14 @@ public class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationT
                 saturdayPatternFound |= ListUtils.isEqualList(
                         dayType.getProperties().getPropertyOfDay().get(0).getDaysOfWeek(), Arrays.asList(DayOfWeekEnumeration.SATURDAY));
             } else {
-                Assert.assertFalse(assignment.isIsAvailable());
-                Assert.assertNull(assignment.getOperatingPeriodRef());
-                Assert.assertTrue(expectedExclusions.remove(assignment.getDate().toLocalDate()));
+                Assertions.assertFalse(assignment.isIsAvailable());
+                Assertions.assertNull(assignment.getOperatingPeriodRef());
+                Assertions.assertTrue(expectedExclusions.remove(assignment.getDate().toLocalDate()));
             }
         }
-        Assert.assertTrue("Did not find expected pattern for week days", weekDayPatternFound);
-        Assert.assertTrue("Did not find expected pattern for saturdays", saturdayPatternFound);
-        Assert.assertTrue("Not all expected exclusion dates found", expectedExclusions.isEmpty());
+        Assertions.assertTrue( weekDayPatternFound, "Did not find expected pattern for week days");
+        Assertions.assertTrue(saturdayPatternFound, "Did not find expected pattern for saturdays");
+        Assertions.assertTrue(expectedExclusions.isEmpty(), "Not all expected exclusion dates found");
     }
 
     private List<LocalDate> generatePattern(LocalDate start, LocalDate end, Set<DayOfWeek> daysOfWeek, int... exclusionArray) {
@@ -313,12 +313,12 @@ public class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationT
                 .collect(Collectors.toList());
         assertThat(routes).hasSize(lineDataSet.getFlightRoutes().size());
 
-        assertThat(routes).extracting(Route::getId).containsOnlyElementsOf(getRouteIds(lineDataSet));
+        assertThat(routes).extracting(Route::getId).containsAll(getRouteIds(lineDataSet));
 
         Set<String> routeNames = lineDataSet.getFlightRoutes().stream()
                 .map(FlightRoute::getRouteName)
                 .collect(Collectors.toSet());
-        assertThat(routes).extracting("name.value").containsOnlyElementsOf(routeNames);
+        assertThat(routes).extracting("name.value").containsAll(routeNames);
 
         assertThat(routes).extracting("lineRef.value.ref").contains(line.getId());
     }
@@ -332,8 +332,8 @@ public class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationT
                 .collect(Collectors.toList());
         assertThat(journeyPatterns).hasSize(lineDataSet.getFlightRoutes().size());
 
-        assertThat(journeyPatterns).extracting(JourneyPattern::getId).containsOnlyElementsOf(getJourneyPatternIds(lineDataSet));
-        assertThat(journeyPatterns).extracting("routeRef.ref").containsOnlyElementsOf(getRouteIds(lineDataSet));
+        assertThat(journeyPatterns).extracting(JourneyPattern::getId).containsAll(getJourneyPatternIds(lineDataSet));
+        assertThat(journeyPatterns).extracting("routeRef.ref").containsAll(getRouteIds(lineDataSet));
 
         for(JourneyPattern jp : journeyPatterns) {
         	StopPointInJourneyPattern stopPoint = (StopPointInJourneyPattern) jp.getPointsInSequence().getPointInJourneyPatternOrStopPointInJourneyPatternOrTimingPointInJourneyPattern().get(0);

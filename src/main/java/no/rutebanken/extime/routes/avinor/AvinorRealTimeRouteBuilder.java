@@ -7,12 +7,12 @@ import no.rutebanken.extime.model.AirportFlightDataSet;
 import no.rutebanken.extime.model.AirportIATA;
 import no.rutebanken.extime.model.FlightType;
 import no.rutebanken.extime.model.StopVisitType;
+import org.apache.camel.AggregationStrategy;
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.component.http4.HttpMethods;
-import org.apache.camel.processor.aggregate.AggregationStrategy;
+import org.apache.camel.component.http.HttpMethods;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -34,7 +34,7 @@ public class AvinorRealTimeRouteBuilder extends RouteBuilder {
     @Override
     public void configure() throws Exception {
 
-        from("quartz2://avinorRealtimeScheduler?{{avinor.realtime.scheduler.options}}")
+        from("quartz://avinorRealtimeScheduler?{{avinor.realtime.scheduler.options}}")
                 .routeId("AvinorRealTimeSchedulerStarter")
                 .autoStartup(false)
                 .process(exchange -> exchange.getIn().setBody(AirportIATA.values())).id("RealTimeAirportIATAProcessor")
@@ -81,7 +81,7 @@ public class AvinorRealTimeRouteBuilder extends RouteBuilder {
                 .setHeader(Exchange.HTTP_QUERY, simpleF("airport=${header.%s}&timeFrom=${header.%s}&timeTo=${header.%s}&direction=${header.%s}",
                         HEADER_REALTIME_AIRPORT_IATA, HEADER_FLIGHTS_TIMEFROM, HEADER_FLIGHTS_TIMETO, HEADER_FLIGHTS_DIRECTION))
                 .setBody(constant(null))
-                .to("http4://{{avinor.realtime.feed.endpoint}}").id("FetchRealtimeFeedProcessor")
+                .to("http://{{avinor.realtime.feed.endpoint}}").id("FetchRealtimeFeedProcessor")
                 .split(stax(Flight.class, false), new FlightAggregationStrategy()).streaming()
                     .log(LoggingLevel.DEBUG, this.getClass().getName(), "Fetched flight with id: ${body.flightId}")
                 .end()

@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.rutebanken.superpom</groupId>
         <artifactId>superpom</artifactId>
-        <version>1.0.12</version>
+        <version>1.0.17</version>
     </parent>
 
     <groupId>no.rutebanken.extime</groupId>
@@ -32,13 +32,12 @@
 
     <properties>
 
-        <camel.version>2.25.2</camel.version>
-        <entur.helpers.version>1.0.22</entur.helpers.version>
-        <guava.version>28.1-jre</guava.version>
+        <camel.version>3.4.4</camel.version>
+        <entur.helpers.version>1.0.32</entur.helpers.version>
         <jaxb2-basics-runtime.version>1.11.1</jaxb2-basics-runtime.version>
         <jaxb-java-time-adapters>1.1.3</jaxb-java-time-adapters>
-        <zt-zip.version>1.13</zt-zip.version>
-        <commons-io.version>2.6</commons-io.version>
+        <zt-zip.version>1.14</zt-zip.version>
+        <commons-io.version>2.8.0</commons-io.version>
         <siri-java-model.version>0.13-SNAPSHOT</siri-java-model.version>
         <commons-collections4.version>4.4</commons-collections4.version>
 
@@ -49,7 +48,7 @@
         <netex-java-model.version>1.0.11-SNAPSHOT</netex-java-model.version>
 
         <!-- empty argLine property, the value is set up by Jacoco during unit tests execution -->
-        <argLine></argLine>
+        <argLine/>
 
     </properties>
 
@@ -57,7 +56,7 @@
         <dependencies>
 
             <dependency>
-                <groupId>org.apache.camel</groupId>
+                <groupId>org.apache.camel.springboot</groupId>
                 <artifactId>camel-spring-boot-dependencies</artifactId>
                 <version>${camel.version}</version>
                 <type>pom</type>
@@ -96,12 +95,12 @@
 
         <!-- Camel -->
         <dependency>
-            <groupId>org.apache.camel</groupId>
+            <groupId>org.apache.camel.springboot</groupId>
             <artifactId>camel-metrics-starter</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.camel</groupId>
-            <artifactId>camel-http4-starter</artifactId>
+            <groupId>org.apache.camel.springboot</groupId>
+            <artifactId>camel-http-starter</artifactId>
             <exclusions>
                 <exclusion>
                     <groupId>org.apache.geronimo.specs</groupId>
@@ -110,29 +109,29 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>org.apache.camel</groupId>
-            <artifactId>camel-quartz2-starter</artifactId>
+            <groupId>org.apache.camel.springboot</groupId>
+            <artifactId>camel-quartz-starter</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.camel</groupId>
+            <groupId>org.apache.camel.springboot</groupId>
             <artifactId>camel-jaxb-starter</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.camel</groupId>
+            <groupId>org.apache.camel.springboot</groupId>
             <artifactId>camel-stax-starter</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.camel</groupId>
-            <artifactId>camel-cache</artifactId>
+            <groupId>org.apache.camel.springboot</groupId>
+            <artifactId>camel-ehcache-starter</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.camel</groupId>
+            <groupId>org.apache.camel.springboot</groupId>
             <artifactId>camel-zipfile-starter</artifactId>
         </dependency>
 
         <dependency>
             <groupId>org.entur.helpers</groupId>
-            <artifactId>camel-entur-google-pubsub</artifactId>
+            <artifactId>camel3-entur-google-pubsub</artifactId>
             <version>${entur.helpers.version}</version>
         </dependency>
 
@@ -210,35 +209,51 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>${guava.version}</version>
         </dependency>
 
         <!-- Testing -->
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.camel</groupId>
-            <artifactId>camel-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.camel</groupId>
-            <artifactId>camel-test-spring</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>junit</groupId>
+                    <artifactId>junit</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.junit.vintage</groupId>
+                    <artifactId>junit-vintage-engine</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-test-spring-junit5</artifactId>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>junit</groupId>
+                    <artifactId>junit</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-launcher</artifactId>
+            <scope>test</scope>
+        </dependency>
+
         <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>

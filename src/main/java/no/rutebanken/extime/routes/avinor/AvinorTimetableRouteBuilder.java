@@ -15,12 +15,12 @@ import no.rutebanken.extime.model.LineDataSet;
 import no.rutebanken.extime.model.StopVisitType;
 import no.rutebanken.extime.util.AvinorTimetableUtils;
 import no.rutebanken.extime.util.DateUtils;
+import org.apache.camel.AggregationStrategy;
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.converter.jaxb.JaxbDataFormat;
-import org.apache.camel.processor.aggregate.AggregationStrategy;
 import org.apache.camel.processor.aggregate.zipfile.ZipAggregationStrategy;
 import org.apache.commons.lang3.StringUtils;
 import org.rutebanken.netex.model.PublicationDeliveryStructure;
@@ -105,11 +105,11 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder {
                 .process(new AirportIataProcessor()).id("TimetableAirportIATAProcessor")
                 .bean(DateUtils.class, "generateDateRanges").id("TimetableDateRangeProcessor")
                 .split(body(), new ScheduledFlightListAggregationStrategy()).parallelProcessing()
-                    .log(LoggingLevel.DEBUG, this.getClass().getName(), "==========================================")
-                    .log(LoggingLevel.DEBUG, this.getClass().getName(), "Processing airport with IATA code: ${body}")
+                    .log(LoggingLevel.INFO, this.getClass().getName(), "==========================================")
+                    .log(LoggingLevel.INFO, this.getClass().getName(), "Processing airport with IATA code: ${body}")
                     .setHeader(HEADER_EXTIME_RESOURCE_CODE, simple("${body}"))
                     .to("direct:fetchTimetableForAirport").id("FetchTimetableProcessor")
-                    .log(LoggingLevel.DEBUG, this.getClass().getName(), "Flights fetched for ${header.ExtimeResourceCode}")
+                    .log(LoggingLevel.INFO, this.getClass().getName(), "Flights fetched for ${header.ExtimeResourceCode}")
                 .end()
         ;
 
@@ -182,8 +182,8 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder {
                 .setHeader(HEADER_EXTIME_HTTP_URI, simple("{{avinor.timetable.feed.endpoint}}"))
 
                 .split(body(), new ScheduledFlightListAggregationStrategy())
-                    .setHeader(HEADER_LOWER_RANGE_ENDPOINT, simple("${bean:dateUtils.format(body.lowerEndpoint())}Z"))
-                    .setHeader(HEADER_UPPER_RANGE_ENDPOINT, simple("${bean:dateUtils.format(body.upperEndpoint())}Z"))
+                    .setHeader(HEADER_LOWER_RANGE_ENDPOINT, simple("${bean:dateUtils.format(${body.lowerEndpoint()})}Z"))
+                    .setHeader(HEADER_UPPER_RANGE_ENDPOINT, simple("${bean:dateUtils.format(${body.upperEndpoint()})}Z"))
                     .to("direct:fetchAirportFlightsByRangeAndStopVisitType").id("FetchFlightsByRangeAndStopVisitTypeProcessor")
                 .end()
         ;
@@ -308,7 +308,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder {
                 .process(exchange -> {
                     Thread stop = new Thread(() -> {
                         try {
-                            exchange.getContext().stopRoute(exchange.getFromRouteId());
+                            exchange.getContext().getRouteController().stopRoute(exchange.getFromRouteId());
                         } catch (Exception ignored) {
                             // Ignore
                         }

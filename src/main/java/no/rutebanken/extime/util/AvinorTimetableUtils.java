@@ -49,7 +49,6 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.HEADER_EXTIME_HTTP_URI;
 import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEADER_MESSAGE_CORRELATION_ID;
 import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.PROPERTY_STATIC_FLIGHTS_XML_FILE;
 
@@ -103,10 +102,6 @@ public class AvinorTimetableUtils {
         SPECIAL_ASCII_MAPPING.put("ü", "u");
         SPECIAL_ASCII_MAPPING.put("Æ", "E");
         SPECIAL_ASCII_MAPPING.put("æ", "e");
-    }
-
-    public String useHttp4Client(@Header(HEADER_EXTIME_HTTP_URI) String httpUri) {
-        return httpUri.replace("https:", "https4:").replace("http:","http4:");
     }
 
     public JAXBElement<Flights> createFlightsElement(List<Flight> flightList) {

@@ -3,7 +3,7 @@ package no.rutebanken.extime.xml;
 import no.avinor.flydata.xjc.model.scheduled.Flight;
 import no.rutebanken.extime.util.AvinorTimetableUtils;
 import org.assertj.core.api.Assertions;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -11,11 +11,11 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
 
-public class DateTimeUnmarshallerTest {
+class DateTimeUnmarshallerTest {
 
 
     @Test
-    public void unmarshalScheduledFlight() throws Exception {
+    void unmarshalScheduledFlight() throws Exception {
         List<Flight> flights = new AvinorTimetableUtils().generateFlightsFromFeedDump("/xml/scheduled-flights.xml");
 
         Flight first = flights.get(0);
