@@ -214,7 +214,7 @@ class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationTestBase
                 .stream().collect(Collectors.toMap(o -> o.getId(), o -> o));
 
         TimetableFrame timetableFrame = NetexTestUtils.getFrames(TimetableFrame.class, dataObjectFrames).get(0);
-        ServiceJourney serviceJourney = (ServiceJourney) timetableFrame.getVehicleJourneys().getDatedServiceJourneyOrDeadRunOrServiceJourney().get(0);
+        ServiceJourney serviceJourney = (ServiceJourney) timetableFrame.getVehicleJourneys().getVehicleJourneyOrDatedVehicleJourneyOrNormalDatedVehicleJourney().get(0);
 
         List<String> dayTypeRefs = serviceJourney.getDayTypes().getDayTypeRef().stream().map(e ->
                 e.getValue().getRef()).collect(Collectors.toList());
