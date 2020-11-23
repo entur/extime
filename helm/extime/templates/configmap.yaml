@@ -1,14 +1,28 @@
 apiVersion: v1
 data:
   application.properties: |+
+
+    # Spring Boot
     spring.profiles.active=gcs-blobstore
+    spring.main.sources=no.rutebanken.extime
+    server.port=8776
+    spring.jmx.enabled=true
+    endpoints.jmx.enabled=true
+    management.server.port=9001
+    management.endpoints.enabled-by-default=false
+    management.endpoint.info.enabled=true
+    management.endpoint.health.enabled=true
+    management.endpoint.health.group.readiness.include=readinessState,pubSub
+    management.endpoint.prometheus.enabled=true
+    management.endpoints.web.exposure.include=info,health,prometheus
+
+    # Camel
     camel.springboot.name=extime
-    blobstore.gcs.bucket.name={{ .Values.gcp.bucketName}}
-    blobstore.provider.id=21
-    blobstore.blob.path=inbound/received/avi/
-    blobstore.gcs.credential.path=/etc/extime-service-account/credentials.json
-    blobstore.gcs.project.id={{ .Values.gcp.blobstoreProjectId }}
-    netex.generated.output.path=/tmp/extime/data/netex
+    camel.springboot.shutdownTimeout=25
+    camel.springboot.useMdcLogging=true
+    camel.springboot.messageHistory=true
+
+    # Avinor data set import
     avinor.airport.feed.endpoint=https://flydata.avinor.no/airportNames.asp
     avinor.airports.large=BGO,BOO,SVG,TRD
     avinor.airline.feed.endpoint=https://flydata.avinor.no/airlineNames.asp
@@ -25,28 +39,30 @@ data:
     avinor.realtime.departures.timefrom=0
     avinor.realtime.feed.endpoint=https://flydata.avinor.no/XmlFeed.asp
     avinor.realtime.departures.timeto=72
-    queue.upload.destination.name=MardukInboundQueue
     netex.compressed.output.path=/tmp/extime/data/zip
-    logging.level.com=INFO
-    logging.level.org=INFO
-    logging.level.no.rutebanken=INFO
-    server.port=8776
-    endpoints.jmx.enabled=true
-    spring.jmx.enabled=true
-    spring.main.sources=no.rutebanken.extime
+    netex.generated.output.path=/tmp/extime/data/netex
+
+    # Blobstore
+    blobstore.gcs.bucket.name={{ .Values.gcp.bucketName}}
+    blobstore.provider.id=21
+    blobstore.blob.path=inbound/received/avi/
+    blobstore.gcs.credential.path=/etc/extime-service-account/credentials.json
+    blobstore.gcs.project.id={{ .Values.gcp.blobstoreProjectId }}
+
+    # Google PubSub
+    queue.upload.destination.name=MardukInboundQueue
     spring.cloud.gcp.pubsub.project-id={{ .Values.gcp.pubsubProjectId }}
     spring.cloud.gcp.pubsub.credentials.location=file:/etc/extime-service-account/credentials.json
     spring.cloud.gcp.pubsub.subscriber.parallel-pull-count=1
     spring.cloud.gcp.pubsub.subscriber.executor-threads=30
     spring.cloud.gcp.pubsub.subscriber.max-ack-extension-period=36000
     entur.pubsub.subscriber.autocreate=false
-    management.server.port=9001
-    management.endpoints.enabled-by-default=false
-    management.endpoint.info.enabled=true
-    management.endpoint.health.enabled=true
-    management.endpoint.health.group.readiness.include=readinessState,pubSub
-    management.endpoint.prometheus.enabled=true
-    management.endpoints.web.exposure.include=info,health,prometheus
+
+    # Logging
+    logging.level.com=INFO
+    logging.level.org=INFO
+    logging.level.no.rutebanken=INFO
+
 kind: ConfigMap
 metadata:
   name: {{ template "extime.name" . }}-config
