@@ -3,8 +3,8 @@ package no.rutebanken.extime.routes;
 import org.apache.camel.CamelContext;
 import org.apache.camel.Endpoint;
 import org.apache.camel.component.google.pubsub.GooglePubsubEndpoint;
+import org.apache.camel.impl.engine.DefaultInterceptSendToEndpoint;
 import org.apache.camel.spi.CamelEvent;
-import org.apache.camel.support.DefaultInterceptSendToEndpoint;
 import org.apache.camel.support.EventNotifierSupport;
 import org.entur.pubsub.base.EnturGooglePubSubAdmin;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +18,7 @@ public class EventNotifier extends EventNotifierSupport {
 
 
     @Override
-    public void notify(CamelEvent event) throws Exception {
+    public void notify(CamelEvent event) {
 
         if (event instanceof CamelEvent.CamelContextStartingEvent) {
             CamelContext context = ((CamelEvent.CamelContextStartingEvent) event).getContext();
