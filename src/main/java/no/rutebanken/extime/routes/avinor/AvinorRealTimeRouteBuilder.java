@@ -12,7 +12,6 @@ import org.apache.camel.AggregationStrategy;
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.Processor;
-import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.http.HttpMethods;
 
 import java.util.ArrayList;

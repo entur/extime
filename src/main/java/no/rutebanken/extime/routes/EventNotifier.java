@@ -28,11 +28,13 @@ public class EventNotifier extends EventNotifierSupport {
     }
 
     private void createSubscriptionIfMissing(Endpoint e) {
-        GooglePubsubEndpoint gep= null;
-        if( e instanceof GooglePubsubEndpoint) {
+        GooglePubsubEndpoint gep;
+        if (e instanceof GooglePubsubEndpoint) {
             gep = (GooglePubsubEndpoint) e;
-        } else if(e instanceof DefaultInterceptSendToEndpoint) {
+        } else if (e instanceof DefaultInterceptSendToEndpoint) {
             gep = (GooglePubsubEndpoint) ((DefaultInterceptSendToEndpoint) e).getOriginalEndpoint();
+        } else {
+            throw new IllegalStateException("Incompatible endpoint: " + e);
         }
         enturGooglePubSubAdmin.createSubscriptionIfMissing(gep.getDestinationName());
     }

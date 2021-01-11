@@ -5,7 +5,6 @@ import no.rutebanken.extime.model.StopVisitType;
 import no.rutebanken.extime.routes.BaseRouteBuilder;
 import no.rutebanken.extime.util.DateUtils;
 import org.apache.camel.Exchange;
-import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.http.HttpMethods;
 
 import java.util.Arrays;

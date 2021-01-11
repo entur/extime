@@ -20,7 +20,6 @@ import org.apache.camel.AggregationStrategy;
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.Processor;
-import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.converter.jaxb.JaxbDataFormat;
 import org.apache.camel.processor.aggregate.zipfile.ZipAggregationStrategy;
 import org.apache.commons.lang3.StringUtils;

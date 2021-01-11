@@ -2,7 +2,6 @@ package no.rutebanken.extime;
 
 
 import org.entur.pubsub.base.config.GooglePubSubConfig;
-import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.annotation.Import;

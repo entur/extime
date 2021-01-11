@@ -3,7 +3,6 @@ package no.rutebanken.extime.routes.avinor;
 import no.rutebanken.extime.routes.BaseRouteBuilder;
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
-import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.ehcache.EhcacheConstants;
 import org.apache.camel.component.http.HttpMethods;
 import org.springframework.stereotype.Component;
