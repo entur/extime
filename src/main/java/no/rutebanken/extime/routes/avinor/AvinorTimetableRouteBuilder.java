@@ -13,6 +13,7 @@ import no.rutebanken.extime.converter.ScheduledFlightConverter;
 import no.rutebanken.extime.model.AirportIATA;
 import no.rutebanken.extime.model.LineDataSet;
 import no.rutebanken.extime.model.StopVisitType;
+import no.rutebanken.extime.routes.BaseRouteBuilder;
 import no.rutebanken.extime.util.AvinorTimetableUtils;
 import no.rutebanken.extime.util.DateUtils;
 import org.apache.camel.AggregationStrategy;
@@ -44,7 +45,7 @@ import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.HEADER
 import static org.apache.camel.component.stax.StAXBuilder.stax;
 
 @Component
-public class AvinorTimetableRouteBuilder extends RouteBuilder {
+public class AvinorTimetableRouteBuilder extends BaseRouteBuilder {
 
     public static final String HEADER_TIMETABLE_SMALL_AIRPORT_RANGE = "TimetableSmallAirportRange";
     public static final String HEADER_TIMETABLE_LARGE_AIRPORT_RANGE = "TimetableLargeAirportRange";
@@ -66,7 +67,9 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder {
     private static final String PROPERTY_LINE_DATASETS_LIST_ORIGINAL_BODY = "LineDataSetsListOriginalBody";
 
     @Override
-    public void configure() throws Exception {
+    public void configure() {
+
+        super.configure();
 
         JaxbDataFormat jaxbDataFormat = new JaxbDataFormat();
         jaxbDataFormat.setContextPath(PublicationDeliveryStructure.class.getPackage().getName());
@@ -303,7 +306,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder {
                 .setBody(constant(null))
 
                 .log(LoggingLevel.INFO, this.getClass().getName(), "Notifying marduk queue about NeTEx export")
-                .to("entur-google-pubsub:{{queue.upload.destination.name}}")
+                .to("google-pubsub:{{spring.cloud.gcp.pubsub.project-id}}:{{queue.upload.destination.name}}")
 
                 .process(exchange -> {
                     Thread stop = new Thread(() -> {
@@ -334,7 +337,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder {
                 .setBody(constant(null))
 
                 .log(LoggingLevel.INFO, this.getClass().getName(), "Notifying marduk queue about NeTEx export")
-                .to("entur-google-pubsub:{{queue.upload.destination.name}}")
+                .to("google-pubsub:{{spring.cloud.gcp.pubsub.project-id}}:{{queue.upload.destination.name}}")
         ;
 
         from("direct:dumpFetchedFlightsToFile")

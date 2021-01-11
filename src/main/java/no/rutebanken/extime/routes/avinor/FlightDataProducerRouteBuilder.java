@@ -2,6 +2,7 @@ package no.rutebanken.extime.routes.avinor;
 
 import no.rutebanken.extime.model.AirportIATA;
 import no.rutebanken.extime.model.StopVisitType;
+import no.rutebanken.extime.routes.BaseRouteBuilder;
 import no.rutebanken.extime.util.DateUtils;
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
@@ -10,10 +11,13 @@ import org.apache.camel.component.http.HttpMethods;
 import java.util.Arrays;
 
 //@Component
-public class FlightDataProducerRouteBuilder extends RouteBuilder {
+public class FlightDataProducerRouteBuilder extends BaseRouteBuilder {
 
     @Override
-    public void configure() throws Exception {
+    public void configure() {
+
+        super.configure();
+
         from("quartz://flightDataScheduler?fireNow=true&trigger.repeatCount=0")
                 .routeId("FlightDataProducerStarter")
                 .autoStartup(false)

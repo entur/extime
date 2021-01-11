@@ -7,6 +7,7 @@ import no.rutebanken.extime.model.AirportFlightDataSet;
 import no.rutebanken.extime.model.AirportIATA;
 import no.rutebanken.extime.model.FlightType;
 import no.rutebanken.extime.model.StopVisitType;
+import no.rutebanken.extime.routes.BaseRouteBuilder;
 import org.apache.camel.AggregationStrategy;
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
@@ -22,7 +23,7 @@ import java.util.Map;
 
 import static org.apache.camel.component.stax.StAXBuilder.stax;
 
-public class AvinorRealTimeRouteBuilder extends RouteBuilder {
+public class AvinorRealTimeRouteBuilder extends BaseRouteBuilder {
 
     static final String HEADER_REALTIME_AIRPORT_IATA = "RealTimeAirportIATA";
     static final String HEADER_FLIGHTS_DIRECTION = "FlightsDirection";
@@ -32,7 +33,9 @@ public class AvinorRealTimeRouteBuilder extends RouteBuilder {
     static final String PROPERTY_ORIGINAL_BODY = "OriginalBody";
 
     @Override
-    public void configure() throws Exception {
+    public void configure() {
+
+        super.configure();
 
         from("quartz://avinorRealtimeScheduler?{{avinor.realtime.scheduler.options}}")
                 .routeId("AvinorRealTimeSchedulerStarter")
