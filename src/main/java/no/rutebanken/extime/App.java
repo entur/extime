@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Import;
 
 public class App {
     public static void main(String[] args) {
-        new SpringApplicationBuilder(App.class).properties("spring.config.name=application,netex-static-data").run(args);
+        new SpringApplicationBuilder(App.class).run(args);
     }
 }
 
