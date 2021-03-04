@@ -61,6 +61,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder {
     public static final String HEADER_MESSAGE_PROVIDER_ID = "RutebankenProviderId";
     public static final String HEADER_MESSAGE_FILE_HANDLE = "RutebankenFileHandle";
     public static final String HEADER_MESSAGE_FILE_NAME = "RutebankenFileName";
+    public static final String HEADER_MESSAGE_USERNAME = "RutebankenUsername";
 
     private static final String PROPERTY_LINE_DATASET_ORIGINAL_BODY = "LineDataSetOriginalBody";
     private static final String PROPERTY_LINE_DATASETS_LIST_ORIGINAL_BODY = "LineDataSetsListOriginalBody";
@@ -300,6 +301,7 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder {
                 .setHeader(HEADER_MESSAGE_PROVIDER_ID, simple("${properties:blobstore.provider.id}", Long.class))
                 .setHeader(HEADER_MESSAGE_FILE_HANDLE, simple("${properties:blobstore.blob.path}${header.CamelFileName}"))
                 .setHeader(HEADER_MESSAGE_FILE_NAME, simple("${header.CamelFileName}"))
+                .setHeader(HEADER_MESSAGE_USERNAME, simple("Extime"))
                 .setBody(constant(null))
 
                 .log(LoggingLevel.INFO, this.getClass().getName(), "Notifying marduk queue about NeTEx export")
@@ -331,6 +333,8 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder {
                 .setHeader(HEADER_MESSAGE_PROVIDER_ID, simple("${properties:blobstore.provider.id}", Long.class))
                 .setHeader(HEADER_MESSAGE_FILE_HANDLE, simple("${properties:blobstore.blob.path}${header.CamelFileName}"))
                 .setHeader(HEADER_MESSAGE_FILE_NAME, simple("${header.CamelFileName}"))
+                .setHeader(HEADER_MESSAGE_USERNAME, simple("Extime"))
+
                 .setBody(constant(null))
 
                 .log(LoggingLevel.INFO, this.getClass().getName(), "Notifying marduk queue about NeTEx export")
