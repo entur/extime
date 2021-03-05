@@ -4,6 +4,7 @@ data:
 
     # Spring Boot
     spring.profiles.active=gcs-blobstore
+    spring.config.import=classpath:netex-static-data.yml
     spring.main.sources=no.rutebanken.extime
     server.port=8776
     spring.jmx.enabled=true
