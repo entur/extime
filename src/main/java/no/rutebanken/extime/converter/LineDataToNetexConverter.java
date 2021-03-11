@@ -398,13 +398,8 @@ public class LineDataToNetexConverter {
 
             TimetabledPassingTimes_RelStructure passingTimesRelStruct = aggregateJourneyPassingTimes(journeyFlights, pointsInLinkSequence);
 
-            CalendarPattern pattern = findPattern(journeyFlights);
             DayTypeRefs_RelStructure dayTypeRefsStruct;
-            if (pattern != null) {
-                dayTypeRefsStruct = collectOperatingPeriodsDayTypesAndAssignmentsFromPattern(pattern);
-            } else {
-                dayTypeRefsStruct = collectDayTypesAndAssignments(journeyFlights);
-            }
+            dayTypeRefsStruct = collectDayTypesAndAssignments(journeyFlights);
 
             String journeyIdSequence = StringUtils.leftPad(idSequence[index++], 2, "0");
             String objectId = Joiner.on(DASH).skipNulls().join(flightId, journeyIdSequence, NetexObjectIdCreator.getObjectIdSuffix(journeyPatternId));
