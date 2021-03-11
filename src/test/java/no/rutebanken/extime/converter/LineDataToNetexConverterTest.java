@@ -190,69 +190,6 @@ class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationTestBase
         }
     }
 
-    @Test
-    void testServiceJourneyWithOperatingPeriodAndExclusions() throws Exception {
-        LocalDate patternFrom = LocalDate.of(2017, 1, 3);
-        LocalDate patternTo = patternFrom.plusDays(70);
-        Set<DayOfWeek> pattern = Sets.newHashSet(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY, DayOfWeek.SATURDAY);
-        // Pattern = 5 days a week, one exception at day 10
-        List<LocalDate> flightDates = generatePattern(patternFrom, patternTo, pattern, 10);
-        List<Pair<String, List<LocalDate>>> routeJourneyPairs = Lists.newArrayList(Pair.of("OSL-SOG", flightDates));
-        LineDataSet lineDataSet = LineDataSetFixture.createLineDataSetWithFixedDates("DY", "OSL-BGO", routeJourneyPairs, ZonedDateTime.now().toLocalTime());
-
-        PublicationDeliveryStructure publicationDelivery = netexConverter.convertToNetex(lineDataSet).getValue();
-        assertValidPublicationDelivery(publicationDelivery, lineDataSet.getLineName());
-
-        List<JAXBElement<? extends Common_VersionFrameStructure>> dataObjectFrames = NetexTestUtils.getDataObjectFrames(publicationDelivery);
-
-        ServiceCalendarFrame serviceCalendarFrame = NetexTestUtils.getFrames(ServiceCalendarFrame.class, dataObjectFrames).get(0);
-        Map<String, DayType> dayTypes = serviceCalendarFrame.getDayTypes().getDayType_().stream()
-                .collect(Collectors.toMap(d -> d.getValue().getId(), d -> (DayType) d.getValue()));
-        Map<String, DayTypeAssignment> dayTimeAssignments = serviceCalendarFrame.getDayTypeAssignments().getDayTypeAssignment().stream()
-                .collect(Collectors.toMap(d -> d.getDayTypeRef().getValue().getRef(), d -> d));
-        Map<String, OperatingPeriod_VersionStructure> operatingPeriods = serviceCalendarFrame.getOperatingPeriods().getOperatingPeriodOrUicOperatingPeriod()
-                .stream().collect(Collectors.toMap(o -> o.getId(), o -> o));
-
-        TimetableFrame timetableFrame = NetexTestUtils.getFrames(TimetableFrame.class, dataObjectFrames).get(0);
-        ServiceJourney serviceJourney = (ServiceJourney) timetableFrame.getVehicleJourneys().getVehicleJourneyOrDatedVehicleJourneyOrNormalDatedVehicleJourney().get(0);
-
-        List<String> dayTypeRefs = serviceJourney.getDayTypes().getDayTypeRef().stream().map(e ->
-                e.getValue().getRef()).collect(Collectors.toList());
-
-        Set<LocalDate> expectedExclusions = Sets.newHashSet(patternFrom.plusDays(10));
-
-        boolean weekDayPatternFound = false;
-        boolean saturdayPatternFound = false;
-
-        for (String dayTypeRef : dayTypeRefs) {
-            DayTypeAssignment assignment = dayTimeAssignments.get(dayTypeRef);
-            Assertions.assertNotNull(assignment);
-            DayType dayType = dayTypes.get(assignment.getDayTypeRef().getValue().getRef());
-            Assertions.assertNotNull(dayType);
-
-            if (assignment.getDate() == null) {
-                OperatingPeriod_VersionStructure operatingPeriod = operatingPeriods.get(assignment.getOperatingPeriodRef().getRef());
-                Assertions.assertNotNull(operatingPeriod);
-                Assertions.assertEquals(patternFrom.atStartOfDay(), operatingPeriod.getFromDate());
-                Assertions.assertEquals(patternTo.atStartOfDay(), operatingPeriod.getToDate());
-
-                weekDayPatternFound |= ListUtils.isEqualList(
-                        dayType.getProperties().getPropertyOfDay().get(0).getDaysOfWeek(), Arrays.asList(DayOfWeekEnumeration.MONDAY,
-                                DayOfWeekEnumeration.TUESDAY, DayOfWeekEnumeration.WEDNESDAY,
-                                DayOfWeekEnumeration.THURSDAY, DayOfWeekEnumeration.FRIDAY));
-                saturdayPatternFound |= ListUtils.isEqualList(
-                        dayType.getProperties().getPropertyOfDay().get(0).getDaysOfWeek(), Arrays.asList(DayOfWeekEnumeration.SATURDAY));
-            } else {
-                Assertions.assertFalse(assignment.isIsAvailable());
-                Assertions.assertNull(assignment.getOperatingPeriodRef());
-                Assertions.assertTrue(expectedExclusions.remove(assignment.getDate().toLocalDate()));
-            }
-        }
-        Assertions.assertTrue( weekDayPatternFound, "Did not find expected pattern for week days");
-        Assertions.assertTrue(saturdayPatternFound, "Did not find expected pattern for saturdays");
-        Assertions.assertTrue(expectedExclusions.isEmpty(), "Not all expected exclusion dates found");
-    }
-
     private List<LocalDate> generatePattern(LocalDate start, LocalDate end, Set<DayOfWeek> daysOfWeek, int... exclusionArray) {
         List<LocalDate> patternDates = new ArrayList<>();
         Set<Integer> exclusions = new HashSet<>();
