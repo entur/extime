@@ -469,11 +469,6 @@ public class LineDataToNetexConverter {
         return passingTimesRelStructure;
     }
 
-    private CalendarPattern findPattern(List<ScheduledFlight> flights) {
-        Set<LocalDate> operationDates = flights.stream().map(ScheduledFlight::getDateOfOperation).collect(Collectors.toSet());
-        return new CalendarPatternAnalyzer().computeCalendarPattern(operationDates);
-    }
-
     private DayTypeRefs_RelStructure collectDayTypesAndAssignments(List<ScheduledFlight> journeyFlights) {
         DayTypeRefs_RelStructure dayTypeStructure = objectFactory.createDayTypeRefs_RelStructure();
         List<LocalDate> datesOfOperation = journeyFlights.stream().map(ScheduledFlight::getDateOfOperation).collect(Collectors.toList());
@@ -507,24 +502,6 @@ public class LineDataToNetexConverter {
                 dayTypeAssignments.put(dayTypeAssignment.getId(), dayTypeAssignment);
             }
         }
-    }
-
-    private DayTypeRefs_RelStructure collectOperatingPeriodsDayTypesAndAssignmentsFromPattern(CalendarPattern pattern) {
-        DayTypeRefs_RelStructure dayTypeStructure = objectFactory.createDayTypeRefs_RelStructure();
-
-        String operatingPeriodId = addOperatingPeriod(pattern);
-
-        for (Set<DayOfWeek> distinctPattern : splitDaysOfWeekPatternAccordingToProfile(pattern.significantDays)) {
-            SortedSet<DayOfWeekEnumeration> daysOfWeek = distinctPattern.stream().map(this::toDayOfWeekEnumeration).collect(Collectors.toCollection(TreeSet::new));
-            String dayTypeIdSuffix = createDayTypeIdSuffix(pattern, daysOfWeek);
-            collectDayTypesFromPattern(operatingPeriodId, dayTypeIdSuffix, dayTypeStructure, daysOfWeek);
-        }
-
-
-        addIndividualDates(dayTypeStructure, pattern.additionalDates, true);
-        addIndividualDates(dayTypeStructure, pattern.excludedDates, false);
-
-        return dayTypeStructure;
     }
 
     /**
