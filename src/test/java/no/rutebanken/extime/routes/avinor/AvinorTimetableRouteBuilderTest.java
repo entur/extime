@@ -13,7 +13,7 @@ import org.apache.camel.EndpointInject;
 import org.apache.camel.Exchange;
 import org.apache.camel.Produce;
 import org.apache.camel.ProducerTemplate;
-import org.apache.camel.builder.AdviceWithRouteBuilder;
+import org.apache.camel.builder.AdviceWith;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Disabled;
@@ -45,7 +45,6 @@ import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEA
 import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEADER_UPPER_RANGE_ENDPOINT;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = {AvinorTimetableRouteBuilder.class} , properties = {
-        "spring.config.name=application,netex-static-data",
         "avinor.timetable.scheduler.consumer=direct:start",
         "avinor.timetable.period.months=4",
         "avinor.timetable.max.range=180",
@@ -151,7 +150,7 @@ class AvinorTimetableRouteBuilderTest extends ExtimeCamelRouteBuilderIntegration
     @Disabled // TODO fix test
     void testTimetableScheduler() throws Exception {
 
-        AdviceWithRouteBuilder.adviceWith(context, "AvinorTimetableSchedulerStarter", a -> {
+        AdviceWith.adviceWith(context, "AvinorTimetableSchedulerStarter", a -> {
             a.weaveById("TimetableAirportIATAProcessor").replace().to("mock:setupIataCodes");
             a.interceptSendToEndpoint("mock:setupIataCodes").process(exchange -> {
                 exchange.getIn().setBody(new AirportIATA[]{AirportIATA.OSL, AirportIATA.BGO, AirportIATA.EVE});
@@ -187,7 +186,7 @@ class AvinorTimetableRouteBuilderTest extends ExtimeCamelRouteBuilderIntegration
     @Test
     void testFetchAndCacheAirportName() throws Exception {
 
-        AdviceWithRouteBuilder.adviceWith(context, "FetchAndCacheAirportName", a -> {
+        AdviceWith.adviceWith(context, "FetchAndCacheAirportName", a -> {
             a.weaveById("FetchAirportNameFromHttpFeedProcessor").replace().to("mock:fetchXmlFromHttp");
             a.interceptSendToEndpoint("mock:fetchXmlFromHttp").process(exchange -> {
                 InputStream inputStream = new FileInputStream("target/classes/xml/airportname-osl.xml");
@@ -214,7 +213,7 @@ class AvinorTimetableRouteBuilderTest extends ExtimeCamelRouteBuilderIntegration
     @Test
     void testFetchAndCacheAirlineName() throws Exception {
 
-        AdviceWithRouteBuilder.adviceWith(context, "FetchAndCacheAirlineName", a -> {
+        AdviceWith.adviceWith(context, "FetchAndCacheAirlineName", a -> {
             a.weaveById("FetchAirlineNameFromHttpFeedProcessor").replace().to("mock:fetchXmlFromHttp");
             a.interceptSendToEndpoint("mock:fetchXmlFromHttp").process(exchange -> {
                 InputStream inputStream = new FileInputStream("target/classes/xml/airlinename-dy.xml");
@@ -241,7 +240,7 @@ class AvinorTimetableRouteBuilderTest extends ExtimeCamelRouteBuilderIntegration
     @Test
     void testFetchTimetableForLargeAirport() throws Exception {
 
-        AdviceWithRouteBuilder.adviceWith(context, "FetchTimetableForAirport", a -> {
+        AdviceWith.adviceWith(context, "FetchTimetableForAirport", a -> {
             a.weaveById("LargeAirportLogProcessor").replace().to("mock:largeAirportLogger");
             a.mockEndpointsAndSkip("direct:fetchTimetableForAirportByRanges");
         });
@@ -269,7 +268,7 @@ class AvinorTimetableRouteBuilderTest extends ExtimeCamelRouteBuilderIntegration
     @Test
     void testFetchTimetableForSmallAirport() throws Exception {
 
-        AdviceWithRouteBuilder.adviceWith(context, "FetchTimetableForAirport", a -> {
+        AdviceWith.adviceWith(context, "FetchTimetableForAirport", a -> {
             a.weaveById("SmallAirportLogProcessor").replace().to("mock:smallAirportLogger");
             a.mockEndpointsAndSkip(
                     "direct:fetchTimetableForLargeAirport",
@@ -299,7 +298,7 @@ class AvinorTimetableRouteBuilderTest extends ExtimeCamelRouteBuilderIntegration
     @Test
     void testFetchTimetableForAirportByRanges() throws Exception {
 
-        AdviceWithRouteBuilder.adviceWith(context, "FetchTimetableForAirportByDateRanges", a -> {
+        AdviceWith.adviceWith(context, "FetchTimetableForAirportByDateRanges", a -> {
             a.weaveById("FetchFlightsByRangeAndStopVisitTypeProcessor").replace().to("mock:fetchAirportFlights");
             a.interceptSendToEndpoint("mock:fetchAirportFlights").process(exchange -> {
                 exchange.getIn().setBody(createDummyFlights());
@@ -337,7 +336,7 @@ class AvinorTimetableRouteBuilderTest extends ExtimeCamelRouteBuilderIntegration
     @Test
     void testFetchAirportFlightsByRangeAndStopVisitType() throws Exception {
 
-        AdviceWithRouteBuilder.adviceWith(context, "FetchFlightsByRangeAndStopVisitType", a -> {
+        AdviceWith.adviceWith(context, "FetchFlightsByRangeAndStopVisitType", a -> {
             a.mockEndpointsAndSkip("direct:fetchXmlStreamFromHttpFeed");
             a.weaveById("SplitAndJoinRangeSVTFlightsProcessor").replace().to("mock:splitAndJoinEndpoint");
             a.interceptSendToEndpoint("mock:splitAndJoinEndpoint").process(exchange -> exchange.getIn().setBody(createDummyFlights()));
@@ -368,7 +367,7 @@ class AvinorTimetableRouteBuilderTest extends ExtimeCamelRouteBuilderIntegration
     @Test
     void testSplitAndAggregateDepartureFlights() throws Exception {
 
-        AdviceWithRouteBuilder.adviceWith(context, "FlightSplitterJoiner", a -> {
+        AdviceWith.adviceWith(context, "FlightSplitterJoiner", a -> {
             a.weaveById("FlightSplitWireTap").replace().to("mock:flightSplitWireTap");
         });
 
@@ -392,7 +391,7 @@ class AvinorTimetableRouteBuilderTest extends ExtimeCamelRouteBuilderIntegration
     @Test
     void testSplitAndAggregateArrivalFlights() throws Exception {
 
-        AdviceWithRouteBuilder.adviceWith(context, "FlightSplitterJoiner", a -> {
+        AdviceWith.adviceWith(context, "FlightSplitterJoiner", a -> {
             a.weaveById("FlightSplitWireTap").replace().to("mock:flightSplitWireTap");
         });
 
@@ -419,7 +418,7 @@ class AvinorTimetableRouteBuilderTest extends ExtimeCamelRouteBuilderIntegration
     @Disabled
     void testConvertScheduledFlightsToNetex() throws Exception {
 
-        AdviceWithRouteBuilder.adviceWith(context, "LineDataSetsToNetexConverter", a -> {
+        AdviceWith.adviceWith(context, "LineDataSetsToNetexConverter", a -> {
                     a.weaveById("AirlineIataPreEnrichProcessor").replace().to("mock:airlineIataPreProcess");
                     a.weaveById("ConvertLineDataSetsToNetexProcessor").replace().to("mock:convertToNetex");
                     a.interceptSendToEndpoint("mock:convertToNetex").process(exchange -> exchange.getIn().setBody(createPublicationDeliveryElement()));

@@ -18,7 +18,6 @@ import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEA
 import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEADER_MESSAGE_PROVIDER_ID;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = {AvinorTimetableRouteBuilder.class}, properties = {
-        "spring.config.name=application,netex-static-data",
         "avinor.timetable.scheduler.consumer=direct:start",
         "avinor.timetable.period.months=4",
         "avinor.timetable.max.range=180",

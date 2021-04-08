@@ -11,7 +11,6 @@ import org.springframework.test.context.ActiveProfiles;
 @CamelSpringBootTest
 @ActiveProfiles({"default", "local-disk-blobstore", "google-pubsub-emulator"})
 @SpringBootTest(classes = {App.class}, properties = {
-        "spring.config.name=application,netex-static-data",
         "avinor.timetable.scheduler.consumer=direct:start"
 })
 public abstract class ExtimeRouteBuilderIntegrationTestBase {
