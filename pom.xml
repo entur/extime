@@ -44,7 +44,7 @@
 
         <entur.google.pubsub.emulator.download.skip>false</entur.google.pubsub.emulator.download.skip>
 
-        <netex-java-model.version>1.0.11</netex-java-model.version>
+        <netex-java-model.version>1.0.12</netex-java-model.version>
 
         <!-- empty argLine property, the value is set up by Jacoco during unit tests execution -->
         <argLine/>
