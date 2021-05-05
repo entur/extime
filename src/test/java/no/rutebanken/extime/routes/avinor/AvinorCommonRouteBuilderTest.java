@@ -6,7 +6,7 @@ import org.apache.camel.EndpointInject;
 import org.apache.camel.Exchange;
 import org.apache.camel.Produce;
 import org.apache.camel.ProducerTemplate;
-import org.apache.camel.builder.AdviceWithRouteBuilder;
+import org.apache.camel.builder.AdviceWith;
 import org.apache.camel.component.ehcache.EhcacheConstants;
 import org.apache.camel.component.http.HttpMethods;
 import org.apache.camel.component.mock.MockEndpoint;
@@ -21,7 +21,6 @@ import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.HEADER
 import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.HEADER_EXTIME_URI_PARAMETERS;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = {AvinorCommonRouteBuilder.class} , properties = {
-        "spring.config.name=application,netex-static-data",
         "avinor.timetable.scheduler.consumer=direct:start"
 })
 class AvinorCommonRouteBuilderTest extends ExtimeCamelRouteBuilderIntegrationTestBase {
@@ -61,7 +60,7 @@ class AvinorCommonRouteBuilderTest extends ExtimeCamelRouteBuilderIntegrationTes
     @Test
     void testAddResourceToCache() throws Exception {
 
-        AdviceWithRouteBuilder.adviceWith(context, "AddResourceToCache", a -> {
+        AdviceWith.adviceWith(context, "AddResourceToCache", a -> {
             a.weaveById("CacheAddResourceProcessor").replace().to("mock:cacheAdd");
                 });
 
@@ -81,7 +80,7 @@ class AvinorCommonRouteBuilderTest extends ExtimeCamelRouteBuilderIntegrationTes
     @Test
     void testGetResourceFromCache() throws Exception {
 
-        AdviceWithRouteBuilder.adviceWith(context, "GetResourceFromCache", a -> {
+        AdviceWith.adviceWith(context, "GetResourceFromCache", a -> {
             a.weaveById("CacheGetResourceProcessor").replace().to("mock:cacheGet");
         });
 
@@ -100,7 +99,7 @@ class AvinorCommonRouteBuilderTest extends ExtimeCamelRouteBuilderIntegrationTes
     @Test
     void testRetrieveResourceWhenInCache() throws Exception {
 
-        AdviceWithRouteBuilder.adviceWith(context, "ResourceRetriever", a -> {
+        AdviceWith.adviceWith(context, "ResourceRetriever", a -> {
             a.weaveById("ResourceCacheCheckProcessor").replace().to("mock:cacheCheck");
             a.interceptSendToEndpoint("mock:cacheCheck").process(exchange -> exchange.getIn().setHeader(EhcacheConstants.ACTION_HAS_RESULT, true));
             a.weaveById("DynamicFetchResourceProcessor").replace().to("mock:fetchResource");
@@ -126,7 +125,7 @@ class AvinorCommonRouteBuilderTest extends ExtimeCamelRouteBuilderIntegrationTes
     @Test
     void testRetrieveResourceWhenNotInCache() throws Exception {
 
-        AdviceWithRouteBuilder.adviceWith(context, "ResourceRetriever", a -> {
+        AdviceWith.adviceWith(context, "ResourceRetriever", a -> {
             a.weaveById("ResourceCacheCheckProcessor").replace().to("mock:cacheCheck");
             a.interceptSendToEndpoint("mock:cacheCheck").process(exchange -> exchange.getIn().setHeader(EhcacheConstants.ACTION_HAS_RESULT, false));
             a.weaveById("DynamicFetchResourceProcessor").replace().to("mock:fetchResource");
@@ -156,7 +155,7 @@ class AvinorCommonRouteBuilderTest extends ExtimeCamelRouteBuilderIntegrationTes
     @Test
     void testFetchFromHttpResource() throws Exception {
 
-        AdviceWithRouteBuilder.adviceWith(context, "FetchXmlFromHttpFeed", a -> {
+        AdviceWith.adviceWith(context, "FetchXmlFromHttpFeed", a -> {
             a. weaveById("FetchXmlFromHttpFeedProcessor").replace().to("mock:fetchFromHttpEndpoint");
         });
 
