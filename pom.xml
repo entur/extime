@@ -75,7 +75,7 @@
                 <!-- This make sure all google libraries are using compatible versions. -->
                 <groupId>com.google.cloud</groupId>
                 <artifactId>libraries-bom</artifactId>
-                <version>14.4.1</version>
+                <version>19.2.1</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -111,12 +111,6 @@
             <artifactId>logging</artifactId>
             <version>${entur.helpers.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.entur.helpers</groupId>
-            <artifactId>camel3-entur-google-pubsub</artifactId>
-            <version>${entur.helpers.version}</version>
-        </dependency>
-
         <!-- Camel -->
         <dependency>
             <groupId>org.apache.camel.springboot</groupId>
