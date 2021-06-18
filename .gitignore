@@ -36,3 +36,6 @@ gradlew.bat
 .DS_Store
     
 /local_config/
+
+# Terraform
+/terraform/.terraform
