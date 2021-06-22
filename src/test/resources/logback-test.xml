@@ -4,4 +4,5 @@
     <logger name="no.rutebanken" level="DEBUG" />
     <logger name="org.entur" level="DEBUG" />
     <logger name="org.springframework" level="INFO" />
+    <logger name="com.google.cloud.spring.core.DefaultCredentialsProvider" level="ERROR"/>
 </configuration>
