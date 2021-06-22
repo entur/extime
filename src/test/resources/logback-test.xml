@@ -3,5 +3,5 @@
     <include resource="org/springframework/boot/logging/logback/base.xml"/>
     <logger name="no.rutebanken" level="DEBUG" />
     <logger name="org.entur" level="DEBUG" />
-    <logger name="org.springframework" level="DEBUG" />
+    <logger name="org.springframework" level="INFO" />
 </configuration>
