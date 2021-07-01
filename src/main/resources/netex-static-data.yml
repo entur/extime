@@ -202,6 +202,13 @@ netex-data-sets:
       phone:
       url:
       details:
+    fs:
+      company-number: 925566004
+      name: Flyr
+      legal-name: Flyr AS
+      phone:
+      url: https://flyr.com
+      details:
 
   # StopPlace types that, for now, corresponding directly to the actual airports. In future versions these can
   # be divided into actual gates at the airport, that will map directly to the Quay type in NeTEx.
