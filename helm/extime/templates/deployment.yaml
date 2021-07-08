@@ -48,6 +48,8 @@ spec:
                 -Dfile.encoding=UTF-8
             - name: TZ
               value: Europe/Oslo
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: /etc/extime-service-account/credentials.json
           livenessProbe:
             httpGet:
               path: /actuator/health/liveness

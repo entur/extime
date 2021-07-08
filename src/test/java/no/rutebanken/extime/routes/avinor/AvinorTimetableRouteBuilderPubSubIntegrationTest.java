@@ -16,6 +16,7 @@ import java.util.Map;
 import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEADER_MESSAGE_FILE_HANDLE;
 import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEADER_MESSAGE_FILE_NAME;
 import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEADER_MESSAGE_PROVIDER_ID;
+import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEADER_MESSAGE_USERNAME;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = {AvinorTimetableRouteBuilder.class}, properties = {
         "avinor.timetable.scheduler.consumer=direct:start",
@@ -29,7 +30,6 @@ import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEA
         "avinor.airline.feed.endpoint=mock:airlineFeedEndpoint",
         "netex.generated.output.path=target/netex-mock",
         "netex.compressed.output.path=target/marduk-mock",
-        "queue.upload.destination.name=MardukInboundQueue",
         "avinor.timetable.dump.enabled=false",
         "avinor.timetable.dump.output.path=target/flights"
 })
@@ -57,6 +57,7 @@ class AvinorTimetableRouteBuilderPubSubIntegrationTest extends ExtimeCamelRouteB
         Assertions.assertNotNull(headers.get(HEADER_MESSAGE_PROVIDER_ID));
         Assertions.assertNotNull(headers.get(HEADER_MESSAGE_FILE_HANDLE));
         Assertions.assertNotNull(headers.get(HEADER_MESSAGE_FILE_NAME));
+        Assertions.assertNotNull(headers.get(HEADER_MESSAGE_USERNAME));
 
     }
 
