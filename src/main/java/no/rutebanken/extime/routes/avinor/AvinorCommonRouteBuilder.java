@@ -65,7 +65,7 @@ public class AvinorCommonRouteBuilder extends BaseRouteBuilder {
                 .setHeader(Exchange.HTTP_QUERY, simpleF("${header.%s}", HEADER_EXTIME_URI_PARAMETERS))
                 .log(LoggingLevel.DEBUG, this.getClass().getName(), String.format("HTTP URI HEADER: ${header.%s}", HEADER_EXTIME_HTTP_URI))
                 .log(LoggingLevel.DEBUG, this.getClass().getName(), String.format("HTTP QUERY HEADER: ${header.%s}", Exchange.HTTP_QUERY))
-                .setBody(constant(null))
+                .setBody(constant(""))
                 .throttle(1).timePeriodMillis(1000)
                     .toD("${header.ExtimeHttpUri}").id("FetchXmlFromHttpFeedProcessor")
                 .end()

@@ -70,7 +70,7 @@ public class FlightDataProducerRouteBuilder extends BaseRouteBuilder {
                 .routeId("FetchFromHttpFeedEndpoint")
                 .setHeader(Exchange.HTTP_METHOD, constant(HttpMethods.GET))
                 .setHeader(Exchange.HTTP_QUERY, simpleF("${header.%s}", "FeedUriParameters"))
-                .setBody(constant(null))
+                .setBody(constant(""))
                 .toD("${header.ExtimeHttpUri}")
                 .convertBodyTo(String.class, "iso-8859-1")
                 .process(exchange -> {

@@ -16,6 +16,7 @@ import java.util.Map;
 import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEADER_MESSAGE_FILE_HANDLE;
 import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEADER_MESSAGE_FILE_NAME;
 import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEADER_MESSAGE_PROVIDER_ID;
+import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEADER_MESSAGE_USERNAME;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = {AvinorTimetableRouteBuilder.class}, properties = {
         "avinor.timetable.scheduler.consumer=direct:start",
@@ -50,12 +51,13 @@ class AvinorTimetableRouteBuilderPubSubIntegrationTest extends ExtimeCamelRouteB
         List<PubsubMessage> messages = pubSubTemplate.pullAndAck(notificationQueue, 1, false);
         Assertions.assertEquals(1, messages.size());
         PubsubMessage pubsubMessage = messages.get(0);
-        //Assertions.assertTrue(pubsubMessage.getData().isEmpty());
+        Assertions.assertTrue(pubsubMessage.getData().isEmpty());
         Map<String, String> headers = pubsubMessage.getAttributesMap();
         Assertions.assertNotNull(headers.get(Exchange.FILE_NAME));
         Assertions.assertNotNull(headers.get(HEADER_MESSAGE_PROVIDER_ID));
         Assertions.assertNotNull(headers.get(HEADER_MESSAGE_FILE_HANDLE));
         Assertions.assertNotNull(headers.get(HEADER_MESSAGE_FILE_NAME));
+        Assertions.assertNotNull(headers.get(HEADER_MESSAGE_USERNAME));
 
     }
 

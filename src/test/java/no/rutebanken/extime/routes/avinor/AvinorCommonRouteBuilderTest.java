@@ -60,9 +60,7 @@ class AvinorCommonRouteBuilderTest extends ExtimeCamelRouteBuilderIntegrationTes
     @Test
     void testAddResourceToCache() throws Exception {
 
-        AdviceWith.adviceWith(context, "AddResourceToCache", a -> {
-            a.weaveById("CacheAddResourceProcessor").replace().to("mock:cacheAdd");
-                });
+        AdviceWith.adviceWith(context, "AddResourceToCache", a -> a.weaveById("CacheAddResourceProcessor").replace().to("mock:cacheAdd"));
 
         context.start();
 
@@ -80,9 +78,7 @@ class AvinorCommonRouteBuilderTest extends ExtimeCamelRouteBuilderIntegrationTes
     @Test
     void testGetResourceFromCache() throws Exception {
 
-        AdviceWith.adviceWith(context, "GetResourceFromCache", a -> {
-            a.weaveById("CacheGetResourceProcessor").replace().to("mock:cacheGet");
-        });
+        AdviceWith.adviceWith(context, "GetResourceFromCache", a -> a.weaveById("CacheGetResourceProcessor").replace().to("mock:cacheGet"));
 
         context.start();
 
@@ -155,9 +151,7 @@ class AvinorCommonRouteBuilderTest extends ExtimeCamelRouteBuilderIntegrationTes
     @Test
     void testFetchFromHttpResource() throws Exception {
 
-        AdviceWith.adviceWith(context, "FetchXmlFromHttpFeed", a -> {
-            a. weaveById("FetchXmlFromHttpFeedProcessor").replace().to("mock:fetchFromHttpEndpoint");
-        });
+        AdviceWith.adviceWith(context, "FetchXmlFromHttpFeed", a -> a. weaveById("FetchXmlFromHttpFeedProcessor").replace().to("mock:fetchFromHttpEndpoint"));
 
         context.start();
 

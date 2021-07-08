@@ -15,7 +15,7 @@ import org.springframework.test.context.ActiveProfiles;
  * Integration test base class that restarts CamelContext before each test. To be used when camel is used expicitly in tests.
  */
 @CamelSpringBootTest
-@ActiveProfiles({"default", "local-disk-blobstore", "google-pubsub-emulator"})
+@ActiveProfiles({"default", "local-disk-blobstore", "google-pubsub-emulator", "google-pubsub-autocreate"})
 @UseAdviceWith
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public abstract class ExtimeCamelRouteBuilderIntegrationTestBase {

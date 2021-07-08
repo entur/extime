@@ -82,7 +82,7 @@ public class AvinorRealTimeRouteBuilder extends BaseRouteBuilder {
                 .setHeader(Exchange.HTTP_METHOD, constant(HttpMethods.GET))
                 .setHeader(Exchange.HTTP_QUERY, simpleF("airport=${header.%s}&timeFrom=${header.%s}&timeTo=${header.%s}&direction=${header.%s}",
                         HEADER_REALTIME_AIRPORT_IATA, HEADER_FLIGHTS_TIMEFROM, HEADER_FLIGHTS_TIMETO, HEADER_FLIGHTS_DIRECTION))
-                .setBody(constant(null))
+                .setBody(constant(""))
                 .to("http://{{avinor.realtime.feed.endpoint}}").id("FetchRealtimeFeedProcessor")
                 .split(stax(Flight.class, false), new FlightAggregationStrategy()).streaming()
                     .log(LoggingLevel.DEBUG, this.getClass().getName(), "Fetched flight with id: ${body.flightId}")

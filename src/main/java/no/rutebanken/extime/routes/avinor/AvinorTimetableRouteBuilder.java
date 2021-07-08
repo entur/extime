@@ -304,10 +304,10 @@ public class AvinorTimetableRouteBuilder extends BaseRouteBuilder {
                 .setHeader(HEADER_MESSAGE_FILE_HANDLE, simple("${properties:blobstore.blob.path}${header.CamelFileName}"))
                 .setHeader(HEADER_MESSAGE_FILE_NAME, simple("${header.CamelFileName}"))
                 .setHeader(HEADER_MESSAGE_USERNAME, simple("Extime"))
-                .setBody(constant(null))
+                .setBody(constant(""))
 
                 .log(LoggingLevel.INFO, this.getClass().getName(), "Notifying marduk queue about NeTEx export")
-                .to("google-pubsub:{{spring.cloud.gcp.pubsub.project-id}}:{{queue.upload.destination.name}}")
+                .to("google-pubsub:{{extime.pubsub.project.id}}:{{queue.upload.destination.name}}")
 
                 .process(exchange -> {
                     Thread stop = new Thread(() -> {
@@ -337,10 +337,10 @@ public class AvinorTimetableRouteBuilder extends BaseRouteBuilder {
                 .setHeader(HEADER_MESSAGE_FILE_NAME, simple("${header.CamelFileName}"))
                 .setHeader(HEADER_MESSAGE_USERNAME, simple("Extime"))
 
-                .setBody(constant(null))
+                .setBody(constant(""))
 
                 .log(LoggingLevel.INFO, this.getClass().getName(), "Notifying marduk queue about NeTEx export")
-                .to("google-pubsub:{{spring.cloud.gcp.pubsub.project-id}}:{{queue.upload.destination.name}}")
+                .to("google-pubsub:{{extime.pubsub.project.id}}:{{queue.upload.destination.name}}")
         ;
 
         from("direct:dumpFetchedFlightsToFile")
