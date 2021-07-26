@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.rutebanken.superpom</groupId>
         <artifactId>superpom</artifactId>
-        <version>1.0.26</version>
+        <version>1.0.27</version>
     </parent>
 
     <groupId>no.rutebanken.extime</groupId>
@@ -32,13 +32,13 @@
 
     <properties>
 
-        <camel.version>3.7.3</camel.version>
-        <spring-boot.version>2.4.5</spring-boot.version>
-        <entur.helpers.version>1.0.47</entur.helpers.version>
+        <camel.version>3.7.5</camel.version>
+        <spring-boot.version>2.4.9</spring-boot.version>
+        <entur.helpers.version>1.0.54</entur.helpers.version>
         <jaxb2-basics.version>0.12.0</jaxb2-basics.version>
         <jaxb-java-time-adapters>1.1.3</jaxb-java-time-adapters>
         <zt-zip.version>1.14</zt-zip.version>
-        <commons-io.version>2.10.0</commons-io.version>
+        <commons-io.version>2.11.0</commons-io.version>
         <siri-java-model.version>0.13-SNAPSHOT</siri-java-model.version>
         <commons-collections4.version>4.4</commons-collections4.version>
 
