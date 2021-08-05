@@ -33,7 +33,7 @@
     <properties>
 
         <camel.version>3.11.0</camel.version>
-        <entur.helpers.version>1.0.58-SNAPSHOT</entur.helpers.version>
+        <entur.helpers.version>1.0.59</entur.helpers.version>
         <jaxb2-basics.version>0.12.0</jaxb2-basics.version>
         <jaxb-java-time-adapters>1.1.3</jaxb-java-time-adapters>
         <zt-zip.version>1.14</zt-zip.version>
