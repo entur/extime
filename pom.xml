@@ -44,7 +44,7 @@
 
         <entur.google.pubsub.emulator.download.skip>false</entur.google.pubsub.emulator.download.skip>
 
-        <netex-java-model.version>1.0.12</netex-java-model.version>
+        <netex-java-model.version>1.0.13</netex-java-model.version>
 
         <maven-jaxb2-plugin-version>0.14.0</maven-jaxb2-plugin-version>
 
