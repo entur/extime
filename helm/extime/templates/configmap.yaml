@@ -51,18 +51,10 @@ data:
     blobstore.gcs.project.id={{ .Values.gcp.blobstoreProjectId }}
 
     # Google PubSub
+    # project id and credential location are not set, they are retrieved automatically through the GOOGLE_APPLICATION_CREDENTIALS environment variable
+    extime.pubsub.project.id={{ .Values.gcp.pubsubProjectId }}
+    camel.component.google-pubsub.service-account-key=file:/etc/extime-service-account/credentials.json
     queue.upload.destination.name=MardukInboundQueue
-    spring.cloud.gcp.pubsub.project-id={{ .Values.gcp.pubsubProjectId }}
-    spring.cloud.gcp.pubsub.credentials.location=file:/etc/extime-service-account/credentials.json
-    spring.cloud.gcp.pubsub.subscriber.parallel-pull-count=1
-    spring.cloud.gcp.pubsub.subscriber.executor-threads=30
-    spring.cloud.gcp.pubsub.subscriber.max-ack-extension-period=36000
-    entur.pubsub.subscriber.autocreate=false
-
-    # Logging
-    logging.level.com=INFO
-    logging.level.org=INFO
-    logging.level.no.rutebanken=INFO
 
 kind: ConfigMap
 metadata:

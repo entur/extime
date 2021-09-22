@@ -1,8 +1,8 @@
 package no.rutebanken.extime.routes.avinor;
 
+import no.rutebanken.extime.routes.BaseRouteBuilder;
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
-import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.ehcache.EhcacheConstants;
 import org.apache.camel.component.http.HttpMethods;
 import org.springframework.stereotype.Component;
@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 import javax.xml.transform.stream.StreamSource;
 
 @Component
-public class AvinorCommonRouteBuilder extends RouteBuilder {
+public class AvinorCommonRouteBuilder extends BaseRouteBuilder {
 
     public static final String DEFAULT_HTTP_CHARSET = "iso-8859-1";
 
@@ -20,7 +20,9 @@ public class AvinorCommonRouteBuilder extends RouteBuilder {
     public static final String HEADER_EXTIME_URI_PARAMETERS = "ExtimeUriParameters";
 
     @Override
-    public void configure() throws Exception {
+    public void configure() {
+
+        super.configure();
 
         from("ehcache://avinorResourceCache?configurationUri=ehcache-extime.xml")
                 .routeId("AvinorResourceCache")
@@ -63,7 +65,7 @@ public class AvinorCommonRouteBuilder extends RouteBuilder {
                 .setHeader(Exchange.HTTP_QUERY, simpleF("${header.%s}", HEADER_EXTIME_URI_PARAMETERS))
                 .log(LoggingLevel.DEBUG, this.getClass().getName(), String.format("HTTP URI HEADER: ${header.%s}", HEADER_EXTIME_HTTP_URI))
                 .log(LoggingLevel.DEBUG, this.getClass().getName(), String.format("HTTP QUERY HEADER: ${header.%s}", Exchange.HTTP_QUERY))
-                .setBody(constant(null))
+                .setBody(constant(""))
                 .throttle(1).timePeriodMillis(1000)
                     .toD("${header.ExtimeHttpUri}").id("FetchXmlFromHttpFeedProcessor")
                 .end()

@@ -13,13 +13,13 @@ import no.rutebanken.extime.converter.ScheduledFlightConverter;
 import no.rutebanken.extime.model.AirportIATA;
 import no.rutebanken.extime.model.LineDataSet;
 import no.rutebanken.extime.model.StopVisitType;
+import no.rutebanken.extime.routes.BaseRouteBuilder;
 import no.rutebanken.extime.util.AvinorTimetableUtils;
 import no.rutebanken.extime.util.DateUtils;
 import org.apache.camel.AggregationStrategy;
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.Processor;
-import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.converter.jaxb.JaxbDataFormat;
 import org.apache.camel.processor.aggregate.zipfile.ZipAggregationStrategy;
 import org.apache.commons.lang3.StringUtils;
@@ -44,7 +44,7 @@ import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.HEADER
 import static org.apache.camel.component.stax.StAXBuilder.stax;
 
 @Component
-public class AvinorTimetableRouteBuilder extends RouteBuilder {
+public class AvinorTimetableRouteBuilder extends BaseRouteBuilder {
 
     public static final String HEADER_TIMETABLE_SMALL_AIRPORT_RANGE = "TimetableSmallAirportRange";
     public static final String HEADER_TIMETABLE_LARGE_AIRPORT_RANGE = "TimetableLargeAirportRange";
@@ -67,7 +67,9 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder {
     private static final String PROPERTY_LINE_DATASETS_LIST_ORIGINAL_BODY = "LineDataSetsListOriginalBody";
 
     @Override
-    public void configure() throws Exception {
+    public void configure() {
+
+        super.configure();
 
         JaxbDataFormat jaxbDataFormat = new JaxbDataFormat();
         jaxbDataFormat.setContextPath(PublicationDeliveryStructure.class.getPackage().getName());
@@ -302,10 +304,10 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder {
                 .setHeader(HEADER_MESSAGE_FILE_HANDLE, simple("${properties:blobstore.blob.path}${header.CamelFileName}"))
                 .setHeader(HEADER_MESSAGE_FILE_NAME, simple("${header.CamelFileName}"))
                 .setHeader(HEADER_MESSAGE_USERNAME, simple("Extime"))
-                .setBody(constant(null))
+                .setBody(constant(""))
 
                 .log(LoggingLevel.INFO, this.getClass().getName(), "Notifying marduk queue about NeTEx export")
-                .to("entur-google-pubsub:{{queue.upload.destination.name}}")
+                .to("google-pubsub:{{extime.pubsub.project.id}}:{{queue.upload.destination.name}}")
 
                 .process(exchange -> {
                     Thread stop = new Thread(() -> {
@@ -335,10 +337,10 @@ public class AvinorTimetableRouteBuilder extends RouteBuilder {
                 .setHeader(HEADER_MESSAGE_FILE_NAME, simple("${header.CamelFileName}"))
                 .setHeader(HEADER_MESSAGE_USERNAME, simple("Extime"))
 
-                .setBody(constant(null))
+                .setBody(constant(""))
 
                 .log(LoggingLevel.INFO, this.getClass().getName(), "Notifying marduk queue about NeTEx export")
-                .to("entur-google-pubsub:{{queue.upload.destination.name}}")
+                .to("google-pubsub:{{extime.pubsub.project.id}}:{{queue.upload.destination.name}}")
         ;
 
         from("direct:dumpFetchedFlightsToFile")

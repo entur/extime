@@ -40,6 +40,7 @@
         <commons-io.version>2.11.0</commons-io.version>
         <siri-java-model.version>0.13-SNAPSHOT</siri-java-model.version>
         <commons-collections4.version>4.4</commons-collections4.version>
+        <google.cloud.bom-version>20.4.0</google.cloud.bom-version>
 
         <entur.google.pubsub.emulator.download.skip>false</entur.google.pubsub.emulator.download.skip>
 
@@ -59,6 +60,14 @@
                 <groupId>org.apache.camel.springboot</groupId>
                 <artifactId>camel-spring-boot-bom</artifactId>
                 <version>${camel.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>com.google.cloud</groupId>
+                <artifactId>libraries-bom</artifactId>
+                <version>${google.cloud.bom-version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -92,11 +101,6 @@
         <dependency>
             <groupId>org.entur.helpers</groupId>
             <artifactId>logging</artifactId>
-            <version>${entur.helpers.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.entur.helpers</groupId>
-            <artifactId>camel3-entur-google-pubsub</artifactId>
             <version>${entur.helpers.version}</version>
         </dependency>
 
@@ -138,6 +142,11 @@
         <dependency>
             <groupId>org.apache.camel.springboot</groupId>
             <artifactId>camel-zipfile-starter</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.camel.springboot</groupId>
+            <artifactId>camel-google-pubsub-starter</artifactId>
         </dependency>
 
         <!-- Spring -->
@@ -199,6 +208,13 @@
             <version>${jaxb2-basics.version}</version>
             <scope>compile</scope>
         </dependency>
+
+        <dependency>
+            <groupId>org.entur.helpers</groupId>
+            <artifactId>entur-google-pubsub</artifactId>
+            <version>${entur.helpers.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>com.migesok</groupId>
             <artifactId>jaxb-java-time-adapters</artifactId>

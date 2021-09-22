@@ -7,11 +7,11 @@ import no.rutebanken.extime.model.AirportFlightDataSet;
 import no.rutebanken.extime.model.AirportIATA;
 import no.rutebanken.extime.model.FlightType;
 import no.rutebanken.extime.model.StopVisitType;
+import no.rutebanken.extime.routes.BaseRouteBuilder;
 import org.apache.camel.AggregationStrategy;
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.Processor;
-import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.http.HttpMethods;
 
 import java.util.ArrayList;
@@ -22,7 +22,7 @@ import java.util.Map;
 
 import static org.apache.camel.component.stax.StAXBuilder.stax;
 
-public class AvinorRealTimeRouteBuilder extends RouteBuilder {
+public class AvinorRealTimeRouteBuilder extends BaseRouteBuilder {
 
     static final String HEADER_REALTIME_AIRPORT_IATA = "RealTimeAirportIATA";
     static final String HEADER_FLIGHTS_DIRECTION = "FlightsDirection";
@@ -32,7 +32,9 @@ public class AvinorRealTimeRouteBuilder extends RouteBuilder {
     static final String PROPERTY_ORIGINAL_BODY = "OriginalBody";
 
     @Override
-    public void configure() throws Exception {
+    public void configure() {
+
+        super.configure();
 
         from("quartz://avinorRealtimeScheduler?{{avinor.realtime.scheduler.options}}")
                 .routeId("AvinorRealTimeSchedulerStarter")
@@ -80,7 +82,7 @@ public class AvinorRealTimeRouteBuilder extends RouteBuilder {
                 .setHeader(Exchange.HTTP_METHOD, constant(HttpMethods.GET))
                 .setHeader(Exchange.HTTP_QUERY, simpleF("airport=${header.%s}&timeFrom=${header.%s}&timeTo=${header.%s}&direction=${header.%s}",
                         HEADER_REALTIME_AIRPORT_IATA, HEADER_FLIGHTS_TIMEFROM, HEADER_FLIGHTS_TIMETO, HEADER_FLIGHTS_DIRECTION))
-                .setBody(constant(null))
+                .setBody(constant(""))
                 .to("http://{{avinor.realtime.feed.endpoint}}").id("FetchRealtimeFeedProcessor")
                 .split(stax(Flight.class, false), new FlightAggregationStrategy()).streaming()
                     .log(LoggingLevel.DEBUG, this.getClass().getName(), "Fetched flight with id: ${body.flightId}")
