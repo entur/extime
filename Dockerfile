@@ -1,6 +1,14 @@
+FROM adoptopenjdk/openjdk11:alpine-jre as builder
+COPY target/extime-*-SNAPSHOT.jar application.jar
+RUN java -Djarmode=layertools -jar application.jar extract
+
 FROM adoptopenjdk/openjdk11:alpine-jre
 WORKDIR /deployments
-COPY target/extime-*-SNAPSHOT.jar extime.jar
 RUN addgroup appuser && adduser --disabled-password appuser --ingroup appuser
 USER appuser
-CMD java $JAVA_OPTIONS -jar extime.jar
+COPY --from=builder dependencies/ ./
+COPY --from=builder snapshot-dependencies/ ./
+COPY --from=builder spring-boot-loader/ ./
+COPY --from=builder application/ ./
+ENTRYPOINT ["java", "org.springframework.boot.loader.JarLauncher"]
+
