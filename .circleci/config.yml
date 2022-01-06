@@ -41,7 +41,7 @@ aliases:
   - &sonar-scan
     name: Sonar scan
     command: |
-      mvn -s /tools/m2/settings.xml \
+      mvn -s ./circleci-toolbox/tools/m2/settings.xml \
         org.jacoco:jacoco-maven-plugin:prepare-agent verify \
         org.jacoco:jacoco-maven-plugin:report sonar:sonar \
         -Dmaven.main.skip \
@@ -108,7 +108,7 @@ workflows:
   build_test_deploy:
     jobs:
       - build:
-          context: org-carbon
+          context: dev
       - deploy-docker:
           context: global
           requires:
