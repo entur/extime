@@ -40,7 +40,7 @@
         <zt-zip.version>1.14</zt-zip.version>
         <siri-java-model.version>0.13-SNAPSHOT</siri-java-model.version>
         <commons-collections4.version>4.4</commons-collections4.version>
-        <google.cloud.bom-version>24.0.0</google.cloud.bom-version>
+        <google.cloud.bom-version>24.1.2</google.cloud.bom-version>
 
         <entur.google.pubsub.emulator.download.skip>false</entur.google.pubsub.emulator.download.skip>
 
