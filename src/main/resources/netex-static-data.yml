@@ -53,14 +53,7 @@ netex-data-sets:
       name: LuftTransport
       legal-name: LUFTTRANSPORT AS
       phone: 0047 75 43 18 00
-      url: http://www.lufttransport.no/
-      details:
-    vf:
-      company-number: 953 787 571
-      name: FlyViking
-      legal-name: FLYVIKING AS
-      phone: 0047 85 22 08 08
-      url: http://www.flyviking.no/
+      url: https://www.lufttransport.no
       details:
     ay:
       company-number:
@@ -146,13 +139,6 @@ netex-data-sets:
       phone:
       url:
       details:
-    lm:
-      company-number:
-      name: Livingston Energy Flight
-      legal-name: Livingston Energy Flight
-      phone:
-      url:
-      details:
     lo:
       company-number:
       name: LOT Polish Airlines
@@ -178,13 +164,6 @@ netex-data-sets:
       company-number:
       name: Wizz Air
       legal-name: Wizz Air
-      phone:
-      url:
-      details:
-    dk:
-      company-number:
-      name: Thomas Cook Airlines
-      legal-name: Thomas Cook Airlines
       phone:
       url:
       details:

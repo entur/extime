@@ -5,8 +5,8 @@ public enum AirlineIATA {
     AY("Finnair"), BT("Air Baltic"), D8("Norwegian"), DX("DAT Danish Air Transport"),
     LTR("Lufttransport"), RC("Atlantic Airways"), FR("Ryanair"), EJU("EasyJet"),
     KL("KLM"), W2("Flexflight"), AF("Air France"), BA("British Airways"),
-    LH("Lufthansa"), LM("Livingston Energy Flight"), LO("LOT Polish Airlines"), SN("Brussels International Airlines"),
-    SU("Aeroflot Russian Airlines"), W6("Wizz Air"), DK("Thomas Cook Airlines"),
+    LH("Lufthansa"), LO("LOT Polish Airlines"), SN("Brussels International Airlines"),
+    SU("Aeroflot Russian Airlines"), W6("Wizz Air"),
     FL("Air Leap"), FS("Flyr");
 
     private String airlineName;
