@@ -88,7 +88,6 @@ import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.EnumMap;
@@ -107,8 +106,6 @@ import static no.rutebanken.extime.Constants.DEFAULT_LANGUAGE;
 import static no.rutebanken.extime.Constants.DEFAULT_START_INCLUSIVE;
 import static no.rutebanken.extime.Constants.DEFAULT_ZONE_ID;
 import static no.rutebanken.extime.Constants.NETEX_PROFILE_VERSION;
-import static no.rutebanken.extime.Constants.NSR_XMLNS;
-import static no.rutebanken.extime.Constants.NSR_XMLNSURL;
 import static no.rutebanken.extime.Constants.VERSION_ONE;
 import static no.rutebanken.extime.util.AvinorTimetableUtils.isCommonDesignator;
 
@@ -177,10 +174,9 @@ public class NetexObjectFactory {
                 .withValidityConditionRefOrValidBetweenOrValidityCondition_(createAvailabilityCondition(availabilityPeriod));
 
         Codespace avinorCodespace = createCodespace(AVINOR_XMLNS, AVINOR_XMLNSURL);
-        Codespace nsrCodespace = createCodespace(NSR_XMLNS, NSR_XMLNSURL);
 
         Codespaces_RelStructure codespaces = objectFactory.createCodespaces_RelStructure()
-                .withCodespaceRefOrCodespace(Arrays.asList(avinorCodespace, nsrCodespace));
+                .withCodespaceRefOrCodespace(List.of(avinorCodespace));
 
         LocaleStructure localeStructure = objectFactory.createLocaleStructure()
                 .withTimeZone(DEFAULT_ZONE_ID)
@@ -477,28 +473,11 @@ public class NetexObjectFactory {
         return objectFactory.createAuthority(authority);
     }
 
-    public JAXBElement<Authority> createNsrAuthorityElement() {
-        NetexStaticDataSet.OrganisationDataSet nsrDataSet = netexStaticDataSet.getOrganisations()
-                .get(NSR_XMLNS.toLowerCase());
-
-        String authorityId = NetexObjectIdCreator.createAuthorityId(NSR_XMLNS, NSR_XMLNS);
-
-        Authority authority = objectFactory.createAuthority()
-                .withVersion(VERSION_ONE)
-                .withId(authorityId)
-                .withCompanyNumber(nsrDataSet.getCompanyNumber())
-                .withName(createMultilingualString(nsrDataSet.getName()))
-                .withLegalName(createMultilingualString(nsrDataSet.getLegalName()))
-                .withContactDetails(createContactStructure(nsrDataSet.getPhone(), nsrDataSet.getUrl()))
-                .withOrganisationType(OrganisationTypeEnumeration.AUTHORITY);
-        return objectFactory.createAuthority(authority);
-    }
-
     public JAXBElement<Operator> createAirlineOperatorElement(String airlineIata) {
         NetexStaticDataSet.OrganisationDataSet airlineDataSet = netexStaticDataSet.getOrganisations()
                 .get(airlineIata.toLowerCase());
 
-        if(airlineDataSet == null) {
+        if (airlineDataSet == null) {
             throw new IllegalArgumentException("Unknown airline: " + airlineIata);
         }
 
@@ -587,8 +566,8 @@ public class NetexObjectFactory {
     private AirSubmodeEnumeration getAirSubmode(String lineDesignation) {
         Map<String, NetexStaticDataSet.StopPlaceDataSet> stopPlaceDataSets = netexStaticDataSet.getStopPlaces();
 
-        for(String airport: lineDesignation.split(DASH)) {
-            if(stopPlaceDataSets.get(airport.toLowerCase()).isInternational()) {
+        for (String airport : lineDesignation.split(DASH)) {
+            if (stopPlaceDataSets.get(airport.toLowerCase()).isInternational()) {
                 return AirSubmodeEnumeration.INTERNATIONAL_FLIGHT;
             }
         }

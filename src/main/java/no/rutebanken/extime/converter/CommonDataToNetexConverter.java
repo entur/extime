@@ -26,7 +26,6 @@ import org.springframework.stereotype.Component;
 import javax.xml.bind.JAXBElement;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -34,8 +33,6 @@ import java.util.Set;
 
 import static no.rutebanken.extime.Constants.AVINOR_XMLNS;
 import static no.rutebanken.extime.Constants.AVINOR_XMLNSURL;
-import static no.rutebanken.extime.Constants.NSR_XMLNS;
-import static no.rutebanken.extime.Constants.NSR_XMLNSURL;
 
 @Component(value = "commonDataToNetexConverter")
 public class CommonDataToNetexConverter {
@@ -62,11 +59,9 @@ public class CommonDataToNetexConverter {
         Instant publicationTimestamp = Instant.now();
 
         Codespace avinorCodespace = netexObjectFactory.createCodespace(AVINOR_XMLNS, AVINOR_XMLNSURL);
-        Codespace nsrCodespace = netexObjectFactory.createCodespace(NSR_XMLNS, NSR_XMLNSURL);
 
         JAXBElement<Authority> avinorAuthorityElement = netexObjectFactory.createAvinorAuthorityElement();
-        JAXBElement<Authority> nsrAuthorityElement = netexObjectFactory.createNsrAuthorityElement();
-        List<JAXBElement<Authority>> authorityElements = Arrays.asList(avinorAuthorityElement, nsrAuthorityElement);
+        List<JAXBElement<Authority>> authorityElements = List.of(avinorAuthorityElement);
 
         List<JAXBElement<Operator>> operatorElements = new ArrayList<>(AirlineDesignator.values().length);
         List<JAXBElement<Branding>> brandingElements = new ArrayList<>(AirlineDesignator.values().length);
@@ -117,7 +112,7 @@ public class CommonDataToNetexConverter {
         framesStruct.getCommonFrame().add(netexObjectFactory.createCommonServiceFrameElement(networks, routePoints, stopPoints, stopAssignmentElements));
 
         JAXBElement<CompositeFrame> compositeFrameElement = netexObjectFactory
-                .createCompositeFrameElement(publicationTimestamp, framesStruct, dateUtils.generateAvailabilityPeriod(), avinorCodespace, nsrCodespace);
+                .createCompositeFrameElement(publicationTimestamp, framesStruct, dateUtils.generateAvailabilityPeriod(), avinorCodespace);
 
         logger.info("Done converting common data to NeTEx");
 
