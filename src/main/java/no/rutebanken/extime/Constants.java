@@ -22,6 +22,9 @@ public final class Constants {
     public static final String NETEX_PROFILE_VERSION = "1.13:NO-NeTEx-networktimetable:1.3";
     public static final String VERSION_ONE = "1";
 
+    public static final String NSR_XMLNS = "NSR";
+    public static final String NSR_XMLNSURL = "http://www.rutebanken.org/ns/nsr";
+
     public static final String AVINOR_XMLNS = "AVI";
     public static final String AVINOR_XMLNSURL = "http://www.rutebanken.org/ns/avi";
     

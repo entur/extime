@@ -33,6 +33,8 @@ import java.util.Set;
 
 import static no.rutebanken.extime.Constants.AVINOR_XMLNS;
 import static no.rutebanken.extime.Constants.AVINOR_XMLNSURL;
+import static no.rutebanken.extime.Constants.NSR_XMLNS;
+import static no.rutebanken.extime.Constants.NSR_XMLNSURL;
 
 @Component(value = "commonDataToNetexConverter")
 public class CommonDataToNetexConverter {
@@ -59,6 +61,7 @@ public class CommonDataToNetexConverter {
         Instant publicationTimestamp = Instant.now();
 
         Codespace avinorCodespace = netexObjectFactory.createCodespace(AVINOR_XMLNS, AVINOR_XMLNSURL);
+        Codespace nsrCodespace = netexObjectFactory.createCodespace(NSR_XMLNS, NSR_XMLNSURL);
 
         JAXBElement<Authority> avinorAuthorityElement = netexObjectFactory.createAvinorAuthorityElement();
         List<JAXBElement<Authority>> authorityElements = List.of(avinorAuthorityElement);
@@ -112,7 +115,8 @@ public class CommonDataToNetexConverter {
         framesStruct.getCommonFrame().add(netexObjectFactory.createCommonServiceFrameElement(networks, routePoints, stopPoints, stopAssignmentElements));
 
         JAXBElement<CompositeFrame> compositeFrameElement = netexObjectFactory
-                .createCompositeFrameElement(publicationTimestamp, framesStruct, dateUtils.generateAvailabilityPeriod(), avinorCodespace);
+                .createCompositeFrameElement(publicationTimestamp, framesStruct, dateUtils.generateAvailabilityPeriod(), avinorCodespace, nsrCodespace);
+
 
         logger.info("Done converting common data to NeTEx");
 
