@@ -185,7 +185,7 @@ class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationTestBase
         List<LocalDate> patternDates = new ArrayList<>();
         Set<Integer> exclusions = new HashSet<>();
         if (exclusionArray != null) {
-            Arrays.stream(exclusionArray).forEach(e -> exclusions.add(e));
+            Arrays.stream(exclusionArray).forEach(exclusions::add);
         }
 
         LocalDate current = start;
