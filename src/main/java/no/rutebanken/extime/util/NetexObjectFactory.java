@@ -88,6 +88,7 @@ import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.EnumMap;
@@ -106,6 +107,8 @@ import static no.rutebanken.extime.Constants.DEFAULT_LANGUAGE;
 import static no.rutebanken.extime.Constants.DEFAULT_START_INCLUSIVE;
 import static no.rutebanken.extime.Constants.DEFAULT_ZONE_ID;
 import static no.rutebanken.extime.Constants.NETEX_PROFILE_VERSION;
+import static no.rutebanken.extime.Constants.NSR_XMLNS;
+import static no.rutebanken.extime.Constants.NSR_XMLNSURL;
 import static no.rutebanken.extime.Constants.VERSION_ONE;
 import static no.rutebanken.extime.util.AvinorTimetableUtils.isCommonDesignator;
 
