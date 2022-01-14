@@ -129,7 +129,7 @@ public class AvinorTimetableUtils {
         for (int i = 1; i <= 2; i++) {
             for (AirportIATA airportIATA : airportIATAs) {
                 String resourceName = String.format("%s-%d.xml", airportIATA, i);
-                Flights flightStructure = generateObjectsFromXml(String.format("/testdata/%s", resourceName), Flights.class);
+                Flights flightStructure = generateObjectsFromXml(String.format("/xml/testdata/%s", resourceName), Flights.class);
                 List<Flight> flights = flightStructure.getFlight();
                 generatedFlights.addAll(flights);
             }
