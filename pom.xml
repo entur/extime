@@ -32,7 +32,7 @@
 
     <properties>
 
-        <camel.version>3.14.1</camel.version>
+        <camel.version>3.14.2</camel.version>
         <entur.helpers.version>1.0.68</entur.helpers.version>
         <jaxb2-basics.version>0.12.0</jaxb2-basics.version>
         <jaxb-java-time-adapters>1.1.3</jaxb-java-time-adapters>
