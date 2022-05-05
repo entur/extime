@@ -395,7 +395,7 @@ public class AvinorTimetableRouteBuilder extends BaseRouteBuilder {
         }
 
         private boolean isCollection(Object body) {
-            return Collection.class.isInstance(body);
+            return body instanceof Collection;
         }
     }
 

@@ -20,7 +20,7 @@ import java.nio.file.Paths;
 @Profile("gcs-blobstore")
 public class GcsBlobStoreRepository implements BlobStoreRepository {
 
-    private static Logger log = LoggerFactory.getLogger(GcsBlobStoreRepository.class);
+    private static final Logger log = LoggerFactory.getLogger(GcsBlobStoreRepository.class);
 
 
     @Value("${blobstore.gcs.credential.path}")

@@ -91,7 +91,7 @@ public class ScheduledFlightConverter {
     @Value("${avinor.timetable.period.months}")
     private int numberOfMonthsInPeriod;
 
-    private String uriParametersFormat = "airport=%s&direction=%s&designator=%s&number=%s&PeriodFrom=%sZ&PeriodTo=%sZ";
+    private final String uriParametersFormat = "airport=%s&direction=%s&designator=%s&number=%s&PeriodFrom=%sZ&PeriodTo=%sZ";
 
     private Map<String, NetexStaticDataSet.StopPlaceDataSet> stopPlaceDataSets;
 

@@ -402,7 +402,7 @@ class AvinorTimetableRouteBuilderTest extends ExtimeCamelRouteBuilderIntegration
                 .isNotEmpty()
                 .hasSize(6)
                 .hasOnlyElementsOfType(Flight.class)
-                .allMatch((Predicate<Flight>) flight ->
+                .allMatch(flight ->
                         flight.getDepartureStation().equals("OSL") && flight.getArrivalStation().equals("TRD"));
     }
 

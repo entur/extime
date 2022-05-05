@@ -136,8 +136,8 @@ public class NetexObjectFactory {
         dayOfWeekMap.put(DayOfWeek.SUNDAY, DayOfWeekEnumeration.SUNDAY);
     }
 
-    private Map<String, Route> routes = new HashMap<>();
-    private Map<String, DestinationDisplay> destinationDisplays = new HashMap<>();
+    private final Map<String, Route> routes = new HashMap<>();
+    private final Map<String, DestinationDisplay> destinationDisplays = new HashMap<>();
 
     public PublicationDeliveryStructure createPublicationDeliveryStructure(Instant publicationTimestamp, JAXBElement<CompositeFrame> compositeFrame, String lineName) {
         NetexStaticDataSet.OrganisationDataSet avinorDataSet = netexStaticDataSet.getOrganisations().get(AVINOR_XMLNS.toLowerCase());

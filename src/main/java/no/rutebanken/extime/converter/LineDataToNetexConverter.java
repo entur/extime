@@ -83,12 +83,12 @@ public class LineDataToNetexConverter {
     private static final String AIRLINE_IATA = "airline_iata";
     private static final String LINE_DESIGNATION = "line_designation";
 
-    private Map<String, String> localContext = new HashMap<>();
-    private Map<String, String> routeIdDesignationMap = new HashMap<>();
-    private Map<String, JourneyPattern> routeDesignationPatternMap = new HashMap<>();
-    private Map<String, DayType> dayTypes = new HashMap<>();
-    private Map<String, DayTypeAssignment> dayTypeAssignments = new HashMap<>();
-    private Map<String, OperatingPeriod> operatingPeriods = new HashMap<>();
+    private final Map<String, String> localContext = new HashMap<>();
+    private final Map<String, String> routeIdDesignationMap = new HashMap<>();
+    private final Map<String, JourneyPattern> routeDesignationPatternMap = new HashMap<>();
+    private final Map<String, DayType> dayTypes = new HashMap<>();
+    private final Map<String, DayTypeAssignment> dayTypeAssignments = new HashMap<>();
+    private final Map<String, OperatingPeriod> operatingPeriods = new HashMap<>();
 
     @Autowired
     private NetexStaticDataSet netexStaticDataSet;
