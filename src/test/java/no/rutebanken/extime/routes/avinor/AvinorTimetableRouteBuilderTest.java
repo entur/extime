@@ -185,7 +185,7 @@ class AvinorTimetableRouteBuilderTest extends ExtimeCamelRouteBuilderIntegration
         AdviceWith.adviceWith(context, "FetchAndCacheAirportName", a -> {
             a.weaveById("FetchAirportNameFromHttpFeedProcessor").replace().to("mock:fetchXmlFromHttp");
             a.interceptSendToEndpoint("mock:fetchXmlFromHttp").process(exchange -> {
-                InputStream inputStream = new FileInputStream("target/classes/xml/airportname-osl.xml");
+                InputStream inputStream = getClass().getResourceAsStream("/xml/airportname-osl.xml");
                 exchange.getIn().setBody(inputStream);
             });
             a.mockEndpointsAndSkip("direct:addResourceToCache");
@@ -212,7 +212,7 @@ class AvinorTimetableRouteBuilderTest extends ExtimeCamelRouteBuilderIntegration
         AdviceWith.adviceWith(context, "FetchAndCacheAirlineName", a -> {
             a.weaveById("FetchAirlineNameFromHttpFeedProcessor").replace().to("mock:fetchXmlFromHttp");
             a.interceptSendToEndpoint("mock:fetchXmlFromHttp").process(exchange -> {
-                InputStream inputStream = new FileInputStream("target/classes/xml/airlinename-dy.xml");
+                InputStream inputStream = getClass().getResourceAsStream("/xml/airlinename-dy.xml");
                 exchange.getIn().setBody(inputStream);
             });
             a.mockEndpointsAndSkip("direct:addResourceToCache");
@@ -367,7 +367,8 @@ class AvinorTimetableRouteBuilderTest extends ExtimeCamelRouteBuilderIntegration
 
         mockFlightSplitWireTap.expectedMessageCount(12);
 
-        InputStream inputStream = new FileInputStream("target/classes/xml/scheduled-flights.xml");
+        InputStream inputStream = getClass().getResourceAsStream("/xml/scheduled-flights.xml");
+
         List<Flight> flights = (List<Flight>) splitJoinFlightsTemplate.requestBodyAndHeader(
                 inputStream, HEADER_TIMETABLE_STOP_VISIT_TYPE, StopVisitType.DEPARTURE);
 
@@ -389,7 +390,8 @@ class AvinorTimetableRouteBuilderTest extends ExtimeCamelRouteBuilderIntegration
 
         mockFlightSplitWireTap.expectedMessageCount(24);
 
-        InputStream inputStream = new FileInputStream("target/classes/xml/scheduled-arrivals-trd.xml");
+        InputStream inputStream = getClass().getResourceAsStream("/xml/scheduled-arrivals-trd.xml");
+
         List<Flight> flights = (List<Flight>) splitJoinFlightsTemplate.requestBodyAndHeader(
                 inputStream, HEADER_TIMETABLE_STOP_VISIT_TYPE, StopVisitType.ARRIVAL);
 

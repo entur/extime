@@ -17,7 +17,7 @@ public class FlightDataProducerRouteBuilder extends BaseRouteBuilder {
 
         super.configure();
 
-        from("quartz://flightDataScheduler?fireNow=true&trigger.repeatCount=0")
+        from("quartz://flightDataScheduler?trigger.repeatCount=0")
                 .routeId("FlightDataProducerStarter")
                 .autoStartup(false)
                 .process(exchange -> {
