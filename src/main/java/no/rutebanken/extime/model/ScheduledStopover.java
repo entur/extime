@@ -111,16 +111,14 @@ public class ScheduledStopover {
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("ScheduledStopover{");
-        sb.append("id=").append(id);
-        sb.append(", airportIATA='").append(airportIATA).append('\'');
-        sb.append(", airportName='").append(airportName).append('\'');
-        sb.append(", arrivalTime=").append(arrivalTime);
-        sb.append(", departureTime=").append(departureTime);
-        sb.append(", forAlighting=").append(forAlighting);
-        sb.append(", forBoarding=").append(forBoarding);
-        sb.append(", order=").append(order);
-        sb.append('}');
-        return sb.toString();
+        return "ScheduledStopover{" + "id=" + id +
+                ", airportIATA='" + airportIATA + '\'' +
+                ", airportName='" + airportName + '\'' +
+                ", arrivalTime=" + arrivalTime +
+                ", departureTime=" + departureTime +
+                ", forAlighting=" + forAlighting +
+                ", forBoarding=" + forBoarding +
+                ", order=" + order +
+                '}';
     }
 }

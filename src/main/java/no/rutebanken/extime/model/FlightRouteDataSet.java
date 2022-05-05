@@ -109,15 +109,13 @@ public class FlightRouteDataSet {
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("FlightRouteDataSet{");
-        sb.append("flightId='").append(flightId).append('\'');
-        sb.append(", airlineIATA='").append(airlineIATA).append('\'');
-        sb.append(", departureAirportName=").append(departureAirportName.getName());
-        sb.append(", arrivalAirportName=").append(arrivalAirportName.getName());
-        sb.append(", departureFlight=").append(departureFlight.getUniqueID());
-        sb.append(", arrivalFlight=").append(arrivalFlight.getUniqueID());
-        sb.append('}');
-        return sb.toString();
+        return "FlightRouteDataSet{" + "flightId='" + flightId + '\'' +
+                ", airlineIATA='" + airlineIATA + '\'' +
+                ", departureAirportName=" + departureAirportName.getName() +
+                ", arrivalAirportName=" + arrivalAirportName.getName() +
+                ", departureFlight=" + departureFlight.getUniqueID() +
+                ", arrivalFlight=" + arrivalFlight.getUniqueID() +
+                '}';
     }
 
 }

@@ -357,9 +357,9 @@ public class AvinorTimetableRouteBuilder extends BaseRouteBuilder {
         ;
     }
 
-    private class AirportIataProcessor implements Processor {
+    private static class AirportIataProcessor implements Processor {
         @Override
-        public void process(Exchange exchange) throws Exception {
+        public void process(Exchange exchange) {
             AirportIATA[] airportIATAs = Arrays.stream(AirportIATA.values())
                     .filter(iata -> !iata.equals(AirportIATA.OSL))
                     .toArray(AirportIATA[]::new);
@@ -367,7 +367,7 @@ public class AvinorTimetableRouteBuilder extends BaseRouteBuilder {
         }
     }
 
-    private class ScheduledFlightListAggregationStrategy implements AggregationStrategy {
+    private static class ScheduledFlightListAggregationStrategy implements AggregationStrategy {
         @Override
         @SuppressWarnings("unchecked")
         public Exchange aggregate(Exchange oldExchange, Exchange newExchange) {
@@ -399,7 +399,7 @@ public class AvinorTimetableRouteBuilder extends BaseRouteBuilder {
         }
     }
 
-    private class ScheduledAirportFlightsAggregationStrategy implements AggregationStrategy {
+    private static class ScheduledAirportFlightsAggregationStrategy implements AggregationStrategy {
         @Override
         public Exchange aggregate(Exchange oldExchange, Exchange newExchange) {
             StopVisitType stopVisitType = newExchange.getIn().getHeader(
@@ -429,7 +429,7 @@ public class AvinorTimetableRouteBuilder extends BaseRouteBuilder {
         }
     }
 
-    private class AirlineNameEnricherAggregationStrategy implements AggregationStrategy {
+    private static class AirlineNameEnricherAggregationStrategy implements AggregationStrategy {
         @Override
         public Exchange aggregate(Exchange original, Exchange resource) {
             LineDataSet originalBody = original.getProperty(PROPERTY_LINE_DATASET_ORIGINAL_BODY, LineDataSet.class);
