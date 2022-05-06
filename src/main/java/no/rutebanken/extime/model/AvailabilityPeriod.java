@@ -51,10 +51,8 @@ public class AvailabilityPeriod {
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("AvailabilityPeriod{");
-        sb.append("periodFromDateTime=").append(periodFromDateTime);
-        sb.append(", periodToDateTime=").append(periodToDateTime);
-        sb.append('}');
-        return sb.toString();
+        return "AvailabilityPeriod{" + "periodFromDateTime=" + periodFromDateTime +
+                ", periodToDateTime=" + periodToDateTime +
+                '}';
     }
 }

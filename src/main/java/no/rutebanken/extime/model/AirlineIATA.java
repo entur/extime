@@ -9,7 +9,7 @@ public enum AirlineIATA {
     SU("Aeroflot Russian Airlines"), W6("Wizz Air"),
     FL("Air Leap"), FS("Flyr");
 
-    private String airlineName;
+    private final String airlineName;
 
     AirlineIATA(String airlineName) {
         this.airlineName = airlineName;

@@ -7,7 +7,7 @@ public enum ServiceType {
     SCHEDULED_PASSENGER_SERVICE("U"),
     SCHEDULED_PASSENGER_CARGO("Q");
 
-    private String code;
+    private final String code;
 
     ServiceType(String code) {
         this.code = code;

@@ -17,12 +17,12 @@ public class ZonedDateTimeFromDateXmlAdapter extends XmlAdapter<String, ZonedDat
             .toFormatter();
 
     @Override
-    public ZonedDateTime unmarshal(String inputDate) throws Exception {
+    public ZonedDateTime unmarshal(String inputDate) {
         return ZonedDateTime.parse(inputDate, formatter);
     }
 
     @Override
-    public String marshal(ZonedDateTime inputDate) throws Exception {
+    public String marshal(ZonedDateTime inputDate) {
         if (inputDate != null) {
             return formatter.format(inputDate);
         } else {

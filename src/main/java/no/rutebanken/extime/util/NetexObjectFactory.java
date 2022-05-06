@@ -136,8 +136,8 @@ public class NetexObjectFactory {
         dayOfWeekMap.put(DayOfWeek.SUNDAY, DayOfWeekEnumeration.SUNDAY);
     }
 
-    private Map<String, Route> routes = new HashMap<>();
-    private Map<String, DestinationDisplay> destinationDisplays = new HashMap<>();
+    private final Map<String, Route> routes = new HashMap<>();
+    private final Map<String, DestinationDisplay> destinationDisplays = new HashMap<>();
 
     public PublicationDeliveryStructure createPublicationDeliveryStructure(Instant publicationTimestamp, JAXBElement<CompositeFrame> compositeFrame, String lineName) {
         NetexStaticDataSet.OrganisationDataSet avinorDataSet = netexStaticDataSet.getOrganisations().get(AVINOR_XMLNS.toLowerCase());
@@ -249,17 +249,14 @@ public class NetexObjectFactory {
         resourceFrame.setOrganisations(organisationsStruct);
         resourceFrame.setTypesOfValue(new TypesOfValueInFrame_RelStructure());
 
-        for (Iterator<JAXBElement<Authority>> iterator = authorityElements.iterator(); iterator.hasNext(); ) {
-            JAXBElement<Authority> authorityElement = iterator.next();
+        for (JAXBElement<Authority> authorityElement : authorityElements) {
             resourceFrame.getOrganisations().getOrganisation_().add(authorityElement);
         }
 
-        for (Iterator<JAXBElement<Operator>> iterator = operatorElements.iterator(); iterator.hasNext(); ) {
-            JAXBElement<Operator> operatorElement = iterator.next();
+        for (JAXBElement<Operator> operatorElement : operatorElements) {
             resourceFrame.getOrganisations().getOrganisation_().add(operatorElement);
         }
-        for (Iterator<JAXBElement<Branding>> iterator = brandingElements.iterator(); iterator.hasNext(); ) {
-            JAXBElement<Branding> brandingElement = iterator.next();
+        for (JAXBElement<Branding> brandingElement : brandingElements) {
             resourceFrame.getTypesOfValue().getValueSetOrTypeOfValue().add(brandingElement);
         }
 

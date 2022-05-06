@@ -4,7 +4,7 @@ public enum FlightType {
 
     DOMESTIC("D"), INTERNATIONAL("I"), SCHENGEN("I");
 
-    private String code;
+    private final String code;
 
     FlightType(String code) {
         this.code = code;

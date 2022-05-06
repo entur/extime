@@ -90,9 +90,9 @@ public class AvinorRealTimeRouteBuilder extends BaseRouteBuilder {
         ;
     }
 
-    class AirportEnricherInitProcessor implements Processor {
+    static class AirportEnricherInitProcessor implements Processor {
         @Override
-        public void process(Exchange exchange) throws Exception {
+        public void process(Exchange exchange) {
             AirportFlightDataSet originalBody = exchange.getIn().getBody(AirportFlightDataSet.class);
             exchange.setProperty(PROPERTY_ORIGINAL_BODY, originalBody);
             String enrichParameter = exchange.getIn().getHeader(HEADER_REALTIME_AIRPORT_IATA, String.class);
@@ -100,7 +100,7 @@ public class AvinorRealTimeRouteBuilder extends BaseRouteBuilder {
         }
     }
 
-    class AirportFlightAggregationStrategy implements AggregationStrategy {
+    static class AirportFlightAggregationStrategy implements AggregationStrategy {
         @Override
         public Exchange aggregate(Exchange oldExchange, Exchange newExchange) {
             String airportIATACode = newExchange.getIn().getHeader(HEADER_REALTIME_AIRPORT_IATA, String.class);
@@ -120,7 +120,7 @@ public class AvinorRealTimeRouteBuilder extends BaseRouteBuilder {
         }
     }
 
-    class FlightDirectionAggregationStrategy implements AggregationStrategy {
+    static class FlightDirectionAggregationStrategy implements AggregationStrategy {
         @Override
         public Exchange aggregate(Exchange oldExchange, Exchange newExchange) {
             @SuppressWarnings("unchecked")
@@ -139,7 +139,7 @@ public class AvinorRealTimeRouteBuilder extends BaseRouteBuilder {
         }
     }
 
-    class FlightAggregationStrategy implements AggregationStrategy {
+    static class FlightAggregationStrategy implements AggregationStrategy {
         @Override
         public Exchange aggregate(Exchange oldExchange, Exchange newExchange) {
             Flight body = newExchange.getIn().getBody(Flight.class);
@@ -170,7 +170,7 @@ public class AvinorRealTimeRouteBuilder extends BaseRouteBuilder {
         }
     }
 
-    class AirportEnricherAggregationStrategy implements AggregationStrategy {
+    static class AirportEnricherAggregationStrategy implements AggregationStrategy {
         public Exchange aggregate(Exchange original, Exchange resource) {
             AirportFlightDataSet originalBody = original.getProperty(PROPERTY_ORIGINAL_BODY, AirportFlightDataSet.class);
             AirportNames enrichment = resource.getIn().getBody(AirportNames.class);

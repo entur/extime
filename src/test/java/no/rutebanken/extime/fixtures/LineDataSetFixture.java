@@ -47,11 +47,11 @@ public final class LineDataSetFixture {
     }
 
     public static String getAirportName(String iata) {
-        return airports.containsKey(iata) ? airports.get(iata) : null;
+        return airports.getOrDefault(iata, null);
     }
 
     public static String getAirlineName(String iata) {
-        return airlines.containsKey(iata) ? airlines.get(iata) : null;
+        return airlines.getOrDefault(iata, null);
     }
 
     public static LineDataSet createEmptyLineDataSet() {

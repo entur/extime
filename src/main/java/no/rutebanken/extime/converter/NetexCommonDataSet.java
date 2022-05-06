@@ -50,9 +50,9 @@ public class NetexCommonDataSet {
     private NetexObjectFactory netexObjectFactory;
 
     private BiMap<String, String> airportHashes = HashBiMap.create();
-    private Map<String, ScheduledStopPoint> stopPointMap = new HashMap<>();
-    private Map<String, PassengerStopAssignment> stopAssignmentMap = new HashMap<>();
-    private Map<String, RoutePoint> routePointMap = new HashMap<>();
+    private final Map<String, ScheduledStopPoint> stopPointMap = new HashMap<>();
+    private final Map<String, PassengerStopAssignment> stopAssignmentMap = new HashMap<>();
+    private final Map<String, RoutePoint> routePointMap = new HashMap<>();
 
     @PostConstruct
     public void init() {

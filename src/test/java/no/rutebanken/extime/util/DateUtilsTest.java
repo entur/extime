@@ -110,7 +110,7 @@ class DateUtilsTest {
                 .isNotNull()
                 .isNotEmpty()
                 .hasSameSizeAs(workDays)
-                .allMatch((Predicate<Boolean>) isWorkDay -> isWorkDay.equals(Boolean.TRUE));
+                .allMatch(isWorkDay -> isWorkDay.equals(Boolean.TRUE));
     }
 
     @Test
@@ -130,7 +130,7 @@ class DateUtilsTest {
                 .isNotNull()
                 .isNotEmpty()
                 .hasSameSizeAs(weekendDays)
-                .allMatch((Predicate<Boolean>) isWorkDay -> isWorkDay.equals(Boolean.FALSE));
+                .allMatch(isWorkDay -> isWorkDay.equals(Boolean.FALSE));
     }
 
     @Test
@@ -153,7 +153,7 @@ class DateUtilsTest {
                 .isNotNull()
                 .isNotEmpty()
                 .hasSameSizeAs(workDays)
-                .allMatch((Predicate<Boolean>) isWeekendDay -> isWeekendDay.equals(Boolean.FALSE));
+                .allMatch(isWeekendDay -> isWeekendDay.equals(Boolean.FALSE));
     }
 
     @Test
@@ -173,7 +173,7 @@ class DateUtilsTest {
                 .isNotNull()
                 .isNotEmpty()
                 .hasSameSizeAs(weekendDays)
-                .allMatch((Predicate<Boolean>) isWeekendDay -> isWeekendDay.equals(Boolean.TRUE));
+                .allMatch(isWeekendDay -> isWeekendDay.equals(Boolean.TRUE));
     }
 
 }

@@ -91,7 +91,7 @@ public class ScheduledFlightConverter {
     @Value("${avinor.timetable.period.months}")
     private int numberOfMonthsInPeriod;
 
-    private String uriParametersFormat = "airport=%s&direction=%s&designator=%s&number=%s&PeriodFrom=%sZ&PeriodTo=%sZ";
+    private static final String URI_PARAMETERS_FORMAT = "airport=%s&direction=%s&designator=%s&number=%s&PeriodFrom=%sZ&PeriodTo=%sZ";
 
     private Map<String, NetexStaticDataSet.StopPlaceDataSet> stopPlaceDataSets;
 
@@ -381,7 +381,7 @@ public class ScheduledFlightConverter {
     private boolean isInternationalDepartureFound(Flight currentFlight) {
         String dateOfOperation = currentFlight.getDateOfOperation().format(DATE_TIME_FORMATTER);
 
-        String uriParameters = String.format(uriParametersFormat,
+        String uriParameters = String.format(URI_PARAMETERS_FORMAT,
                 currentFlight.getDepartureStation(), StopVisitType.ARRIVAL.getCode(),
                 currentFlight.getAirlineDesignator(), currentFlight.getFlightNumber(), dateOfOperation, dateOfOperation);
 
@@ -394,7 +394,7 @@ public class ScheduledFlightConverter {
     private boolean isInternationalArrivalFound(Flight currentFlight) {
         String dateOfOperation = currentFlight.getDateOfOperation().format(DATE_TIME_FORMATTER);
 
-        String uriParameters = String.format(uriParametersFormat,
+        String uriParameters = String.format(URI_PARAMETERS_FORMAT,
                 currentFlight.getDepartureStation(), StopVisitType.DEPARTURE.getCode(),
                 currentFlight.getAirlineDesignator(), currentFlight.getFlightNumber(), dateOfOperation, dateOfOperation);
 
@@ -587,7 +587,7 @@ public class ScheduledFlightConverter {
         return scheduledFlight;
     }
 
-    private class AirportWithSize {
+    private static class AirportWithSize {
         AirportIATA airportIata;
         int size;
 
