@@ -1,3 +1,4 @@
+env: test
 avinorTimetableSchedulerCron: 0+0+5+*+*+?
 gcp:
   bucketName: ror-marduk-exchange-test

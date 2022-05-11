@@ -1,3 +1,4 @@
+env: dev
 avinorTimetableSchedulerCron: 0+4+3+*+*+?
 gcp:
   bucketName: ror-marduk-exchange-dev

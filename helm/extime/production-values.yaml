@@ -1,3 +1,4 @@
+env: prod
 avinorTimetableSchedulerCron: 0+58+2+*+*+?
 gcp:
   bucketName: ror-marduk-exchange-production
