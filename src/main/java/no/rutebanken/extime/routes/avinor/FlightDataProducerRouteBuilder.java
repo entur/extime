@@ -9,6 +9,8 @@ import org.apache.camel.component.http.HttpMethods;
 
 import java.util.Arrays;
 
+import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.HEADER_EXTIME_HTTP_URI;
+
 //@Component
 public class FlightDataProducerRouteBuilder extends BaseRouteBuilder {
 
@@ -47,7 +49,7 @@ public class FlightDataProducerRouteBuilder extends BaseRouteBuilder {
 
         from("direct:fetchTimetableByRanges")
                 .routeId("FetchTimetableByRanges")
-                .setHeader("ExtimeHttpUri", simple("{{avinor.timetable.feed.endpoint}}"))
+                .setHeader(HEADER_EXTIME_HTTP_URI, simple("{{avinor.timetable.feed.endpoint}}"))
                 .split(body())
                     .setHeader("DataFeedLowerRange", simple("${bean:dateUtils.format(${body.lowerEndpoint()})}Z"))
                     .setHeader("DataFeedUpperRange", simple("${bean:dateUtils.format(${body.upperEndpoint()})}Z"))
@@ -71,15 +73,16 @@ public class FlightDataProducerRouteBuilder extends BaseRouteBuilder {
                 .setHeader(Exchange.HTTP_METHOD, constant(HttpMethods.GET))
                 .setHeader(Exchange.HTTP_QUERY, simpleF("${header.%s}", "FeedUriParameters"))
                 .setBody(constant(""))
-                .toD("${header.ExtimeHttpUri}")
-                .convertBodyTo(String.class, "iso-8859-1")
+                .toD("${header." + HEADER_EXTIME_HTTP_URI + "}")
+                // convert using the charset retrieved from the HTTP response header that Camel sets in the property Exchange.CHARSET_NAME
+                .convertBodyTo(String.class)
+                // remove the property Exchange.CHARSET_NAME after the conversion so that the JAXB formats can be overriden with a custom encoding
+                .removeProperty(Exchange.CHARSET_NAME)
                 .process(exchange -> {
                     String uuid = getContext().getUuidGenerator().generateUuid();
                     exchange.getIn().setHeader("FileNameGenerated", uuid);
                 })
                 .setHeader(Exchange.FILE_NAME, simple("${header.FileNameGenerated}.xml"))
-                .setHeader(Exchange.CONTENT_TYPE, constant("text/xml;charset=iso-8859-1"))
-                .setHeader(Exchange.CHARSET_NAME, constant("iso-8859-1"))
                 .to("file:target/testdata")
         ;
 

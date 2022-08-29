@@ -12,7 +12,6 @@ import javax.xml.transform.stream.StreamSource;
 @Component
 public class AvinorCommonRouteBuilder extends BaseRouteBuilder {
 
-    public static final String DEFAULT_HTTP_CHARSET = "iso-8859-1";
 
     public static final String HEADER_EXTIME_RESOURCE_CODE = "ExtimeResourceCode";
     public static final String HEADER_EXTIME_FETCH_RESOURCE_ENDPOINT = "ExtimeFetchResourceEndpoint";
@@ -67,9 +66,12 @@ public class AvinorCommonRouteBuilder extends BaseRouteBuilder {
                 .log(LoggingLevel.DEBUG, this.getClass().getName(), String.format("HTTP QUERY HEADER: ${header.%s}", Exchange.HTTP_QUERY))
                 .setBody(constant(""))
                 .throttle(1).timePeriodMillis(1000)
-                    .toD("${header.ExtimeHttpUri}").id("FetchXmlFromHttpFeedProcessor")
+                .toD("${header." + HEADER_EXTIME_HTTP_URI + "}").id("FetchXmlFromHttpFeedProcessor")
                 .end()
-                .convertBodyTo(StreamSource.class, DEFAULT_HTTP_CHARSET)
+                // convert using the charset retrieved from the HTTP response header that Camel sets in the property Exchange.CHARSET_NAME
+                .convertBodyTo(StreamSource.class)
+                // remove the property Exchange.CHARSET_NAME after the conversion so that the JAXB formats can be overriden with a custom encoding
+                .removeProperty(Exchange.CHARSET_NAME)
         ;
 
     }

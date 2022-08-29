@@ -160,10 +160,10 @@ class AvinorCommonRouteBuilderTest extends ExtimeCamelRouteBuilderIntegrationTes
         mockFetchFromHttpEndpoint.expectedHeaderReceived(
                 Exchange.HTTP_QUERY, "airport=TRD&direction=D&PeriodFrom=2017-01-01Z&PeriodTo=2017-01-31Z");
         mockFetchFromHttpEndpoint.expectedHeaderReceived(
-                HEADER_EXTIME_HTTP_URI, "http://195.69.13.136/XmlFeedScheduled.asp");
+                HEADER_EXTIME_HTTP_URI, "https://flydata.avinor.no/XmlFeedScheduled.asp");
 
         Map<String,Object> headers = Maps.newHashMap();
-        headers.put(HEADER_EXTIME_HTTP_URI, "http://195.69.13.136/XmlFeedScheduled.asp");
+        headers.put(HEADER_EXTIME_HTTP_URI, "https://flydata.avinor.no/XmlFeedScheduled.asp");
         headers.put(HEADER_EXTIME_URI_PARAMETERS, "airport=TRD&direction=D&PeriodFrom=2017-01-01Z&PeriodTo=2017-01-31Z");
 
         fetchXmlStreamFromHttpFeedTemplate.sendBodyAndHeaders(null, headers);

@@ -27,6 +27,7 @@ import org.rutebanken.netex.model.PublicationDeliveryStructure;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -66,6 +67,8 @@ public class AvinorTimetableRouteBuilder extends BaseRouteBuilder {
     private static final String PROPERTY_LINE_DATASET_ORIGINAL_BODY = "LineDataSetOriginalBody";
     private static final String PROPERTY_LINE_DATASETS_LIST_ORIGINAL_BODY = "LineDataSetsListOriginalBody";
 
+    private static final String DEFAULT_NETEX_CHARSET_NAME = StandardCharsets.UTF_8.name();
+
     @Override
     public void configure() {
 
@@ -73,12 +76,12 @@ public class AvinorTimetableRouteBuilder extends BaseRouteBuilder {
 
         JaxbDataFormat jaxbDataFormat = new JaxbDataFormat();
         jaxbDataFormat.setContextPath(PublicationDeliveryStructure.class.getPackage().getName());
-
         jaxbDataFormat.setPrettyPrint(true);
-        jaxbDataFormat.setEncoding("UTF-8");
+        jaxbDataFormat.setEncoding(DEFAULT_NETEX_CHARSET_NAME);
 
         JaxbDataFormat flightsJaxbDataFormat = new JaxbDataFormat();
         flightsJaxbDataFormat.setContextPath(Flights.class.getPackage().getName());
+        flightsJaxbDataFormat.setEncoding(DEFAULT_NETEX_CHARSET_NAME);
 
         from("{{avinor.timetable.scheduler.consumer}}")
                 .routeId("AvinorTimetableSchedulerStarter")
@@ -221,8 +224,6 @@ public class AvinorTimetableRouteBuilder extends BaseRouteBuilder {
                  .process(e -> {/* Do nothing. WireTap used by test. This should not have been implemented as split - aggregate */} )
                  .routeId("DoNothingFlightSplitWireTap");
 
-        final String contentType = "text/xml;charset=utf-8";
-        final String charsetName = "utf-8";
 
         from("direct:convertCommonDataToNetex")
                 .routeId("CommonDataToNetexConverter")
@@ -239,8 +240,6 @@ public class AvinorTimetableRouteBuilder extends BaseRouteBuilder {
                 //.log(LoggingLevel.DEBUG, this.getClass().getName(), "${body}")
                 .process(exchange -> exchange.getIn().setHeader(HEADER_FILE_NAME_GENERATED, "_avinor_common_elements")).id("GenerateCommonFileNameProcessor")
                 .setHeader(Exchange.FILE_NAME, simpleF("${header.%s}.xml", HEADER_FILE_NAME_GENERATED))
-                .setHeader(Exchange.CONTENT_TYPE, constant(contentType))
-                .setHeader(Exchange.CHARSET_NAME, constant(charsetName))
                 .to("file:{{netex.generated.output.path}}")
         ;
 
@@ -259,8 +258,6 @@ public class AvinorTimetableRouteBuilder extends BaseRouteBuilder {
                     .setHeader(HEADER_FILE_NAME_GENERATED, simple("${bean:avinorTimetableUtils?method=generateFilename}"))
                     .marshal(jaxbDataFormat)
                     .setHeader(Exchange.FILE_NAME, simpleF("${header.%s}.xml", HEADER_FILE_NAME_GENERATED))
-                    .setHeader(Exchange.CONTENT_TYPE, constant(contentType))
-                    .setHeader(Exchange.CHARSET_NAME, constant(charsetName))
                     .to("file:{{netex.generated.output.path}}")
                 .end()
         ;
@@ -350,8 +347,6 @@ public class AvinorTimetableRouteBuilder extends BaseRouteBuilder {
                 .bean(AvinorTimetableUtils.class, "createFlightsElement")
                 .marshal(flightsJaxbDataFormat)
                 .setHeader(Exchange.FILE_NAME, simple("avinor-flights_${bean:dateUtils.timestamp()}.xml"))
-                .setHeader(Exchange.CONTENT_TYPE, constant(contentType))
-                .setHeader(Exchange.CHARSET_NAME, constant(charsetName))
                 .to("file:{{avinor.timetable.dump.output.path}}")
                 .log(LoggingLevel.INFO, "Successfully dumped all flights to file : ${header.CamelFileNameProduced}")
         ;

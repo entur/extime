@@ -23,7 +23,6 @@ import org.rutebanken.netex.model.PublicationDeliveryStructure;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import javax.xml.bind.JAXBElement;
-import java.io.FileInputStream;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.time.LocalDate;
@@ -33,7 +32,6 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Predicate;
 
 import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.HEADER_EXTIME_HTTP_URI;
 import static no.rutebanken.extime.routes.avinor.AvinorCommonRouteBuilder.HEADER_EXTIME_RESOURCE_CODE;
@@ -434,8 +432,6 @@ class AvinorTimetableRouteBuilderTest extends ExtimeCamelRouteBuilderIntegration
 
         mockFileTargetNetex.expectedMessageCount(2);
         mockFileTargetNetex.expectedHeaderReceived(Exchange.FILE_NAME, "067e6162-3b6f-4ae2-a171-2470b63dff00.xml");
-        mockFileTargetNetex.expectedHeaderReceived(Exchange.CONTENT_TYPE, "text/xml;charset=utf-8");
-        mockFileTargetNetex.expectedHeaderReceived(Exchange.CHARSET_NAME, "utf-8");
         mockFileTargetNetex.expectedBodiesReceived(createPublicationDelivery(), createPublicationDelivery());
 
         List<ScheduledFlight> scheduledFlights = Lists.newArrayList(
