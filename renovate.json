@@ -4,14 +4,5 @@
   ],
   "minor": {
     "automerge": false
-  },
-  "packageRules": [
-    {
-      "matchPackageNames": [
-        "google/cloud-sdk"
-      ],
-      "automerge": true,
-      "separateMinorPatch": false
-    }
-  ]
+  }
 }
