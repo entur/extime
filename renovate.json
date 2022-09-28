@@ -5,5 +5,20 @@
   "minor": {
     "automerge": false
   },
-  "separateMinorPatch": true
+  "separateMinorPatch": true,
+  "packageRules": [
+    {
+      "matchPackagePrefixes": [
+        "org.entur.ror"
+      ],
+      "matchManagers": [
+        "maven"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "automerge": true
+    }
+  ]
 }
