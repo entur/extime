@@ -2,10 +2,6 @@
   "extends": [
     "github>entur/ror-renovate-config"
   ],
-  "minor": {
-    "automerge": true,
-    "matchCurrentVersion": ">=1.0.0"
-  },
   "separateMinorPatch": true,
   "packageRules": [
     {
@@ -26,17 +22,6 @@
       "description": "Do not automerge Camel minor releases (not SemVer compliant: breaking changes may occur)",
       "matchPackageNames": [
         "org.apache.camel.springboot:camel-spring-boot-bom"
-      ],
-      "matchUpdateTypes": [
-        "major",
-        "minor"
-      ],
-      "automerge": false
-    },
-    {
-      "description": "Do not automerge Logback minor releases (not SemVer compliant: version 1.2 is compatible with SLF4J 1 and version 1.3+ is compatible with SLF4J 2)",
-      "matchPackageNames": [
-        "ch.qos.logback:logback-classic"
       ],
       "matchUpdateTypes": [
         "major",
