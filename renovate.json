@@ -40,8 +40,7 @@
         "major",
         "minor"
       ],
-      "automerge": false,
-      "separateMinorPatch": true
+      "automerge": false
     },
     {
       "description": "Do not automerge Logback minor releases (not SemVer compliant: version 1.2 is compatible with SLF4J 1 and version 1.3+ is compatible with SLF4J 2)",
@@ -52,8 +51,7 @@
         "major",
         "minor"
       ],
-      "automerge": false,
-      "separateMinorPatch": true
+      "automerge": false
     }
   ]
 }
