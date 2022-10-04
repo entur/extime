@@ -2,32 +2,5 @@
   "extends": [
     "github>entur/ror-renovate-config"
   ],
-  "separateMinorPatch": true,
-  "packageRules": [
-    {
-      "description": "Automerge major stable releases for Maven test dependencies",
-      "matchUpdateTypes": [
-        "major"
-      ],
-      "matchDatasources": [
-        "maven"
-      ],
-      "matchDepTypes": [
-        "test"
-      ],
-      "matchCurrentVersion": ">=1.0.0",
-      "automerge": true
-    },
-    {
-      "description": "Do not automerge Camel minor releases (not SemVer compliant: breaking changes may occur)",
-      "matchPackageNames": [
-        "org.apache.camel.springboot:camel-spring-boot-bom"
-      ],
-      "matchUpdateTypes": [
-        "major",
-        "minor"
-      ],
-      "automerge": false
-    }
-  ]
+  "separateMinorPatch": true
 }
