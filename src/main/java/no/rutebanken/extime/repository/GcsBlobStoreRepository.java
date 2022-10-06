@@ -23,7 +23,7 @@ public class GcsBlobStoreRepository implements BlobStoreRepository {
     private static final Logger log = LoggerFactory.getLogger(GcsBlobStoreRepository.class);
 
 
-    @Value("${blobstore.gcs.credential.path}")
+    @Value("${blobstore.gcs.credential.path:#{null}}")
     private String credentialPath;
 
     @Value("${blobstore.gcs.bucket.name}")
@@ -48,7 +48,13 @@ public class GcsBlobStoreRepository implements BlobStoreRepository {
             Path filePath = Paths.get(compressedFilePath);
             String blobIdName = blobPath + compressedFileName;
             log.info("Created blob : {}", blobIdName);
-            Storage storage = BlobStoreHelper.getStorage(credentialPath, projectId);
+            Storage storage;
+            if (credentialPath == null || credentialPath.isEmpty()) {
+                //Used default gcp credentials
+                storage = BlobStoreHelper.getStorage(projectId);
+            } else {
+                storage = BlobStoreHelper.getStorage(credentialPath, projectId);
+            }
 
             try (InputStream inputStream = Files.newInputStream(filePath)) {
                 BlobStoreHelper.createNew(storage, bucketName, blobIdName, inputStream, false);
