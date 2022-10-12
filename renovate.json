@@ -2,23 +2,5 @@
   "extends": [
     "github>entur/ror-renovate-config"
   ],
-  "minor": {
-    "automerge": false
-  },
-  "separateMinorPatch": true,
-  "packageRules": [
-    {
-      "matchPackagePrefixes": [
-        "org.entur.ror"
-      ],
-      "matchManagers": [
-        "maven"
-      ],
-      "matchUpdateTypes": [
-        "minor",
-        "patch"
-      ],
-      "automerge": true
-    }
-  ]
+  "separateMinorPatch": true
 }
