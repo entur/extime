@@ -3,7 +3,9 @@ terraform {
   required_version = ">= 0.13.2"
 }
 
-provider "google" {}
+provider "google" {
+  version = ">= 4.26"
+}
 
 # add service account as member to the bucket
 resource "google_storage_bucket_iam_member" "storage_bucket_iam_member" {
