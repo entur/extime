@@ -1,13 +1,11 @@
 apiVersion: v1
 data:
   application.properties: |+
-
     # Spring Boot
     spring.profiles.active=gcs-blobstore
     spring.config.import=classpath:netex-static-data.yml
     spring.main.sources=no.rutebanken.extime
     server.port=8080
-
     # Actuator
     management.server.port=8080
     management.endpoints.enabled-by-default=false
@@ -18,7 +16,6 @@ data:
     management.endpoint.prometheus.enabled=true
     management.endpoints.web.exposure.include=health,prometheus
     management.endpoints.jmx.exposure.exclude=*
-
     # Camel
     camel.springboot.name=extime
     camel.springboot.streamCachingEnabled=false
@@ -26,7 +23,6 @@ data:
     camel.springboot.shutdownTimeout=25
     camel.springboot.useMdcLogging=true
     camel.springboot.messageHistory=true
-
     # Avinor data set import
     avinor.airport.feed.endpoint=https://flydata.avinor.no/airportNames.asp
     avinor.airports.large=BGO,BOO,SVG,TRD
@@ -46,13 +42,11 @@ data:
     avinor.realtime.departures.timeto=72
     netex.compressed.output.path=/tmp/extime/data/zip
     netex.generated.output.path=/tmp/extime/data/netex
-
     # Blobstore
     blobstore.gcs.bucket.name={{ .Values.gcp.bucketName}}
     blobstore.provider.id=21
     blobstore.blob.path=inbound/received/avi/
     blobstore.gcs.project.id={{ .Values.gcp.blobstoreProjectId }}
-
     # Google PubSub
     # project id and credential location are not set, they are retrieved automatically through the GOOGLE_APPLICATION_CREDENTIALS environment variable
     extime.pubsub.project.id={{ .Values.gcp.pubsubProjectId }}

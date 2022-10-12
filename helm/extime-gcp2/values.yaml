@@ -33,7 +33,7 @@ common:
     enabled: false
   configmap:
     data:
-      JAVA_OPTIONS: -server -Xmx512m -Dspring.config.additional-location=/etc/application-config/application.properties
+      JDK_JAVA_OPTIONS: -server -Xmx512m -Dspring.config.additional-location=/etc/application-config/application.properties
         -Dfile.encoding=UTF-8
       TZ: Europe/Oslo
     enabled: true
