@@ -61,7 +61,7 @@ data:
 kind: ConfigMap
 metadata:
   name: extime-application
-  namespace: "extime"
+  namespace: "rorextime"
   labels:
     app: "extime"
     shortname: "extime"
