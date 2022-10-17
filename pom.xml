@@ -31,7 +31,7 @@
     </licenses>
 
     <properties>
-
+        <java.version>17</java.version>
         <camel.version>3.18.2</camel.version>
         <entur.helpers.version>1.85</entur.helpers.version>
         <jaxb2-basics.version>0.13.1</jaxb2-basics.version>
