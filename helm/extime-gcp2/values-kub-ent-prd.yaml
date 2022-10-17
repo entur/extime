@@ -1,0 +1,12 @@
+common:
+  env: prd
+  replicas: 1
+  container:
+    forceReplicas: 1
+
+avinorTimetableSchedulerCron: 0+58+2+*+*+?
+gcp:
+  bucketName: ror-marduk-exchange-production
+  blobstoreProjectId: entur-ror-prod
+  pubsubProjectId: entur-ror-prod
+
