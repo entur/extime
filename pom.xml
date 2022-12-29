@@ -45,7 +45,7 @@
 
         <netex-java-model.version>1.0.14</netex-java-model.version>
 
-        <maven-jaxb2-plugin-version>0.15.1</maven-jaxb2-plugin-version>
+        <maven-jaxb2-plugin-version>0.15.2</maven-jaxb2-plugin-version>
 
         <!-- empty argLine property, the value is set up by Jacoco during unit tests execution -->
         <argLine/>
