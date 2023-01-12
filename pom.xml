@@ -89,11 +89,6 @@
             <artifactId>calendar-helper</artifactId>
             <version>${entur.helpers.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.entur.ror.helpers</groupId>
-            <artifactId>logging</artifactId>
-            <version>${entur.helpers.version}</version>
-        </dependency>
 
         <!-- Camel -->
         <dependency>
