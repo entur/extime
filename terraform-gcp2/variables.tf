@@ -1,9 +1,5 @@
 #Environment variables
 
-variable "gcp_resources_project" {
-  description = "The GCP project hosting the GCP resources"
-}
-
 variable "gcp_pubsub_project_legacy" {
   default = "The GCP pubsub project legacy"
 }
