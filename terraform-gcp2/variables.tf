@@ -4,6 +4,14 @@ variable "gcp_resources_project" {
   description = "The GCP project hosting the GCP resources"
 }
 
+variable "gcp_pubsub_project_legacy" {
+  default = "The GCP pubsub project legacy"
+}
+
+variable "gcp_pubsub_project" {
+  default = "The GCP pubsub project gcp2"
+}
+
 variable "extime_service_account" {
   description = "application service account"
 }
