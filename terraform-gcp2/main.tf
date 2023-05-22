@@ -14,15 +14,6 @@ resource "google_storage_bucket_iam_member" "storage_bucket_iam_member" {
   member = var.extime_service_account
 }
 
-# add service account as member to pubsub service in the legacy resources project
-
-resource "google_pubsub_topic_iam_member" "pubsub_topic_iam_member_legacy" {
-  project = var.gcp_pubsub_project_legacy
-  topic = var.pubsub_topic_name
-  role = var.service_account_pubsub_role
-  member = var.extime_service_account
-}
-
 # add service account as member to pubsub service in the gcp2 project
 
 resource "google_pubsub_topic_iam_member" "pubsub_topic_iam_member" {
