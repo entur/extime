@@ -20,6 +20,7 @@ import javax.xml.bind.JAXBElement;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Map;
 
 import static no.rutebanken.extime.Constants.NETEX_PROFILE_VERSION;
 import static no.rutebanken.extime.Constants.VERSION_ONE;
@@ -33,7 +34,7 @@ class CommonDataWithSiteToNetexConverterTest extends ExtimeRouteBuilderIntegrati
 
     @Test
     void verifyPublicationDelivery() throws Exception {
-        PublicationDeliveryStructure publicationDelivery = netexConverter.convertToNetex().getValue();
+        PublicationDeliveryStructure publicationDelivery = netexConverter.convertToNetex(Map.of()).getValue();
         assertValidPublicationDelivery(publicationDelivery);
 
         NetexTestUtils.verifyCompositeFrameAttributes(publicationDelivery);

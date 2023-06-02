@@ -4,32 +4,19 @@ import com.google.common.collect.Lists;
 import no.rutebanken.extime.model.AirlineDesignator;
 import no.rutebanken.extime.model.AirportIATA;
 import no.rutebanken.extime.util.DateUtils;
+import no.rutebanken.extime.util.ExtimeException;
 import no.rutebanken.extime.util.NetexObjectFactory;
-import org.rutebanken.netex.model.Authority;
-import org.rutebanken.netex.model.Branding;
-import org.rutebanken.netex.model.Codespace;
-import org.rutebanken.netex.model.CompositeFrame;
-import org.rutebanken.netex.model.Frames_RelStructure;
-import org.rutebanken.netex.model.Network;
-import org.rutebanken.netex.model.ObjectFactory;
-import org.rutebanken.netex.model.Operator;
-import org.rutebanken.netex.model.PassengerStopAssignment;
-import org.rutebanken.netex.model.PublicationDeliveryStructure;
-import org.rutebanken.netex.model.RoutePoint;
-import org.rutebanken.netex.model.ScheduledStopPoint;
+import org.apache.camel.ExchangeProperty;
+import org.rutebanken.netex.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.xml.bind.JAXBElement;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.function.Function;
 
 import static no.rutebanken.extime.Constants.AVINOR_XMLNS;
 import static no.rutebanken.extime.Constants.AVINOR_XMLNSURL;
@@ -40,6 +27,8 @@ import static no.rutebanken.extime.Constants.NSR_XMLNSURL;
 public class CommonDataToNetexConverter {
 
     private static final Logger logger = LoggerFactory.getLogger(CommonDataToNetexConverter.class);
+
+    public static final String PROPERTY_NSR_QUAY_MAP = "NsrQuayMap";
 
     @Autowired
     private ObjectFactory objectFactory;
@@ -53,10 +42,9 @@ public class CommonDataToNetexConverter {
     @Autowired
     private DateUtils dateUtils;
 
-    @Value("${avinor.timetable.period.months}")
-    private int numberOfMonthsInPeriod;
+    public JAXBElement<PublicationDeliveryStructure> convertToNetex(
+            @ExchangeProperty(PROPERTY_NSR_QUAY_MAP) Map<String, Quay> nsrQuayMap) {
 
-    public JAXBElement<PublicationDeliveryStructure> convertToNetex() {
         logger.info("Converting common data to NeTEx");
         Instant publicationTimestamp = Instant.now();
 
@@ -87,24 +75,33 @@ public class CommonDataToNetexConverter {
         Set<Network> networks = new HashSet<>();
 
         for (AirportIATA airportIATA : airportIATAS) {
-            String airportIataName = airportIATA.name();
+            String airportIATAName = airportIATA.name();
 
-            ScheduledStopPoint stopPoint = netexCommonDataSet.getStopPointMap().get(airportIataName);
+            ScheduledStopPoint stopPoint = netexCommonDataSet.getStopPointMap().get(airportIATAName);
             stopPoints.add(stopPoint);
 
-            RoutePoint routePoint = netexCommonDataSet.getRoutePointMap().get(airportIataName);
+            RoutePoint routePoint = netexCommonDataSet.getRoutePointMap().get(airportIATAName);
             routePoints.add(routePoint);
 
-            PassengerStopAssignment stopAssignment = netexCommonDataSet.getStopAssignmentMap().get(airportIataName);
-            JAXBElement<PassengerStopAssignment> stopAssignmentElement = objectFactory.createPassengerStopAssignment(stopAssignment);
+            PassengerStopAssignment stopAssignment = netexCommonDataSet.getStopAssignmentMap().get(airportIATAName);
+
+            var nsrQuay = nsrQuayMap.get(stopAssignment.getQuayRef().getRef());
+
+            PassengerStopAssignment passengerStopAssignment = nsrQuay != null
+                    ? stopAssignment.withQuayRef(netexObjectFactory.createQuayRefStructure(nsrQuay.getId()))
+                    : stopAssignment;
+
+            var stopAssignmentElement = objectFactory.createPassengerStopAssignment(passengerStopAssignment);
             stopAssignmentElements.add(stopAssignmentElement);
         }
 
-        Frames_RelStructure framesStruct = objectFactory.createFrames_RelStructure();
+        var framesStruct = objectFactory.createFrames_RelStructure();
 
         stopPoints.sort(Comparator.comparing(ScheduledStopPoint::getId));
         logger.info("Retrieved and populated NeTEx structure with {} stop points", stopPoints.size());
-        framesStruct.getCommonFrame().add(netexObjectFactory.createResourceFrameElement(authorityElements, operatorElements, brandingElements));
+        framesStruct.getCommonFrame().add(
+                netexObjectFactory.createResourceFrameElement(authorityElements, operatorElements, brandingElements)
+        );
 
         for (AirlineDesignator designator : AirlineDesignator.values()) {
             String designatorName = designator.name().toUpperCase();
@@ -112,15 +109,17 @@ public class CommonDataToNetexConverter {
             networks.add(network);
         }
 
-        framesStruct.getCommonFrame().add(netexObjectFactory.createCommonServiceFrameElement(networks, routePoints, stopPoints, stopAssignmentElements));
+        framesStruct.getCommonFrame().add(
+                netexObjectFactory.createCommonServiceFrameElement(
+                        networks, routePoints, stopPoints, stopAssignmentElements
+                )
+        );
 
-        JAXBElement<CompositeFrame> compositeFrameElement = netexObjectFactory
-                .createCompositeFrameElement(publicationTimestamp, framesStruct, dateUtils.generateAvailabilityPeriod(), avinorCodespace, nsrCodespace);
-
+        var compositeFrameElement = netexObjectFactory.createCompositeFrameElement(
+                publicationTimestamp, framesStruct, dateUtils.generateAvailabilityPeriod(), avinorCodespace, nsrCodespace
+        );
 
         logger.info("Done converting common data to NeTEx");
-
         return netexObjectFactory.createPublicationDeliveryStructureElement(publicationTimestamp, compositeFrameElement);
     }
-
 }

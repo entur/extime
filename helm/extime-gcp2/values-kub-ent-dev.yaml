@@ -4,7 +4,9 @@ common:
 
 avinorTimetableSchedulerCron: 0+4+3+*+*+?
 gcp:
-  bucketName: ror-marduk-exchange-dev
+  bucketName:
+    marduk: marduk-dev
+    mardukExchange: ror-marduk-exchange-dev
   blobstoreProjectId: entur-ror-dev
   pubsubProjectId: ent-marduk-dev
 

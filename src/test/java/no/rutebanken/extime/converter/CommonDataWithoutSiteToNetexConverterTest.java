@@ -5,18 +5,13 @@ import no.rutebanken.extime.ExtimeRouteBuilderIntegrationTestBase;
 import no.rutebanken.extime.model.AirportIATA;
 import no.rutebanken.extime.util.NetexObjectIdTypes;
 import org.junit.jupiter.api.Test;
-import org.rutebanken.netex.model.CompositeFrame;
-import org.rutebanken.netex.model.Network;
-import org.rutebanken.netex.model.PublicationDeliveryStructure;
-import org.rutebanken.netex.model.ResourceFrame;
-import org.rutebanken.netex.model.ServiceFrame;
-import org.rutebanken.netex.model.SiteFrame;
-import org.rutebanken.netex.model.StopAssignmentsInFrame_RelStructure;
+import org.rutebanken.netex.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Map;
 
 import static no.rutebanken.extime.Constants.NETEX_PROFILE_VERSION;
 import static no.rutebanken.extime.Constants.VERSION_ONE;
@@ -30,7 +25,7 @@ class CommonDataWithoutSiteToNetexConverterTest extends ExtimeRouteBuilderIntegr
 
     @Test
     void verifyPublicationDelivery() throws Exception {
-        PublicationDeliveryStructure publicationDelivery = netexConverter.convertToNetex().getValue();
+        PublicationDeliveryStructure publicationDelivery = netexConverter.convertToNetex(Map.of()).getValue();
         assertValidPublicationDelivery(publicationDelivery);
 
         NetexTestUtils.verifyCompositeFrameAttributes(publicationDelivery);

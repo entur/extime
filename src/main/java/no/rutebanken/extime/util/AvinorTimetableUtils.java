@@ -46,10 +46,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEADER_MESSAGE_CORRELATION_ID;
+import static no.rutebanken.extime.Constants.HEADER_MESSAGE_CORRELATION_ID;
 import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.PROPERTY_STATIC_FLIGHTS_XML_FILE;
 
 @Component
@@ -72,7 +71,7 @@ public class AvinorTimetableUtils {
     private NetexStaticDataSet netexStaticDataSet;
 
     @Autowired
-    BlobStoreRepository blobStoreRepository;
+//    BlobStoreRepository blobStoreRepository;
 
     private static final Map<String, String> SPECIAL_ASCII_MAPPING = Maps.newHashMap();
     static {
@@ -173,16 +172,16 @@ public class AvinorTimetableUtils {
 
         List<ServiceFrame> collect = publicationDelivery.getValue().getDataObjects().getCompositeFrameOrCommonFrame().stream()
                 .map(JAXBElement::getValue)
-                .filter(e -> e instanceof CompositeFrame)
+                .filter(CompositeFrame.class::isInstance)
                 .map(e -> (CompositeFrame) e)
                 .map(e -> e.getFrames().getCommonFrame())
                 .map(e -> e.stream()
                         .map(JAXBElement::getValue)
-                        .filter(ex -> ex instanceof ServiceFrame)
+                        .filter(ServiceFrame.class::isInstance)
                         .map(ex -> (ServiceFrame) ex)
-                        .collect(Collectors.toList()))
+                        .toList())
                 .flatMap(Collection::stream)
-                .collect(Collectors.toList());
+                .toList();
 
         ServiceFrame sf = collect.get(0);
 
@@ -251,12 +250,6 @@ public class AvinorTimetableUtils {
         }
 
         exchange.getIn().setHeader(Exchange.FILE_NAME_PRODUCED, zipOutputFilePath.toAbsolutePath());
-    }
-
-    public void uploadBlobToStorage(@Header(Exchange.FILE_NAME) String compressedFileName,
-                                    @Header(Exchange.FILE_NAME_PRODUCED) String compressedFilePath,
-                                    @Header(HEADER_MESSAGE_CORRELATION_ID) String correlationId)  {
-        blobStoreRepository.uploadBlob(compressedFileName, compressedFilePath, correlationId);
     }
 
     public static boolean isValidFlight(StopVisitType stopVisitType, Flight newFlight) {
