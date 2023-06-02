@@ -9,13 +9,14 @@ import org.springframework.beans.factory.annotation.Value;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 
+import static no.rutebanken.extime.Constants.HEADER_MESSAGE_CORRELATION_ID;
 
 /**
  * Defines common route behavior.
  */
 public abstract class BaseRouteBuilder extends RouteBuilder {
-
 
     @Value("${extime.camel.redelivery.max:3}")
     private int maxRedelivery;
@@ -71,5 +72,11 @@ public abstract class BaseRouteBuilder extends RouteBuilder {
         log.warn("Exchange failed ({}: {}) . Redelivering the message locally, attempt {}/{}...", rootCauseType, rootCauseMessage, redeliveryCounter, redeliveryMaxCounter);
     }
 
+    protected void setNewCorrelationId(Exchange e) {
+        e.getIn().setHeader(HEADER_MESSAGE_CORRELATION_ID, UUID.randomUUID().toString());
+    }
 
+    protected String logDebugShowAll() {
+        return "log:" + getClass().getName() + "?level=DEBUG&showAll=true&multiline=true";
+    }
 }

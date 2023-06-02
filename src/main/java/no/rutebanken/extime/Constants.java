@@ -31,4 +31,6 @@ public final class Constants {
     public static final String DEFAULT_COORDINATE_SYSTEM = "WGS84";
     public static final String DEFAULT_ID_SEPARATOR = ":";
 
+    public static final String HEADER_MESSAGE_CORRELATION_ID = "RutebankenCorrelationId";
+    public static final String HEADER_MESSAGE_FILE_HANDLE = "RutebankenFileHandle";
 }
