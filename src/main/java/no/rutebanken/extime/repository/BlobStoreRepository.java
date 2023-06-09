@@ -1,5 +1,6 @@
 package no.rutebanken.extime.repository;
 
+import java.io.InputStream;
 
 /**
  * Repository interface for managing binary files.
@@ -8,5 +9,11 @@ package no.rutebanken.extime.repository;
  */
 public interface BlobStoreRepository {
 
-    void uploadBlob(String compressedFileName, String compressedFilePath, String correlationId);
+    InputStream getBlob(String objectName);
+
+    void uploadBlob(String compressedFileName,
+                    String compressedFilePath,
+                    String correlationId);
+
+    void setContainerName(String containerName);
 }

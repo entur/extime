@@ -43,7 +43,8 @@ data:
     netex.compressed.output.path=/tmp/extime/data/zip
     netex.generated.output.path=/tmp/extime/data/netex
     # Blobstore
-    blobstore.gcs.bucket.name={{ .Values.gcp.bucketName}}
+    blobstore.gcs.marduk.container.name={{ .Values.gcp.bucketName.marduk}}
+    blobstore.gcs.marduk-exchange.container.name={{ .Values.gcp.bucketName.mardukExchange}}
     blobstore.provider.id=21
     blobstore.blob.path=inbound/received/avi/
     blobstore.gcs.project.id={{ .Values.gcp.blobstoreProjectId }}

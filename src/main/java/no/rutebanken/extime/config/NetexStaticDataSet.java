@@ -16,9 +16,6 @@ public class NetexStaticDataSet {
     private Map<String, OrganisationDataSet> organisations = new HashMap<>();
     private Map<String, StopPlaceDataSet> stopPlaces = new HashMap<>();
 
-    public NetexStaticDataSet() {
-        toString();}
-
     public Map<String, OrganisationDataSet> getOrganisations() {
         return organisations;
     }
@@ -143,10 +140,5 @@ public class NetexStaticDataSet {
                     .add("international", international)
                     .toString();
         }
-
-
     }
-
-
-
 }

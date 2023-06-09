@@ -22,21 +22,29 @@ public class GcsBlobStoreRepository implements BlobStoreRepository {
 
     private static final Logger log = LoggerFactory.getLogger(GcsBlobStoreRepository.class);
 
+    private String containerName;
 
-    @Value("${blobstore.gcs.credential.path:#{null}}")
-    private String credentialPath;
-
-    @Value("${blobstore.gcs.bucket.name}")
-    private String bucketName;
+    private final Storage storage;
 
     @Value("${blobstore.blob.path}")
     private String blobPath;
 
-    @Value("${blobstore.gcs.project.id}")
-    private String projectId;
-
     @Value("${blobstore.provider.id}")
     private String providerId;
+
+    public GcsBlobStoreRepository(Storage storage) {
+        this.storage = storage;
+    }
+
+    @Override
+    public void setContainerName(String containerName) {
+        this.containerName = containerName;
+    }
+
+    @Override
+    public InputStream getBlob(String name) {
+        return BlobStoreHelper.getBlob(storage, containerName, name);
+    }
 
     @Override
     public void uploadBlob(String compressedFileName, String compressedFilePath, String correlationId) {
@@ -47,21 +55,15 @@ public class GcsBlobStoreRepository implements BlobStoreRepository {
 
             Path filePath = Paths.get(compressedFilePath);
             String blobIdName = blobPath + compressedFileName;
-            log.info("Created blob : {}", blobIdName);
-            Storage storage;
-            if (credentialPath == null || credentialPath.isEmpty()) {
-                //Used default gcp credentials
-                storage = BlobStoreHelper.getStorage(projectId);
-            } else {
-                storage = BlobStoreHelper.getStorage(credentialPath, projectId);
-            }
+            log.info("Creating blob : {}", blobIdName);
 
             try (InputStream inputStream = Files.newInputStream(filePath)) {
-                BlobStoreHelper.createNew(storage, bucketName, blobIdName, inputStream, false);
+                BlobStoreHelper.createNew(storage, containerName, blobIdName, inputStream, false);
             }
-            log.info("Stored blob with name '{}' and size '{}' in bucket '{}'", filePath.getFileName(), Files.size(filePath), bucketName);
+            log.info("Stored blob with name '{}' and size '{}' in bucket '{}'", filePath.getFileName(), Files.size(filePath), containerName);
         } catch (Exception e) {
             log.warn("Failed to put file '{}' in blobstore", compressedFileName, e);
         }
     }
+
 }

@@ -47,6 +47,8 @@
 
         <maven-jaxb2-plugin-version>0.15.3</maven-jaxb2-plugin-version>
 
+        <netex-parser-java.version>2.0.1</netex-parser-java.version>
+
         <!-- empty argLine property, the value is set up by Jacoco during unit tests execution -->
         <argLine/>
 
@@ -88,6 +90,11 @@
             <groupId>org.entur.ror.helpers</groupId>
             <artifactId>calendar-helper</artifactId>
             <version>${entur.helpers.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.entur</groupId>
+            <artifactId>netex-parser-java</artifactId>
+            <version>${netex-parser-java.version}</version>
         </dependency>
 
         <!-- Camel -->
