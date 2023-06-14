@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.io.InputStream;
@@ -17,6 +18,7 @@ import java.nio.file.Paths;
  * Blob store repository targeting Google Cloud Storage.
  */
 @Component
+@Scope("prototype")
 @Profile("gcs-blobstore")
 public class GcsBlobStoreRepository implements BlobStoreRepository {
 

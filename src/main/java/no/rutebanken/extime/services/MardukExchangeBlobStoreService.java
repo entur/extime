@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import static no.rutebanken.extime.Constants.HEADER_MESSAGE_CORRELATION_ID;
 
 /**
- * Operations on blobs in the main damu bucket.
+ * Operations on blobs in the marduk exchange bucket.
  */
 @Service
 public class MardukExchangeBlobStoreService extends AbstractBlobStoreService {

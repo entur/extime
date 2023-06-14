@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayInputStream;
@@ -20,6 +21,7 @@ import java.nio.file.Paths;
  * The system property blobstore.local.folder specifies the target file location.
  */
 @Component
+@Scope("prototype")
 @Profile("local-disk-blobstore")
 public class LocalDiskBlobStoreRepository implements BlobStoreRepository {
 
