@@ -6,7 +6,7 @@ avinorTimetableSchedulerCron: 0+4+3+*+*+?
 gcp:
   bucketName:
     marduk: marduk-dev
-    mardukExchange: ror-marduk-exchange-dev
+    mardukExchange: marduk-exchange-dev
   blobstoreProjectId: entur-ror-dev
   pubsubProjectId: ent-marduk-dev
 
