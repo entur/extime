@@ -5,7 +5,7 @@ import no.rutebanken.extime.util.AvinorTimetableUtils;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import javax.xml.bind.JAXBException;
+import jakarta.xml.bind.JAXBException;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;

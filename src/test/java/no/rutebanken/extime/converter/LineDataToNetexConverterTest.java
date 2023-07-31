@@ -28,7 +28,7 @@ import org.rutebanken.netex.model.StopPointInJourneyPattern;
 import org.rutebanken.netex.model.TimetableFrame;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.xml.bind.JAXBElement;
+import jakarta.xml.bind.JAXBElement;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.ZoneId;
