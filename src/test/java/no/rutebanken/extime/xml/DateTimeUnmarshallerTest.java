@@ -5,6 +5,7 @@ import no.rutebanken.extime.util.AvinorTimetableUtils;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import javax.xml.bind.JAXBException;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
@@ -15,7 +16,7 @@ class DateTimeUnmarshallerTest {
 
 
     @Test
-    void unmarshalScheduledFlight() throws Exception {
+    void unmarshalScheduledFlight() throws JAXBException {
         List<Flight> flights = new AvinorTimetableUtils().generateFlightsFromFeedDump("/xml/scheduled-flights.xml");
 
         Flight first = flights.get(0);

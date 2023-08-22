@@ -186,11 +186,10 @@ public final class LineDataSetFixture {
     }
 
     private static List<String> resolveStops(String routeDesignation) {
-        return Splitter.on(DASH)
+        return new ArrayList<>(Splitter.on(DASH)
                 .trimResults()
                 .omitEmptyStrings()
-                .splitToList(routeDesignation).stream()
-                .collect(Collectors.toList());
+                .splitToList(routeDesignation));
     }
 
     public static List<LocalDate> generateRandomDates(int cnt, LocalDate inclusive, LocalDate exclusive) {

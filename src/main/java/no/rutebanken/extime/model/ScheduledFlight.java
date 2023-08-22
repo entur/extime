@@ -10,7 +10,6 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static no.rutebanken.extime.Constants.DASH;
 import static no.rutebanken.extime.Constants.EMPTY;
@@ -172,7 +171,7 @@ public class ScheduledFlight {
         if (hasStopovers()) {
             List<String> airportIatas = scheduledStopovers.stream()
                     .map(ScheduledStopover::getAirportIATA)
-                    .collect(Collectors.toList());
+                    .toList();
             return joiner.join(airportIatas);
         }
         return joiner.join(departureAirportIATA, arrivalAirportIATA);
@@ -186,7 +185,7 @@ public class ScheduledFlight {
             Joiner emptyJoiner = Joiner.on(EMPTY).skipNulls();
             List<String> stopTimes = scheduledStopovers.stream()
                     .map(stop -> emptyJoiner.join(stop.getArrivalTime(), stop.getDepartureTime()))
-                    .collect(Collectors.toList());
+                    .toList();
             return charMatcher.removeFrom(dashJoiner.join(stopTimes));
         }
 

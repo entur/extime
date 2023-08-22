@@ -258,7 +258,7 @@ public class LineDataToNetexConverter {
                 .distinct()
                 .sorted(Comparator.comparing(iata -> iata))
                 .map(iata -> netexObjectFactory.createDestinationDisplay(objectIdPrefix + iata, stopPlaceDataSets.get(iata.toLowerCase()).getShortName(), true))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private List<DestinationDisplay> createDestinationDisplaysForPatterns(List<JourneyPattern> journeyPatterns) {
@@ -460,14 +460,12 @@ public class LineDataToNetexConverter {
 
     private DayTypeRefs_RelStructure collectDayTypesAndAssignments(List<ScheduledFlight> journeyFlights) {
         DayTypeRefs_RelStructure dayTypeStructure = objectFactory.createDayTypeRefs_RelStructure();
-        List<LocalDate> datesOfOperation = journeyFlights.stream().map(ScheduledFlight::getDateOfOperation).collect(Collectors.toList());
+        List<LocalDate> datesOfOperation = journeyFlights.stream().map(ScheduledFlight::getDateOfOperation).sorted().toList();
         collectDayTypesAndAssignments(dayTypeStructure, datesOfOperation, true);
         return dayTypeStructure;
     }
 
     private void collectDayTypesAndAssignments(DayTypeRefs_RelStructure dayTypeStructure, List<LocalDate> datesOfOperation, boolean available) {
-
-        datesOfOperation.sort(Comparator.naturalOrder());
         for (int i = 0; i < datesOfOperation.size(); i++) {
             LocalDate dateOfOperation = datesOfOperation.get(i);
 

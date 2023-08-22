@@ -10,7 +10,6 @@ import no.rutebanken.extime.model.AirlineDesignator;
 import no.rutebanken.extime.model.AirportIATA;
 import no.rutebanken.extime.model.ServiceType;
 import no.rutebanken.extime.model.StopVisitType;
-import no.rutebanken.extime.repository.BlobStoreRepository;
 import org.apache.camel.Exchange;
 import org.apache.camel.ExchangeProperty;
 import org.apache.camel.Header;
@@ -48,7 +47,6 @@ import java.util.Map;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-import static no.rutebanken.extime.Constants.HEADER_MESSAGE_CORRELATION_ID;
 import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.PROPERTY_STATIC_FLIGHTS_XML_FILE;
 
 @Component

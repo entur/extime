@@ -33,7 +33,7 @@ class CommonDataWithSiteToNetexConverterTest extends ExtimeRouteBuilderIntegrati
     private CommonDataToNetexConverter netexConverter;
 
     @Test
-    void verifyPublicationDelivery() throws Exception {
+    void verifyPublicationDelivery() {
         PublicationDeliveryStructure publicationDelivery = netexConverter.convertToNetex(Map.of()).getValue();
         assertValidPublicationDelivery(publicationDelivery);
 
