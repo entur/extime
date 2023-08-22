@@ -34,7 +34,7 @@ public class RealTimeFlightConverter {
 
             List<Flight> directFlights = departureFlights.stream()
                     .filter(flight -> flight.getViaAirport() == null || flight.getViaAirport().isEmpty())
-                    .collect(Collectors.toList());
+                    .toList();
 
             directFlights.forEach(departureFlight -> {
                 List<Flight> arrivalFlights = arrivalFlightsMap.get(departureFlight.getAirport().trim());

@@ -43,8 +43,8 @@ public class AutoCreatePubSubSubscriptionEventNotifier extends EventNotifierSupp
     @Override
     public void notify(CamelEvent event) {
 
-        if (event instanceof CamelEvent.CamelContextStartingEvent) {
-            CamelContext context = ((CamelEvent.CamelContextStartingEvent) event).getContext();
+        if (event instanceof CamelEvent.CamelContextStartingEvent camelContextStartingEvent) {
+            CamelContext context = camelContextStartingEvent.getContext();
             context.getEndpoints().stream().filter(e -> e.getEndpointUri().startsWith("google-pubsub")).forEach(this::createSubscriptionIfMissing);
         }
 
@@ -52,10 +52,10 @@ public class AutoCreatePubSubSubscriptionEventNotifier extends EventNotifierSupp
 
     private void createSubscriptionIfMissing(Endpoint e) {
         GooglePubsubEndpoint gep;
-        if (e instanceof GooglePubsubEndpoint) {
-            gep = (GooglePubsubEndpoint) e;
-        } else if (e instanceof DefaultInterceptSendToEndpoint) {
-            gep = (GooglePubsubEndpoint) ((DefaultInterceptSendToEndpoint) e).getOriginalEndpoint();
+        if (e instanceof GooglePubsubEndpoint googlePubsubEndpoint) {
+            gep = googlePubsubEndpoint;
+        } else if (e instanceof DefaultInterceptSendToEndpoint defaultInterceptSendToEndpoint) {
+            gep = (GooglePubsubEndpoint) defaultInterceptSendToEndpoint.getOriginalEndpoint();
         } else {
             throw new IllegalStateException("Incompatible endpoint: " + e);
         }

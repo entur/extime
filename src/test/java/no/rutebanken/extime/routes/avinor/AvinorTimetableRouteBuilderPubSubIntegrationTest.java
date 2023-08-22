@@ -43,7 +43,7 @@ class AvinorTimetableRouteBuilderPubSubIntegrationTest extends ExtimeCamelRouteB
     protected ProducerTemplate compressNetexAndSendToStorageTemplate;
 
     @Test
-    void testNotifyMarduk() throws Exception {
+    void testNotifyMarduk() {
 
         context.start();
         compressNetexAndSendToStorageTemplate.sendBody("");

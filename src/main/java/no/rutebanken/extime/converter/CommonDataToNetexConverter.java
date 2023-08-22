@@ -4,7 +4,6 @@ import com.google.common.collect.Lists;
 import no.rutebanken.extime.model.AirlineDesignator;
 import no.rutebanken.extime.model.AirportIATA;
 import no.rutebanken.extime.util.DateUtils;
-import no.rutebanken.extime.util.ExtimeException;
 import no.rutebanken.extime.util.NetexObjectFactory;
 import org.apache.camel.ExchangeProperty;
 import org.rutebanken.netex.model.*;
@@ -16,7 +15,6 @@ import org.springframework.stereotype.Component;
 import javax.xml.bind.JAXBElement;
 import java.time.Instant;
 import java.util.*;
-import java.util.function.Function;
 
 import static no.rutebanken.extime.Constants.AVINOR_XMLNS;
 import static no.rutebanken.extime.Constants.AVINOR_XMLNSURL;

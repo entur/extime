@@ -52,7 +52,7 @@ class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationTestBase
     private LineDataToNetexConverter netexConverter;
 
     @Test
-    void verifyFrameAttributes() throws Exception {
+    void verifyFrameAttributes() {
         List<Pair<String, Integer>> routeJourneyPairs = Lists.newArrayList(Pair.of("OSL-BGO", 1), Pair.of("BGO-OSL", 1));
         LineDataSet lineDataSet = LineDataSetFixture.createLineDataSet("DY", "OSL-BGO", routeJourneyPairs);
         PublicationDeliveryStructure publicationDelivery = netexConverter.convertToNetex(lineDataSet).getValue();
@@ -70,7 +70,7 @@ class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationTestBase
     }
 
     @Test
-    void testLineWithRoundTripRoutes() throws Exception {
+    void testLineWithRoundTripRoutes() {
         List<Pair<String, Integer>> routeJourneyPairs = Lists.newArrayList(Pair.of("OSL-BGO", 1), Pair.of("BGO-OSL", 1));
         LineDataSet lineDataSet = LineDataSetFixture.createLineDataSet("DY", "OSL-BGO", routeJourneyPairs);
 
@@ -87,7 +87,7 @@ class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationTestBase
     }
 
     @Test
-    void testLineWithStopoverRoutes() throws Exception {
+    void testLineWithStopoverRoutes() {
         List<Pair<String, Integer>> routeJourneyPairs = Lists.newArrayList(Pair.of("TRD-OSL-BGO-MOL-SOG", 1), Pair.of("SOG-MOL-BGO-OSL-TRD", 1));
         LineDataSet lineDataSet = LineDataSetFixture.createLineDataSet("WF", "TRD-SOG", routeJourneyPairs);
 
@@ -104,7 +104,7 @@ class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationTestBase
     }
 
     @Test
-    void testDestinationDisplaysNoVias() throws Exception {
+    void testDestinationDisplaysNoVias() {
         List<Pair<String, Integer>> routeJourneyPairs = Lists.newArrayList(Pair.of("OSL-BGO", 1), Pair.of("BGO-OSL", 1));
         LineDataSet lineDataSet = LineDataSetFixture.createLineDataSet("DY", "OSL-BGO", routeJourneyPairs);
 
@@ -140,7 +140,7 @@ class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationTestBase
     }
 
     @Test
-    void testDestinationDisplaysWithVias() throws Exception {
+    void testDestinationDisplaysWithVias() {
         List<Pair<String, Integer>> routeJourneyPairs = Lists.newArrayList(Pair.of("OSL-SOG-BGO", 1), Pair.of("BGO-SOG-OSL", 1));
         LineDataSet lineDataSet = LineDataSetFixture.createLineDataSet("DY", "OSL-BGO", routeJourneyPairs);
 

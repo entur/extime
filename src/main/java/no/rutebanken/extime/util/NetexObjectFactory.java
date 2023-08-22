@@ -770,7 +770,7 @@ public class NetexObjectFactory {
                 .map(Route::getId)
                 .collect(Collectors.toSet()).stream()
                 .map(routeId -> objectFactory.createRouteRefStructure().withVersion(VERSION_ONE).withRef(routeId))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public StopPlaceRefStructure createStopPlaceRefStructure(String stopPlaceId) {

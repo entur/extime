@@ -176,7 +176,7 @@ public class ScheduledFlightConverter {
      * Remove any flights where departure station and arrival station are the same. Causes loops in conversion and are probably not relevant (if event correct).
      */
     private List<Flight> filterFlightsWithArrivalAtDepartureStation(List<Flight> filteredFlights) {
-        return filteredFlights.stream().filter(flight -> !Objects.equals(flight.getDepartureStation(), flight.getArrivalStation())).collect(Collectors.toList());
+        return filteredFlights.stream().filter(flight -> !Objects.equals(flight.getDepartureStation(), flight.getArrivalStation())).toList();
     }
 
     private LineDataSet populateFlightLineDataSet(String airlineIata, Map.Entry<String, List<ScheduledFlight>> flightsByLineEntry) {
@@ -196,7 +196,7 @@ public class ScheduledFlightConverter {
         List<FlightRoute> flightRoutes = flights.stream()
                 .map(flight -> new FlightRoute(flight.getRoutePattern(), getRouteNameFromDesignation(flight.getRoutePattern())))
                 .filter(distinctByKey(FlightRoute::getRouteDesignation))
-                .collect(Collectors.toList());
+                .toList();
         lineDataSet.setFlightRoutes(flightRoutes);
 
         Map<String, Map<String, List<ScheduledFlight>>> journeysByRouteAndFlightId = flights.stream()
@@ -231,7 +231,7 @@ public class ScheduledFlightConverter {
                 .splitToList(routeDesignation).stream()
                 .map(String::toLowerCase)
                 .map(iata -> stopPlaceDataSets.get(iata).getShortName())
-                .collect(Collectors.toList());
+                .toList();
         return Joiner.on(DASH).skipNulls().join(airportNames);
     }
 
@@ -251,7 +251,7 @@ public class ScheduledFlightConverter {
 
                         List<ScheduledFlight> mergedFlights = Stream.of(lineFlights, oppositeLineFlights)
                                 .flatMap(Collection::stream)
-                                .collect(Collectors.toList());
+                                .toList();
 
                         mergedFlightsByLineDesignation.put(mostSignificantLineDesignation, mergedFlights);
                         lineDesignations.addAll(Arrays.asList(lineDesignation, oppositeLineDesignation));
@@ -344,7 +344,7 @@ public class ScheduledFlightConverter {
 
         return scheduledFlights.stream()
                 .filter(flight -> !invalidFlightIds.contains(flight.getId()))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private List<Flight> filterValidFlights(List<Flight> scheduledFlights) {
@@ -364,7 +364,7 @@ public class ScheduledFlightConverter {
 
         return scheduledFlights.stream()
                 .filter(flight -> !invalidFlightIds.contains(flight.getId()))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private boolean hasInfrequentDesignator(Flight flight) {
@@ -569,7 +569,7 @@ public class ScheduledFlightConverter {
 
             List<String> airportIatas = scheduledStopovers.stream()
                     .map(ScheduledStopover::getAirportIATA)
-                    .collect(Collectors.toList());
+                    .toList();
             scheduledFlight.setStopsDesignation(joiner.join(airportIatas));
         } else {
             scheduledFlight.setFlightId(flight.getId());
