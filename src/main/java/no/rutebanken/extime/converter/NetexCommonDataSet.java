@@ -70,10 +70,7 @@ public class NetexCommonDataSet {
 
 
     private String createQuayId(String iata) {
-        String objectIdPrefix = AVINOR_XMLNS;
-        String objectIdSuffix = iata.toUpperCase();
-
-        return NetexObjectIdCreator.createQuayId(objectIdPrefix, objectIdSuffix);
+        return NetexObjectIdCreator.createQuayId(AVINOR_XMLNS, iata.toUpperCase());
     }
 
     private void populateStopPointMap() {

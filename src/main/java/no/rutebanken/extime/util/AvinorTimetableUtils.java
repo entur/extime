@@ -68,9 +68,6 @@ public class AvinorTimetableUtils {
     @Autowired
     private NetexStaticDataSet netexStaticDataSet;
 
-    @Autowired
-//    BlobStoreRepository blobStoreRepository;
-
     private static final Map<String, String> SPECIAL_ASCII_MAPPING = Maps.newHashMap();
     static {
         SPECIAL_ASCII_MAPPING.put("Ê", "E");

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <airport xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:noNamespaceSchemaLocation="http://flydata.avinor.no/XmlFeed.xsd"
+         xsi:noNamespaceSchemaLocation="https://flydata.avinor.no/XmlFeed.xsd"
          name="BGO">
     <flights lastUpdate="2016-05-20T12:00:48Z">
         <flight uniqueID="5911173">
