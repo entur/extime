@@ -2,7 +2,7 @@
 <jaxb:bindings xmlns:jaxb="http://java.sun.com/xml/ns/jaxb" xmlns:xs="http://www.w3.org/2001/XMLSchema"
     xmlns:xjc="http://java.sun.com/xml/ns/jaxb/xjc" jaxb:version="2.1">
     <jaxb:globalBindings underscoreBinding="asCharInWord">
-        <xjc:javaType name="java.time.ZonedDateTime" xmlType="xs:dateTime" adapter="com.migesok.jaxb.adapter.javatime.ZonedDateTimeXmlAdapter" />
-        <xjc:javaType name="java.time.Duration" xmlType="xs:duration" adapter="com.migesok.jaxb.adapter.javatime.DurationXmlAdapter" />
+        <xjc:javaType name="java.time.ZonedDateTime" xmlType="xs:dateTime" adapter="io.github.threetenjaxb.core.ZonedDateTimeXmlAdapter" />
+        <xjc:javaType name="java.time.Duration" xmlType="xs:duration" adapter="io.github.threetenjaxb.core.DurationXmlAdapter" />
     </jaxb:globalBindings>
 </jaxb:bindings>
