@@ -45,7 +45,7 @@
 
         <netex-java-model.version>1.0.14</netex-java-model.version>
 
-        <jaxb-maven-plugin-version>2.0.8</jaxb-maven-plugin-version>
+        <jaxb-maven-plugin-version>2.0.9</jaxb-maven-plugin-version>
 
         <netex-parser-java.version>2.2.0</netex-parser-java.version>
 
