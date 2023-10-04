@@ -35,7 +35,7 @@
         <camel.version>3.21.1</camel.version>
         <entur.helpers.version>1.100</entur.helpers.version>
         <jaxb2-basics.version>2.0.9</jaxb2-basics.version>
-        <threeten-jaxb-core.version>1.2</threeten-jaxb-core.version>
+        <threeten-jaxb-core.version>2.1.0</threeten-jaxb-core.version>
         <commons-io.version>2.14.0</commons-io.version>
         <zt-zip.version>1.16</zt-zip.version>
         <siri-java-model.version>0.15</siri-java-model.version>
