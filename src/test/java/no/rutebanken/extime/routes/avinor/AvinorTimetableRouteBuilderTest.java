@@ -24,7 +24,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import jakarta.xml.bind.JAXBElement;
 import java.io.InputStream;
-import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -479,7 +478,7 @@ class AvinorTimetableRouteBuilderTest extends ExtimeCamelRouteBuilderIntegration
     private Flight createDummyFlight(long dummyId, String dummyDesignator, String dummyFlightNumber, ZonedDateTime dummyDateOfOperation,
                                      String dummyDepartureStation, LocalTime dummyDepartureTime, String dummyArrivalStation, LocalTime dummyArrivalTime) {
         Flight flight = new Flight();
-        flight.setId(BigInteger.valueOf(dummyId));
+        flight.setId(dummyId);
         flight.setAirlineDesignator(dummyDesignator);
         flight.setFlightNumber(dummyFlightNumber);
         flight.setDateOfOperation(dummyDateOfOperation);
