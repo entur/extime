@@ -11,8 +11,8 @@ public interface BlobStoreRepository {
 
     InputStream getBlob(String objectName);
 
-    void uploadBlob(String compressedFileName,
-                    String compressedFilePath,
+    void uploadBlob(String targetFile,
+                    String sourceFile,
                     String correlationId);
 
     void setContainerName(String containerName);

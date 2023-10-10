@@ -1,5 +1,6 @@
 package no.rutebanken.extime.services;
 
+import no.rutebanken.extime.Constants;
 import no.rutebanken.extime.repository.BlobStoreRepository;
 import org.apache.camel.Exchange;
 import org.apache.camel.Header;
@@ -20,9 +21,9 @@ public class MardukExchangeBlobStoreService extends AbstractBlobStoreService {
         super(containerName, repository);
     }
 
-    public void uploadBlob(@Header(Exchange.FILE_NAME) String compressedFileName,
-                           @Header(Exchange.FILE_NAME_PRODUCED) String compressedFilePath,
+    public void uploadBlob(@Header(Constants.HEADER_MESSAGE_FILE_HANDLE) String targetFile,
+                           @Header(Exchange.FILE_NAME_PRODUCED) String sourceFile,
                            @Header(HEADER_MESSAGE_CORRELATION_ID) String correlationId) {
-        repository.uploadBlob(compressedFileName, compressedFilePath, correlationId);
+        repository.uploadBlob(targetFile, sourceFile, correlationId);
     }
 }

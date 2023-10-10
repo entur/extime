@@ -60,18 +60,18 @@ public class LocalDiskBlobStoreRepository implements BlobStoreRepository {
     }
 
     @Override
-    public void uploadBlob(String compressedFileName,
-                           String compressedFilePath,
+    public void uploadBlob(String targetFile,
+                           String sourceFile,
                            String correlationId) {
 
-        logger.debug("upload blob called in local-disk blob store on {}", compressedFilePath );
+        logger.debug("upload blob called in local-disk blob store on {}", sourceFile );
         try {
 
-            Path sourceFilePath = Paths.get(compressedFilePath);
-            Path targetFolderPath= Paths.get(baseFolder);
-            Path targetFilePath= targetFolderPath.resolve(compressedFileName);
+            Path sourceFilePath = Paths.get(sourceFile);
+            Path targetFolderPath= Paths.get(getContainerFolder());
+            Path targetFilePath= targetFolderPath.resolve(targetFile);
 
-            Files.createDirectories(targetFolderPath);
+            Files.createDirectories(targetFilePath.getParent());
             Files.deleteIfExists(targetFilePath);
             try (InputStream inputStream = Files.newInputStream(sourceFilePath)) {
                 Files.copy(inputStream, targetFilePath);
