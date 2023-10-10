@@ -35,7 +35,6 @@ import org.springframework.util.CollectionUtils;
 
 import javax.annotation.PostConstruct;
 import java.io.InputStream;
-import java.math.BigInteger;
 import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -121,7 +120,7 @@ public class ScheduledFlightConverter {
         Map<String, List<Flight>> flightsByArrivalAirportIata = filteredFlights.stream()
                 .collect(Collectors.groupingBy(Flight::getArrivalStation));
 
-        Set<BigInteger> distinctFlightLegIds = Sets.newHashSet();
+        Set<Long> distinctFlightLegIds = Sets.newHashSet();
         List<ScheduledFlight> mergedScheduledFlights = Lists.newArrayList();
 
         for (Flight flight : filteredFlights) {
@@ -334,7 +333,7 @@ public class ScheduledFlightConverter {
     }
 
     private List<Flight> filterFlightsWithInfrequentDesignator(List<Flight> scheduledFlights) {
-        Set<BigInteger> invalidFlightIds = Sets.newHashSet();
+        Set<Long> invalidFlightIds = Sets.newHashSet();
 
         for (Flight flight : scheduledFlights) {
             if (hasInfrequentDesignator(flight)) {
@@ -348,7 +347,7 @@ public class ScheduledFlightConverter {
     }
 
     private List<Flight> filterValidFlights(List<Flight> scheduledFlights) {
-        Set<BigInteger> invalidFlightIds = Sets.newHashSet();
+        Set<Long> invalidFlightIds = Sets.newHashSet();
 
         for (Flight flight : scheduledFlights) {
             if (hasInfrequentDesignator(flight)) {
@@ -462,7 +461,7 @@ public class ScheduledFlightConverter {
     }
 
     public List<Flight> findConnectingFlightLegs(Flight currentFlightLeg, Map<String, List<Flight>> flightsByDepartureAirportIata,
-                                                 Map<String, List<Flight>> flightsByArrivalAirportIata, Set<BigInteger> distinctFlightLegIds) {
+                                                 Map<String, List<Flight>> flightsByArrivalAirportIata, Set<Long> distinctFlightLegIds) {
 
         if (distinctFlightLegIds.contains(currentFlightLeg.getId())) {
             return Collections.emptyList();

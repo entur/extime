@@ -15,7 +15,6 @@ import org.junit.jupiter.api.Test;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.transform.stream.StreamSource;
-import java.math.BigInteger;
 import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.util.Collections;
@@ -157,7 +156,7 @@ class ScheduledFlightConverterTest {
         Map<String, List<Flight>> flightsByArrivalAirportIata = flightLegs.stream()
                 .collect(Collectors.groupingBy(Flight::getArrivalStation));
 
-        HashSet<BigInteger> distinctFlightLegIds = Sets.newHashSet();
+        HashSet<Long> distinctFlightLegIds = Sets.newHashSet();
 
         clazzUnderTest.findConnectingFlightLegs(
                 currentFlight, flightsByDepartureAirport, flightsByArrivalAirportIata, distinctFlightLegIds);
@@ -166,7 +165,7 @@ class ScheduledFlightConverterTest {
                 .isNotNull()
                 .isNotEmpty()
                 .hasSize(3)
-                .containsOnly(BigInteger.valueOf(1001L), BigInteger.valueOf(1002L), BigInteger.valueOf(1003L));
+                .containsOnly(1001L, 1002L, 1003L);
     }
 
     @Test
@@ -452,7 +451,7 @@ class ScheduledFlightConverterTest {
     private Flight createFlight(long id, String designator, String flightNumber, ZonedDateTime dateOfOperation,
                                 String departureStation, LocalTime departureTime, String arrivalStation, LocalTime arrivalTime) {
         Flight flight = new Flight();
-        flight.setId(BigInteger.valueOf(id));
+        flight.setId(id);
         flight.setAirlineDesignator(designator);
         flight.setFlightNumber(flightNumber);
         flight.setDateOfOperation(dateOfOperation);

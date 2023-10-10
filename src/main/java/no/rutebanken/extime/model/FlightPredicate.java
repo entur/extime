@@ -2,7 +2,6 @@ package no.rutebanken.extime.model;
 
 import no.avinor.flydata.xjc.model.scheduled.Flight;
 
-import java.math.BigInteger;
 import java.util.function.Predicate;
 
 public class FlightPredicate {
@@ -32,13 +31,13 @@ public class FlightPredicate {
     public static Predicate<Flight> matchPreviousFlightId(Flight currentFlight) {
         return previousFlight ->
                 currentFlight.getId().equals(previousFlight.getId()) ||
-                currentFlight.getId().subtract(previousFlight.getId()).equals(BigInteger.ONE);
+                        currentFlight.getId() - previousFlight.getId() == 1;
     }
 
     public static Predicate<Flight> matchNextFlightId(Flight currentFlight) {
         return nextFlight ->
                 nextFlight.getId().equals(currentFlight.getId()) ||
-                nextFlight.getId().subtract(currentFlight.getId()).equals(BigInteger.ONE);
+                        nextFlight.getId() - currentFlight.getId() == 1;
     }
 
     public static Predicate<Flight> matchPreviousByIata(Flight currentFlight) {

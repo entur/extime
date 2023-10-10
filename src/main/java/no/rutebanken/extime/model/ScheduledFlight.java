@@ -5,7 +5,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
-import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -16,7 +15,7 @@ import static no.rutebanken.extime.Constants.EMPTY;
 
 public class ScheduledFlight {
 
-    private BigInteger flightId;
+    private Long flightId;
     private String airlineIATA;
     private String airlineName;
     private String airlineFlightId;
@@ -32,11 +31,11 @@ public class ScheduledFlight {
     private String timesDesignation;
     private List<ScheduledStopover> scheduledStopovers;
 
-    public BigInteger getFlightId() {
+    public Long getFlightId() {
         return flightId;
     }
 
-    public void setFlightId(BigInteger flightId) {
+    public void setFlightId(Long flightId) {
         this.flightId = flightId;
     }
 
