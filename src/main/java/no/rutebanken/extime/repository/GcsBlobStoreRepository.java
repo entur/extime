@@ -22,14 +22,11 @@ import java.nio.file.Paths;
 @Profile("gcs-blobstore")
 public class GcsBlobStoreRepository implements BlobStoreRepository {
 
-    private static final Logger log = LoggerFactory.getLogger(GcsBlobStoreRepository.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(GcsBlobStoreRepository.class);
 
     private String containerName;
 
     private final Storage storage;
-
-    @Value("${blobstore.blob.path}")
-    private String blobPath;
 
     @Value("${blobstore.provider.id}")
     private String providerId;
@@ -49,22 +46,20 @@ public class GcsBlobStoreRepository implements BlobStoreRepository {
     }
 
     @Override
-    public void uploadBlob(String compressedFileName, String compressedFilePath, String correlationId) {
+    public void uploadBlob(String targetFile, String sourceFile, String correlationId) {
 
         try {
-            log.info("Placing file '{}' from provider with id '{}' and correlation id '{}' in blob store.",
-                    compressedFileName, providerId, correlationId);
+            LOGGER.info("Writing file '{}' from provider with id '{}' and correlation id '{}' in blob store.",
+                    targetFile, providerId, correlationId);
 
-            Path filePath = Paths.get(compressedFilePath);
-            String blobIdName = blobPath + compressedFileName;
-            log.info("Creating blob : {}", blobIdName);
+            Path filePath = Paths.get(sourceFile);
 
             try (InputStream inputStream = Files.newInputStream(filePath)) {
-                BlobStoreHelper.createNew(storage, containerName, blobIdName, inputStream, false);
+                BlobStoreHelper.createNew(storage, containerName, targetFile, inputStream, false);
             }
-            log.info("Stored blob with name '{}' and size '{}' in bucket '{}'", filePath.getFileName(), Files.size(filePath), containerName);
+            LOGGER.info("Stored blob with name '{}' and size '{}' in bucket '{}'", filePath.getFileName(), Files.size(filePath), containerName);
         } catch (Exception e) {
-            log.warn("Failed to put file '{}' in blobstore", compressedFileName, e);
+            LOGGER.warn("Failed to put file '{}' in blobstore", targetFile, e);
         }
     }
 
