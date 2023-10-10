@@ -1,3 +1,0 @@
-gcp_resources_project = "entur-ror-prod"
-kube_namespace = "production"
-bucket_instance_name = "ror-marduk-exchange-production"
