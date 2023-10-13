@@ -36,7 +36,6 @@
 
         <jakarta-xml-bind.version>4.0.1</jakarta-xml-bind.version>
         <glassfish-jaxb.version>4.0.3</glassfish-jaxb.version>
-        <jaxb2-basics.version>2.0.9</jaxb2-basics.version>
         <threeten-jaxb-core.version>2.1.0</threeten-jaxb-core.version>
         <jaxb-maven-plugin-version>4.0.0</jaxb-maven-plugin-version>
 
@@ -199,9 +198,8 @@
         </dependency>
         <dependency>
             <groupId>org.jvnet.jaxb</groupId>
-            <artifactId>jaxb2-basics-runtime</artifactId>
-            <version>${jaxb2-basics.version}</version>
-            <scope>compile</scope>
+            <artifactId>jaxb-plugins-runtime</artifactId>
+            <version>${jaxb-maven-plugin-version}</version>
         </dependency>
 
         <!-- Misc. -->
@@ -297,7 +295,7 @@
                 <groupId>org.jvnet.jaxb</groupId>
                 <artifactId>jaxb-maven-plugin</artifactId>
                 <version>${jaxb-maven-plugin-version}</version>
-                <!--configuration>
+                <configuration>
                     <extension>true</extension>
                     <specVersion>4.0</specVersion>
                     <args>
@@ -308,11 +306,11 @@
                     <plugins>
                         <plugin>
                             <groupId>org.jvnet.jaxb</groupId>
-                            <artifactId>jaxb2-basics</artifactId>
-                            <version>${jaxb2-basics.version}</version>
+                            <artifactId>jaxb-plugins</artifactId>
+                            <version>${jaxb-maven-plugin-version}</version>
                         </plugin>
                     </plugins>
-                </configuration-->
+                </configuration>
                 <executions>
                     <execution>
                         <id>xjc-scheduled</id>
