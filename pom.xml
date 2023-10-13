@@ -179,6 +179,7 @@
         </dependency>
 
 
+        <!-- JAXB -->
         <dependency>
             <groupId>javax.xml.bind</groupId>
             <artifactId>jaxb-api</artifactId>
@@ -193,7 +194,6 @@
             <artifactId>threeten-jaxb-core</artifactId>
             <version>${threeten-jaxb-core.version}</version>
         </dependency>
-        <!-- Compile Scope -->
         <dependency>
             <groupId>org.jvnet.jaxb</groupId>
             <artifactId>jaxb2-basics-runtime</artifactId>
