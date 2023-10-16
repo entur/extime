@@ -22,7 +22,7 @@ import org.rutebanken.netex.model.ObjectFactory;
 import org.rutebanken.netex.model.PublicationDeliveryStructure;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import javax.xml.bind.JAXBElement;
+import jakarta.xml.bind.JAXBElement;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.time.LocalDate;

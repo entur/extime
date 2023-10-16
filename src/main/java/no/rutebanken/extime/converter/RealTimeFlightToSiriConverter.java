@@ -4,9 +4,7 @@ import no.avinor.flydata.xjc.model.feed.Flight;
 import org.springframework.stereotype.Component;
 import uk.org.siri.siri20.*;
 
-import javax.xml.datatype.DatatypeConfigurationException;
-import javax.xml.datatype.DatatypeFactory;
-import javax.xml.datatype.Duration;
+import java.time.Duration;
 import java.time.ZonedDateTime;
 
 @Component(value = "realTimeFlightToSiriConverter")
@@ -172,12 +170,7 @@ public class RealTimeFlightToSiriConverter {
     }
 
     public Duration createDuration(String lexicalRepresentation) {
-        try {
-            return DatatypeFactory.newInstance().newDuration(215081000L);
-        } catch (DatatypeConfigurationException ex) {
-            // @todo: do some logging here...
-        }
-        return null;
+            return java.time.Duration.ofMillis(215081000L);
     }
 
 }

@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.entur.ror</groupId>
         <artifactId>superpom</artifactId>
-        <version>1.64</version>
+        <version>2.3</version>
     </parent>
 
     <groupId>no.rutebanken.extime</groupId>
@@ -31,23 +31,23 @@
     </licenses>
 
     <properties>
-        <java.version>17</java.version>
-        <camel.version>3.21.1</camel.version>
-        <entur.helpers.version>1.100</entur.helpers.version>
-        <jaxb2-basics.version>2.0.9</jaxb2-basics.version>
-        <threeten-jaxb-core.version>1.2</threeten-jaxb-core.version>
+        <camel.version>4.0.1</camel.version>
+        <entur.helpers.version>2.3</entur.helpers.version>
+
+        <jakarta-xml-bind.version>4.0.1</jakarta-xml-bind.version>
+        <glassfish-jaxb.version>4.0.3</glassfish-jaxb.version>
+        <threeten-jaxb-core.version>2.1.0</threeten-jaxb-core.version>
+        <jaxb-maven-plugin-version>4.0.0</jaxb-maven-plugin-version>
+
         <commons-io.version>2.14.0</commons-io.version>
         <zt-zip.version>1.16</zt-zip.version>
-        <siri-java-model.version>0.15</siri-java-model.version>
         <commons-collections4.version>4.4</commons-collections4.version>
 
         <entur.google.pubsub.emulator.download.skip>false</entur.google.pubsub.emulator.download.skip>
 
-        <netex-java-model.version>1.0.14</netex-java-model.version>
-
-        <jaxb-maven-plugin-version>2.0.9</jaxb-maven-plugin-version>
-
-        <netex-parser-java.version>2.2.0</netex-parser-java.version>
+        <netex-java-model.version>2.0.14</netex-java-model.version>
+        <netex-parser-java.version>3.0.2</netex-parser-java.version>
+        <siri-java-model.version>1.22</siri-java-model.version>
 
         <!-- empty argLine property, the value is set up by Jacoco during unit tests execution -->
         <argLine/>
@@ -181,12 +181,14 @@
 
         <!-- JAXB -->
         <dependency>
-            <groupId>javax.xml.bind</groupId>
-            <artifactId>jaxb-api</artifactId>
+            <groupId>jakarta.xml.bind</groupId>
+            <artifactId>jakarta.xml.bind-api</artifactId>
+            <version>${jakarta-xml-bind.version}</version>
         </dependency>
         <dependency>
             <groupId>org.glassfish.jaxb</groupId>
             <artifactId>jaxb-runtime</artifactId>
+            <version>${glassfish-jaxb.version}</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>
@@ -196,9 +198,8 @@
         </dependency>
         <dependency>
             <groupId>org.jvnet.jaxb</groupId>
-            <artifactId>jaxb2-basics-runtime</artifactId>
-            <version>${jaxb2-basics.version}</version>
-            <scope>compile</scope>
+            <artifactId>jaxb-plugins-runtime</artifactId>
+            <version>${jaxb-maven-plugin-version}</version>
         </dependency>
 
         <!-- Misc. -->
@@ -296,6 +297,7 @@
                 <version>${jaxb-maven-plugin-version}</version>
                 <configuration>
                     <extension>true</extension>
+                    <specVersion>4.0</specVersion>
                     <args>
                         <arg>-Xequals</arg>
                         <arg>-XhashCode</arg>
@@ -304,8 +306,8 @@
                     <plugins>
                         <plugin>
                             <groupId>org.jvnet.jaxb</groupId>
-                            <artifactId>jaxb2-basics</artifactId>
-                            <version>${jaxb2-basics.version}</version>
+                            <artifactId>jaxb-plugins</artifactId>
+                            <version>${jaxb-maven-plugin-version}</version>
                         </plugin>
                     </plugins>
                 </configuration>
