@@ -31,7 +31,7 @@
     </licenses>
 
     <properties>
-        <camel.version>4.0.1</camel.version>
+        <camel.version>4.1.0</camel.version>
         <entur.helpers.version>2.3</entur.helpers.version>
 
         <jakarta-xml-bind.version>4.0.1</jakarta-xml-bind.version>
