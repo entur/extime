@@ -3,81 +3,7 @@ package no.rutebanken.extime.util;
 import com.google.common.base.Joiner;
 import no.rutebanken.extime.config.NetexStaticDataSet;
 import no.rutebanken.extime.model.AvailabilityPeriod;
-import org.rutebanken.netex.model.AirSubmodeEnumeration;
-import org.rutebanken.netex.model.AllVehicleModesOfTransportEnumeration;
-import org.rutebanken.netex.model.Authority;
-import org.rutebanken.netex.model.AuthorityRefStructure;
-import org.rutebanken.netex.model.AvailabilityCondition;
-import org.rutebanken.netex.model.Branding;
-import org.rutebanken.netex.model.BrandingRefStructure;
-import org.rutebanken.netex.model.Codespace;
-import org.rutebanken.netex.model.Codespaces_RelStructure;
-import org.rutebanken.netex.model.CompositeFrame;
-import org.rutebanken.netex.model.ContactStructure;
-import org.rutebanken.netex.model.DayOfWeekEnumeration;
-import org.rutebanken.netex.model.DayType;
-import org.rutebanken.netex.model.DayTypeAssignment;
-import org.rutebanken.netex.model.DayTypeAssignmentsInFrame_RelStructure;
-import org.rutebanken.netex.model.DayTypeRefStructure;
-import org.rutebanken.netex.model.DayTypeRefs_RelStructure;
-import org.rutebanken.netex.model.DayTypesInFrame_RelStructure;
-import org.rutebanken.netex.model.DestinationDisplay;
-import org.rutebanken.netex.model.DestinationDisplayRefStructure;
-import org.rutebanken.netex.model.DestinationDisplaysInFrame_RelStructure;
-import org.rutebanken.netex.model.Frames_RelStructure;
-import org.rutebanken.netex.model.GroupOfLines;
-import org.rutebanken.netex.model.GroupOfLinesRefStructure;
-import org.rutebanken.netex.model.GroupsOfLinesInFrame_RelStructure;
-import org.rutebanken.netex.model.JourneyPattern;
-import org.rutebanken.netex.model.JourneyPatternRefStructure;
-import org.rutebanken.netex.model.JourneyPatternsInFrame_RelStructure;
-import org.rutebanken.netex.model.JourneysInFrame_RelStructure;
-import org.rutebanken.netex.model.Line;
-import org.rutebanken.netex.model.LineRefStructure;
-import org.rutebanken.netex.model.LinesInFrame_RelStructure;
-import org.rutebanken.netex.model.LocaleStructure;
-import org.rutebanken.netex.model.MultilingualString;
-import org.rutebanken.netex.model.Network;
-import org.rutebanken.netex.model.NetworksInFrame_RelStructure;
-import org.rutebanken.netex.model.ObjectFactory;
-import org.rutebanken.netex.model.OperatingPeriod;
-import org.rutebanken.netex.model.OperatingPeriodRefStructure;
-import org.rutebanken.netex.model.OperatingPeriod_VersionStructure;
-import org.rutebanken.netex.model.OperatingPeriodsInFrame_RelStructure;
-import org.rutebanken.netex.model.Operator;
-import org.rutebanken.netex.model.OperatorRefStructure;
-import org.rutebanken.netex.model.OrganisationTypeEnumeration;
-import org.rutebanken.netex.model.OrganisationsInFrame_RelStructure;
-import org.rutebanken.netex.model.PassengerStopAssignment;
-import org.rutebanken.netex.model.PointOnRoute;
-import org.rutebanken.netex.model.PointRefStructure;
-import org.rutebanken.netex.model.PointsInJourneyPattern_RelStructure;
-import org.rutebanken.netex.model.PointsOnRoute_RelStructure;
-import org.rutebanken.netex.model.PublicationDeliveryStructure;
-import org.rutebanken.netex.model.QuayRefStructure;
-import org.rutebanken.netex.model.ResourceFrame;
-import org.rutebanken.netex.model.Route;
-import org.rutebanken.netex.model.RoutePoint;
-import org.rutebanken.netex.model.RoutePointRefStructure;
-import org.rutebanken.netex.model.RoutePointsInFrame_RelStructure;
-import org.rutebanken.netex.model.RouteRefStructure;
-import org.rutebanken.netex.model.RoutesInFrame_RelStructure;
-import org.rutebanken.netex.model.ScheduledStopPoint;
-import org.rutebanken.netex.model.ScheduledStopPointRefStructure;
-import org.rutebanken.netex.model.ScheduledStopPointsInFrame_RelStructure;
-import org.rutebanken.netex.model.ServiceCalendarFrame;
-import org.rutebanken.netex.model.ServiceFrame;
-import org.rutebanken.netex.model.ServiceJourney;
-import org.rutebanken.netex.model.StopAssignmentsInFrame_RelStructure;
-import org.rutebanken.netex.model.StopPlaceRefStructure;
-import org.rutebanken.netex.model.StopPointInJourneyPattern;
-import org.rutebanken.netex.model.StopPointInJourneyPatternRefStructure;
-import org.rutebanken.netex.model.TimetableFrame;
-import org.rutebanken.netex.model.TimetabledPassingTime;
-import org.rutebanken.netex.model.TimetabledPassingTimes_RelStructure;
-import org.rutebanken.netex.model.TypesOfValueInFrame_RelStructure;
-import org.rutebanken.netex.model.ValidityConditions_RelStructure;
-import org.rutebanken.netex.model.VersionFrameDefaultsStructure;
+import org.rutebanken.netex.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
@@ -437,7 +363,7 @@ public class NetexObjectFactory {
         String networkId = NetexObjectIdCreator.createNetworkId(AVINOR_XMLNS, airlineIata);
         String authorityId = NetexObjectIdCreator.createAuthorityId(AVINOR_XMLNS, avinorDataSet.getName());
 
-        AuthorityRefStructure authorityRefStruct = objectFactory.createAuthorityRefStructure()
+        AuthorityRef authorityRef = objectFactory.createAuthorityRef()
                 .withVersion(VERSION_ONE)
                 .withRef(authorityId);
 
@@ -454,7 +380,7 @@ public class NetexObjectFactory {
                 .withChanged(dateUtils.toExportLocalDateTime(publicationTimestamp))
                 .withId(networkId)
                 .withName(createMultilingualString(airlineName))
-                .withTransportOrganisationRef(objectFactory.createAuthorityRef(authorityRefStruct));
+                .withTransportOrganisationRef(objectFactory.createAuthorityRef(authorityRef));
     }
 
     public JAXBElement<Authority> createAvinorAuthorityElement() {
@@ -737,7 +663,7 @@ public class NetexObjectFactory {
                 objectFactory.createOperatingPeriodRefStructure().withRef(operatingPeriodId).withVersion(VERSION_ONE);
 
         return createDayTypeAssignment(objectId, order, null, dayTypeId, true)
-                .withOperatingPeriodRef(operatingPeriodRefStructure);
+                .withOperatingPeriodRef(objectFactory.createOperatingPeriodRef(operatingPeriodRefStructure));
 
     }
 
