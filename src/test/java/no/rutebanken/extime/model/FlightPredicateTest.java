@@ -4,7 +4,6 @@ import no.avinor.flydata.xjc.model.scheduled.Flight;
 import no.rutebanken.extime.util.DateUtils;
 import org.junit.jupiter.api.Test;
 
-import java.math.BigInteger;
 import java.time.LocalTime;
 import java.time.OffsetTime;
 import java.time.ZonedDateTime;
@@ -239,7 +238,7 @@ class FlightPredicateTest {
     private Flight createFlight(long id, String designator, String flightNumber, ZonedDateTime dateOfOperation,
             String departureStation, LocalTime departureTime, String arrivalStation, LocalTime arrivalTime) {
         Flight flight = new Flight();
-        flight.setId(BigInteger.valueOf(id));
+        flight.setId(id);
         flight.setAirlineDesignator(designator);
         flight.setFlightNumber(flightNumber);
         flight.setDateOfOperation(dateOfOperation);

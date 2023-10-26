@@ -7,7 +7,6 @@ import no.rutebanken.extime.model.FlightRouteDataSet;
 import org.apache.camel.Body;
 import org.springframework.stereotype.Component;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -62,7 +61,7 @@ public class RealTimeFlightConverter {
 
     private Predicate<Flight> createMatchingFlightPredicate(String airportIATA, Flight departureFlight) {
         Predicate<Flight> uniqueIdPredicate = arrivalFlight ->
-                arrivalFlight.getUniqueID().subtract(departureFlight.getUniqueID()).equals(BigInteger.ONE);
+                arrivalFlight.getUniqueID() - departureFlight.getUniqueID() == 1;
         Predicate<Flight> airlineIATAPredicate = arrivalFlight ->
                 arrivalFlight.getAirline().equalsIgnoreCase(departureFlight.getAirline());
         Predicate<Flight> flightIdPredicate = arrivalFlight ->
