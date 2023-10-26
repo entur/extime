@@ -31,6 +31,7 @@
     </licenses>
 
     <properties>
+        <java.version>21</java.version>
         <camel.version>4.0.1</camel.version>
         <entur.helpers.version>2.3</entur.helpers.version>
 
