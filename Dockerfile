@@ -2,7 +2,7 @@ FROM bellsoft/liberica-openjdk-alpine:21.0.1-12 AS builder
 COPY target/extime-*-SNAPSHOT.jar application.jar
 RUN java -Djarmode=layertools -jar application.jar extract
 
-FROM bellsoft/liberica-openjdk-alpine:17.0.8-7
+FROM bellsoft/liberica-openjdk-alpine:21.0.1-12
 RUN apk update && apk upgrade && apk add --no-cache tini
 WORKDIR /deployments
 RUN addgroup appuser && adduser --disabled-password appuser --ingroup appuser
