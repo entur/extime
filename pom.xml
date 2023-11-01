@@ -46,7 +46,7 @@
 
         <entur.google.pubsub.emulator.download.skip>false</entur.google.pubsub.emulator.download.skip>
 
-        <netex-java-model.version>2.0.14</netex-java-model.version>
+        <netex-java-model.version>2.0.15</netex-java-model.version>
         <netex-parser-java.version>3.0.5</netex-parser-java.version>
         <siri-java-model.version>1.25</siri-java-model.version>
 
