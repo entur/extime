@@ -83,10 +83,12 @@ public class CommonDataToNetexConverter {
 
             PassengerStopAssignment stopAssignment = netexCommonDataSet.getStopAssignmentMap().get(airportIATAName);
 
-            var nsrQuay = nsrQuayMap.get(stopAssignment.getQuayRef().getRef());
+            var nsrQuay = nsrQuayMap.get(stopAssignment.getQuayRef().getValue().getRef());
+
+
 
             PassengerStopAssignment passengerStopAssignment = nsrQuay != null
-                    ? stopAssignment.withQuayRef(netexObjectFactory.createQuayRefStructure(nsrQuay.getId()))
+                    ? stopAssignment.withQuayRef(objectFactory.createQuayRef(netexObjectFactory.createQuayRefStructure(nsrQuay.getId())))
                     : stopAssignment;
 
             var stopAssignmentElement = objectFactory.createPassengerStopAssignment(passengerStopAssignment);

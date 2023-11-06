@@ -102,7 +102,7 @@ class CommonDataWithSiteToNetexConverterTest extends ExtimeRouteBuilderIntegrati
 //                    assertThat(stopPlaceRef).isNotNull();
 //                    assertThat(stopPlaceRef.getRef()).isNotNull().isNotEmpty().matches("^AVI:StopPlace:[A-Z]{3}$");
 
-                    QuayRefStructure quayRef = stopAssignment.getQuayRef();
+                    QuayRefStructure quayRef = stopAssignment.getQuayRef().getValue();
                     assertThat(quayRef).isNotNull();
                     assertThat(quayRef.getRef()).isNotNull().isNotEmpty().matches("^AVI:Quay:[A-Z]{3}$");
                 }
