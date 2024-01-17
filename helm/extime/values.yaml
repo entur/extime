@@ -7,7 +7,7 @@ common:
   service:
     internalPort: 8080
   container:
-    image: ${artifact.metadata.image}
+    image: <+artifacts.primary.image>
     cpu: 0.5
     memory: 800
     cpuLimit: 1000m
