@@ -10,7 +10,6 @@ common:
     image: <+artifacts.primary.image>
     cpu: 0.5
     memory: 800
-    cpuLimit: 1000m
     memoryLimit: 1000
     probes:
       liveness:
