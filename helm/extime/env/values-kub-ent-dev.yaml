@@ -1,0 +1,12 @@
+common:
+  env: dev
+  replicas: 1
+
+avinorTimetableSchedulerCron: 0+4+3+*+*+?
+gcp:
+  bucketName:
+    marduk: marduk-dev
+    mardukExchange: marduk-exchange-dev
+  blobstoreProjectId: entur-ror-dev
+  pubsubProjectId: ent-marduk-dev
+

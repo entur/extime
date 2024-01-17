@@ -1,0 +1,12 @@
+common:
+  env: tst
+  replicas: 1
+
+avinorTimetableSchedulerCron: 0+0+5+*+*+?
+gcp:
+  bucketName:
+    marduk: marduk-test
+    mardukExchange: marduk-exchange-test
+  blobstoreProjectId: entur-ror-test
+  pubsubProjectId: ent-marduk-tst
+
