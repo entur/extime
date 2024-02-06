@@ -41,7 +41,7 @@
         <jaxb-maven-plugin-version>4.0.0</jaxb-maven-plugin-version>
 
         <commons-io.version>2.15.1</commons-io.version>
-        <zt-zip.version>1.16</zt-zip.version>
+        <zt-zip.version>1.17</zt-zip.version>
         <commons-collections4.version>4.4</commons-collections4.version>
 
         <entur.google.pubsub.emulator.download.skip>false</entur.google.pubsub.emulator.download.skip>
