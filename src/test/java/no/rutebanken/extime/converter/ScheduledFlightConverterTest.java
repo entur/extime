@@ -124,7 +124,7 @@ class ScheduledFlightConverterTest {
         Map<String, List<Flight>> flightsByArrivalAirportIata = wf149FlightLegs.stream()
                 .collect(Collectors.groupingBy(Flight::getArrivalStation));
 
-        Flight currentFlight = wf149FlightLegs.get(0);
+        Flight currentFlight = wf149FlightLegs.getFirst();
         List<Flight> connectingFlightLegs = clazzUnderTest.findConnectingFlightLegs(
                 currentFlight, flightsByDepartureAirport, flightsByArrivalAirportIata, Sets.newHashSet(currentFlight.getId()));
 
@@ -419,7 +419,7 @@ class ScheduledFlightConverterTest {
 
         optionalFlight.ifPresent(flight -> Assertions.assertThat(flight)
                 .isNotNull()
-                .isEqualTo(flightLegs.get(0)));
+                .isEqualTo(flightLegs.getFirst()));
     }
 
     @Test

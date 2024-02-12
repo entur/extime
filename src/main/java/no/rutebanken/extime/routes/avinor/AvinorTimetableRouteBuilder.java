@@ -145,7 +145,7 @@ public class AvinorTimetableRouteBuilder extends BaseRouteBuilder {
 
                 .process(exchange -> {
                     List<AirportName> airportNames = exchange.getIn().getBody(AirportNames.class).getAirportName();
-                    exchange.getIn().setBody((airportNames != null && !airportNames.isEmpty()) ? airportNames.get(0).getName() :
+                    exchange.getIn().setBody((airportNames != null && !airportNames.isEmpty()) ? airportNames.getFirst().getName() :
                             exchange.getIn().getHeader(HEADER_EXTIME_RESOURCE_CODE), String.class);
                 })
 
@@ -161,7 +161,7 @@ public class AvinorTimetableRouteBuilder extends BaseRouteBuilder {
 
                 .process(exchange -> {
                     List<AirlineName> airlineNames = exchange.getIn().getBody(AirlineNames.class).getAirlineName();
-                    exchange.getIn().setBody((airlineNames != null && !airlineNames.isEmpty()) ? airlineNames.get(0).getName() :
+                    exchange.getIn().setBody((airlineNames != null && !airlineNames.isEmpty()) ? airlineNames.getFirst().getName() :
                             exchange.getIn().getHeader(HEADER_EXTIME_RESOURCE_CODE), String.class);
                 })
 

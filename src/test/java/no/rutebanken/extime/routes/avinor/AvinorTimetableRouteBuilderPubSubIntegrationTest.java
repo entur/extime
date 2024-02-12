@@ -50,7 +50,7 @@ class AvinorTimetableRouteBuilderPubSubIntegrationTest extends ExtimeCamelRouteB
 
         List<PubsubMessage> messages = pubSubTemplate.pullAndAck(notificationQueue, 1, false);
         Assertions.assertEquals(1, messages.size());
-        PubsubMessage pubsubMessage = messages.get(0);
+        PubsubMessage pubsubMessage = messages.getFirst();
         Assertions.assertTrue(pubsubMessage.getData().isEmpty());
         Map<String, String> headers = pubsubMessage.getAttributesMap();
         Assertions.assertNotNull(headers.get(Exchange.FILE_NAME));

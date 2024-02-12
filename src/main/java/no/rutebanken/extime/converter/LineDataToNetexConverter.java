@@ -277,7 +277,7 @@ public class LineDataToNetexConverter {
             // get the final destination from stop points sequence, to set as front text
             List<PointInLinkSequence_VersionedChildStructure> pointsInLinkSequence = journeyPattern.getPointsInSequence()
                     .getPointInJourneyPatternOrStopPointInJourneyPatternOrTimingPointInJourneyPattern();
-            PointInLinkSequence_VersionedChildStructure lastPointInSequence = pointsInLinkSequence.get(pointsInLinkSequence.size() - 1);
+            PointInLinkSequence_VersionedChildStructure lastPointInSequence = pointsInLinkSequence.getLast();
             StopPointInJourneyPattern finalDestinationPoint = (StopPointInJourneyPattern) lastPointInSequence;
 
             String finalDestinationPointId = finalDestinationPoint.getScheduledStopPointRef().getValue().getRef();
@@ -286,7 +286,7 @@ public class LineDataToNetexConverter {
             patternDestinationDisplay.setFrontText(netexObjectFactory.createMultilingualString(frontTextValue));
             patternDestinationDisplay.setName(patternDestinationDisplay.getFrontText());
 
-            StopPointInJourneyPattern firstStopPointInJourneyPattern = (StopPointInJourneyPattern) pointsInLinkSequence.get(0);
+            StopPointInJourneyPattern firstStopPointInJourneyPattern = (StopPointInJourneyPattern) pointsInLinkSequence.getFirst();
             firstStopPointInJourneyPattern.setDestinationDisplayRef(destinationDisplayRefStruct);          		
             
             List<String> viaTexts = new ArrayList<>();
@@ -392,7 +392,7 @@ public class LineDataToNetexConverter {
 
             String journeyIdSequence = StringUtils.leftPad(idSequence[index++], 2, "0");
             String objectId = Joiner.on(DASH).skipNulls().join(flightId, journeyIdSequence, NetexObjectIdCreator.getObjectIdSuffix(journeyPatternId));
-            ServiceJourney serviceJourney = netexObjectFactory.createServiceJourney(objectId, line.getId(), flightId, dayTypeRefsStruct, journeyPatternId, passingTimesRelStruct,journeyFlights.get(0).getArrivalAirportName());
+            ServiceJourney serviceJourney = netexObjectFactory.createServiceJourney(objectId, line.getId(), flightId, dayTypeRefsStruct, journeyPatternId, passingTimesRelStruct,journeyFlights.getFirst().getArrivalAirportName());
             serviceJourneys.add(serviceJourney);
         }
 
@@ -400,7 +400,7 @@ public class LineDataToNetexConverter {
     }
 
     private TimetabledPassingTimes_RelStructure aggregateJourneyPassingTimes(List<ScheduledFlight> journeyFlights, List<PointInLinkSequence_VersionedChildStructure> pointsInLinkSequence) {
-        ScheduledFlight guidingFlight = journeyFlights.get(0);
+        ScheduledFlight guidingFlight = journeyFlights.getFirst();
         TimetabledPassingTimes_RelStructure passingTimesRelStructure = objectFactory.createTimetabledPassingTimes_RelStructure();
 
         if (guidingFlight.hasStopovers()) {
@@ -441,7 +441,7 @@ public class LineDataToNetexConverter {
                 passingTimesRelStructure.withTimetabledPassingTime(passingTime);
             }
         } else {
-            TimetabledPassingTime departurePassingTime = netexObjectFactory.createTimetabledPassingTime(pointsInLinkSequence.get(0).getId());
+            TimetabledPassingTime departurePassingTime = netexObjectFactory.createTimetabledPassingTime(pointsInLinkSequence.getFirst().getId());
             departurePassingTime.setDepartureTime(guidingFlight.getTimeOfDeparture());
             passingTimesRelStructure.withTimetabledPassingTime(departurePassingTime);
             

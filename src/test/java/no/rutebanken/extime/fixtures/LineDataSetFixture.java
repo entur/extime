@@ -99,7 +99,7 @@ public final class LineDataSetFixture {
 
                 List<String> routeStops = resolveStops(routeDesignation);
                 if (routeStops.size() == 2) {
-                    String departureAirportIata = routeStops.get(0);
+                    String departureAirportIata = routeStops.getFirst();
                     scheduledFlight.setDepartureAirportIATA(departureAirportIata);
                     scheduledFlight.setDepartureAirportName(airports.get(departureAirportIata));
 
@@ -146,7 +146,7 @@ public final class LineDataSetFixture {
             }
 
             // TODO add support for multiple flights per flight id
-            flightsById.put(flights.get(0).getAirlineFlightId(), flights);
+            flightsById.put(flights.getFirst().getAirlineFlightId(), flights);
             routeJourneys.put(routeDesignation, flightsById);
         }
 
