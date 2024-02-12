@@ -7,6 +7,6 @@ gcp:
   bucketName:
     marduk: marduk-dev
     mardukExchange: marduk-exchange-dev
-  blobstoreProjectId: entur-ror-dev
+  blobstoreProjectId: ent-marduk-dev
   pubsubProjectId: ent-marduk-dev
 
