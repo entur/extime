@@ -161,7 +161,7 @@ public class ScheduledFlight {
     public String getOperatingLine() {
         Joiner joiner = Joiner.on(DASH).skipNulls();
         return hasStopovers() ?
-                joiner.join(scheduledStopovers.get(0).getAirportIATA(), scheduledStopovers.get(scheduledStopovers.size() - 1).getAirportIATA()) :
+                joiner.join(scheduledStopovers.getFirst().getAirportIATA(), scheduledStopovers.getLast().getAirportIATA()) :
                 joiner.join(departureAirportIATA, arrivalAirportIATA);
     }
 

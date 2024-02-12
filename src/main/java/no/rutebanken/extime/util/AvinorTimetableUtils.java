@@ -178,9 +178,9 @@ public class AvinorTimetableUtils {
                 .flatMap(Collection::stream)
                 .toList();
 
-        ServiceFrame sf = collect.get(0);
+        ServiceFrame sf = collect.getFirst();
 
-        Line line = ((Line) sf.getLines().getLine_().get(0).getValue());
+        Line line = ((Line) sf.getLines().getLine_().getFirst().getValue());
 
         String networkName;
         if (sf.getNetwork() != null) {

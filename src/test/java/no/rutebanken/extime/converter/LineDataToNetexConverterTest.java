@@ -60,11 +60,11 @@ class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationTestBase
         NetexTestUtils.verifyCompositeFrameAttributes(publicationDelivery);
         NetexTestUtils.verifyServiceFrameAttributes(publicationDelivery);
 
-        TimetableFrame timetableFrame = NetexTestUtils.getFrames(TimetableFrame.class, NetexTestUtils.getDataObjectFrames(publicationDelivery)).get(0);
+        TimetableFrame timetableFrame = NetexTestUtils.getFrames(TimetableFrame.class, NetexTestUtils.getDataObjectFrames(publicationDelivery)).getFirst();
         assertThat(timetableFrame).hasFieldOrPropertyWithValue("version", VERSION_ONE);
         assertThat(timetableFrame.getId()).matches(id -> id.split(":")[1].equals(NetexObjectIdTypes.TIMETABLE_FRAME_KEY), "TimetableFrame");
 
-        ServiceCalendarFrame serviceCalendarFrame = NetexTestUtils.getFrames(ServiceCalendarFrame.class, NetexTestUtils.getDataObjectFrames(publicationDelivery)).get(0);
+        ServiceCalendarFrame serviceCalendarFrame = NetexTestUtils.getFrames(ServiceCalendarFrame.class, NetexTestUtils.getDataObjectFrames(publicationDelivery)).getFirst();
         assertThat(serviceCalendarFrame).hasFieldOrPropertyWithValue("version", VERSION_ONE);
         assertThat(serviceCalendarFrame.getId()).matches(id -> id.split(":")[1].equals(NetexObjectIdTypes.SERVICE_CALENDAR_FRAME_KEY), "ServiceCalendarFrame");
     }
@@ -78,9 +78,9 @@ class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationTestBase
         assertValidPublicationDelivery(publicationDelivery, lineDataSet.getLineName());
 
         List<JAXBElement<? extends Common_VersionFrameStructure>> dataObjectFrames = NetexTestUtils.getDataObjectFrames(publicationDelivery);
-        ServiceFrame serviceFrame = NetexTestUtils.getFrames(ServiceFrame.class, dataObjectFrames).get(0);
+        ServiceFrame serviceFrame = NetexTestUtils.getFrames(ServiceFrame.class, dataObjectFrames).getFirst();
 
-        Line line = (Line) serviceFrame.getLines().getLine_().get(0).getValue();
+        Line line = (Line) serviceFrame.getLines().getLine_().getFirst().getValue();
 
         assertValidLine(line, lineDataSet);
         assertValidRoutes(serviceFrame.getRoutes(), lineDataSet, line);
@@ -95,9 +95,9 @@ class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationTestBase
         assertValidPublicationDelivery(publicationDelivery, lineDataSet.getLineName());
 
         List<JAXBElement<? extends Common_VersionFrameStructure>> dataObjectFrames = NetexTestUtils.getDataObjectFrames(publicationDelivery);
-        ServiceFrame serviceFrame = NetexTestUtils.getFrames(ServiceFrame.class, dataObjectFrames).get(0);
+        ServiceFrame serviceFrame = NetexTestUtils.getFrames(ServiceFrame.class, dataObjectFrames).getFirst();
 
-        Line line = (Line) serviceFrame.getLines().getLine_().get(0).getValue();
+        Line line = (Line) serviceFrame.getLines().getLine_().getFirst().getValue();
 
         assertValidLine(line, lineDataSet);
         assertValidRoutes(serviceFrame.getRoutes(), lineDataSet, line);
@@ -112,7 +112,7 @@ class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationTestBase
         assertValidPublicationDelivery(publicationDelivery, lineDataSet.getLineName());
 
         List<JAXBElement<? extends Common_VersionFrameStructure>> dataObjectFrames = NetexTestUtils.getDataObjectFrames(publicationDelivery);
-        ServiceFrame serviceFrame = NetexTestUtils.getFrames(ServiceFrame.class, dataObjectFrames).get(0);
+        ServiceFrame serviceFrame = NetexTestUtils.getFrames(ServiceFrame.class, dataObjectFrames).getFirst();
 
         // check journey patterns for destination display reference
         JourneyPatternsInFrame_RelStructure journeyPatternStruct = serviceFrame.getJourneyPatterns();
@@ -148,7 +148,7 @@ class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationTestBase
         assertValidPublicationDelivery(publicationDelivery, lineDataSet.getLineName());
 
         List<JAXBElement<? extends Common_VersionFrameStructure>> dataObjectFrames = NetexTestUtils.getDataObjectFrames(publicationDelivery);
-        ServiceFrame serviceFrame = NetexTestUtils.getFrames(ServiceFrame.class, dataObjectFrames).get(0);
+        ServiceFrame serviceFrame = NetexTestUtils.getFrames(ServiceFrame.class, dataObjectFrames).getFirst();
 
         // check journey patterns for destination display reference
         JourneyPatternsInFrame_RelStructure journeyPatternStruct = serviceFrame.getJourneyPatterns();
@@ -169,14 +169,14 @@ class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationTestBase
             if (destinationDisplay.getId().equals("AVI:DestinationDisplay:DY_OSL-SOG-BGO")) {
                 assertThat(destinationDisplay.getFrontText().getValue()).isEqualTo("Bergen");
                 assertThat(destinationDisplay.getVias().getVia()).hasSize(1);
-                assertThat(destinationDisplay.getVias().getVia().get(0).getDestinationDisplayRef().getVersion()).isEqualTo(VERSION_ONE);
-                assertThat(destinationDisplay.getVias().getVia().get(0).getDestinationDisplayRef().getRef()).isEqualTo("AVI:DestinationDisplay:DYOSLBGO-SOG");
+                assertThat(destinationDisplay.getVias().getVia().getFirst().getDestinationDisplayRef().getVersion()).isEqualTo(VERSION_ONE);
+                assertThat(destinationDisplay.getVias().getVia().getFirst().getDestinationDisplayRef().getRef()).isEqualTo("AVI:DestinationDisplay:DYOSLBGO-SOG");
             }
             if (destinationDisplay.getId().equals("AVI:DestinationDisplay:DY_BGO-SOG-OSL")) {
                 assertThat(destinationDisplay.getFrontText().getValue()).isEqualTo("Oslo");
                 assertThat(destinationDisplay.getVias().getVia()).hasSize(1);
-                assertThat(destinationDisplay.getVias().getVia().get(0).getDestinationDisplayRef().getVersion()).isEqualTo(VERSION_ONE);
-                assertThat(destinationDisplay.getVias().getVia().get(0).getDestinationDisplayRef().getRef()).isEqualTo("AVI:DestinationDisplay:DYOSLBGO-SOG");
+                assertThat(destinationDisplay.getVias().getVia().getFirst().getDestinationDisplayRef().getVersion()).isEqualTo(VERSION_ONE);
+                assertThat(destinationDisplay.getVias().getVia().getFirst().getDestinationDisplayRef().getRef()).isEqualTo("AVI:DestinationDisplay:DYOSLBGO-SOG");
             }
         }
     }
@@ -264,7 +264,7 @@ class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationTestBase
         assertThat(journeyPatterns).extracting("routeRef.ref").containsAll(getRouteIds(lineDataSet));
 
         for(JourneyPattern jp : journeyPatterns) {
-        	StopPointInJourneyPattern stopPoint = (StopPointInJourneyPattern) jp.getPointsInSequence().getPointInJourneyPatternOrStopPointInJourneyPatternOrTimingPointInJourneyPattern().get(0);
+        	StopPointInJourneyPattern stopPoint = (StopPointInJourneyPattern) jp.getPointsInSequence().getPointInJourneyPatternOrStopPointInJourneyPatternOrTimingPointInJourneyPattern().getFirst();
             assertThat(stopPoint).extracting("destinationDisplayRef.ref").isNotNull();
         	//assertThat(stopPoint).extracting("destinationDisplayRef.ref").containsOnlyElementsOf(getDestinationDisplayIds(lineDataSet));
             //assertThat(stopPoint).extracting("destinationDisplayRef.version").contains(VERSION_ONE);

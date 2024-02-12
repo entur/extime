@@ -29,18 +29,18 @@ class NetexTestUtils {
 
     static List<JAXBElement<? extends Common_VersionFrameStructure>> getDataObjectFrames(PublicationDeliveryStructure publicationDelivery) {
         List<JAXBElement<? extends Common_VersionFrameStructure>> dataObjectFrames = publicationDelivery.getDataObjects().getCompositeFrameOrCommonFrame();
-        CompositeFrame compositeFrame = NetexTestUtils.getFrames(CompositeFrame.class, dataObjectFrames).get(0);
+        CompositeFrame compositeFrame = NetexTestUtils.getFrames(CompositeFrame.class, dataObjectFrames).getFirst();
         return compositeFrame.getFrames().getCommonFrame();
     }
 
     static void verifyCompositeFrameAttributes(PublicationDeliveryStructure publicationDelivery) {
-        CompositeFrame compositeFrame = NetexTestUtils.getFrames(CompositeFrame.class, publicationDelivery.getDataObjects().getCompositeFrameOrCommonFrame()).get(0);
+        CompositeFrame compositeFrame = NetexTestUtils.getFrames(CompositeFrame.class, publicationDelivery.getDataObjects().getCompositeFrameOrCommonFrame()).getFirst();
         assertThat(compositeFrame).hasFieldOrPropertyWithValue("version", VERSION_ONE);
         assertThat(compositeFrame.getId()).matches(id -> id.split(":")[1].equals(NetexObjectIdTypes.COMPOSITE_FRAME_KEY), "CompositeFrame");
     }
 
     static void verifyServiceFrameAttributes(PublicationDeliveryStructure publicationDelivery) {
-        ServiceFrame serviceFrame = NetexTestUtils.getFrames(ServiceFrame.class, getDataObjectFrames(publicationDelivery)).get(0);
+        ServiceFrame serviceFrame = NetexTestUtils.getFrames(ServiceFrame.class, getDataObjectFrames(publicationDelivery)).getFirst();
         assertThat(serviceFrame).hasFieldOrPropertyWithValue("version", VERSION_ONE);
         assertThat(serviceFrame.getId()).matches(id -> id.split(":")[1].equals(NetexObjectIdTypes.SERVICE_FRAME_KEY), "ServiceFrame");
     }

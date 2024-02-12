@@ -31,7 +31,7 @@ class CommonDataWithoutSiteToNetexConverterTest extends ExtimeRouteBuilderIntegr
         NetexTestUtils.verifyCompositeFrameAttributes(publicationDelivery);
         assertValidCompositeFrame(publicationDelivery);
 
-        ResourceFrame resourceFrame = NetexTestUtils.getFrames(ResourceFrame.class, NetexTestUtils.getDataObjectFrames(publicationDelivery)).get(0);
+        ResourceFrame resourceFrame = NetexTestUtils.getFrames(ResourceFrame.class, NetexTestUtils.getDataObjectFrames(publicationDelivery)).getFirst();
         assertThat(resourceFrame).hasFieldOrPropertyWithValue("version", VERSION_ONE);
         assertThat(resourceFrame.getId()).matches(id -> id.split(":")[1].equals(NetexObjectIdTypes.RESOURCE_FRAME_KEY), "ResourceFrame");
 
@@ -53,7 +53,7 @@ class CommonDataWithoutSiteToNetexConverterTest extends ExtimeRouteBuilderIntegr
     }
 
     private void assertValidCompositeFrame(PublicationDeliveryStructure publicationDelivery) {
-        CompositeFrame compositeFrame = NetexTestUtils.getFrames(CompositeFrame.class, publicationDelivery.getDataObjects().getCompositeFrameOrCommonFrame()).get(0);
+        CompositeFrame compositeFrame = NetexTestUtils.getFrames(CompositeFrame.class, publicationDelivery.getDataObjects().getCompositeFrameOrCommonFrame()).getFirst();
         assertThat(compositeFrame.getValidityConditions()).isNotNull();
 
         assertThat(compositeFrame.getCodespaces()).isNotNull();

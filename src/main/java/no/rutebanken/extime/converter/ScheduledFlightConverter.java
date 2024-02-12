@@ -293,7 +293,7 @@ public class ScheduledFlightConverter {
 
         AirportIATA largestAirport = findLargestAirport(airportsWithSize);
 
-        return largestAirport.name().equals(lineAirportIatas.get(0)) ? lineDesignation :
+        return largestAirport.name().equals(lineAirportIatas.getFirst()) ? lineDesignation :
                 Joiner.on(DASH).skipNulls().join(Lists.reverse(lineAirportIatas));
     }
 
@@ -561,8 +561,8 @@ public class ScheduledFlightConverter {
 
         if (!CollectionUtils.isEmpty(scheduledStopovers)) {
             scheduledFlight.getScheduledStopovers().addAll(scheduledStopovers);
-            String departureAirportIata = scheduledStopovers.get(0).getAirportIATA();
-            String arrivalAirportIata = scheduledStopovers.get(scheduledStopovers.size() - 1).getAirportIATA();
+            String departureAirportIata = scheduledStopovers.getFirst().getAirportIATA();
+            String arrivalAirportIata = scheduledStopovers.getLast().getAirportIATA();
             String lineDesignation = joiner.join(departureAirportIata, arrivalAirportIata);
             scheduledFlight.setLineDesignation(lineDesignation);
 

@@ -19,7 +19,7 @@ class DateTimeUnmarshallerTest {
     void unmarshalScheduledFlight() throws JAXBException {
         List<Flight> flights = new AvinorTimetableUtils().generateFlightsFromFeedDump("/xml/scheduled-flights.xml");
 
-        Flight first = flights.get(0);
+        Flight first = flights.getFirst();
         Assertions.assertThat(first.getDateOfOperation()).isNotNull().isEqualTo(ZonedDateTime.of(LocalDate.of(2016, 6, 15).atStartOfDay(), ZoneId.of("UTC")));
         Assertions.assertThat(first.getStd()).isNotNull().isEqualTo(LocalTime.of(9, 30));
         Assertions.assertThat(first.getSta()).isNotNull().isEqualTo(LocalTime.of(10, 50));

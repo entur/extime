@@ -56,9 +56,9 @@ class DateUtilsTest {
                 .isNotNull()
                 .isNotEmpty()
                 .hasSize(1);
-        Assertions.assertThat(dateRanges.get(0).lowerEndpoint())
+        Assertions.assertThat(dateRanges.getFirst().lowerEndpoint())
                 .isEqualTo(LocalDate.now());
-        Assertions.assertThat(dateRanges.get(0).upperEndpoint())
+        Assertions.assertThat(dateRanges.getFirst().upperEndpoint())
                 .isEqualTo(LocalDate.now().plusMonths(3));
     }
 
