@@ -33,7 +33,7 @@
     <properties>
         <java.version>21</java.version>
         <camel.version>4.0.4</camel.version>
-        <entur.helpers.version>2.6</entur.helpers.version>
+        <entur.helpers.version>2.7</entur.helpers.version>
 
         <jakarta-xml-bind.version>4.0.1</jakarta-xml-bind.version>
         <glassfish-jaxb.version>4.0.4</glassfish-jaxb.version>
