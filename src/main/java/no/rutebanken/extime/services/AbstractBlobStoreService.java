@@ -1,7 +1,7 @@
 package no.rutebanken.extime.services;
 
-import no.rutebanken.extime.repository.BlobStoreRepository;
 import org.apache.camel.Header;
+import org.rutebanken.helper.gcp.repository.BlobStoreRepository;
 
 import java.io.InputStream;
 
