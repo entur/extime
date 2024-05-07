@@ -29,7 +29,7 @@ public class MardukExchangeBlobStoreService extends AbstractBlobStoreService {
                            ) {
 
         try {
-            repository.uploadBlob(targetFile, new FileInputStream(sourceFile));
+            repository.uploadNewBlob(targetFile, new FileInputStream(sourceFile));
         } catch (FileNotFoundException e) {
             throw new BlobStoreException(e);
         }
