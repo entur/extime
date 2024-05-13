@@ -16,7 +16,7 @@
 
 package no.rutebanken.extime.config;
 
-import org.rutebanken.helper.gcp.repository.BlobStoreRepository;
+import org.rutebanken.helper.storage.repository.BlobStoreRepository;
 import org.rutebanken.helper.gcp.repository.GcsBlobStoreRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
