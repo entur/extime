@@ -35,8 +35,6 @@
         <camel.version>4.4.3</camel.version>
         <entur.helpers.version>2.27</entur.helpers.version>
 
-        <jakarta-xml-bind.version>4.0.2</jakarta-xml-bind.version>
-        <glassfish-jaxb.version>4.0.5</glassfish-jaxb.version>
         <threeten-jaxb-core.version>2.2.0</threeten-jaxb-core.version>
         <jaxb-maven-plugin-version>4.0.8</jaxb-maven-plugin-version>
 
@@ -190,12 +188,10 @@
         <dependency>
             <groupId>jakarta.xml.bind</groupId>
             <artifactId>jakarta.xml.bind-api</artifactId>
-            <version>${jakarta-xml-bind.version}</version>
         </dependency>
         <dependency>
             <groupId>org.glassfish.jaxb</groupId>
             <artifactId>jaxb-runtime</artifactId>
-            <version>${glassfish-jaxb.version}</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>
