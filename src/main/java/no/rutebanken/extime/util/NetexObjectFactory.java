@@ -36,7 +36,6 @@ import static no.rutebanken.extime.Constants.NETEX_PROFILE_VERSION;
 import static no.rutebanken.extime.Constants.NSR_XMLNS;
 import static no.rutebanken.extime.Constants.NSR_XMLNSURL;
 import static no.rutebanken.extime.Constants.VERSION_ONE;
-import static no.rutebanken.extime.util.AvinorTimetableUtils.isCommonDesignator;
 
 @Component(value = "netexObjectFactory")
 public class NetexObjectFactory {
@@ -247,9 +246,6 @@ public class NetexObjectFactory {
                                                         String airlineIata, List<Route> routes, Line line, List<DestinationDisplay> destinationDisplays, List<JourneyPattern> journeyPatterns) {
 
         Network network = null;
-        if (!isCommonDesignator(airlineIata)) {
-            network = createNetwork(publicationTimestamp, airlineIata, airlineName);
-        }
 
         RoutesInFrame_RelStructure routesInFrame = objectFactory.createRoutesInFrame_RelStructure();
         for (Route route : routes) {
@@ -476,10 +472,6 @@ public class NetexObjectFactory {
         GroupOfLinesRefStructure groupOfLinesRefStruct = objectFactory.createGroupOfLinesRefStructure()
                 .withRef(NetexObjectIdCreator.createNetworkId(AVINOR_XMLNS, airlineIata));
 
-        if (!isCommonDesignator(airlineIata)) {
-            groupOfLinesRefStruct.setVersion(VERSION_ONE);
-        }
-
         return objectFactory.createLine()
                 .withVersion(VERSION_ONE)
                 .withId(lineId)
@@ -606,7 +598,6 @@ public class NetexObjectFactory {
                 .withId(serviceJourneyId)
                 .withPublicCode(flightId)
                 .withName(createMultilingualString(name))
-                // .withDepartureTime(departureTime)
                 .withDayTypes(dayTypeRefsStruct)
                 .withJourneyPatternRef(journeyPatternRefStructElement)
                 .withLineRef(lineRefStructElement)

@@ -325,64 +325,10 @@
                             <generateDirectory>${project.build.directory}/generated-sources/scheduled</generateDirectory>
                             <schemaDirectory>src/main/resources/no/rutebanken/extime/avinor/scheduled</schemaDirectory>
                             <schemaIncludes>
-                                <include>XmlFeedScheduled-Named.xsd</include>
+                                <include>XmlFeedScheduled.xsd</include>
                             </schemaIncludes>
                             <bindingIncludes>
                                 <include>XmlFeedScheduled.xjb</include>
-                            </bindingIncludes>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>xjc-flights</id>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
-                        <configuration>
-                            <generatePackage>no.avinor.flydata.xjc.model.feed</generatePackage>
-                            <generateDirectory>${project.build.directory}/generated-sources/feed</generateDirectory>
-                            <schemaDirectory>src/main/resources/no/rutebanken/extime/avinor/feed</schemaDirectory>
-                            <schemaIncludes>
-                                <include>XmlFeed-Named.xsd</include>
-                            </schemaIncludes>
-                            <bindingIncludes>
-                                <include>feed.xjb</include>
-                            </bindingIncludes>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>xjc-airports</id>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
-                        <configuration>
-                            <generatePackage>no.avinor.flydata.xjc.model.airport</generatePackage>
-                            <generateDirectory>${project.build.directory}/generated-sources/airports</generateDirectory>
-                            <schemaDirectory>src/main/resources/no/rutebanken/extime/avinor/airports</schemaDirectory>
-                            <schemaIncludes>
-                                <include>airportNames-named.xsd</include>
-                            </schemaIncludes>
-                            <bindingIncludes>
-                                <include>airportNames.xjb</include>
-                            </bindingIncludes>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>xjc-airlines</id>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
-                        <configuration>
-                            <generatePackage>no.avinor.flydata.xjc.model.airline</generatePackage>
-                            <generateDirectory>${project.build.directory}/generated-sources/airlines</generateDirectory>
-                            <schemaDirectory>src/main/resources/no/rutebanken/extime/avinor/airlines</schemaDirectory>
-                            <schemaIncludes>
-                                <include>airlineNames-named.xsd</include>
-                            </schemaIncludes>
-                            <bindingIncludes>
-                                <include>airlineNames.xjb</include>
                             </bindingIncludes>
                         </configuration>
                     </execution>

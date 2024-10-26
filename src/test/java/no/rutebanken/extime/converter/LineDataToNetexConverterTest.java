@@ -181,24 +181,6 @@ class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationTestBase
         }
     }
 
-    private List<LocalDate> generatePattern(LocalDate start, LocalDate end, Set<DayOfWeek> daysOfWeek, int... exclusionArray) {
-        List<LocalDate> patternDates = new ArrayList<>();
-        Set<Integer> exclusions = new HashSet<>();
-        if (exclusionArray != null) {
-            Arrays.stream(exclusionArray).forEach(exclusions::add);
-        }
-
-        LocalDate current = start;
-        int i = 0;
-        while (!current.isAfter(end)) {
-            if (!exclusions.contains(i++) && daysOfWeek.contains(current.getDayOfWeek())) {
-                patternDates.add(current);
-            }
-            current = current.plusDays(1);
-        }
-        return patternDates;
-    }
-
     private void assertValidPublicationDelivery(PublicationDeliveryStructure publicationDelivery, String lineName) {
         assertThat(publicationDelivery).isNotNull();
         assertThat(publicationDelivery.getVersion()).isEqualTo(NETEX_PROFILE_VERSION);
@@ -209,19 +191,10 @@ class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationTestBase
         assertThat(publicationDelivery.getDataObjects()).isNotNull();
     }
 
-/*
-    private void assertValidNetwork(Network network, String airlineIata) {
-        assertThat(network).isNotNull();
-        assertThat(network.getId()).isEqualTo(String.format("AVI:Network:%s", airlineIata));
-        assertThat(network.getName().getValue()).isEqualTo(LineDataSetFixture.getAirlineName(airlineIata));
-    }
-*/
-
     private void assertValidLine(Line line, LineDataSet lineDataSet) {
         assertThat(line.getId()).isEqualTo(String.format("AVI:Line:%s_%s", lineDataSet.getAirlineIata(), lineDataSet.getLineDesignation()));
         assertThat(line.getName().getValue()).isEqualTo(lineDataSet.getLineName());
         assertThat(line.getTransportMode()).isEqualTo(AllVehicleModesOfTransportEnumeration.AIR);
-       // assertThat(line.getPublicCode()).isEqualTo(lineDataSet.getLineDesignation());
         assertThat(line.getOperatorRef().getRef()).isEqualTo(String.format("AVI:Operator:%s", lineDataSet.getAirlineIata()));
         assertThat(line.getRepresentedByGroupRef().getRef()).isEqualTo(String.format("AVI:Network:%s", lineDataSet.getAirlineIata()));
 
@@ -266,17 +239,7 @@ class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationTestBase
         for(JourneyPattern jp : journeyPatterns) {
         	StopPointInJourneyPattern stopPoint = (StopPointInJourneyPattern) jp.getPointsInSequence().getPointInJourneyPatternOrStopPointInJourneyPatternOrTimingPointInJourneyPattern().getFirst();
             assertThat(stopPoint).extracting("destinationDisplayRef.ref").isNotNull();
-        	//assertThat(stopPoint).extracting("destinationDisplayRef.ref").containsOnlyElementsOf(getDestinationDisplayIds(lineDataSet));
-            //assertThat(stopPoint).extracting("destinationDisplayRef.version").contains(VERSION_ONE);
-
         }
-
-
-        // TODO add assertions for points in sequence
-        /*
-        journeyPatterns.forEach(journeyPattern -> assertThat(journeyPattern.getPointsInSequence()
-                .getPointInJourneyPatternOrStopPointInJourneyPatternOrTimingPointInJourneyPattern()).hasSize(2));
-        */
     }
 
     private Set<String> getRouteIds(LineDataSet lineDataSet) {
@@ -294,15 +257,6 @@ class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationTestBase
                 .map(designation -> Joiner.on(UNDERSCORE).join(lineDataSet.getAirlineIata(), designation))
                 .map(objectId -> NetexObjectIdCreator.hashObjectId(objectId, 10))
                 .map(hashedId -> String.format("AVI:JourneyPattern:%s", hashedId))
-                .collect(Collectors.toSet());
-    }
-
-    private Set<String> getDestinationDisplayIds(LineDataSet lineDataSet) {
-        return lineDataSet.getFlightRoutes().stream()
-                .map(FlightRoute::getRouteDesignation)
-                .map(designation -> Joiner.on(UNDERSCORE).join(lineDataSet.getAirlineIata(), designation))
-                .map(objectId -> NetexObjectIdCreator.hashObjectId(objectId, 10))
-                .map(hashedId -> String.format("AVI:DestinationDisplay:%s", hashedId))
                 .collect(Collectors.toSet());
     }
 

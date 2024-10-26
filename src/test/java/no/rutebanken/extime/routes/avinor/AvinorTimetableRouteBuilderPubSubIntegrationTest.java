@@ -20,7 +20,7 @@ import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEA
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = {AvinorTimetableRouteBuilder.class}, properties = {
         "avinor.timetable.scheduler.consumer=direct:start",
-        "avinor.timetable.period.months=4",
+        "avinor.timetable.period.forward=14",
         "avinor.timetable.max.range=180",
         "avinor.timetable.min.range=60",
         "avinor.timetable.feed.endpoint=mock:timetableFeedEndpoint",

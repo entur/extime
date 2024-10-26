@@ -13,6 +13,10 @@ import java.util.List;
 import static no.rutebanken.extime.Constants.DASH;
 import static no.rutebanken.extime.Constants.EMPTY;
 
+/**
+ * A potentially multi-leg flight from a departure airport to a destination airport, with any number of layovers in
+ * between.
+ */
 public class ScheduledFlight {
 
     private Long flightId;

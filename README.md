@@ -53,13 +53,13 @@ General application configuration parameters are set in the Spring Boot configur
 
 Main parameters:
 
-| Parameter name                     | Description                 | 
-| -------------                      |:-------------:              |
-| avinor.timetable.feed.endpoint     | Flights timetables endpoint |
-| avinor.airport.feed.endpoint       | Airport names endpoint      |
-| avinor.airline.feed.endpoint       | Airline names endpoint      |
-| avinor.timetable.scheduler.consumer| Configuration of the frequency of the Flight information import|
-| avinor.timetable.period.months     | Time window in months for which flight data are imported|
+| Parameter name                      |                           Description                           | 
+|-------------------------------------|:---------------------------------------------------------------:|
+| avinor.timetable.feed.endpoint      |                   Flights timetables endpoint                   |
+| avinor.airport.feed.endpoint        |                     Airport names endpoint                      |
+| avinor.airline.feed.endpoint        |                     Airline names endpoint                      |
+| avinor.timetable.scheduler.consumer | Configuration of the frequency of the Flight information import |
+| avinor.timetable.period.forward     |       Time window for which flight data are imported            |
 
 ## System integration
 
@@ -91,14 +91,14 @@ spring.cloud.gcp.pubsub.emulatorHost=localhost:8085
     * Dump mode, used to dump remotely fetched data to file for later reuse.
         * Enable dump mode in your local configuration file : `avinor.timetable.dump.enabled=true`
         * Choose your local directory, used to save the dump file, in property : `avinor.timetable.dump.output.path=$HOME/dev/git/extime/target/dump`
-        * Configure number of months needed to fetch data for, starting from 00:01 AM the current date, by changing the property: `avinor.timetable.period.months`, default is 1 month
+        * Configure the time window needed to fetch data for, starting from 00:01 AM the current date, by changing the property: `avinor.timetable.period.forward`, default is 14 days
         * Run : `mvn spring-boot:run -Dspring.profiles.active=dev -Dspring.config.location=$HOME/config/extime_application.properties`
     * Offline mode, uses a dump file, produced by above mode, instead of fetching from remote. Should only be used in dev environment. (Great for debugging!)
         * N.B. To run this mode, the application expects the availability of a dump file, produced in dump mode.
         * If you have dump mode enabled, disable in your local configuration file : `avinor.timetable.dump.enabled=false`
         * Run : `mvn spring-boot:run -Dspring.profiles.active=dev -Dspring.config.location=$HOME/config/extime_application.properties -Davinor.timetable.dump.file=$HOME/dev/git/extime/target/dump/dump.xml`
     * Normal mode, fetches all data from remote feed. This is the normal mode used in test and prod environment.
-        * Configure number of months needed to fetch data for, starting from 00:01 AM the current date, by changing the property: `avinor.timetable.period.months`, default is 1 month 
+        * Configure the time window needed to fetch data for, starting from 00:01 AM the current date, by changing the property: `avinor.timetable.period.forward`, default is 14 days 
         * Run : `mvn spring-boot:run -Dspring.profiles.active=dev -Dspring.config.location=$HOME/config/extime_application.properties`
 * Local debug run with Maven, to enable maven debugging, add the following configuration to the `spring-boot-maven-plugin` plugin in pm.xml:
 ```

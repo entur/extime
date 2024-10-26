@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="yes"?>
+<airport name="OSL" xsi:noNamespaceSchemaLocation="/XmlFeed.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <flights lastUpdate="2024-10-25T10:33:15.713286300Z">
+        <flight uniqueID="840384119">
+            <airline>SK</airline>
+            <flight_id>SK267</flight_id>
+            <dom_int>D</dom_int>
+            <schedule_time>2024-10-25T10:10:00Z</schedule_time>
+            <arr_dep>D</arr_dep>
+            <airport>BGO</airport>
+            <check_in>5 6 7</check_in>
+            <gate>A20</gate>
+            <status code="D" time="2024-10-25T10:04:00Z"/>
+        </flight>
+    </flights>
+</airport>

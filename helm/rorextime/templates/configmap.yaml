@@ -24,22 +24,11 @@ data:
     camel.springboot.useMdcLogging=true
     camel.springboot.messageHistory=true
     # Avinor data set import
-    avinor.airport.feed.endpoint=https://flydata.avinor.no/airportNames.asp
-    avinor.airports.large=BGO,BOO,SVG,TRD
-    avinor.airline.feed.endpoint=https://flydata.avinor.no/airlineNames.asp
-    avinor.timetable.feed.endpoint=https://flydata.avinor.no/XmlFeedScheduled.asp
+    avinor.timetable.feed.endpoint=https://asrv.avinor.no/XmlFeed/v1.0
     avinor.timetable.scheduler.consumer=quartz://avinorTimetableScheduler?cron={{ .Values.avinorTimetableSchedulerCron }}
     avinor.timetable.dump.output.path=/tmp/extime/data/dump
-    avinor.timetable.min.range=7
-    avinor.timetable.period.months=4
-    avinor.timetable.dump.enabled=false
-    avinor.timetable.max.range=180
-    avinor.realtime.scheduler.options=cron=2+*/3+*+*+*+*+?&trigger.timeZone=Europe/Oslo
-    avinor.realtime.arrivals.timefrom=0
-    avinor.realtime.arrivals.timeto=96
-    avinor.realtime.departures.timefrom=0
-    avinor.realtime.feed.endpoint=https://flydata.avinor.no/XmlFeed.asp
-    avinor.realtime.departures.timeto=72
+    avinor.timetable.period.forward=14d
+    avinor.timetable.period.back=2d
     netex.compressed.output.path=/tmp/extime/data/zip
     netex.generated.output.path=/tmp/extime/data/netex
     # Blobstore

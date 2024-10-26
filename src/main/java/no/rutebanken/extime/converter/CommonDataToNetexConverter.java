@@ -1,7 +1,7 @@
 package no.rutebanken.extime.converter;
 
 import com.google.common.collect.Lists;
-import no.rutebanken.extime.model.AirlineDesignator;
+import no.rutebanken.extime.model.AirlineIATA;
 import no.rutebanken.extime.model.AirportIATA;
 import no.rutebanken.extime.util.DateUtils;
 import no.rutebanken.extime.util.NetexObjectFactory;
@@ -52,10 +52,10 @@ public class CommonDataToNetexConverter {
         JAXBElement<Authority> avinorAuthorityElement = netexObjectFactory.createAvinorAuthorityElement();
         List<JAXBElement<Authority>> authorityElements = List.of(avinorAuthorityElement);
 
-        List<JAXBElement<Operator>> operatorElements = new ArrayList<>(AirlineDesignator.values().length);
-        List<JAXBElement<Branding>> brandingElements = new ArrayList<>(AirlineDesignator.values().length);
+        List<JAXBElement<Operator>> operatorElements = new ArrayList<>(AirlineIATA.values().length);
+        List<JAXBElement<Branding>> brandingElements = new ArrayList<>(AirlineIATA.values().length);
 
-        for (AirlineDesignator designator : AirlineDesignator.values()) {
+        for (AirlineIATA designator : AirlineIATA.values()) {
             String designatorName = designator.name().toUpperCase();
             JAXBElement<Operator> operatorElement = netexObjectFactory.createAirlineOperatorElement(designatorName);
             operatorElements.add(operatorElement);
@@ -103,7 +103,7 @@ public class CommonDataToNetexConverter {
                 netexObjectFactory.createResourceFrameElement(authorityElements, operatorElements, brandingElements)
         );
 
-        for (AirlineDesignator designator : AirlineDesignator.values()) {
+        for (AirlineIATA designator : AirlineIATA.values()) {
             String designatorName = designator.name().toUpperCase();
             Network network = netexObjectFactory.createNetwork(publicationTimestamp, designatorName, null);
             networks.add(network);

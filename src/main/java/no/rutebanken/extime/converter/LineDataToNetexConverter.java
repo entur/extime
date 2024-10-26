@@ -27,13 +27,11 @@ import org.rutebanken.netex.model.JourneyPattern;
 import org.rutebanken.netex.model.Line;
 import org.rutebanken.netex.model.ObjectFactory;
 import org.rutebanken.netex.model.OperatingPeriod;
-import org.rutebanken.netex.model.Operator;
 import org.rutebanken.netex.model.PointInLinkSequence_VersionedChildStructure;
 import org.rutebanken.netex.model.PointOnRoute;
 import org.rutebanken.netex.model.PointsInJourneyPattern_RelStructure;
 import org.rutebanken.netex.model.PointsOnRoute_RelStructure;
 import org.rutebanken.netex.model.PublicationDeliveryStructure;
-import org.rutebanken.netex.model.ResourceFrame;
 import org.rutebanken.netex.model.Route;
 import org.rutebanken.netex.model.RoutePoint;
 import org.rutebanken.netex.model.RouteRefStructure;
@@ -48,8 +46,6 @@ import org.rutebanken.netex.model.TimetabledPassingTime;
 import org.rutebanken.netex.model.TimetabledPassingTimes_RelStructure;
 import org.rutebanken.netex.model.Via_VersionedChildStructure;
 import org.rutebanken.netex.model.Vias_RelStructure;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -72,13 +68,11 @@ import static no.rutebanken.extime.Constants.COLON;
 import static no.rutebanken.extime.Constants.DASH;
 import static no.rutebanken.extime.Constants.DAY_TYPE_PATTERN;
 import static no.rutebanken.extime.Constants.UNDERSCORE;
-import static no.rutebanken.extime.util.AvinorTimetableUtils.isCommonDesignator;
 import static no.rutebanken.extime.util.NetexObjectIdCreator.hashObjectId;
 import static no.rutebanken.extime.util.NetexObjectIdTypes.DESTINATION_DISPLAY;
 
 @Component(value = "lineDataToNetexConverter")
 public class LineDataToNetexConverter {
-    private static final Logger logger = LoggerFactory.getLogger(LineDataToNetexConverter.class);
 
     private static final String AIRLINE_IATA = "airline_iata";
     private static final String LINE_DESIGNATION = "line_designation";
@@ -116,11 +110,9 @@ public class LineDataToNetexConverter {
             String airlineIata = lineDataSet.getAirlineIata();
 
             String operatorId = NetexObjectIdCreator.createOperatorId(AVINOR_XMLNS, airlineIata);
-            boolean isFrequentOperator = isCommonDesignator(airlineIata);
 
             Line line = netexObjectFactory.createLine(lineDataSet.getAirlineIata(), lineDataSet.getLineDesignation(), lineDataSet.getLineName());
-            line.setOperatorRef(isFrequentOperator ? netexObjectFactory.createOperatorRefStructure(operatorId, Boolean.FALSE) :
-                    netexObjectFactory.createOperatorRefStructure(operatorId, Boolean.TRUE));
+            line.setOperatorRef(netexObjectFactory.createOperatorRefStructure(operatorId, Boolean.FALSE));
 
             List<Route> routes = createRoutes(line, lineDataSet.getFlightRoutes());
             List<RouteRefStructure> routeRefStructures = netexObjectFactory.createRouteRefStructures(routes);
@@ -134,13 +126,6 @@ public class LineDataToNetexConverter {
             List<ServiceJourney> serviceJourneys = createServiceJourneys(line, lineDataSet.getRouteJourneys());
 
             Frames_RelStructure frames = objectFactory.createFrames_RelStructure();
-
-            if (!isFrequentOperator) {
-                logger.warn("Infrequent operator identified by id : {}", airlineIata);
-                Operator operator = netexObjectFactory.createInfrequentAirlineOperatorElement(airlineIata, lineDataSet.getAirlineName(), operatorId);
-                JAXBElement<ResourceFrame> resourceFrameElement = netexObjectFactory.createResourceFrameElement(operator);
-                frames.getCommonFrame().add(resourceFrameElement);
-            }
 
             JAXBElement<ServiceFrame> serviceFrame = netexObjectFactory.createServiceFrame(publicationTimestamp,
                     lineDataSet.getAirlineName(), lineDataSet.getAirlineIata(), routes, line, destinationDisplays, journeyPatterns);
