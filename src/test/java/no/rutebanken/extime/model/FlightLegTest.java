@@ -10,17 +10,6 @@ import static no.rutebanken.extime.TestUtils.createFlight;
 class FlightLegTest {
 
     @Test
-    void testIsPreviousLeg() {
-        FlightLeg flight1 = createFlight(2L, "SK", "4455", "BGO",
-                ZonedDateTime.parse("2017-01-01T08:00:00Z"), "HOV", ZonedDateTime.parse("2017-01-01T08:30:00Z"));
-
-        FlightLeg flight2 = createFlight(1L, "SK", "4455", "OSL",
-                ZonedDateTime.parse("2017-01-01T07:00:00Z"), "BGO", ZonedDateTime.parse("2017-01-01T07:30:00Z"));
-
-        Assertions.assertTrue(flight2.isPreviousLegOf(flight1));
-    }
-
-    @Test
     void testIsNextLeg() {
         FlightLeg flight1 = createFlight(1L, "WF", "149", "OSL",
                 ZonedDateTime.parse("2017-01-01T06:55:00Z"), "HOV", ZonedDateTime.parse("2017-01-01T07:30:00Z"));

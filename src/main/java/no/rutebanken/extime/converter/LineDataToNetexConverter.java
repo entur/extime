@@ -3,7 +3,6 @@ package no.rutebanken.extime.converter;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
-import com.google.common.collect.BiMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import no.rutebanken.extime.config.NetexStaticDataSet;
@@ -46,7 +45,6 @@ import org.rutebanken.netex.model.TimetabledPassingTime;
 import org.rutebanken.netex.model.TimetabledPassingTimes_RelStructure;
 import org.rutebanken.netex.model.Via_VersionedChildStructure;
 import org.rutebanken.netex.model.Vias_RelStructure;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import jakarta.xml.bind.JAXBElement;
@@ -84,17 +82,20 @@ public class LineDataToNetexConverter {
     private final Map<String, DayTypeAssignment> dayTypeAssignments = new HashMap<>();
     private final Map<String, OperatingPeriod> operatingPeriods = new HashMap<>();
 
-    @Autowired
-    private NetexStaticDataSet netexStaticDataSet;
+    private final NetexStaticDataSet netexStaticDataSet;
 
-    @Autowired
-    private NetexCommonDataSet netexCommonDataSet;
+    private final NetexCommonDataSet netexCommonDataSet;
 
-    @Autowired
-    private ObjectFactory objectFactory;
+    private final ObjectFactory objectFactory;
 
-    @Autowired
-    private NetexObjectFactory netexObjectFactory;
+    private final NetexObjectFactory netexObjectFactory;
+
+    public LineDataToNetexConverter(NetexStaticDataSet netexStaticDataSet, NetexCommonDataSet netexCommonDataSet, ObjectFactory objectFactory, NetexObjectFactory netexObjectFactory) {
+        this.netexStaticDataSet = netexStaticDataSet;
+        this.netexCommonDataSet = netexCommonDataSet;
+        this.objectFactory = objectFactory;
+        this.netexObjectFactory = netexObjectFactory;
+    }
 
 
     public JAXBElement<PublicationDeliveryStructure> convertToNetex(LineDataSet lineDataSet) {
@@ -127,8 +128,8 @@ public class LineDataToNetexConverter {
 
             Frames_RelStructure frames = objectFactory.createFrames_RelStructure();
 
-            JAXBElement<ServiceFrame> serviceFrame = netexObjectFactory.createServiceFrame(publicationTimestamp,
-                    lineDataSet.getAirlineName(), lineDataSet.getAirlineIata(), routes, line, destinationDisplays, journeyPatterns);
+            JAXBElement<ServiceFrame> serviceFrame = netexObjectFactory.createServiceFrame(
+                    routes, line, destinationDisplays, journeyPatterns);
             frames.getCommonFrame().add(serviceFrame);
 
             JAXBElement<TimetableFrame> timetableFrame = netexObjectFactory.createTimetableFrame(serviceJourneys);

@@ -20,7 +20,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.stream.Collectors;
 
 import static no.rutebanken.extime.Constants.DASH;
 
@@ -162,7 +161,7 @@ public final class LineDataSetFixture {
 
         List<Pair<String, List<LocalDate>>> routeJourneyPairsWithFixedDatesOfOperation =
                 routeJourneyPairs.stream().map(p -> Pair.of(p.getKey(),
-                        generateRandomDates(p.getValue(), periodFromDate, periodToDate))).collect(Collectors.toList());
+                        generateRandomDates(p.getValue(), periodFromDate, periodToDate))).toList();
         return createLineDataSetWithFixedDates(airlineIata, lineDesignation, routeJourneyPairsWithFixedDatesOfOperation, null);
     }
 
@@ -181,7 +180,7 @@ public final class LineDataSetFixture {
                 .omitEmptyStrings()
                 .splitToList(routeDesignation).stream()
                 .map(airports::get)
-                .collect(Collectors.toList());
+                .toList();
         return Joiner.on(DASH).skipNulls().join(airportNames);
     }
 

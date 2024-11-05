@@ -29,13 +29,9 @@ import org.rutebanken.netex.model.TimetableFrame;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import jakarta.xml.bind.JAXBElement;
-import java.time.DayOfWeek;
-import java.time.LocalDate;
+
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -211,7 +207,7 @@ class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationTestBase
         List<Route> routes = routeElements.stream()
                 .map(JAXBElement::getValue)
                 .map(route -> (Route) route)
-                .collect(Collectors.toList());
+                .toList();
         assertThat(routes).hasSize(lineDataSet.getFlightRoutes().size());
 
         assertThat(routes).extracting(Route::getId).containsAll(getRouteIds(lineDataSet));
@@ -230,7 +226,7 @@ class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationTestBase
         List<JourneyPattern> journeyPatterns = journeyPatternElements.stream()
                 .map(JAXBElement::getValue)
                 .map(journeyPattern -> (JourneyPattern) journeyPattern)
-                .collect(Collectors.toList());
+                .toList();
         assertThat(journeyPatterns).hasSize(lineDataSet.getFlightRoutes().size());
 
         assertThat(journeyPatterns).extracting(JourneyPattern::getId).containsAll(getJourneyPatternIds(lineDataSet));

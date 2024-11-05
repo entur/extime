@@ -3,8 +3,6 @@ package no.rutebanken.extime.model;
 import no.avinor.flydata.xjc.model.scheduled.Airport;
 import no.avinor.flydata.xjc.model.scheduled.Flight;
 import no.avinor.flydata.xjc.model.scheduled.Flights;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.List;
@@ -12,9 +10,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class FlightEventMapper {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(FlightEventMapper.class);
-
 
     private final Set<String> whitelistedAirports;
     private final Set<String> whitelistedAirlines;

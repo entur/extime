@@ -15,7 +15,7 @@ public class FlightLeg {
      * Maximum layover time between 2 flight legs. If the time is shorter, the two flights legs are considered being part of the
      * same multi-leg flight.
      */
-    private static final Duration MAX_LAYOVER_TIME = Duration.ofHours(3);
+    private static final Duration MAX_LAYOVER_DURATION = Duration.ofHours(3);
 
 
     private final String departureAirport;
@@ -58,13 +58,6 @@ public class FlightLeg {
         return flightNumber;
     }
 
-    public boolean isPreviousLegOf(FlightLeg other) {
-        return  hasSameAirlineAs(other)
-                && hasSameFlightNumberAs(other)
-                && other.departFromArrivalAirportOf(this)
-                && other.departSoonAfterArrivalOf(this);
-    }
-
     public boolean isNextLegOf(FlightLeg other) {
         return hasSameAirlineAs(other)
                 && hasSameFlightNumberAs(other)
@@ -86,7 +79,7 @@ public class FlightLeg {
 
     boolean departSoonAfterArrivalOf(FlightLeg other) {
         Duration layover = Duration.between(other.getSta(), this.getStd());
-        return layover.isPositive() && layover.compareTo(MAX_LAYOVER_TIME) < 0;
+        return layover.isPositive() && layover.compareTo(MAX_LAYOVER_DURATION) < 0;
     }
 
     @Override

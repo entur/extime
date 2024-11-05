@@ -3,7 +3,6 @@ package no.rutebanken.extime.util;
 import com.google.common.collect.Maps;
 import no.avinor.flydata.xjc.model.scheduled.Airport;
 import no.rutebanken.extime.model.*;
-import no.rutebanken.extime.config.NetexStaticDataSet;
 import org.apache.camel.Exchange;
 import org.apache.camel.Header;
 import org.apache.commons.lang3.EnumUtils;
@@ -11,9 +10,6 @@ import org.rutebanken.netex.model.CompositeFrame;
 import org.rutebanken.netex.model.Line;
 import org.rutebanken.netex.model.PublicationDeliveryStructure;
 import org.rutebanken.netex.model.ServiceFrame;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.zeroturnaround.zip.ZipUtil;
@@ -41,8 +37,6 @@ import java.util.stream.Stream;
 
 @Component
 public class AvinorTimetableUtils {
-
-    private static final Logger LOG = LoggerFactory.getLogger(AvinorTimetableUtils.class);
 
     private static final String XML_GLOB = "glob:*.xml";
 

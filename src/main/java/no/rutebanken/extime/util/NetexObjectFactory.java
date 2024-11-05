@@ -4,7 +4,6 @@ import com.google.common.base.Joiner;
 import no.rutebanken.extime.config.NetexStaticDataSet;
 import no.rutebanken.extime.model.AvailabilityPeriod;
 import org.rutebanken.netex.model.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
@@ -40,14 +39,11 @@ import static no.rutebanken.extime.Constants.VERSION_ONE;
 @Component(value = "netexObjectFactory")
 public class NetexObjectFactory {
 
-    @Autowired
-    private ObjectFactory objectFactory;
+    private final ObjectFactory objectFactory;
 
-    @Autowired
-    private NetexStaticDataSet netexStaticDataSet;
+    private final NetexStaticDataSet netexStaticDataSet;
 
-    @Autowired
-    private DateUtils dateUtils;
+    private final DateUtils dateUtils;
 
     private static final Map<DayOfWeek, DayOfWeekEnumeration> dayOfWeekMap = new EnumMap<>(DayOfWeek.class);
 
@@ -63,6 +59,12 @@ public class NetexObjectFactory {
 
     private final Map<String, Route> routes = new HashMap<>();
     private final Map<String, DestinationDisplay> destinationDisplays = new HashMap<>();
+
+    public NetexObjectFactory(ObjectFactory objectFactory, NetexStaticDataSet netexStaticDataSet, DateUtils dateUtils) {
+        this.objectFactory = objectFactory;
+        this.netexStaticDataSet = netexStaticDataSet;
+        this.dateUtils = dateUtils;
+    }
 
     public PublicationDeliveryStructure createPublicationDeliveryStructure(Instant publicationTimestamp, JAXBElement<CompositeFrame> compositeFrame, String lineName) {
         NetexStaticDataSet.OrganisationDataSet avinorDataSet = netexStaticDataSet.getOrganisations().get(AVINOR_XMLNS.toLowerCase());
@@ -242,8 +244,7 @@ public class NetexObjectFactory {
         return objectFactory.createServiceFrame(serviceFrame);
     }
 
-    public JAXBElement<ServiceFrame> createServiceFrame(Instant publicationTimestamp, String airlineName,
-                                                        String airlineIata, List<Route> routes, Line line, List<DestinationDisplay> destinationDisplays, List<JourneyPattern> journeyPatterns) {
+    public JAXBElement<ServiceFrame> createServiceFrame(List<Route> routes, Line line, List<DestinationDisplay> destinationDisplays, List<JourneyPattern> journeyPatterns) {
 
         Network network = null;
 
