@@ -30,6 +30,7 @@ public class FlightLegMapper {
                         .withStd(entry.getValue().getFirst().scheduledTime())
                         .withSta(entry.getValue().getLast().scheduledTime())
                         .build())
+                .sorted(Comparator.comparing(FlightLeg::getStd))
                 .toList();
 
         LOGGER.info("Mapped {} flight legs", flightLegs.size());

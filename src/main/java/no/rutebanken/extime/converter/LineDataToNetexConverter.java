@@ -186,8 +186,7 @@ public class LineDataToNetexConverter {
 
     private List<JourneyPattern> createJourneyPatterns(List<Route> routes) {
         Map<String, ScheduledStopPoint> stopPointMap = netexCommonDataSet.getStopPointMap();
-        BiMap<String, String> airportHashes = netexCommonDataSet.getAirportHashes();
-        List<JourneyPattern> journeyPatterns = Lists.newArrayList();
+       List<JourneyPattern> journeyPatterns = Lists.newArrayList();
 
         if (!routeDesignationPatternMap.isEmpty()) {
             routeDesignationPatternMap.clear();
@@ -201,7 +200,7 @@ public class LineDataToNetexConverter {
                 PointOnRoute pointOnRoute = pointsOnRoute.get(i);
                 String pointIdRef = pointOnRoute.getPointRef().getValue().getRef();
                 String stopPointIdSuffix = NetexObjectIdCreator.getObjectIdSuffix(pointIdRef);
-                ScheduledStopPoint scheduledStopPoint = stopPointMap.get(airportHashes.inverse().get(stopPointIdSuffix));
+                ScheduledStopPoint scheduledStopPoint = stopPointMap.get(stopPointIdSuffix);
                 String pointOnRouteIdSuffix = NetexObjectIdCreator.getObjectIdSuffix(pointOnRoute.getId());
 
                 StopPointInJourneyPattern stopPointInJourneyPattern = netexObjectFactory.createStopPointInJourneyPattern(
@@ -248,8 +247,7 @@ public class LineDataToNetexConverter {
 
     private List<DestinationDisplay> createDestinationDisplaysForPatterns(List<JourneyPattern> journeyPatterns) {
         Map<String, NetexStaticDataSet.StopPlaceDataSet> stopPlaceDataSets = netexStaticDataSet.getStopPlaces();
-        BiMap<String, String> airportHashes = netexCommonDataSet.getAirportHashes();
-        List<DestinationDisplay> destinationDisplays = Lists.newArrayList();
+       List<DestinationDisplay> destinationDisplays = Lists.newArrayList();
 
         for (JourneyPattern journeyPattern : journeyPatterns) {
 
@@ -267,7 +265,7 @@ public class LineDataToNetexConverter {
 
             String finalDestinationPointId = finalDestinationPoint.getScheduledStopPointRef().getValue().getRef();
             String finalStopPointObjectId = Iterables.getLast(Splitter.on(COLON).trimResults().split(finalDestinationPointId));
-            String frontTextValue = stopPlaceDataSets.get(airportHashes.inverse().get(finalStopPointObjectId).toLowerCase()).getShortName();
+            String frontTextValue = stopPlaceDataSets.get(finalStopPointObjectId.toLowerCase()).getShortName();
             patternDestinationDisplay.setFrontText(netexObjectFactory.createMultilingualString(frontTextValue));
             patternDestinationDisplay.setName(patternDestinationDisplay.getFrontText());
 
@@ -285,8 +283,7 @@ public class LineDataToNetexConverter {
                         StopPointInJourneyPattern stopPointInJourneyPattern = (StopPointInJourneyPattern) pointsInLinkSequence.get(i);
                         String stopPointIdRef = stopPointInJourneyPattern.getScheduledStopPointRef().getValue().getRef();
                         String stopPointObjectId = Iterables.getLast(Splitter.on(COLON).trimResults().split(stopPointIdRef));
-                        String inversedStopPointObjectId = airportHashes.inverse().get(stopPointObjectId);
-                        String objectIdRef = localContext.get(AIRLINE_IATA) + StringUtils.remove(localContext.get(LINE_DESIGNATION), DASH) + DASH + inversedStopPointObjectId;
+                        String objectIdRef = localContext.get(AIRLINE_IATA) + StringUtils.remove(localContext.get(LINE_DESIGNATION), DASH) + DASH + stopPointObjectId;
 
                         String destinationDisplayIdRef = Joiner.on(COLON).skipNulls().join(AVINOR_XMLNS, DESTINATION_DISPLAY, objectIdRef);
                         DestinationDisplay destinationDisplay = netexObjectFactory.getDestinationDisplay(destinationDisplayIdRef);
@@ -296,7 +293,7 @@ public class LineDataToNetexConverter {
                             Via_VersionedChildStructure viaChildStruct = objectFactory.createVia_VersionedChildStructure();
                             viaChildStruct.setDestinationDisplayRef(viaRefStruct);
                             viasStruct.getVia().add(viaChildStruct);
-                            String frontTextValueVia = stopPlaceDataSets.get(airportHashes.inverse().get(stopPointObjectId).toLowerCase()).getShortName();
+                            String frontTextValueVia = stopPlaceDataSets.get(stopPointObjectId.toLowerCase()).getShortName();
                             viaTexts.add(frontTextValueVia);
                         }
                     }

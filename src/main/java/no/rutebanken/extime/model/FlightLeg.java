@@ -2,7 +2,6 @@ package no.rutebanken.extime.model;
 
 import java.time.Duration;
 import java.time.ZonedDateTime;
-import java.time.temporal.ChronoUnit;
 
 
 /**
@@ -57,10 +56,6 @@ public class FlightLeg {
     }
     public String getFlightNumber() {
         return flightNumber;
-    }
-
-    public ZonedDateTime getDateOfOperation() {
-        return std.truncatedTo(ChronoUnit.DAYS);
     }
 
     public boolean isPreviousLegOf(FlightLeg other) {

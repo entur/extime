@@ -45,8 +45,10 @@ public class DateUtils {
         return LocalDateTime.ofInstant(instant, exportZoneId);
     }
 
-    public LocalDateTime toExportLocalDateTime(ZonedDateTime zonedDateTime){
-        return zonedDateTime.withZoneSameInstant(exportZoneId).toLocalDateTime();
+
+
+    public LocalDate toExportLocalDate(ZonedDateTime zonedDateTime){
+        return zonedDateTime.withZoneSameInstant(exportZoneId).toLocalDate();
     }
 
     public LocalTime toExportLocalTime(ZonedDateTime zonedDateTime){

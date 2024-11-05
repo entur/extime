@@ -49,23 +49,15 @@ public class NetexCommonDataSet {
     @Autowired
     private NetexObjectFactory netexObjectFactory;
 
-    private BiMap<String, String> airportHashes = HashBiMap.create();
     private final Map<String, ScheduledStopPoint> stopPointMap = new HashMap<>();
     private final Map<String, PassengerStopAssignment> stopAssignmentMap = new HashMap<>();
     private final Map<String, RoutePoint> routePointMap = new HashMap<>();
 
     @PostConstruct
     public void init() {
-        populateAirportHashes();
         populateStopPointMap();
         populateStopAssignmentMap();
         populateRoutePointMap();
-    }
-
-    private void populateAirportHashes() {
-        List<AirportIATA> airportIatas = Lists.newArrayList(AirportIATA.values());
-        airportIatas.sort(Comparator.comparing(Enum::name));
-        airportIatas.forEach(airportIata -> airportHashes.put(airportIata.name(), NetexObjectIdCreator.hashObjectId(airportIata.name(), 5)));
     }
 
 
@@ -85,7 +77,7 @@ public class NetexCommonDataSet {
                 throw new IllegalArgumentException("Unknow airport: " + airportIATA.name().toLowerCase());
             }
 
-            String stopPointId = NetexObjectIdCreator.createStopPointId(AVINOR_XMLNS, airportHashes.get(airportIATA.name()));
+            String stopPointId = NetexObjectIdCreator.createStopPointId(AVINOR_XMLNS, airportIATA.name());
 
             ScheduledStopPoint stopPoint = objectFactory.createScheduledStopPoint()
                     .withVersion(VERSION_ONE)
@@ -175,11 +167,4 @@ public class NetexCommonDataSet {
         return routePointMap;
     }
 
-    public BiMap<String, String> getAirportHashes() {
-        return airportHashes;
-    }
-
-    public void setAirportHashes(BiMap<String, String> airportHashes) {
-        this.airportHashes = airportHashes;
-    }
 }

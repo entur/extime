@@ -16,7 +16,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
 import java.time.LocalTime;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -62,21 +61,18 @@ public class ScheduledFlightConverter {
         Map<String, List<FlightLeg>> flightsByDepartureAirport = flightLegs.stream()
                 .collect(Collectors.groupingBy(FlightLeg::getDepartureAirport));
 
-        Map<String, List<FlightLeg>> flightsByArrivalAirport = flightLegs.stream()
-                .collect(Collectors.groupingBy(FlightLeg::getArrivalAirport));
-
         Set<Long> distinctFlightLegIds = Sets.newHashSet();
         List<ScheduledFlight> mergedScheduledFlights = Lists.newArrayList();
 
         for (FlightLeg flight : flightLegs) {
-            List<FlightLeg> connectingFlightLegs = findConnectingFlightLegs(flight, flightsByDepartureAirport, flightsByArrivalAirport, distinctFlightLegIds);
+            List<FlightLeg> connectingFlightLegs = findConnectingFlightLegs(flight, flightsByDepartureAirport, distinctFlightLegIds);
 
             if (CollectionUtils.isEmpty(connectingFlightLegs)) {
                 continue;
             }
             if (isMultiLegFlightRoute(connectingFlightLegs)) {
                 List<Triple<StopVisitType, String, LocalTime>> stopovers = extractStopoversFromFlights(connectingFlightLegs);
-                List<ScheduledStopover> scheduledStopovers = createScheduledStopovers(stopovers, flight.getDateOfOperation());
+                List<ScheduledStopover> scheduledStopovers = createScheduledStopovers(stopovers);
                 ScheduledFlight scheduledFlightWithStopovers = convertToScheduledFlight(flight, scheduledStopovers);
 
                 if (scheduledFlightWithStopovers != null) {
@@ -275,7 +271,7 @@ public class ScheduledFlightConverter {
 
 
 
-    public List<ScheduledStopover> createScheduledStopovers(List<Triple<StopVisitType, String, LocalTime>> stopovers, ZonedDateTime dateOfOperation) {
+    public List<ScheduledStopover> createScheduledStopovers(List<Triple<StopVisitType, String, LocalTime>> stopovers) {
         List<ScheduledStopover> multiLegFlights = Lists.newArrayList();
         Triple<StopVisitType, String, LocalTime> tempArrivalStopover = null;
 
@@ -285,10 +281,10 @@ public class ScheduledFlightConverter {
             if (stopover.getLeft().equals(StopVisitType.DEPARTURE)) {
                 ScheduledStopover scheduledStopover = new ScheduledStopover();
                 scheduledStopover.setAirportIATA(stopover.getMiddle());
-                scheduledStopover.setDepartureTime(dateUtils.toExportLocalTime(dateOfOperation.with(stopover.getRight())));
+                scheduledStopover.setDepartureTime(stopover.getRight());
 
                 if (tempArrivalStopover != null) {
-                    scheduledStopover.setArrivalTime(dateUtils.toExportLocalTime(dateOfOperation.with(tempArrivalStopover.getRight())));
+                    scheduledStopover.setArrivalTime(tempArrivalStopover.getRight());
                 }
 
                 multiLegFlights.add(scheduledStopover);
@@ -296,7 +292,7 @@ public class ScheduledFlightConverter {
                 if (!it.hasNext()) {
                     ScheduledStopover scheduledStopover = new ScheduledStopover();
                     scheduledStopover.setAirportIATA(stopover.getMiddle());
-                    scheduledStopover.setArrivalTime(dateUtils.toExportLocalTime(dateOfOperation.with(stopover.getRight())));
+                    scheduledStopover.setArrivalTime(stopover.getRight());
                     multiLegFlights.add(scheduledStopover);
                 } else {
                     tempArrivalStopover = stopover;
@@ -315,24 +311,15 @@ public class ScheduledFlightConverter {
     }
 
     public List<FlightLeg> findConnectingFlightLegs(FlightLeg currentFlightLeg, Map<String, List<FlightLeg>> flightsByDepartureAirportIata,
-                                                    Map<String, List<FlightLeg>> flightsByArrivalAirportIata, Set<Long> distinctFlightLegIds) {
+                                                    Set<Long> distinctFlightLegIds) {
 
         if (distinctFlightLegIds.contains(currentFlightLeg.getId())) {
             return Collections.emptyList();
         }
 
         List<FlightLeg> connectingFlightLegs = Lists.newArrayList(currentFlightLeg);
-        List<FlightLeg> previousFlightLegs = findPreviousFlightLegs(currentFlightLeg, flightsByArrivalAirportIata, Lists.newArrayList());
 
-        if (!CollectionUtils.isEmpty(previousFlightLegs)) {
-            connectingFlightLegs.addAll(previousFlightLegs);
-        }
-
-        List<FlightLeg> nextFlightLegs = findNextFlightLegs(currentFlightLeg, flightsByDepartureAirportIata, Lists.newArrayList());
-
-        if (!CollectionUtils.isEmpty(nextFlightLegs)) {
-            connectingFlightLegs.addAll(nextFlightLegs);
-        }
+        connectingFlightLegs.addAll(findNextFlightLegs(currentFlightLeg, flightsByDepartureAirportIata, Lists.newArrayList()));
 
         if (connectingFlightLegs.size() > 1) {
             connectingFlightLegs.sort(Comparator.comparing(FlightLeg::getStd));
@@ -342,31 +329,12 @@ public class ScheduledFlightConverter {
         return connectingFlightLegs;
     }
 
-    public List<FlightLeg> findPreviousFlightLegs(FlightLeg currentFlightLeg, Map<String, List<FlightLeg>> flightsByArrivalAirportIata, List<FlightLeg> previousFlightLegs) {
-        String departureAirportIata = currentFlightLeg.getDepartureAirport();
-        List<FlightLeg> flightLegsForIata = flightsByArrivalAirportIata.get(departureAirportIata);
-
-        LOGGER.trace("Attempting to find previous flight legs for flight leg: {} ", currentFlightLeg);
-
-        if (flightLegsForIata != null) {
-            Optional<FlightLeg> optionalFlightLeg = findOptionalConnectingFlightLeg(f -> f.isPreviousLegOf(currentFlightLeg), flightLegsForIata);
-            optionalFlightLeg.ifPresent(flight -> {
-                LOGGER.trace("Found previous flight leg: {} for current flight leg {}", flight, currentFlightLeg);
-                FlightLeg flightLeg = optionalFlightLeg.get();
-                previousFlightLegs.add(flightLeg);
-                findPreviousFlightLegs(flightLeg, flightsByArrivalAirportIata, previousFlightLegs);
-            });
-        }
-
-        return previousFlightLegs;
-    }
-
     public List<FlightLeg> findNextFlightLegs(FlightLeg currentFlightLeg, Map<String, List<FlightLeg>> flightsByDepartureAirportIata, List<FlightLeg> nextFlightLegs) {
         String arrivalAirportIata = currentFlightLeg.getArrivalAirport();
         List<FlightLeg> flightLegsForIata = flightsByDepartureAirportIata.get(arrivalAirportIata);
 
         if (flightLegsForIata != null) {
-            Optional<FlightLeg> optionalFlightLeg = findOptionalConnectingFlightLeg(f -> f.isNextLegOf(currentFlightLeg), flightLegsForIata);
+            Optional<FlightLeg> optionalFlightLeg = flightLegsForIata.stream().filter(f -> f.isNextLegOf(currentFlightLeg)).findFirst();
             optionalFlightLeg.ifPresent(flight -> {
                 LOGGER.trace("Found next flight leg: {} for current flight leg {}", flight, currentFlightLeg);
                 FlightLeg flightLeg = optionalFlightLeg.get();
@@ -376,12 +344,6 @@ public class ScheduledFlightConverter {
         }
 
         return nextFlightLegs;
-    }
-
-    public Optional<FlightLeg> findOptionalConnectingFlightLeg(Predicate<FlightLeg> flightPredicate, List<FlightLeg> flightLegs) {
-        return flightLegs.stream()
-                .filter(flightPredicate)
-                .findFirst();
     }
 
     public List<Triple<StopVisitType, String, LocalTime>> extractStopoversFromFlights(List<FlightLeg> stopoverFlights) {
@@ -411,7 +373,7 @@ public class ScheduledFlightConverter {
         ScheduledFlight scheduledFlight = new ScheduledFlight();
         scheduledFlight.setAirlineIATA(flight.getAirlineDesignator());
         scheduledFlight.setAirlineFlightId(flight.getFlightNumber());
-        scheduledFlight.setDateOfOperation(dateUtils.toExportLocalDateTime(flight.getDateOfOperation()).toLocalDate());
+        scheduledFlight.setDateOfOperation(dateUtils.toExportLocalDate(flight.getStd()));
 
         if (!CollectionUtils.isEmpty(scheduledStopovers)) {
             scheduledFlight.getScheduledStopovers().addAll(scheduledStopovers);
