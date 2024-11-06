@@ -11,9 +11,7 @@ Ultimately the flight timetables are injected into the [Norwegian National Journ
 
 ## Input
 Extime makes use of the following dataset provided by Avinor:
-- Flights timetables: https://flydata.avinor.no/XmlFeed.asp
-- Airport names: https://flydata.avinor.no/airportNames.asp
-- Airline names: https://flydata.avinor.no/airlineNames.asp
+- Flights timetables: https://asrv.avinor.no/XmlFeed/v1.0
 
 ## Output
 Extimes converts the flight data into a set of NeTEx documents packaged as a zip file following the [Nordic NeTEx Profile delivery format](https://enturas.atlassian.net/wiki/spaces/PUBLIC/pages/728563782/General+information+NeTEx#Generalinformation:NeTEx-PublicationDeliveryExchanginginformation).
@@ -24,17 +22,6 @@ Extime extracts and converts only a subset of the flights published by Avinor. F
 # Reference data
 Extime generates NeTEx timetables that reference airports as NeTEx **StopPlaces** and **Quays**. These StopPlaces and Quays should be declared in the [Norwegian Stop Place Register](https://stoppested.entur.org).
 
-By convention, flights arrive/depart from a **Quay** identified in the Stop Register  by a local reference following the format:
-```
-AVI:Quay:[Airport code]
-```
-where [Airport code] is the IATA code of the corresponding airport.
-
-Example for Oslo airport:
-```
-AVI:Quay:OSL
-```
-
 # Configuration
 
 ## Airport and airlines
@@ -43,8 +30,6 @@ Airports and airlines are configured in:
 - `no.rutebanken.extime.model.AirportIATA`: Airports whitelist
 
 - `no.rutebanken.extime.model.AirlineIATA`: Airlines whitelist
-
-- `no.rutebanken.extime.model.AirlineDesignator`: Airlines whitelist
 
 - `netex-static-data.yml`: Metadata for airports and airlines
  
@@ -56,10 +41,19 @@ Main parameters:
 | Parameter name                      |                           Description                           | 
 |-------------------------------------|:---------------------------------------------------------------:|
 | avinor.timetable.feed.endpoint      |                   Flights timetables endpoint                   |
-| avinor.airport.feed.endpoint        |                     Airport names endpoint                      |
-| avinor.airline.feed.endpoint        |                     Airline names endpoint                      |
 | avinor.timetable.scheduler.consumer | Configuration of the frequency of the Flight information import |
-| avinor.timetable.period.forward     |       Time window for which flight data are imported            |
+| avinor.timetable.period.forward     |         Time window for which flight data are imported          |
+
+## Workflow overview
+- For each whitelisted airport, Extime sends a query to the Avinor REST API and retrieves all passenger flights over a given time period.
+- The API returns a list of Flight objects that represent either a departure or an arrival at a given airport.
+- The arrival and departure of a given flight are matched by their unique ID and mapped to a FlightLeg object.
+- A heuristic searches among all FlightLegs those that are part of a multi-leg flight:
+  - they share the same airline and flight number,
+  - a given leg arrives at the same airport as the one the next leg departs from,
+  - the layover between the two legs is less than 3 hours.
+- Single-leg and multi-leg flights are mapped to ScheduledFlight objects.
+- ScheduledFlights are grouped together to build NeTEx ServiceJourneys, JourneyPatterns, Routes and Lines
 
 ## System integration
 
@@ -89,13 +83,13 @@ spring.cloud.gcp.pubsub.emulatorHost=localhost:8085
 * Build: `mvn clean install`
 * Local run, three different run modes are available: 
     * Dump mode, used to dump remotely fetched data to file for later reuse.
-        * Enable dump mode in your local configuration file : `avinor.timetable.dump.enabled=true`
+        * Enable dump mode in your local configuration file : `avinor.timetable.dump.output=true`
         * Choose your local directory, used to save the dump file, in property : `avinor.timetable.dump.output.path=$HOME/dev/git/extime/target/dump`
         * Configure the time window needed to fetch data for, starting from 00:01 AM the current date, by changing the property: `avinor.timetable.period.forward`, default is 14 days
         * Run : `mvn spring-boot:run -Dspring.profiles.active=dev -Dspring.config.location=$HOME/config/extime_application.properties`
     * Offline mode, uses a dump file, produced by above mode, instead of fetching from remote. Should only be used in dev environment. (Great for debugging!)
         * N.B. To run this mode, the application expects the availability of a dump file, produced in dump mode.
-        * If you have dump mode enabled, disable in your local configuration file : `avinor.timetable.dump.enabled=false`
+        * If you have dump mode enabled, disable in your local configuration file : `avinor.timetable.dump.output=false`
         * Run : `mvn spring-boot:run -Dspring.profiles.active=dev -Dspring.config.location=$HOME/config/extime_application.properties -Davinor.timetable.dump.file=$HOME/dev/git/extime/target/dump/dump.xml`
     * Normal mode, fetches all data from remote feed. This is the normal mode used in test and prod environment.
         * Configure the time window needed to fetch data for, starting from 00:01 AM the current date, by changing the property: `avinor.timetable.period.forward`, default is 14 days 

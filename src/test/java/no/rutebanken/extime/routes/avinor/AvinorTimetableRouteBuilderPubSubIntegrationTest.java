@@ -28,7 +28,6 @@ import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEA
         "avinor.airline.feed.endpoint=mock:airlineFeedEndpoint",
         "netex.generated.output.path=target/netex-mock",
         "netex.compressed.output.path=target/marduk-mock",
-        "avinor.timetable.dump.enabled=false",
         "avinor.timetable.dump.output.path=target/flights"
 })
 class AvinorTimetableRouteBuilderPubSubIntegrationTest extends ExtimeCamelRouteBuilderIntegrationTestBase {

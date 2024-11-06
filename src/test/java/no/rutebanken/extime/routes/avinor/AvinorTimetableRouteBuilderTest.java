@@ -37,7 +37,6 @@ import static no.rutebanken.extime.TestUtils.*;
         "netex.generated.output.path=target/netex-mock",
         "netex.compressed.output.path=target/marduk-mock",
         "queue.upload.destination.name=MockMardukQueue",
-        "avinor.timetable.dump.enabled=false",
         "avinor.timetable.dump.output.path=target/flights"
 } )
 class AvinorTimetableRouteBuilderTest extends ExtimeCamelRouteBuilderIntegrationTestBase {
