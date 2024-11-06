@@ -11,6 +11,7 @@ import no.rutebanken.extime.model.FlightRoute;
 import no.rutebanken.extime.model.LineDataSet;
 import no.rutebanken.extime.model.ScheduledFlight;
 import no.rutebanken.extime.model.ScheduledStopover;
+import no.rutebanken.extime.util.ExtimeException;
 import no.rutebanken.extime.util.NetexObjectFactory;
 import no.rutebanken.extime.util.NetexObjectIdCreator;
 import org.apache.commons.lang3.StringUtils;
@@ -164,7 +165,7 @@ public class LineDataToNetexConverter {
             List<String> routePointsInSequence = flightRoute.getRoutePointsInSequence();
             String[] idSequence = NetexObjectIdCreator.generateIdSequence(routePointsInSequence.size());
 
-            String objectId = Joiner.on(UNDERSCORE).skipNulls().join(localContext.get(AIRLINE_IATA), flightRoute.getRouteDesignation());
+            String objectId = Joiner.on(UNDERSCORE).skipNulls().join(localContext.get(AIRLINE_IATA), flightRoute.routeDesignation());
             String hashedObjectId = hashObjectId(objectId, 10);
 
             for (int i = 0; i < routePointsInSequence.size(); i++) {
@@ -174,11 +175,11 @@ public class LineDataToNetexConverter {
                 pointsOnRoute.getPointOnRoute().add(pointOnRoute);
             }
 
-            Route route = netexObjectFactory.createRoute(line.getId(), hashedObjectId, flightRoute.getRouteName(), pointsOnRoute);
+            Route route = netexObjectFactory.createRoute(line.getId(), hashedObjectId, flightRoute.routeName(), pointsOnRoute);
             routes.add(route);
 
             if (!routeIdDesignationMap.containsKey(route.getId())) {
-                routeIdDesignationMap.put(route.getId(), flightRoute.getRouteDesignation());
+                routeIdDesignationMap.put(route.getId(), flightRoute.routeDesignation());
             }
         }
 
@@ -327,15 +328,12 @@ public class LineDataToNetexConverter {
 
         for (Map.Entry<String, Map<String, List<ScheduledFlight>>> entry : routeJourneys.entrySet()) {
             String routeDesignation = entry.getKey();
-            JourneyPattern journeyPattern = null;
+            JourneyPattern journeyPattern;
 
             if (routeDesignationPatternMap.containsKey(routeDesignation)) {
                 journeyPattern = routeDesignationPatternMap.get(routeDesignation);
             } else {
-                /*
-                 * TODO: What to do if JourneyPattern is not found?
-                 *  Currently this will lead to NullPointerException when creating ServiceJourneys
-                 */
+                throw new ExtimeException("Route not found: " + routeDesignation);
             }
 
             Map<String, List<ScheduledFlight>> flightsById = entry.getValue();
@@ -444,16 +442,17 @@ public class LineDataToNetexConverter {
     private DayTypeRefs_RelStructure collectDayTypesAndAssignments(List<ScheduledFlight> journeyFlights) {
         DayTypeRefs_RelStructure dayTypeStructure = objectFactory.createDayTypeRefs_RelStructure();
         List<LocalDate> datesOfOperation = journeyFlights.stream().map(ScheduledFlight::getDateOfOperation).sorted().toList();
-        collectDayTypesAndAssignments(dayTypeStructure, datesOfOperation, true);
+        collectDayTypesAndAssignments(dayTypeStructure, datesOfOperation);
         return dayTypeStructure;
     }
 
-    private void collectDayTypesAndAssignments(DayTypeRefs_RelStructure dayTypeStructure, List<LocalDate> datesOfOperation, boolean available) {
+    private void collectDayTypesAndAssignments(DayTypeRefs_RelStructure dayTypeStructure, List<LocalDate> datesOfOperation) {
         for (int i = 0; i < datesOfOperation.size(); i++) {
             LocalDate dateOfOperation = datesOfOperation.get(i);
 
             String dayTypeIdLinePart = getIdLinePart();
-            String dayTypeIdSuffix = Joiner.on(DASH).skipNulls().join(dayTypeIdLinePart, dateOfOperation.format(DateTimeFormatter.ofPattern(DAY_TYPE_PATTERN)), available ? null : "X");
+            String formattedDateOfOperation = dateOfOperation.format(DateTimeFormatter.ofPattern(DAY_TYPE_PATTERN));
+            String dayTypeIdSuffix = Joiner.on(DASH).skipNulls().join(dayTypeIdLinePart, formattedDateOfOperation);
             String dayTypeId = NetexObjectIdCreator.createDayTypeId(AVINOR_XMLNS, dayTypeIdSuffix);
 
             DayType dayType;
@@ -468,7 +467,7 @@ public class LineDataToNetexConverter {
 
             DayTypeAssignment dayTypeAssignment;
             if (!dayTypeAssignments.containsKey(dayTypeId)) {
-                dayTypeAssignment = netexObjectFactory.createDayTypeAssignment(dayTypeIdSuffix, i + 1, dateOfOperation, dayTypeId, available);
+                dayTypeAssignment = netexObjectFactory.createDayTypeAssignment(dayTypeIdSuffix, i + 1, dateOfOperation, dayTypeId);
                 dayTypeAssignments.put(dayTypeAssignment.getId(), dayTypeAssignment);
             }
         }

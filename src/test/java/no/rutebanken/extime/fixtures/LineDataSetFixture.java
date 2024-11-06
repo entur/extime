@@ -8,7 +8,6 @@ import no.rutebanken.extime.model.FlightRoute;
 import no.rutebanken.extime.model.LineDataSet;
 import no.rutebanken.extime.model.ScheduledFlight;
 import no.rutebanken.extime.model.ScheduledStopover;
-import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.time.LocalDate;
@@ -25,6 +24,7 @@ import static no.rutebanken.extime.Constants.DASH;
 
 public final class LineDataSetFixture {
 
+    private static final Random RANDOM = new Random();
     private static final Map<String, String> airports = new HashMap<>();
     private static final Map<String, String> airlines = new HashMap<>();
 
@@ -43,14 +43,6 @@ public final class LineDataSetFixture {
     }
 
     private LineDataSetFixture() {
-    }
-
-    public static String getAirportName(String iata) {
-        return airports.getOrDefault(iata, null);
-    }
-
-    public static String getAirlineName(String iata) {
-        return airlines.getOrDefault(iata, null);
     }
 
     public static LineDataSet createEmptyLineDataSet() {
@@ -100,7 +92,6 @@ public final class LineDataSetFixture {
                 if (routeStops.size() == 2) {
                     String departureAirportIata = routeStops.getFirst();
                     scheduledFlight.setDepartureAirportIATA(departureAirportIata);
-                    scheduledFlight.setDepartureAirportName(airports.get(departureAirportIata));
 
                     String arrivalAirportIata = routeStops.get(1);
                     scheduledFlight.setArrivalAirportIATA(arrivalAirportIata);
@@ -144,7 +135,6 @@ public final class LineDataSetFixture {
                 flights.add(scheduledFlight);
             }
 
-            // TODO add support for multiple flights per flight id
             flightsById.put(flights.getFirst().getAirlineFlightId(), flights);
             routeJourneys.put(routeDesignation, flightsById);
         }
@@ -212,7 +202,7 @@ public final class LineDataSetFixture {
     }
 
     public static int generateRandomId(int startInclusive, int endExclusive) {
-        return RandomUtils.nextInt(startInclusive, endExclusive);
+        return RANDOM.nextInt(endExclusive - startInclusive) + startInclusive;
     }
 
 }

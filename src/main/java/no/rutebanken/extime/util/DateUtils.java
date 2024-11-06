@@ -6,7 +6,6 @@ import org.springframework.stereotype.Component;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
 
@@ -14,14 +13,6 @@ import static no.rutebanken.extime.Constants.DEFAULT_ZONE_ID;
 
 @Component(value = "dateUtils")
 public class DateUtils {
-
-	private static final DateTimeFormatter formatter = new DateTimeFormatterBuilder().appendPattern("yyyy-MM-dd")
-			.optionalStart().appendPattern("XXXXX").optionalEnd()
-            .parseDefaulting(ChronoField.HOUR_OF_DAY, 0)
-            .parseDefaulting(ChronoField.MINUTE_OF_HOUR, 0)
-            .parseDefaulting(ChronoField.SECOND_OF_MINUTE, 0)
-            .parseDefaulting(ChronoField.OFFSET_SECONDS,OffsetDateTime.now().getLong(ChronoField.OFFSET_SECONDS) )
-            .toFormatter();
 
     private final Duration durationForward;
     private final ZoneId exportZoneId;
@@ -31,15 +22,6 @@ public class DateUtils {
         this.durationForward = durationForward;
         this.exportZoneId = exportZoneId;
     }
-
-    public static ZonedDateTime parseDate(String dateWithZone) {
-		return ZonedDateTime.parse(dateWithZone, formatter);
-	}
-
-    public static ZonedDateTime parseDateTime(String dateTimeWithZone) {
-        return ZonedDateTime.parse(dateTimeWithZone);
-    }
-	
 
     public LocalDateTime toExportLocalDateTime(Instant instant) {
         return LocalDateTime.ofInstant(instant, exportZoneId);

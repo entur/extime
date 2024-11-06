@@ -27,8 +27,6 @@ public class TestUtils {
     public static final ZonedDateTime ZDT_2017_01_01_09_30 = ZonedDateTime.parse("2017-01-01T09:30:00Z");
     public static final ZonedDateTime ZDT_2017_01_01_10_00 = ZonedDateTime.parse("2017-01-01T10:00:00Z");
     public static final ZonedDateTime ZDT_2017_01_01_10_30 = ZonedDateTime.parse("2017-01-01T10:30:00Z");
-    public static final ZonedDateTime ZDT_2017_01_01_11_00 = ZonedDateTime.parse("2017-01-01T11:00:00Z");
-    public static final ZonedDateTime ZDT_2017_01_01_11_30 = ZonedDateTime.parse("2017-01-01T11:30:00Z");
 
     public static final ZonedDateTime ZDT_2017_01_02_08_00 = ZonedDateTime.parse("2017-01-02T08:00:00Z");
     public static final ZonedDateTime ZDT_2017_01_02_08_30 = ZonedDateTime.parse("2017-01-02T08:30:00Z");

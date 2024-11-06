@@ -3,15 +3,17 @@ package no.rutebanken.extime.util;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
-import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static no.rutebanken.extime.Constants.COLON;
 import static no.rutebanken.extime.Constants.UNDERSCORE;
 
 public class NetexObjectIdCreator {
+
+    private static final Random RANDOM = new Random();
 
     private NetexObjectIdCreator() {
         // Utility class - should not be instantiated
@@ -25,10 +27,6 @@ public class NetexObjectIdCreator {
 
     public static String createResourceFrameId(String objectIdPrefix, String objectId) {
         return NetexObjectIdCreator.composeNetexObjectId(objectIdPrefix, NetexObjectIdTypes.RESOURCE_FRAME_KEY, objectId);
-    }
-
-    public static String createSiteFrameId(String objectIdPrefix, String objectId) {
-        return NetexObjectIdCreator.composeNetexObjectId(objectIdPrefix, NetexObjectIdTypes.SITE_FRAME_KEY, objectId);
     }
 
     public static String createServiceFrameId(String objectIdPrefix, String objectId) {
@@ -78,10 +76,6 @@ public class NetexObjectIdCreator {
         return NetexObjectIdCreator.composeNetexObjectId(objectIdPrefix, NetexObjectIdTypes.ROUTE_KEY, objectId);
     }
 
-    public static String createStopPlaceId(String objectIdPrefix, String objectId) {
-        return NetexObjectIdCreator.composeNetexObjectId(objectIdPrefix, NetexObjectIdTypes.STOP_PLACE_KEY, objectId);
-    }
-
     public static String createQuayId(String objectIdPrefix, String objectId) {
         return NetexObjectIdCreator.composeNetexObjectId(objectIdPrefix, NetexObjectIdTypes.QUAY_KEY, objectId);
     }
@@ -116,10 +110,6 @@ public class NetexObjectIdCreator {
 
     public static String createDayTypeId(String objectIdPrefix, String objectId) {
         return NetexObjectIdCreator.composeNetexObjectId(objectIdPrefix, NetexObjectIdTypes.DAY_TYPE_KEY, objectId);
-    }
-
-    public static String createOperatingPeriodId(String objectIdPrefix, String objectId) {
-        return NetexObjectIdCreator.composeNetexObjectId(objectIdPrefix, NetexObjectIdTypes.OPERATING_PERIOD_KEY, objectId);
     }
 
     public static String createDayTypeAssignmentId(String objectIdPrefix, String objectId) {
@@ -157,20 +147,9 @@ public class NetexObjectIdCreator {
         return idSequence;
     }
 
-    public static String[] generateIdSequenceByRandomBase(int startInclusive, int endExclusive, int totalInSequence) {
-        String[] idSequence = new String[totalInSequence];
-        int idRangeBase = generateRandomId(startInclusive, endExclusive);
-        AtomicInteger incrementor = new AtomicInteger(1);
-
-        for (int i = 0; i < totalInSequence; i++) {
-            idSequence[i] = String.format("%d%d", idRangeBase, incrementor.getAndAdd(1));
-        }
-
-        return idSequence;
-    }
 
     public static int generateRandomId(int startInclusive, int endExclusive) {
-        return RandomUtils.nextInt(startInclusive, endExclusive);
+        return RANDOM.nextInt(endExclusive - startInclusive) + startInclusive;
     }
 
     public static String hashObjectId(String objectId, int end) {

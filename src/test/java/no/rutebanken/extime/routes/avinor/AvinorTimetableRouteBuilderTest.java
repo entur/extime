@@ -29,8 +29,6 @@ import static no.rutebanken.extime.TestUtils.*;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = {AvinorTimetableRouteBuilder.class} , properties = {
         "avinor.timetable.scheduler.consumer=direct:start",
         "avinor.timetable.period.forward=14",
-        "avinor.timetable.max.range=180",
-        "avinor.timetable.min.range=60",
         "avinor.timetable.feed.endpoint=mock:timetableFeedEndpoint",
         "avinor.airport.feed.endpoint=mock:airportFeedEndpoint",
         "avinor.airports.small=EVE,KRS,MOL,SOG,TOS",
@@ -76,7 +74,7 @@ class AvinorTimetableRouteBuilderTest extends ExtimeCamelRouteBuilderIntegration
     protected ProducerTemplate convertScheduledFlightsToNetexTemplate;
 
     @Test
-    @Disabled // TODO fix test
+    @Disabled
     void testTimetableScheduler() throws Exception {
 
         AdviceWith.adviceWith(context, "AvinorTimetableSchedulerStarter", a -> {
@@ -165,7 +163,6 @@ class AvinorTimetableRouteBuilderTest extends ExtimeCamelRouteBuilderIntegration
         scheduledFlight.setAirlineFlightId(airlineFlightId);
         scheduledFlight.setDateOfOperation(dateOfOperation);
         scheduledFlight.setDepartureAirportIATA("");
-        scheduledFlight.setDepartureAirportName("");
         scheduledFlight.setArrivalAirportIATA("");
         scheduledFlight.setArrivalAirportName("");
         scheduledFlight.setTimeOfDeparture(LocalTime.of(0, 0));

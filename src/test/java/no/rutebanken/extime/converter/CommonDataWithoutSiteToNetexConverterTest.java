@@ -20,7 +20,6 @@ import java.util.Map;
 import static no.rutebanken.extime.Constants.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SuppressWarnings("unchecked")
 class CommonDataWithoutSiteToNetexConverterTest extends ExtimeRouteBuilderIntegrationTestBase {
 
     @Autowired

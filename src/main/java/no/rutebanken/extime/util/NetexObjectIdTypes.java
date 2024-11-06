@@ -9,7 +9,6 @@ public abstract class NetexObjectIdTypes {
     // frame id keys
     public static final String COMPOSITE_FRAME_KEY = "CompositeFrame";
     public static final String RESOURCE_FRAME_KEY = "ResourceFrame";
-    public static final String SITE_FRAME_KEY = "SiteFrame";
     public static final String SERVICE_FRAME_KEY = "ServiceFrame";
     public static final String SERVICE_CALENDAR_FRAME_KEY = "ServiceCalendarFrame";
     public static final String TIMETABLE_FRAME_KEY = "TimetableFrame";
@@ -22,7 +21,6 @@ public abstract class NetexObjectIdTypes {
     public static final String GROUP_OF_LINES_KEY = "GroupOfLines";
     public static final String LINE_KEY = "Line";
     public static final String ROUTE_KEY = "Route";
-    public static final String STOP_PLACE_KEY = "StopPlace";
     public static final String QUAY_KEY = "Quay";
     public static final String STOP_POINT_KEY = "ScheduledStopPoint";
     public static final String POINT_PROJECTION_KEY = "PointProjection";
@@ -36,6 +34,5 @@ public abstract class NetexObjectIdTypes {
     public static final String AVAILABILITY_CONDITION_KEY = "AvailabilityCondition";
     public static final String SERVICE_JOURNEY_KEY = "ServiceJourney";
     public static final String PASSENGER_STOP_ASSIGNMENT_KEY = "PassengerStopAssignment";
-    public static final String OPERATING_PERIOD_KEY = "OperatingPeriod";
     public static final String TIMETABLED_PASSING_TIME_KEY = "TimetabledPassingTime";
 }

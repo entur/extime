@@ -109,7 +109,6 @@ class NetexObjectFactoryTest extends ExtimeRouteBuilderIntegrationTestBase {
 
     @Test
     void createOperatorRefStructure() {
-        // TODO also test the case where validation for references is disabled
         OperatorRefStructure operatorRefStructure = netexObjectFactory.createOperatorRefStructure("AVI:Operator:WF", Boolean.TRUE);
 
         Assertions.assertThat(operatorRefStructure)
@@ -148,7 +147,6 @@ class NetexObjectFactoryTest extends ExtimeRouteBuilderIntegrationTestBase {
 
     @Test
     void createStopPlaceRefStructure() {
-        // TODO also test the case where validation for references is disabled
         StopPlaceRefStructure stopPlaceRefStructure = netexObjectFactory.createStopPlaceRefStructure("AVI:StopPlace:TRD");
 
         Assertions.assertThat(stopPlaceRefStructure)
@@ -163,7 +161,6 @@ class NetexObjectFactoryTest extends ExtimeRouteBuilderIntegrationTestBase {
 
     @Test
     void createScheduledStopPointRefStructure() {
-        // TODO also test the case where validation for references is disabled
         ScheduledStopPointRefStructure scheduledStopPointRefStructure = netexObjectFactory
                 .createScheduledStopPointRefStructure("AVI:ScheduledStopPoint:77777771", Boolean.TRUE);
 
@@ -204,7 +201,6 @@ class NetexObjectFactoryTest extends ExtimeRouteBuilderIntegrationTestBase {
 
     @Test
     void createPointRefStructure() {
-        // TODO also test the case where validation for references is disabled
         PointRefStructure pointRefStructure = netexObjectFactory.createPointRefStructure("AVI:ScheduledStopPoint:77777771", Boolean.TRUE);
 
         Assertions.assertThat(pointRefStructure)

@@ -7,6 +7,7 @@ import com.google.common.collect.Sets;
 import no.rutebanken.extime.model.*;
 import no.rutebanken.extime.config.NetexStaticDataSet;
 import no.rutebanken.extime.util.DateUtils;
+import no.rutebanken.extime.util.ExtimeException;
 import org.apache.commons.lang3.EnumUtils;
 import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.apache.commons.lang3.tuple.Triple;
@@ -16,27 +17,20 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static no.rutebanken.extime.Constants.DASH;
+import static no.rutebanken.extime.model.AirportIATA.*;
 
 @Component(value = "scheduledFlightConverter")
 public class ScheduledFlightConverter {
+
+    private static final Set<AirportIATA> LARGE_SIZED_AIRPORTS = EnumSet.of(OSL);
+    private static final Set<AirportIATA> MEDIUM_SIZED_AIRPORTS = EnumSet.of(BGO, BOO, SVG, TRD);
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ScheduledFlightConverter.class);
 
@@ -82,11 +76,7 @@ public class ScheduledFlightConverter {
                 ScheduledFlight directFlight = convertToScheduledFlight(flight, null);
                 mergedScheduledFlights.add(directFlight);
             } else {
-                LOGGER.error("Flight with unique id: {}, and flightId: {}-{} is NOT a valid flight",
-                        flight.getId(),
-                        flight.getAirlineDesignator(),
-                        flight.getFlightNumber());
-                throw new RuntimeException("Invalid flight");
+                throw new ExtimeException("Invalid flight " + flight.getId());
             }
         }
 
@@ -130,16 +120,13 @@ public class ScheduledFlightConverter {
 
         List<FlightRoute> flightRoutes = flights.stream()
                 .map(flight -> new FlightRoute(flight.getRoutePattern(), getRouteNameFromDesignation(flight.getRoutePattern())))
-                .filter(distinctByKey(FlightRoute::getRouteDesignation))
+                .filter(distinctByKey(FlightRoute::routeDesignation))
                 .toList();
         lineDataSet.setFlightRoutes(flightRoutes);
 
         Map<String, Map<String, List<ScheduledFlight>>> journeysByRouteAndFlightId = flights.stream()
                 .collect(Collectors.groupingBy(ScheduledFlight::getRoutePattern,
                         Collectors.groupingBy(ScheduledFlight::getAirlineFlightId)));
-
-        // TODO consider sorting all internally grouped flights by operating day
-        // .sorted(Comparator.comparing(ScheduledFlight::getDateOfOperation))
 
         lineDataSet.setRouteJourneys(journeysByRouteAndFlightId);
 
@@ -238,16 +225,15 @@ public class ScheduledFlightConverter {
 
         if (validEnum) {
             AirportIATA airportIata = AirportIATA.valueOf(airportIataCode);
-            if (AirportIATA.LARGE_SIZED_AIRPORTS.contains(airportIata)) {
+            if (LARGE_SIZED_AIRPORTS.contains(airportIata)) {
                 return new AirportWithSize(airportIata, 3);
-            } else if (AirportIATA.MEDIUM_SIZED_AIRPORTS.contains(airportIata)) {
+            } else if (MEDIUM_SIZED_AIRPORTS.contains(airportIata)) {
                 return new AirportWithSize(airportIata, 2);
             } else {
                 return new AirportWithSize(airportIata, 1);
             }
         } else {
-            LOGGER.error("Invalid iata code : {}", airportIataCode);
-            throw new RuntimeException("Invalid iata code");
+            throw new ExtimeException("Invalid IATA code " + airportIataCode);
         }
     }
 
@@ -255,12 +241,12 @@ public class ScheduledFlightConverter {
         AirportWithSize airportWithSize1 = airportWithSizeList.get(0);
         AirportWithSize airportWithSize2 = airportWithSizeList.get(1);
 
-        if (airportWithSize1.getSize() > airportWithSize2.getSize()) {
-            return airportWithSize1.getAirportIata();
-        } else if (airportWithSize1.getSize() < airportWithSize2.getSize()) {
-            return airportWithSize2.getAirportIata();
+        if (airportWithSize1.size() > airportWithSize2.size()) {
+            return airportWithSize1.airportIata();
+        } else if (airportWithSize1.size() < airportWithSize2.size()) {
+            return airportWithSize2.airportIata();
         }
-        return airportWithSize1.getAirportIata();
+        return airportWithSize1.airportIata();
     }
 
     private <T> Predicate<T> distinctByKey(Function<? super T, ?> keyExtractor) {
@@ -368,8 +354,6 @@ public class ScheduledFlightConverter {
     }
 
     public ScheduledFlight convertToScheduledFlight(FlightLeg flight, List<ScheduledStopover> scheduledStopovers) {
-        Joiner joiner = Joiner.on(DASH).skipNulls();
-
         ScheduledFlight scheduledFlight = new ScheduledFlight();
         scheduledFlight.setAirlineIATA(flight.getAirlineDesignator());
         scheduledFlight.setAirlineFlightId(flight.getFlightNumber());
@@ -377,53 +361,17 @@ public class ScheduledFlightConverter {
 
         if (!CollectionUtils.isEmpty(scheduledStopovers)) {
             scheduledFlight.getScheduledStopovers().addAll(scheduledStopovers);
-            String departureAirportIata = scheduledStopovers.getFirst().getAirportIATA();
-            String arrivalAirportIata = scheduledStopovers.getLast().getAirportIATA();
-            String lineDesignation = joiner.join(departureAirportIata, arrivalAirportIata);
-            scheduledFlight.setLineDesignation(lineDesignation);
-
-            List<String> airportIatas = scheduledStopovers.stream()
-                    .map(ScheduledStopover::getAirportIATA)
-                    .toList();
-            scheduledFlight.setStopsDesignation(joiner.join(airportIatas));
         } else {
-            scheduledFlight.setFlightId(flight.getId());
             scheduledFlight.setDepartureAirportIATA(flight.getDepartureAirport());
             scheduledFlight.setArrivalAirportIATA(flight.getArrivalAirport());
             scheduledFlight.setTimeOfDeparture(dateUtils.toExportLocalTime(flight.getStd()));
             scheduledFlight.setTimeOfArrival(dateUtils.toExportLocalTime(flight.getSta()));
-            String lineDesignation = joiner.join(scheduledFlight.getDepartureAirportIATA(), scheduledFlight.getArrivalAirportIATA());
-            scheduledFlight.setLineDesignation(lineDesignation);
-            scheduledFlight.setStopsDesignation(lineDesignation);
-        }
+            }
 
         return scheduledFlight;
     }
 
-    private static class AirportWithSize {
-        AirportIATA airportIata;
-        int size;
-
-        public AirportWithSize(AirportIATA airportIata, int size) {
-            this.airportIata = airportIata;
-            this.size = size;
-        }
-
-        public AirportIATA getAirportIata() {
-            return airportIata;
-        }
-
-        public void setAirportIata(AirportIATA airportIata) {
-            this.airportIata = airportIata;
-        }
-
-        public int getSize() {
-            return size;
-        }
-
-        public void setSize(int size) {
-            this.size = size;
-        }
+    private record AirportWithSize(AirportIATA airportIata, int size) {
     }
 
     public boolean isKnownAirlineName(String airlineIata) {

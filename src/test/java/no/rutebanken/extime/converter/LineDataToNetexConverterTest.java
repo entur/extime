@@ -41,7 +41,6 @@ import static no.rutebanken.extime.Constants.UNDERSCORE;
 import static no.rutebanken.extime.Constants.VERSION_ONE;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SuppressWarnings("unchecked")
 class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationTestBase {
 
     @Autowired
@@ -213,7 +212,7 @@ class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationTestBase
         assertThat(routes).extracting(Route::getId).containsAll(getRouteIds(lineDataSet));
 
         Set<String> routeNames = lineDataSet.getFlightRoutes().stream()
-                .map(FlightRoute::getRouteName)
+                .map(FlightRoute::routeName)
                 .collect(Collectors.toSet());
         assertThat(routes).extracting("name.value").containsAll(routeNames);
 
@@ -240,7 +239,7 @@ class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationTestBase
 
     private Set<String> getRouteIds(LineDataSet lineDataSet) {
         return lineDataSet.getFlightRoutes().stream()
-                .map(FlightRoute::getRouteDesignation)
+                .map(FlightRoute::routeDesignation)
                 .map(designation -> Joiner.on(UNDERSCORE).join(lineDataSet.getAirlineIata(), designation))
                 .map(objectId -> NetexObjectIdCreator.hashObjectId(objectId, 10))
                 .map(hashedId -> String.format("AVI:Route:%s", hashedId))
@@ -249,7 +248,7 @@ class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationTestBase
 
     private Set<String> getJourneyPatternIds(LineDataSet lineDataSet) {
         return lineDataSet.getFlightRoutes().stream()
-                .map(FlightRoute::getRouteDesignation)
+                .map(FlightRoute::routeDesignation)
                 .map(designation -> Joiner.on(UNDERSCORE).join(lineDataSet.getAirlineIata(), designation))
                 .map(objectId -> NetexObjectIdCreator.hashObjectId(objectId, 10))
                 .map(hashedId -> String.format("AVI:JourneyPattern:%s", hashedId))

@@ -153,7 +153,7 @@ public class AvinorTimetableUtils {
             try {
                 Files.createDirectory(zipOutputPath);
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                throw new ExtimeException("Error while compressing NeTEx files", e);
             }
         }
 
@@ -164,7 +164,7 @@ public class AvinorTimetableUtils {
                     .toArray(File[]::new);
             ZipUtil.packEntries(files, zipOutputFilePath.toFile());
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new ExtimeException("Error while compressing NeTEx files", e);
         }
 
         exchange.getIn().setHeader(Exchange.FILE_NAME_PRODUCED, zipOutputFilePath.toAbsolutePath());
@@ -196,7 +196,7 @@ public class AvinorTimetableUtils {
             return JAXBContext.newInstance(clazz).createUnmarshaller().unmarshal(
                     new StreamSource(new FileInputStream(file)), clazz).getValue();
         } catch (JAXBException | FileNotFoundException e) {
-            throw new RuntimeException(e);
+            throw new ExtimeException("Error while unmarshalling JAXB files", e);
         }
     }
 
