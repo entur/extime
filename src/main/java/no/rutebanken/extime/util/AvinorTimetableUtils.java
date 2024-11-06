@@ -77,12 +77,14 @@ public class AvinorTimetableUtils {
     }
 
     public List<FlightEvent> generateFlightEventsFromFeedDump(String inputDir) throws IOException {
-        return Files.list(Path.of(inputDir))
-                .map(path -> generateObjectsFromXml(path.toFile(), Airport.class))
-                .map(airport -> new FlightEventMapper().mapToFlightEvent(airport))
-                .flatMap(Collection::stream)
-                .toList();
-       }
+        try (Stream<Path> list = Files.list(Path.of(inputDir))) {
+            return list
+                    .map(path -> generateObjectsFromXml(path.toFile(), Airport.class))
+                    .map(airport -> new FlightEventMapper().mapToFlightEvent(airport))
+                    .flatMap(Collection::stream)
+                    .toList();
+        }
+    }
 
     public String generateFilename(Exchange exchange) {
         @SuppressWarnings("unchecked")

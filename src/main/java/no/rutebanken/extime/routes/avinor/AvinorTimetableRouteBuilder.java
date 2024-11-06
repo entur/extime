@@ -14,7 +14,6 @@ import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.converter.jaxb.JaxbDataFormat;
 import org.apache.camel.processor.aggregate.zipfile.ZipAggregationStrategy;
-import org.apache.camel.spi.DataFormat;
 import org.rutebanken.netex.model.PublicationDeliveryStructure;
 import org.springframework.stereotype.Component;
 
@@ -56,8 +55,6 @@ public class AvinorTimetableRouteBuilder extends BaseRouteBuilder {
     public void configure() {
 
         super.configure();
-
-        DataFormat jaxb = new JaxbDataFormat("no.avinor.flydata.xjc.model.scheduled");
 
         JaxbDataFormat netexJaxbDataFormat = new JaxbDataFormat();
         netexJaxbDataFormat.setContextPath(PublicationDeliveryStructure.class.getPackage().getName());
@@ -112,7 +109,7 @@ public class AvinorTimetableRouteBuilder extends BaseRouteBuilder {
             .to("file:{{avinor.timetable.dump.output.path}}")
             .end()
             // convert using the charset retrieved from the HTTP response header that Camel sets in the property Exchange.CHARSET_NAME
-            .unmarshal(jaxb)
+            .unmarshal(airportJaxbDataFormat)
             .setBody(exchange -> flightEventMapper.mapToFlightEvent(exchange.getIn().getBody(Airport.class)))
             .log(LoggingLevel.DEBUG, this.getClass().getName(), "Retrieved ${body.size} flight events")
             // remove the property Exchange.CHARSET_NAME after the conversion so that the JAXB formats can be overriden with a custom encoding
