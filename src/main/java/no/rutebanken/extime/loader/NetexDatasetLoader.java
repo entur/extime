@@ -4,7 +4,6 @@ import no.rutebanken.extime.util.ExtimeException;
 import org.entur.netex.NetexParser;
 import org.entur.netex.index.api.NetexEntitiesIndex;
 import org.entur.netex.index.impl.NetexEntitiesIndexImpl;
-import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -12,7 +11,6 @@ import java.io.InputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-@Component
 public class NetexDatasetLoader {
 
     public NetexEntitiesIndex load(InputStream timetableDataset) {

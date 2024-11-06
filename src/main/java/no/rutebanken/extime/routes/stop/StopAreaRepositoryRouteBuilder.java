@@ -35,11 +35,10 @@ public class StopAreaRepositoryRouteBuilder extends BaseRouteBuilder {
     private final NetexDatasetLoader netexDatasetLoader;
 
     public StopAreaRepositoryRouteBuilder(
-            @Value("${extime.netex.airports.export.filename:tiamat/Airports_latest.zip}") String airportsExportFilename,
-            NetexDatasetLoader netexDatasetLoader) {
+            @Value("${extime.netex.airports.export.filename:tiamat/Airports_latest.zip}") String airportsExportFilename) {
         super();
         this.airportsExportFilename = airportsExportFilename;
-        this.netexDatasetLoader = netexDatasetLoader;
+        this.netexDatasetLoader = new NetexDatasetLoader();
     }
 
     @Override
