@@ -4,6 +4,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import no.rutebanken.extime.config.NetexStaticDataSet;
 import no.rutebanken.extime.model.FlightLeg;
+import no.rutebanken.extime.model.FlightLegBuilder;
+import no.rutebanken.extime.model.LineDataSet;
 import no.rutebanken.extime.model.StopVisitType;
 import no.rutebanken.extime.util.DateUtils;
 import org.apache.commons.lang3.tuple.Triple;
@@ -14,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import java.time.Duration;
 import java.time.LocalTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -24,15 +27,60 @@ import static no.rutebanken.extime.TestUtils.*;
 
 class ScheduledFlightConverterTest {
 
-    
+    private static final ZonedDateTime LEG1_SCHEDULED_DEPARTURE_TIME = ZonedDateTime.of(2024, 1, 1, 1, 0, 0, 0, ZoneId.of("CET"));
+    private static final ZonedDateTime LEG1_SCHEDULED_ARRIVAL_TIME = ZonedDateTime.of(2024, 1, 1, 2, 0, 0, 0, ZoneId.of("CET"));
+    private static final ZonedDateTime LEG2_SCHEDULED_DEPARTURE_TIME = ZonedDateTime.of(2024, 1, 1, 3, 0, 0, 0, ZoneId.of("CET"));
+    private static final ZonedDateTime LEG2_SCHEDULED_ARRIVAL_TIME = ZonedDateTime.of(2024, 1, 1, 4, 0, 0, 0, ZoneId.of("CET"));
 
     private ScheduledFlightConverter clazzUnderTest;
 
     @BeforeEach
     void setUp() {
         NetexStaticDataSet netexStaticDataSet = new NetexStaticDataSet();
-        DateUtils dateUtils = new DateUtils(Duration.ofDays(4), ZoneId.of("CET"));
+
+        NetexStaticDataSet.StopPlaceDataSet tos = new NetexStaticDataSet.StopPlaceDataSet();
+        tos.setShortName("Tromsø");
+        NetexStaticDataSet.StopPlaceDataSet boo = new NetexStaticDataSet.StopPlaceDataSet();
+        tos.setShortName("Bodø");
+        NetexStaticDataSet.StopPlaceDataSet trd = new NetexStaticDataSet.StopPlaceDataSet();
+        tos.setShortName("Trondheim");
+
+        Map<String, NetexStaticDataSet.StopPlaceDataSet> stopPlaces = Map.of(
+                "tos", tos,
+                "boo", boo,
+                "trd", trd
+        );
+        netexStaticDataSet.setStopPlaces(stopPlaces);
+        DateUtils dateUtils = new DateUtils(Duration.ofDays(14), ZoneId.of("CET"));
         clazzUnderTest = new ScheduledFlightConverter(netexStaticDataSet, dateUtils);
+    }
+
+    @Test
+    void convertMultiLegFlight() {
+        FlightLeg leg1 = new FlightLegBuilder()
+                .withDepartureAirport("TOS")
+                .withArrivalAirport("BOO")
+                .withAirlineDesignator("DY")
+                .withFlightNumber("DY1")
+                .withStd(LEG1_SCHEDULED_DEPARTURE_TIME)
+                .withSta(LEG1_SCHEDULED_ARRIVAL_TIME)
+                .build();
+        FlightLeg leg2 = new FlightLegBuilder()
+                .withDepartureAirport("BOO")
+                .withArrivalAirport("TRD")
+                .withAirlineDesignator("DY")
+                .withFlightNumber("DY1")
+                .withStd(LEG2_SCHEDULED_DEPARTURE_TIME)
+                .withSta(LEG2_SCHEDULED_ARRIVAL_TIME)
+                .build();
+        List<FlightLeg> flightLegs = List.of(leg1, leg2);
+        List<LineDataSet> lineDataSets = clazzUnderTest.convertFlightLegsToLineCentricDataSets(flightLegs);
+        Assertions.assertThat(lineDataSets)
+                .isNotNull()
+                .isNotEmpty();
+        LineDataSet lineDataSet = lineDataSets.getFirst();
+        Assertions.assertThat(lineDataSet.getLineDesignation()).isEqualTo("TRD-TOS");
+        Assertions.assertThat(lineDataSet.getAirlineIata()).isEqualTo("DY");
     }
 
     @Test
@@ -226,6 +274,8 @@ class ScheduledFlightConverterTest {
                 .hasSize(2)
                 .containsOnly(flightLegs.get(0), flightLegs.get(1));
     }
+
+
 
 
     private List<FlightLeg> createDummyFlights() {

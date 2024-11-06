@@ -49,9 +49,12 @@ public class ScheduledFlightConverter {
         this.stopPlaceDataSets = netexStaticDataSet.getStopPlaces();
     }
 
-    public List<LineDataSet> convertToLineCentricDataSets(List<FlightEvent> flightEvents) {
+    public List<LineDataSet> convertFlightEventsToLineCentricDataSets(List<FlightEvent> flightEvents) {
         List<FlightLeg> flightLegs = flightLegMapper.map(flightEvents);
+        return convertFlightLegsToLineCentricDataSets(flightLegs);
+    }
 
+    List<LineDataSet> convertFlightLegsToLineCentricDataSets(List<FlightLeg> flightLegs) {
         Map<String, List<FlightLeg>> flightsByDepartureAirport = flightLegs.stream()
                 .collect(Collectors.groupingBy(FlightLeg::getDepartureAirport));
 
@@ -257,7 +260,7 @@ public class ScheduledFlightConverter {
 
 
 
-    public List<ScheduledStopover> createScheduledStopovers(List<Triple<StopVisitType, String, LocalTime>> stopovers) {
+    List<ScheduledStopover> createScheduledStopovers(List<Triple<StopVisitType, String, LocalTime>> stopovers) {
         List<ScheduledStopover> multiLegFlights = Lists.newArrayList();
         Triple<StopVisitType, String, LocalTime> tempArrivalStopover = null;
 
@@ -288,15 +291,15 @@ public class ScheduledFlightConverter {
         return multiLegFlights;
     }
 
-    public boolean isMultiLegFlightRoute(List<FlightLeg> flights) {
+    boolean isMultiLegFlightRoute(List<FlightLeg> flights) {
         return !CollectionUtils.isEmpty(flights) && flights.size() > 1;
     }
 
-    public boolean isDirectFlightRoute(List<FlightLeg> flights) {
+    boolean isDirectFlightRoute(List<FlightLeg> flights) {
         return !CollectionUtils.isEmpty(flights) && flights.size() == 1;
     }
 
-    public List<FlightLeg> findConnectingFlightLegs(FlightLeg currentFlightLeg, Map<String, List<FlightLeg>> flightsByDepartureAirportIata,
+    List<FlightLeg> findConnectingFlightLegs(FlightLeg currentFlightLeg, Map<String, List<FlightLeg>> flightsByDepartureAirportIata,
                                                     Set<Long> distinctFlightLegIds) {
 
         if (distinctFlightLegIds.contains(currentFlightLeg.getId())) {
@@ -315,7 +318,7 @@ public class ScheduledFlightConverter {
         return connectingFlightLegs;
     }
 
-    public List<FlightLeg> findNextFlightLegs(FlightLeg currentFlightLeg, Map<String, List<FlightLeg>> flightsByDepartureAirportIata, List<FlightLeg> nextFlightLegs) {
+    List<FlightLeg> findNextFlightLegs(FlightLeg currentFlightLeg, Map<String, List<FlightLeg>> flightsByDepartureAirportIata, List<FlightLeg> nextFlightLegs) {
         String arrivalAirportIata = currentFlightLeg.getArrivalAirport();
         List<FlightLeg> flightLegsForIata = flightsByDepartureAirportIata.get(arrivalAirportIata);
 
@@ -332,7 +335,7 @@ public class ScheduledFlightConverter {
         return nextFlightLegs;
     }
 
-    public List<Triple<StopVisitType, String, LocalTime>> extractStopoversFromFlights(List<FlightLeg> stopoverFlights) {
+    List<Triple<StopVisitType, String, LocalTime>> extractStopoversFromFlights(List<FlightLeg> stopoverFlights) {
         List<Triple<StopVisitType, String, LocalTime>> stopoverTriples = new ArrayList<>();
 
         stopoverFlights.forEach(stopoverFlight -> {
@@ -353,7 +356,7 @@ public class ScheduledFlightConverter {
         }
     }
 
-    public ScheduledFlight convertToScheduledFlight(FlightLeg flight, List<ScheduledStopover> scheduledStopovers) {
+    ScheduledFlight convertToScheduledFlight(FlightLeg flight, List<ScheduledStopover> scheduledStopovers) {
         ScheduledFlight scheduledFlight = new ScheduledFlight();
         scheduledFlight.setAirlineIATA(flight.getAirlineDesignator());
         scheduledFlight.setAirlineFlightId(flight.getFlightNumber());

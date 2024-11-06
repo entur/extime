@@ -122,7 +122,7 @@ public class AvinorTimetableRouteBuilder extends BaseRouteBuilder {
         from("direct:convertFlights")
             .routeId("ConvertFlights")
             .log(LoggingLevel.INFO, this.getClass().getName(), "Converting to line centric flight data sets")
-            .bean(ScheduledFlightConverter.class, "convertToLineCentricDataSets")
+            .bean(ScheduledFlightConverter.class, "convertFlightEventsToLineCentricDataSets")
             .id("ConvertToLineDataSetsBeanProcessor")
             .setProperty(PROPERTY_LINE_DATASETS_LIST_ORIGINAL_BODY, body())
             .to("direct:convertCommonDataToNetex")
