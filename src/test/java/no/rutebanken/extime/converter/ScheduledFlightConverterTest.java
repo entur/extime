@@ -56,6 +56,27 @@ class ScheduledFlightConverterTest {
     }
 
     @Test
+    void convertSingleLegFlight() {
+        FlightLeg leg1 = new FlightLegBuilder()
+                .withDepartureAirport("TOS")
+                .withArrivalAirport("BOO")
+                .withAirlineDesignator("DY")
+                .withFlightNumber("DY1")
+                .withStd(LEG1_SCHEDULED_DEPARTURE_TIME)
+                .withSta(LEG1_SCHEDULED_ARRIVAL_TIME)
+                .build();
+        List<FlightLeg> flightLegs = List.of(leg1);
+        List<LineDataSet> lineDataSets = clazzUnderTest.convertFlightLegsToLineCentricDataSets(flightLegs);
+        Assertions.assertThat(lineDataSets)
+                .isNotNull()
+                .isNotEmpty();
+        LineDataSet lineDataSet = lineDataSets.getFirst();
+        Assertions.assertThat(lineDataSet.getLineDesignation()).isEqualTo("BOO-TOS");
+        Assertions.assertThat(lineDataSet.getAirlineIata()).isEqualTo("DY");
+    }
+
+
+    @Test
     void convertMultiLegFlight() {
         FlightLeg leg1 = new FlightLegBuilder()
                 .withDepartureAirport("TOS")
