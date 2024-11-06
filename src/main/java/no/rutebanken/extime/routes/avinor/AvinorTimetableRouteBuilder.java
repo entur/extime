@@ -189,8 +189,7 @@ public class AvinorTimetableRouteBuilder extends BaseRouteBuilder {
                 .setHeader(HEADER_MESSAGE_FILE_NAME, simple("${header.CamelFileName}"))
                 .setHeader(HEADER_MESSAGE_USERNAME, simple("Extime"))
                 .setBody(constant(""))
-                .log(LoggingLevel.INFO, this.getClass().getName(), "Notifying marduk queue about NeTEx export")
-                .to("google-pubsub:{{extime.pubsub.project.id}}:{{queue.upload.destination.name}}")
+                .to("direct:notifyMarduk")
                 .process(exchange -> {
                     Thread stop = new Thread(() -> {
                         try {
@@ -219,6 +218,11 @@ public class AvinorTimetableRouteBuilder extends BaseRouteBuilder {
             .setBody(constant(""))
             .log(LoggingLevel.INFO, this.getClass().getName(), "Notifying marduk queue about NeTEx export")
             .to("google-pubsub:{{extime.pubsub.project.id}}:{{queue.upload.destination.name}}");
+
+        from("direct:notifyMarduk")
+                .log(LoggingLevel.INFO, this.getClass().getName(), "Notifying marduk queue about NeTEx export")
+                .to("google-pubsub:{{extime.pubsub.project.id}}:{{queue.upload.destination.name}}")
+                .routeId("NotifyMarduk");
 
     }
 
