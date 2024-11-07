@@ -1,9 +1,7 @@
 package no.rutebanken.extime.routes.avinor;
 
-import com.google.cloud.spring.pubsub.core.PubSubTemplate;
 import com.google.pubsub.v1.PubsubMessage;
 import no.rutebanken.extime.ExtimeCamelRouteBuilderIntegrationTestBase;
-import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
 import org.apache.camel.Produce;
 import org.apache.camel.ProducerTemplate;

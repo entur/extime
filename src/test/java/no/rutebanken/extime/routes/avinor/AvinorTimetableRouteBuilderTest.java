@@ -1,12 +1,10 @@
 package no.rutebanken.extime.routes.avinor;
 
-import com.google.cloud.spring.pubsub.core.PubSubTemplate;
 import no.rutebanken.extime.ExtimeCamelRouteBuilderIntegrationTestBase;
 import no.rutebanken.extime.model.AirlineIATA;
 import no.rutebanken.extime.model.AirportIATA;
 import no.rutebanken.extime.model.FlightEvent;
 import no.rutebanken.extime.model.StopVisitType;
-import org.apache.camel.CamelContext;
 import org.apache.camel.EndpointInject;
 import org.apache.camel.builder.AdviceWith;
 import org.apache.camel.component.mock.MockEndpoint;
