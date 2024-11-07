@@ -1,9 +1,13 @@
 package no.rutebanken.extime.converter;
 
+import com.google.common.base.Splitter;
+import com.google.common.collect.Iterables;
+import jakarta.xml.bind.JAXBElement;
 import no.rutebanken.extime.Constants;
 import no.rutebanken.extime.ExtimeRouteBuilderIntegrationTestBase;
 import no.rutebanken.extime.model.AirportIATA;
 import no.rutebanken.extime.util.NetexObjectIdTypes;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Test;
 import org.rutebanken.netex.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,11 +17,9 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
 
-import static no.rutebanken.extime.Constants.NETEX_PROFILE_VERSION;
-import static no.rutebanken.extime.Constants.VERSION_ONE;
+import static no.rutebanken.extime.Constants.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SuppressWarnings("unchecked")
 class CommonDataWithoutSiteToNetexConverterTest extends ExtimeRouteBuilderIntegrationTestBase {
 
     @Autowired
@@ -87,12 +89,10 @@ class CommonDataWithoutSiteToNetexConverterTest extends ExtimeRouteBuilderIntegr
                 assertThat(stopAssignmentStruct.getStopAssignment()).isNotEmpty();
                 assertThat(stopAssignmentStruct.getStopAssignment()).hasSize(AirportIATA.values().length);
 
-                // TODO enable the following block when stop register is ready and stable
-/*
                 for (JAXBElement<? extends StopAssignment_VersionStructure> stopAssignmentElement : stopAssignmentStruct.getStopAssignment()) {
                     PassengerStopAssignment stopAssignment = (PassengerStopAssignment) stopAssignmentElement.getValue();
 
-                    StopPlaceRefStructure stopPlaceRef = stopAssignment.getStopPlaceRef();
+                    StopPlaceRefStructure stopPlaceRef = stopAssignment.getStopPlaceRef().getValue();
                     assertThat(stopPlaceRef).isNotNull();
                     assertThat(stopPlaceRef.getRef()).isNotNull().isNotEmpty();
 
@@ -102,7 +102,7 @@ class CommonDataWithoutSiteToNetexConverterTest extends ExtimeRouteBuilderIntegr
                         assertThat(stopPlaceRef.getRef()).matches("^NSR:StopPlace:\\d{5}$");
                     }
 
-                    QuayRefStructure quayRef = stopAssignment.getQuayRef();
+                    QuayRefStructure quayRef = stopAssignment.getQuayRef().getValue();
                     assertThat(quayRef).isNotNull();
                     assertThat(quayRef.getRef()).isNotNull().isNotEmpty();
 
@@ -112,7 +112,7 @@ class CommonDataWithoutSiteToNetexConverterTest extends ExtimeRouteBuilderIntegr
                         assertThat(quayRef.getRef()).matches("^NSR:Quay:\\d{5}$");
                     }
                 }
-*/
+
             }
         }
     }

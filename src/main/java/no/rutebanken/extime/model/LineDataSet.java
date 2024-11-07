@@ -24,10 +24,6 @@ public class LineDataSet {
         this.airlineIata = airlineIata;
     }
 
-    public String getAirlineName() {
-        return airlineName;
-    }
-
     public void setAirlineName(String airlineName) {
         this.airlineName = airlineName;
     }

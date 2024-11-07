@@ -1,7 +1,5 @@
 package no.rutebanken.extime.converter;
 
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
 import com.google.common.collect.Lists;
 import jakarta.annotation.PostConstruct;
 import no.rutebanken.extime.config.NetexStaticDataSet;
@@ -20,7 +18,6 @@ import org.rutebanken.netex.model.ScheduledStopPoint;
 import org.rutebanken.netex.model.ScheduledStopPointRefStructure;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Component;
 
@@ -40,32 +37,27 @@ public class NetexCommonDataSet {
 
     private static final Logger logger = LoggerFactory.getLogger(NetexCommonDataSet.class);
 
-    @Autowired
-    private NetexStaticDataSet netexStaticDataSet;
+    private final NetexStaticDataSet netexStaticDataSet;
 
-    @Autowired
-    private ObjectFactory objectFactory;
+    private final ObjectFactory objectFactory;
 
-    @Autowired
-    private NetexObjectFactory netexObjectFactory;
+    private final NetexObjectFactory netexObjectFactory;
 
-    private BiMap<String, String> airportHashes = HashBiMap.create();
     private final Map<String, ScheduledStopPoint> stopPointMap = new HashMap<>();
     private final Map<String, PassengerStopAssignment> stopAssignmentMap = new HashMap<>();
     private final Map<String, RoutePoint> routePointMap = new HashMap<>();
 
+    public NetexCommonDataSet(NetexStaticDataSet netexStaticDataSet, ObjectFactory objectFactory, NetexObjectFactory netexObjectFactory) {
+        this.netexStaticDataSet = netexStaticDataSet;
+        this.objectFactory = objectFactory;
+        this.netexObjectFactory = netexObjectFactory;
+    }
+
     @PostConstruct
     public void init() {
-        populateAirportHashes();
         populateStopPointMap();
         populateStopAssignmentMap();
         populateRoutePointMap();
-    }
-
-    private void populateAirportHashes() {
-        List<AirportIATA> airportIatas = Lists.newArrayList(AirportIATA.values());
-        airportIatas.sort(Comparator.comparing(Enum::name));
-        airportIatas.forEach(airportIata -> airportHashes.put(airportIata.name(), NetexObjectIdCreator.hashObjectId(airportIata.name(), 5)));
     }
 
 
@@ -85,7 +77,7 @@ public class NetexCommonDataSet {
                 throw new IllegalArgumentException("Unknow airport: " + airportIATA.name().toLowerCase());
             }
 
-            String stopPointId = NetexObjectIdCreator.createStopPointId(AVINOR_XMLNS, airportHashes.get(airportIATA.name()));
+            String stopPointId = NetexObjectIdCreator.createStopPointId(AVINOR_XMLNS, airportIATA.name());
 
             ScheduledStopPoint stopPoint = objectFactory.createScheduledStopPoint()
                     .withVersion(VERSION_ONE)
@@ -175,11 +167,4 @@ public class NetexCommonDataSet {
         return routePointMap;
     }
 
-    public BiMap<String, String> getAirportHashes() {
-        return airportHashes;
-    }
-
-    public void setAirportHashes(BiMap<String, String> airportHashes) {
-        this.airportHashes = airportHashes;
-    }
 }

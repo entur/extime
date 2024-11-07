@@ -28,16 +28,17 @@ public class StopAreaRepositoryRouteBuilder extends BaseRouteBuilder {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(StopAreaRepositoryRouteBuilder.class);
 
+    private static final String CORRELATION = "correlationId=${header." + HEADER_MESSAGE_CORRELATION_ID + "} ";
+
     private final String airportsExportFilename;
 
     private final NetexDatasetLoader netexDatasetLoader;
 
     public StopAreaRepositoryRouteBuilder(
-            @Value("${extime.netex.airports.export.filename:tiamat/Airports_latest.zip}") String airportsExportFilename,
-            NetexDatasetLoader netexDatasetLoader) {
+            @Value("${extime.netex.airports.export.filename:tiamat/Airports_latest.zip}") String airportsExportFilename) {
         super();
         this.airportsExportFilename = airportsExportFilename;
-        this.netexDatasetLoader = netexDatasetLoader;
+        this.netexDatasetLoader = new NetexDatasetLoader();
     }
 
     @Override
@@ -46,19 +47,19 @@ public class StopAreaRepositoryRouteBuilder extends BaseRouteBuilder {
 
         from("direct:refreshStops")
                 .process(this::setNewCorrelationId)
-                .log(LoggingLevel.DEBUG, "correlationId=${header." + HEADER_MESSAGE_CORRELATION_ID + "} Refreshing stop areas.")
+                .log(LoggingLevel.DEBUG, CORRELATION + "Refreshing stop areas.")
                 .to("direct:downloadNetexStopDataset")
                 .process(this::loadNetexEntitiesIndex)
                 .process(this::buildAvinorLocalReferenceToQuayMap)
-                .log(LoggingLevel.DEBUG, "correlationId=${header." + HEADER_MESSAGE_CORRELATION_ID + "} Refreshed stop areas.")
+                .log(LoggingLevel.DEBUG, CORRELATION + "Refreshed stop areas.")
                 .routeId("stop-area-refresh");
 
         from("direct:downloadNetexStopDataset")
-                .log(LoggingLevel.INFO, "correlationId=${header." + HEADER_MESSAGE_CORRELATION_ID + "} Downloading NeTEx Stop dataset")
+                .log(LoggingLevel.INFO, CORRELATION + "Downloading NeTEx Stop dataset")
                 .setHeader(HEADER_MESSAGE_FILE_HANDLE, constant(airportsExportFilename))
                 .to("direct:getMardukBlob")
                 .filter(body().isNull())
-                .log(LoggingLevel.ERROR, "correlationId=${header." + HEADER_MESSAGE_CORRELATION_ID + "} NeTEx Stopfile not found")
+                .log(LoggingLevel.ERROR, CORRELATION + "NeTEx Stopfile not found")
                 .stop()
                 //end filter
                 .end()

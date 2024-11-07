@@ -20,9 +20,7 @@ import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEA
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = {AvinorTimetableRouteBuilder.class}, properties = {
         "avinor.timetable.scheduler.consumer=direct:start",
-        "avinor.timetable.period.months=4",
-        "avinor.timetable.max.range=180",
-        "avinor.timetable.min.range=60",
+        "avinor.timetable.period.forward=14",
         "avinor.timetable.feed.endpoint=mock:timetableFeedEndpoint",
         "avinor.airport.feed.endpoint=mock:airportFeedEndpoint",
         "avinor.airports.small=EVE,KRS,MOL,SOG,TOS",
@@ -30,7 +28,6 @@ import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEA
         "avinor.airline.feed.endpoint=mock:airlineFeedEndpoint",
         "netex.generated.output.path=target/netex-mock",
         "netex.compressed.output.path=target/marduk-mock",
-        "avinor.timetable.dump.enabled=false",
         "avinor.timetable.dump.output.path=target/flights"
 })
 class AvinorTimetableRouteBuilderPubSubIntegrationTest extends ExtimeCamelRouteBuilderIntegrationTestBase {

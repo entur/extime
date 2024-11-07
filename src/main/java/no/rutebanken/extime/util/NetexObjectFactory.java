@@ -4,20 +4,17 @@ import com.google.common.base.Joiner;
 import no.rutebanken.extime.config.NetexStaticDataSet;
 import no.rutebanken.extime.model.AvailabilityPeriod;
 import org.rutebanken.netex.model.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
 import jakarta.xml.bind.JAXBElement;
 import java.math.BigInteger;
-import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -36,34 +33,23 @@ import static no.rutebanken.extime.Constants.NETEX_PROFILE_VERSION;
 import static no.rutebanken.extime.Constants.NSR_XMLNS;
 import static no.rutebanken.extime.Constants.NSR_XMLNSURL;
 import static no.rutebanken.extime.Constants.VERSION_ONE;
-import static no.rutebanken.extime.util.AvinorTimetableUtils.isCommonDesignator;
 
 @Component(value = "netexObjectFactory")
 public class NetexObjectFactory {
 
-    @Autowired
-    private ObjectFactory objectFactory;
+    private final ObjectFactory objectFactory;
 
-    @Autowired
-    private NetexStaticDataSet netexStaticDataSet;
+    private final NetexStaticDataSet netexStaticDataSet;
 
-    @Autowired
-    private DateUtils dateUtils;
+    private final DateUtils dateUtils;
 
-    private static final Map<DayOfWeek, DayOfWeekEnumeration> dayOfWeekMap = new EnumMap<>(DayOfWeek.class);
-
-    static {
-        dayOfWeekMap.put(DayOfWeek.MONDAY, DayOfWeekEnumeration.MONDAY);
-        dayOfWeekMap.put(DayOfWeek.TUESDAY, DayOfWeekEnumeration.TUESDAY);
-        dayOfWeekMap.put(DayOfWeek.WEDNESDAY, DayOfWeekEnumeration.WEDNESDAY);
-        dayOfWeekMap.put(DayOfWeek.THURSDAY, DayOfWeekEnumeration.THURSDAY);
-        dayOfWeekMap.put(DayOfWeek.FRIDAY, DayOfWeekEnumeration.FRIDAY);
-        dayOfWeekMap.put(DayOfWeek.SATURDAY, DayOfWeekEnumeration.SATURDAY);
-        dayOfWeekMap.put(DayOfWeek.SUNDAY, DayOfWeekEnumeration.SUNDAY);
-    }
-
-    private final Map<String, Route> routes = new HashMap<>();
     private final Map<String, DestinationDisplay> destinationDisplays = new HashMap<>();
+
+    public NetexObjectFactory(ObjectFactory objectFactory, NetexStaticDataSet netexStaticDataSet, DateUtils dateUtils) {
+        this.objectFactory = objectFactory;
+        this.netexStaticDataSet = netexStaticDataSet;
+        this.dateUtils = dateUtils;
+    }
 
     public PublicationDeliveryStructure createPublicationDeliveryStructure(Instant publicationTimestamp, JAXBElement<CompositeFrame> compositeFrame, String lineName) {
         NetexStaticDataSet.OrganisationDataSet avinorDataSet = netexStaticDataSet.getOrganisations().get(AVINOR_XMLNS.toLowerCase());
@@ -189,22 +175,6 @@ public class NetexObjectFactory {
         return objectFactory.createResourceFrame(resourceFrame);
     }
 
-    public JAXBElement<ResourceFrame> createResourceFrameElement(Operator operator) {
-        OrganisationsInFrame_RelStructure organisationsStruct = objectFactory.createOrganisationsInFrame_RelStructure();
-        organisationsStruct.getOrganisation_().add(createAirlineOperatorElement(operator));
-
-        String resourceFrameId = NetexObjectIdCreator.createResourceFrameId(AVINOR_XMLNS,
-                String.valueOf(NetexObjectIdCreator.generateRandomId(DEFAULT_START_INCLUSIVE, DEFAULT_END_EXCLUSIVE)));
-
-        ResourceFrame resourceFrame = objectFactory.createResourceFrame()
-                .withVersion(VERSION_ONE)
-                .withId(resourceFrameId);
-        resourceFrame.setOrganisations(organisationsStruct);
-
-        return objectFactory.createResourceFrame(resourceFrame);
-    }
-
-
     public JAXBElement<ServiceFrame> createCommonServiceFrameElement(Collection<Network> networks, List<RoutePoint> routePoints,
                                                                      List<ScheduledStopPoint> scheduledStopPoints, List<JAXBElement<PassengerStopAssignment>> stopAssignmentElements) {
 
@@ -243,14 +213,8 @@ public class NetexObjectFactory {
         return objectFactory.createServiceFrame(serviceFrame);
     }
 
-    public JAXBElement<ServiceFrame> createServiceFrame(Instant publicationTimestamp, String airlineName,
-                                                        String airlineIata, List<Route> routes, Line line, List<DestinationDisplay> destinationDisplays, List<JourneyPattern> journeyPatterns) {
-
-        Network network = null;
-        if (!isCommonDesignator(airlineIata)) {
-            network = createNetwork(publicationTimestamp, airlineIata, airlineName);
-        }
-
+    public JAXBElement<ServiceFrame> createServiceFrame(List<Route> routes, Line line, List<DestinationDisplay> destinationDisplays, List<JourneyPattern> journeyPatterns) {
+        
         RoutesInFrame_RelStructure routesInFrame = objectFactory.createRoutesInFrame_RelStructure();
         for (Route route : routes) {
             JAXBElement<Route> routeElement = objectFactory.createRoute(route);
@@ -279,11 +243,7 @@ public class NetexObjectFactory {
                 .withLines(linesInFrame)
                 .withDestinationDisplays(destinationDisplayStruct)
                 .withJourneyPatterns(journeyPatternsInFrame);
-
-        if (network != null) {
-            serviceFrame.setNetwork(network);
-        }
-
+        
         return objectFactory.createServiceFrame(serviceFrame);
     }
 
@@ -344,8 +304,8 @@ public class NetexObjectFactory {
         AvailabilityCondition availabilityCondition = objectFactory.createAvailabilityCondition()
                 .withVersion(VERSION_ONE)
                 .withId(availabilityConditionId)
-                .withFromDate(availabilityPeriod.getPeriodFromDateTime())
-                .withToDate(availabilityPeriod.getPeriodToDateTime());
+                .withFromDate(availabilityPeriod.periodFromDateTime())
+                .withToDate(availabilityPeriod.periodToDateTime());
 
         return objectFactory.createAvailabilityCondition(availabilityCondition);
     }
@@ -441,22 +401,6 @@ public class NetexObjectFactory {
         return objectFactory.createBranding(branding);
     }
 
-    public JAXBElement<Operator> createAirlineOperatorElement(Operator operator) {
-        return objectFactory.createOperator(operator);
-    }
-
-    public Operator createInfrequentAirlineOperatorElement(String airlineIata, String airlineName, String operatorId) {
-        return objectFactory.createOperator()
-                .withVersion(VERSION_ONE)
-                .withId(operatorId)
-                .withCompanyNumber("999999999")
-                .withName(createMultilingualString(airlineName.trim()))
-                .withLegalName(createMultilingualString((airlineName.trim().toUpperCase())))
-                .withContactDetails(createContactStructure("0047 99999999", String.format("http://%s.no/", airlineIata.toLowerCase())))
-                .withCustomerServiceContactDetails(createContactStructure("0047 99999999", String.format("http://%s.no/", airlineIata.toLowerCase())))
-                .withOrganisationType(OrganisationTypeEnumeration.OPERATOR);
-    }
-
     public ContactStructure createContactStructure(String phone, String url) {
         return objectFactory.createContactStructure()
                 .withPhone(phone)
@@ -475,10 +419,6 @@ public class NetexObjectFactory {
 
         GroupOfLinesRefStructure groupOfLinesRefStruct = objectFactory.createGroupOfLinesRefStructure()
                 .withRef(NetexObjectIdCreator.createNetworkId(AVINOR_XMLNS, airlineIata));
-
-        if (!isCommonDesignator(airlineIata)) {
-            groupOfLinesRefStruct.setVersion(VERSION_ONE);
-        }
 
         return objectFactory.createLine()
                 .withVersion(VERSION_ONE)
@@ -566,13 +506,6 @@ public class NetexObjectFactory {
                 .withId(destinationDisplayId);
     }
 
-    public DestinationDisplay getDestinationDisplay(String objectId, String frontText) {
-        return destinationDisplays.computeIfAbsent(objectId, s -> objectFactory.createDestinationDisplay()
-                .withVersion(VERSION_ONE)
-                .withId(NetexObjectIdCreator.createDestinationDisplayId(AVINOR_XMLNS, objectId))
-                .withFrontText(createMultilingualString(frontText)));
-    }
-
     public DestinationDisplay createDestinationDisplay(String objectId, String frontText, boolean isStopDisplay) {
         String destinationDisplayId = NetexObjectIdCreator.createDestinationDisplayId(AVINOR_XMLNS, objectId);
 
@@ -606,7 +539,6 @@ public class NetexObjectFactory {
                 .withId(serviceJourneyId)
                 .withPublicCode(flightId)
                 .withName(createMultilingualString(name))
-                // .withDepartureTime(departureTime)
                 .withDayTypes(dayTypeRefsStruct)
                 .withJourneyPatternRef(journeyPatternRefStructElement)
                 .withLineRef(lineRefStructElement)
@@ -633,38 +565,18 @@ public class NetexObjectFactory {
                 .withId(dayTypeId);
     }
 
-    public OperatingPeriod createOperatingPeriod(String operatingPeriodId, LocalDate from, LocalDate to) {
-        return new OperatingPeriod().withId(operatingPeriodId).withVersion(VERSION_ONE).withFromDate(from.atStartOfDay()).withToDate(to.atStartOfDay());
-    }
-
-    public DayTypeAssignment createDayTypeAssignment(String objectId, Integer order, LocalDate dateOfOperation, String dayTypeId, boolean available) {
+    public DayTypeAssignment createDayTypeAssignment(String objectId, Integer order, LocalDate dateOfOperation, String dayTypeId) {
         String dayTypeAssignmentId = NetexObjectIdCreator.createDayTypeAssignmentId(AVINOR_XMLNS, objectId);
 
         DayTypeRefStructure dayTypeRefStruct = createDayTypeRefStructure(dayTypeId);
         JAXBElement<DayTypeRefStructure> dayTypeRefStructElement = objectFactory.createDayTypeRef(dayTypeRefStruct);
 
-        DayTypeAssignment dayTypeAssignment = objectFactory.createDayTypeAssignment()
+        return objectFactory.createDayTypeAssignment()
                 .withVersion(VERSION_ONE)
                 .withId(dayTypeAssignmentId)
                 .withOrder(BigInteger.valueOf(order))
                 .withDate(dateOfOperation == null ? null : dateOfOperation.atStartOfDay())
                 .withDayTypeRef(dayTypeRefStructElement);
-
-        if (!available) {
-            dayTypeAssignment.withIsAvailable(available);
-        }
-
-        return dayTypeAssignment;
-    }
-
-    public DayTypeAssignment createDayTypeAssignment(String objectId, Integer order, String dayTypeId, String operatingPeriodId) {
-
-        OperatingPeriodRefStructure operatingPeriodRefStructure =
-                objectFactory.createOperatingPeriodRefStructure().withRef(operatingPeriodId).withVersion(VERSION_ONE);
-
-        return createDayTypeAssignment(objectId, order, null, dayTypeId, true)
-                .withOperatingPeriodRef(objectFactory.createOperatingPeriodRef(operatingPeriodRefStructure));
-
     }
 
     public MultilingualString createMultilingualString(String value) {
@@ -746,7 +658,6 @@ public class NetexObjectFactory {
     }
 
     public void clearReferentials() {
-        routes.clear();
         destinationDisplays.clear();
     }
 

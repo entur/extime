@@ -3,7 +3,6 @@ package no.rutebanken.extime.converter;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
-import com.google.common.collect.BiMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import no.rutebanken.extime.config.NetexStaticDataSet;
@@ -12,6 +11,7 @@ import no.rutebanken.extime.model.FlightRoute;
 import no.rutebanken.extime.model.LineDataSet;
 import no.rutebanken.extime.model.ScheduledFlight;
 import no.rutebanken.extime.model.ScheduledStopover;
+import no.rutebanken.extime.util.ExtimeException;
 import no.rutebanken.extime.util.NetexObjectFactory;
 import no.rutebanken.extime.util.NetexObjectIdCreator;
 import org.apache.commons.lang3.StringUtils;
@@ -27,13 +27,11 @@ import org.rutebanken.netex.model.JourneyPattern;
 import org.rutebanken.netex.model.Line;
 import org.rutebanken.netex.model.ObjectFactory;
 import org.rutebanken.netex.model.OperatingPeriod;
-import org.rutebanken.netex.model.Operator;
 import org.rutebanken.netex.model.PointInLinkSequence_VersionedChildStructure;
 import org.rutebanken.netex.model.PointOnRoute;
 import org.rutebanken.netex.model.PointsInJourneyPattern_RelStructure;
 import org.rutebanken.netex.model.PointsOnRoute_RelStructure;
 import org.rutebanken.netex.model.PublicationDeliveryStructure;
-import org.rutebanken.netex.model.ResourceFrame;
 import org.rutebanken.netex.model.Route;
 import org.rutebanken.netex.model.RoutePoint;
 import org.rutebanken.netex.model.RouteRefStructure;
@@ -48,9 +46,6 @@ import org.rutebanken.netex.model.TimetabledPassingTime;
 import org.rutebanken.netex.model.TimetabledPassingTimes_RelStructure;
 import org.rutebanken.netex.model.Via_VersionedChildStructure;
 import org.rutebanken.netex.model.Vias_RelStructure;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import jakarta.xml.bind.JAXBElement;
@@ -72,13 +67,11 @@ import static no.rutebanken.extime.Constants.COLON;
 import static no.rutebanken.extime.Constants.DASH;
 import static no.rutebanken.extime.Constants.DAY_TYPE_PATTERN;
 import static no.rutebanken.extime.Constants.UNDERSCORE;
-import static no.rutebanken.extime.util.AvinorTimetableUtils.isCommonDesignator;
 import static no.rutebanken.extime.util.NetexObjectIdCreator.hashObjectId;
 import static no.rutebanken.extime.util.NetexObjectIdTypes.DESTINATION_DISPLAY;
 
 @Component(value = "lineDataToNetexConverter")
 public class LineDataToNetexConverter {
-    private static final Logger logger = LoggerFactory.getLogger(LineDataToNetexConverter.class);
 
     private static final String AIRLINE_IATA = "airline_iata";
     private static final String LINE_DESIGNATION = "line_designation";
@@ -90,17 +83,20 @@ public class LineDataToNetexConverter {
     private final Map<String, DayTypeAssignment> dayTypeAssignments = new HashMap<>();
     private final Map<String, OperatingPeriod> operatingPeriods = new HashMap<>();
 
-    @Autowired
-    private NetexStaticDataSet netexStaticDataSet;
+    private final NetexStaticDataSet netexStaticDataSet;
 
-    @Autowired
-    private NetexCommonDataSet netexCommonDataSet;
+    private final NetexCommonDataSet netexCommonDataSet;
 
-    @Autowired
-    private ObjectFactory objectFactory;
+    private final ObjectFactory objectFactory;
 
-    @Autowired
-    private NetexObjectFactory netexObjectFactory;
+    private final NetexObjectFactory netexObjectFactory;
+
+    public LineDataToNetexConverter(NetexStaticDataSet netexStaticDataSet, NetexCommonDataSet netexCommonDataSet, ObjectFactory objectFactory, NetexObjectFactory netexObjectFactory) {
+        this.netexStaticDataSet = netexStaticDataSet;
+        this.netexCommonDataSet = netexCommonDataSet;
+        this.objectFactory = objectFactory;
+        this.netexObjectFactory = netexObjectFactory;
+    }
 
 
     public JAXBElement<PublicationDeliveryStructure> convertToNetex(LineDataSet lineDataSet) {
@@ -116,11 +112,9 @@ public class LineDataToNetexConverter {
             String airlineIata = lineDataSet.getAirlineIata();
 
             String operatorId = NetexObjectIdCreator.createOperatorId(AVINOR_XMLNS, airlineIata);
-            boolean isFrequentOperator = isCommonDesignator(airlineIata);
 
             Line line = netexObjectFactory.createLine(lineDataSet.getAirlineIata(), lineDataSet.getLineDesignation(), lineDataSet.getLineName());
-            line.setOperatorRef(isFrequentOperator ? netexObjectFactory.createOperatorRefStructure(operatorId, Boolean.FALSE) :
-                    netexObjectFactory.createOperatorRefStructure(operatorId, Boolean.TRUE));
+            line.setOperatorRef(netexObjectFactory.createOperatorRefStructure(operatorId, Boolean.FALSE));
 
             List<Route> routes = createRoutes(line, lineDataSet.getFlightRoutes());
             List<RouteRefStructure> routeRefStructures = netexObjectFactory.createRouteRefStructures(routes);
@@ -135,15 +129,8 @@ public class LineDataToNetexConverter {
 
             Frames_RelStructure frames = objectFactory.createFrames_RelStructure();
 
-            if (!isFrequentOperator) {
-                logger.warn("Infrequent operator identified by id : {}", airlineIata);
-                Operator operator = netexObjectFactory.createInfrequentAirlineOperatorElement(airlineIata, lineDataSet.getAirlineName(), operatorId);
-                JAXBElement<ResourceFrame> resourceFrameElement = netexObjectFactory.createResourceFrameElement(operator);
-                frames.getCommonFrame().add(resourceFrameElement);
-            }
-
-            JAXBElement<ServiceFrame> serviceFrame = netexObjectFactory.createServiceFrame(publicationTimestamp,
-                    lineDataSet.getAirlineName(), lineDataSet.getAirlineIata(), routes, line, destinationDisplays, journeyPatterns);
+            JAXBElement<ServiceFrame> serviceFrame = netexObjectFactory.createServiceFrame(
+                    routes, line, destinationDisplays, journeyPatterns);
             frames.getCommonFrame().add(serviceFrame);
 
             JAXBElement<TimetableFrame> timetableFrame = netexObjectFactory.createTimetableFrame(serviceJourneys);
@@ -178,7 +165,7 @@ public class LineDataToNetexConverter {
             List<String> routePointsInSequence = flightRoute.getRoutePointsInSequence();
             String[] idSequence = NetexObjectIdCreator.generateIdSequence(routePointsInSequence.size());
 
-            String objectId = Joiner.on(UNDERSCORE).skipNulls().join(localContext.get(AIRLINE_IATA), flightRoute.getRouteDesignation());
+            String objectId = Joiner.on(UNDERSCORE).skipNulls().join(localContext.get(AIRLINE_IATA), flightRoute.routeDesignation());
             String hashedObjectId = hashObjectId(objectId, 10);
 
             for (int i = 0; i < routePointsInSequence.size(); i++) {
@@ -188,11 +175,11 @@ public class LineDataToNetexConverter {
                 pointsOnRoute.getPointOnRoute().add(pointOnRoute);
             }
 
-            Route route = netexObjectFactory.createRoute(line.getId(), hashedObjectId, flightRoute.getRouteName(), pointsOnRoute);
+            Route route = netexObjectFactory.createRoute(line.getId(), hashedObjectId, flightRoute.routeName(), pointsOnRoute);
             routes.add(route);
 
             if (!routeIdDesignationMap.containsKey(route.getId())) {
-                routeIdDesignationMap.put(route.getId(), flightRoute.getRouteDesignation());
+                routeIdDesignationMap.put(route.getId(), flightRoute.routeDesignation());
             }
         }
 
@@ -201,8 +188,7 @@ public class LineDataToNetexConverter {
 
     private List<JourneyPattern> createJourneyPatterns(List<Route> routes) {
         Map<String, ScheduledStopPoint> stopPointMap = netexCommonDataSet.getStopPointMap();
-        BiMap<String, String> airportHashes = netexCommonDataSet.getAirportHashes();
-        List<JourneyPattern> journeyPatterns = Lists.newArrayList();
+       List<JourneyPattern> journeyPatterns = Lists.newArrayList();
 
         if (!routeDesignationPatternMap.isEmpty()) {
             routeDesignationPatternMap.clear();
@@ -216,7 +202,7 @@ public class LineDataToNetexConverter {
                 PointOnRoute pointOnRoute = pointsOnRoute.get(i);
                 String pointIdRef = pointOnRoute.getPointRef().getValue().getRef();
                 String stopPointIdSuffix = NetexObjectIdCreator.getObjectIdSuffix(pointIdRef);
-                ScheduledStopPoint scheduledStopPoint = stopPointMap.get(airportHashes.inverse().get(stopPointIdSuffix));
+                ScheduledStopPoint scheduledStopPoint = stopPointMap.get(stopPointIdSuffix);
                 String pointOnRouteIdSuffix = NetexObjectIdCreator.getObjectIdSuffix(pointOnRoute.getId());
 
                 StopPointInJourneyPattern stopPointInJourneyPattern = netexObjectFactory.createStopPointInJourneyPattern(
@@ -263,8 +249,7 @@ public class LineDataToNetexConverter {
 
     private List<DestinationDisplay> createDestinationDisplaysForPatterns(List<JourneyPattern> journeyPatterns) {
         Map<String, NetexStaticDataSet.StopPlaceDataSet> stopPlaceDataSets = netexStaticDataSet.getStopPlaces();
-        BiMap<String, String> airportHashes = netexCommonDataSet.getAirportHashes();
-        List<DestinationDisplay> destinationDisplays = Lists.newArrayList();
+       List<DestinationDisplay> destinationDisplays = Lists.newArrayList();
 
         for (JourneyPattern journeyPattern : journeyPatterns) {
 
@@ -282,7 +267,7 @@ public class LineDataToNetexConverter {
 
             String finalDestinationPointId = finalDestinationPoint.getScheduledStopPointRef().getValue().getRef();
             String finalStopPointObjectId = Iterables.getLast(Splitter.on(COLON).trimResults().split(finalDestinationPointId));
-            String frontTextValue = stopPlaceDataSets.get(airportHashes.inverse().get(finalStopPointObjectId).toLowerCase()).getShortName();
+            String frontTextValue = stopPlaceDataSets.get(finalStopPointObjectId.toLowerCase()).getShortName();
             patternDestinationDisplay.setFrontText(netexObjectFactory.createMultilingualString(frontTextValue));
             patternDestinationDisplay.setName(patternDestinationDisplay.getFrontText());
 
@@ -300,8 +285,7 @@ public class LineDataToNetexConverter {
                         StopPointInJourneyPattern stopPointInJourneyPattern = (StopPointInJourneyPattern) pointsInLinkSequence.get(i);
                         String stopPointIdRef = stopPointInJourneyPattern.getScheduledStopPointRef().getValue().getRef();
                         String stopPointObjectId = Iterables.getLast(Splitter.on(COLON).trimResults().split(stopPointIdRef));
-                        String inversedStopPointObjectId = airportHashes.inverse().get(stopPointObjectId);
-                        String objectIdRef = localContext.get(AIRLINE_IATA) + StringUtils.remove(localContext.get(LINE_DESIGNATION), DASH) + DASH + inversedStopPointObjectId;
+                        String objectIdRef = localContext.get(AIRLINE_IATA) + StringUtils.remove(localContext.get(LINE_DESIGNATION), DASH) + DASH + stopPointObjectId;
 
                         String destinationDisplayIdRef = Joiner.on(COLON).skipNulls().join(AVINOR_XMLNS, DESTINATION_DISPLAY, objectIdRef);
                         DestinationDisplay destinationDisplay = netexObjectFactory.getDestinationDisplay(destinationDisplayIdRef);
@@ -311,7 +295,7 @@ public class LineDataToNetexConverter {
                             Via_VersionedChildStructure viaChildStruct = objectFactory.createVia_VersionedChildStructure();
                             viaChildStruct.setDestinationDisplayRef(viaRefStruct);
                             viasStruct.getVia().add(viaChildStruct);
-                            String frontTextValueVia = stopPlaceDataSets.get(airportHashes.inverse().get(stopPointObjectId).toLowerCase()).getShortName();
+                            String frontTextValueVia = stopPlaceDataSets.get(stopPointObjectId.toLowerCase()).getShortName();
                             viaTexts.add(frontTextValueVia);
                         }
                     }
@@ -344,15 +328,12 @@ public class LineDataToNetexConverter {
 
         for (Map.Entry<String, Map<String, List<ScheduledFlight>>> entry : routeJourneys.entrySet()) {
             String routeDesignation = entry.getKey();
-            JourneyPattern journeyPattern = null;
+            JourneyPattern journeyPattern;
 
             if (routeDesignationPatternMap.containsKey(routeDesignation)) {
                 journeyPattern = routeDesignationPatternMap.get(routeDesignation);
             } else {
-                /*
-                 * TODO: What to do if JourneyPattern is not found?
-                 *  Currently this will lead to NullPointerException when creating ServiceJourneys
-                 */
+                throw new ExtimeException("Route not found: " + routeDesignation);
             }
 
             Map<String, List<ScheduledFlight>> flightsById = entry.getValue();
@@ -461,16 +442,17 @@ public class LineDataToNetexConverter {
     private DayTypeRefs_RelStructure collectDayTypesAndAssignments(List<ScheduledFlight> journeyFlights) {
         DayTypeRefs_RelStructure dayTypeStructure = objectFactory.createDayTypeRefs_RelStructure();
         List<LocalDate> datesOfOperation = journeyFlights.stream().map(ScheduledFlight::getDateOfOperation).sorted().toList();
-        collectDayTypesAndAssignments(dayTypeStructure, datesOfOperation, true);
+        collectDayTypesAndAssignments(dayTypeStructure, datesOfOperation);
         return dayTypeStructure;
     }
 
-    private void collectDayTypesAndAssignments(DayTypeRefs_RelStructure dayTypeStructure, List<LocalDate> datesOfOperation, boolean available) {
+    private void collectDayTypesAndAssignments(DayTypeRefs_RelStructure dayTypeStructure, List<LocalDate> datesOfOperation) {
         for (int i = 0; i < datesOfOperation.size(); i++) {
             LocalDate dateOfOperation = datesOfOperation.get(i);
 
             String dayTypeIdLinePart = getIdLinePart();
-            String dayTypeIdSuffix = Joiner.on(DASH).skipNulls().join(dayTypeIdLinePart, dateOfOperation.format(DateTimeFormatter.ofPattern(DAY_TYPE_PATTERN)), available ? null : "X");
+            String formattedDateOfOperation = dateOfOperation.format(DateTimeFormatter.ofPattern(DAY_TYPE_PATTERN));
+            String dayTypeIdSuffix = Joiner.on(DASH).skipNulls().join(dayTypeIdLinePart, formattedDateOfOperation);
             String dayTypeId = NetexObjectIdCreator.createDayTypeId(AVINOR_XMLNS, dayTypeIdSuffix);
 
             DayType dayType;
@@ -485,7 +467,7 @@ public class LineDataToNetexConverter {
 
             DayTypeAssignment dayTypeAssignment;
             if (!dayTypeAssignments.containsKey(dayTypeId)) {
-                dayTypeAssignment = netexObjectFactory.createDayTypeAssignment(dayTypeIdSuffix, i + 1, dateOfOperation, dayTypeId, available);
+                dayTypeAssignment = netexObjectFactory.createDayTypeAssignment(dayTypeIdSuffix, i + 1, dateOfOperation, dayTypeId);
                 dayTypeAssignments.put(dayTypeAssignment.getId(), dayTypeAssignment);
             }
         }

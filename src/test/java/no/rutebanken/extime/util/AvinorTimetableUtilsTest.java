@@ -1,7 +1,8 @@
 package no.rutebanken.extime.util;
 
-import no.avinor.flydata.xjc.model.scheduled.Flight;
+import no.rutebanken.extime.model.FlightLeg;
 import no.rutebanken.extime.ExtimeRouteBuilderIntegrationTestBase;
+import no.rutebanken.extime.model.FlightLegBuilder;
 import no.rutebanken.extime.model.StopVisitType;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -10,10 +11,10 @@ class AvinorTimetableUtilsTest  extends ExtimeRouteBuilderIntegrationTestBase {
 
     @Test
     void testIsValidFlight() {
-        Flight flight = new Flight();
-        flight.setDepartureStation("OSL");
-        flight.setArrivalStation("BGO");
-        flight.setServiceType("J");
+        FlightLeg flight = new FlightLegBuilder()
+                .withDepartureAirport("OSL")
+                .withArrivalAirport("BGO")
+                .build();
 
         boolean isValidFlight = AvinorTimetableUtils.isValidFlight(StopVisitType.DEPARTURE, flight);
 
@@ -22,10 +23,10 @@ class AvinorTimetableUtilsTest  extends ExtimeRouteBuilderIntegrationTestBase {
 
     @Test
     void testIsValidArrivalToOslFlight() {
-        Flight flight = new Flight();
-        flight.setDepartureStation("OSL");
-        flight.setArrivalStation("BGO");
-        flight.setServiceType("J");
+        FlightLeg flight = new FlightLegBuilder()
+                .withDepartureAirport("OSL")
+                .withArrivalAirport("BGO")
+                .build();
 
         boolean isValidFlight = AvinorTimetableUtils.isValidFlight(StopVisitType.ARRIVAL, flight);
 
@@ -34,10 +35,10 @@ class AvinorTimetableUtilsTest  extends ExtimeRouteBuilderIntegrationTestBase {
 
     @Test
     void testIsNotValidArrivalToOslFlight()  {
-        Flight flight = new Flight();
-        flight.setDepartureStation("BGO");
-        flight.setArrivalStation("OSL");
-        flight.setServiceType("J");
+        FlightLeg flight = new FlightLegBuilder()
+                .withDepartureAirport("BGO")
+                .withArrivalAirport("OSL")
+                .build();
 
         boolean isValidFlight = AvinorTimetableUtils.isValidFlight(StopVisitType.ARRIVAL, flight);
 
@@ -45,54 +46,23 @@ class AvinorTimetableUtilsTest  extends ExtimeRouteBuilderIntegrationTestBase {
     }
 
     @Test
-    void testIsNotValidCharterFlight()  {
-        Flight flight = new Flight();
-        flight.setDepartureStation("OSL");
-        flight.setArrivalStation("BGO");
-        flight.setServiceType("C");
-
-        boolean isNotValidFlight = AvinorTimetableUtils.isValidFlight(StopVisitType.DEPARTURE, flight);
-
-        Assertions.assertThat(isNotValidFlight).isFalse();
-    }
-
-    @Test
     void testIsNotValidInternationalFlight()  {
-        Flight flight = new Flight();
-        flight.setDepartureStation("LHR");
-        flight.setArrivalStation("EWR");
-        flight.setServiceType("J");
+        FlightLeg flight = new FlightLegBuilder()
+                .withDepartureAirport("LHR")
+                .withArrivalAirport("EWR")
+                .build();
 
         boolean isNotValidFlight = AvinorTimetableUtils.isValidFlight(StopVisitType.DEPARTURE, flight);
-
-        Assertions.assertThat(isNotValidFlight).isFalse();
-    }
-
-    @Test
-    void testIsScheduledPassengerFlight()  {
-        Flight flight = new Flight();
-        flight.setServiceType("J");
-
-        boolean isValidFlight = AvinorTimetableUtils.isScheduledPassengerFlight(flight);
-
-        Assertions.assertThat(isValidFlight).isTrue();
-    }
-
-    @Test
-    void testIsNotScheduledPassengerFlight()  {
-        Flight flight = new Flight();
-        flight.setServiceType("C");
-
-        boolean isNotValidFlight = AvinorTimetableUtils.isScheduledPassengerFlight(flight);
 
         Assertions.assertThat(isNotValidFlight).isFalse();
     }
 
     @Test
     void testIsValidDomesticFlight()  {
-        Flight flight = new Flight();
-        flight.setDepartureStation("OSL");
-        flight.setArrivalStation("BGO");
+        FlightLeg flight = new FlightLegBuilder()
+                .withDepartureAirport("OSL")
+                .withArrivalAirport("BGO")
+                .build();
 
         boolean isValidFlight = AvinorTimetableUtils.isDomesticFlight(flight);
 
@@ -101,9 +71,10 @@ class AvinorTimetableUtilsTest  extends ExtimeRouteBuilderIntegrationTestBase {
 
     @Test
     void testIsNotValidDomesticFlight()  {
-        Flight flight = new Flight();
-        flight.setDepartureStation("LHR");
-        flight.setArrivalStation("EWR");
+        FlightLeg flight = new FlightLegBuilder()
+                .withDepartureAirport("LHR")
+                .withArrivalAirport("EWR")
+                .build();
 
         boolean isNotValidFlight = AvinorTimetableUtils.isDomesticFlight(flight);
 

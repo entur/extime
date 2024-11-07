@@ -5,7 +5,6 @@ import org.apache.camel.Exchange;
 import org.apache.camel.Header;
 import org.rutebanken.helper.storage.BlobStoreException;
 import org.rutebanken.helper.storage.repository.BlobStoreRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -20,7 +19,7 @@ public class MardukExchangeBlobStoreService extends AbstractBlobStoreService {
 
 
     public MardukExchangeBlobStoreService(@Value("${blobstore.gcs.marduk-exchange.container.name:marduk-exchange}") String containerName,
-                                          @Autowired BlobStoreRepository repository) {
+                                          BlobStoreRepository repository) {
         super(containerName, repository);
     }
 

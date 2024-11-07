@@ -15,7 +15,6 @@ public final class Constants {
     public static final int DEFAULT_END_EXCLUSIVE = 8888888;
 
     // date/period specific constants
-    public static final String DEFAULT_DATE_TIME_PATTERN = "yyyy-MM-dd";
     public static final String DAY_TYPE_PATTERN = "MMM_EEE_dd";
 
     // netex specific constants
@@ -28,7 +27,6 @@ public final class Constants {
     public static final String AVINOR_XMLNS = "AVI";
     public static final String AVINOR_XMLNSURL = "http://www.rutebanken.org/ns/avi";
     
-    public static final String DEFAULT_COORDINATE_SYSTEM = "WGS84";
     public static final String DEFAULT_ID_SEPARATOR = ":";
 
     public static final String HEADER_MESSAGE_CORRELATION_ID = "RutebankenCorrelationId";

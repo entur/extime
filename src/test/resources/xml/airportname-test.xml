@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
-<airportNames xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-              xsi:noNamespaceSchemaLocation="https://flydata.avinor.no/airportNames.xsd">
-    <airportName code="OSL" name="Oslo" shortname8="Oslo" shortname15="Oslo" name_uk="Oslo" shortname8_uk="Oslo"
-                 shortname15_uk="Oslo"/>
-</airportNames>

@@ -2,42 +2,31 @@ package no.rutebanken.extime.model;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
-import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static no.rutebanken.extime.Constants.DASH;
 import static no.rutebanken.extime.Constants.EMPTY;
 
+/**
+ * A potentially multi-leg flight from a departure airport to a destination airport, with any number of layovers in
+ * between.
+ */
 public class ScheduledFlight {
 
-    private Long flightId;
     private String airlineIATA;
-    private String airlineName;
     private String airlineFlightId;
     private String departureAirportIATA;
     private String arrivalAirportIATA;
-    private String departureAirportName;
     private String arrivalAirportName;
     private LocalDate dateOfOperation;
     private LocalTime timeOfDeparture;
     private LocalTime timeOfArrival;
-    private String lineDesignation;
-    private String stopsDesignation;
-    private String timesDesignation;
     private List<ScheduledStopover> scheduledStopovers;
-
-    public Long getFlightId() {
-        return flightId;
-    }
-
-    public void setFlightId(Long flightId) {
-        this.flightId = flightId;
-    }
 
     public String getAirlineIATA() {
         return airlineIATA;
@@ -45,14 +34,6 @@ public class ScheduledFlight {
 
     public void setAirlineIATA(String airlineIATA) {
         this.airlineIATA = airlineIATA;
-    }
-
-    public String getAirlineName() {
-        return airlineName;
-    }
-
-    public void setAirlineName(String airlineName) {
-        this.airlineName = airlineName;
     }
 
     public String getAirlineFlightId() {
@@ -63,28 +44,12 @@ public class ScheduledFlight {
         this.airlineFlightId = airlineFlightId;
     }
 
-    public String getDepartureAirportIATA() {
-        return departureAirportIATA;
-    }
-
     public void setDepartureAirportIATA(String departureAirportIATA) {
         this.departureAirportIATA = departureAirportIATA;
     }
 
-    public String getArrivalAirportIATA() {
-        return arrivalAirportIATA;
-    }
-
     public void setArrivalAirportIATA(String arrivalAirportIATA) {
         this.arrivalAirportIATA = arrivalAirportIATA;
-    }
-
-    public String getDepartureAirportName() {
-        return departureAirportName;
-    }
-
-    public void setDepartureAirportName(String departureAirportName) {
-        this.departureAirportName = departureAirportName;
     }
 
     public String getArrivalAirportName() {
@@ -119,39 +84,11 @@ public class ScheduledFlight {
         this.timeOfArrival = timeOfArrival;
     }
 
-    public String getLineDesignation() {
-        return lineDesignation;
-    }
-
-    public void setLineDesignation(String lineDesignation) {
-        this.lineDesignation = lineDesignation;
-    }
-
-    public String getStopsDesignation() {
-        return stopsDesignation;
-    }
-
-    public void setStopsDesignation(String stopsDesignation) {
-        this.stopsDesignation = stopsDesignation;
-    }
-
-    public String getTimesDesignation() {
-        return timesDesignation;
-    }
-
-    public void setTimesDesignation(String timesDesignation) {
-        this.timesDesignation = timesDesignation;
-    }
-
     public List<ScheduledStopover> getScheduledStopovers() {
         if (scheduledStopovers == null) {
             scheduledStopovers = new ArrayList<>();
         }
         return this.scheduledStopovers;
-    }
-
-    public void setScheduledStopovers(List<ScheduledStopover> scheduledStopovers) {
-        this.scheduledStopovers = scheduledStopovers;
     }
 
     public boolean hasStopovers() {
@@ -196,48 +133,26 @@ public class ScheduledFlight {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         ScheduledFlight that = (ScheduledFlight) o;
-        return Objects.equal(flightId, that.flightId) &&
-                Objects.equal(airlineIATA, that.airlineIATA) &&
-                Objects.equal(airlineName, that.airlineName) &&
-                Objects.equal(airlineFlightId, that.airlineFlightId) &&
-                Objects.equal(departureAirportIATA, that.departureAirportIATA) &&
-                Objects.equal(arrivalAirportIATA, that.arrivalAirportIATA) &&
-                Objects.equal(departureAirportName, that.departureAirportName) &&
-                Objects.equal(arrivalAirportName, that.arrivalAirportName) &&
-                Objects.equal(dateOfOperation, that.dateOfOperation) &&
-                Objects.equal(timeOfDeparture, that.timeOfDeparture) &&
-                Objects.equal(timeOfArrival, that.timeOfArrival) &&
-                Objects.equal(lineDesignation, that.lineDesignation) &&
-                Objects.equal(stopsDesignation, that.stopsDesignation) &&
-                Objects.equal(timesDesignation, that.timesDesignation) &&
-                Objects.equal(scheduledStopovers, that.scheduledStopovers);
+        return Objects.equals(airlineIATA, that.airlineIATA) && Objects.equals(airlineFlightId, that.airlineFlightId) && Objects.equals(departureAirportIATA, that.departureAirportIATA) && Objects.equals(arrivalAirportIATA, that.arrivalAirportIATA) && Objects.equals(arrivalAirportName, that.arrivalAirportName) && Objects.equals(dateOfOperation, that.dateOfOperation) && Objects.equals(timeOfDeparture, that.timeOfDeparture) && Objects.equals(timeOfArrival, that.timeOfArrival) && Objects.equals(scheduledStopovers, that.scheduledStopovers);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(flightId, airlineIATA, airlineName, airlineFlightId, departureAirportIATA,
-                arrivalAirportIATA, departureAirportName, arrivalAirportName, dateOfOperation, timeOfDeparture,
-                timeOfArrival, lineDesignation, stopsDesignation, timesDesignation, scheduledStopovers);
+        return Objects.hash(airlineIATA, airlineFlightId, departureAirportIATA, arrivalAirportIATA, arrivalAirportName, dateOfOperation, timeOfDeparture, timeOfArrival, scheduledStopovers);
     }
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this)
-                .add("flightId", flightId)
-                .add("airlineIATA", airlineIATA)
-                .add("airlineName", airlineName)
-                .add("airlineFlightId", airlineFlightId)
-                .add("departureAirportIATA", departureAirportIATA)
-                .add("arrivalAirportIATA", arrivalAirportIATA)
-                .add("departureAirportName", departureAirportName)
-                .add("arrivalAirportName", arrivalAirportName)
-                .add("dateOfOperation", dateOfOperation)
-                .add("timeOfDeparture", timeOfDeparture)
-                .add("timeOfArrival", timeOfArrival)
-                .add("lineDesignation", lineDesignation)
-                .add("stopsDesignation", stopsDesignation)
-                .add("timesDesignation", timesDesignation)
-                .add("scheduledStopovers", scheduledStopovers)
-                .toString();
+        return "ScheduledFlight{" +
+                "airlineIATA='" + airlineIATA + '\'' +
+                ", airlineFlightId='" + airlineFlightId + '\'' +
+                ", departureAirportIATA='" + departureAirportIATA + '\'' +
+                ", arrivalAirportIATA='" + arrivalAirportIATA + '\'' +
+                ", arrivalAirportName='" + arrivalAirportName + '\'' +
+                ", dateOfOperation=" + dateOfOperation +
+                ", timeOfDeparture=" + timeOfDeparture +
+                ", timeOfArrival=" + timeOfArrival +
+                ", scheduledStopovers=" + scheduledStopovers +
+                '}';
     }
 }

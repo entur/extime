@@ -1,7 +1,7 @@
 package no.rutebanken.extime.converter;
 
 import com.google.common.collect.Lists;
-import no.rutebanken.extime.model.AirlineDesignator;
+import no.rutebanken.extime.model.AirlineIATA;
 import no.rutebanken.extime.model.AirportIATA;
 import no.rutebanken.extime.util.DateUtils;
 import no.rutebanken.extime.util.NetexObjectFactory;
@@ -9,7 +9,6 @@ import org.apache.camel.ExchangeProperty;
 import org.rutebanken.netex.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import jakarta.xml.bind.JAXBElement;
@@ -28,17 +27,20 @@ public class CommonDataToNetexConverter {
 
     public static final String PROPERTY_NSR_QUAY_MAP = "NsrQuayMap";
 
-    @Autowired
-    private ObjectFactory objectFactory;
+    private final ObjectFactory objectFactory;
 
-    @Autowired
-    private NetexObjectFactory netexObjectFactory;
+    private final NetexObjectFactory netexObjectFactory;
 
-    @Autowired
-    private NetexCommonDataSet netexCommonDataSet;
+    private final NetexCommonDataSet netexCommonDataSet;
 
-    @Autowired
-    private DateUtils dateUtils;
+    private final DateUtils dateUtils;
+
+    public CommonDataToNetexConverter(ObjectFactory objectFactory, NetexObjectFactory netexObjectFactory, NetexCommonDataSet netexCommonDataSet, DateUtils dateUtils) {
+        this.objectFactory = objectFactory;
+        this.netexObjectFactory = netexObjectFactory;
+        this.netexCommonDataSet = netexCommonDataSet;
+        this.dateUtils = dateUtils;
+    }
 
     public JAXBElement<PublicationDeliveryStructure> convertToNetex(
             @ExchangeProperty(PROPERTY_NSR_QUAY_MAP) Map<String, Quay> nsrQuayMap) {
@@ -52,10 +54,10 @@ public class CommonDataToNetexConverter {
         JAXBElement<Authority> avinorAuthorityElement = netexObjectFactory.createAvinorAuthorityElement();
         List<JAXBElement<Authority>> authorityElements = List.of(avinorAuthorityElement);
 
-        List<JAXBElement<Operator>> operatorElements = new ArrayList<>(AirlineDesignator.values().length);
-        List<JAXBElement<Branding>> brandingElements = new ArrayList<>(AirlineDesignator.values().length);
+        List<JAXBElement<Operator>> operatorElements = new ArrayList<>(AirlineIATA.values().length);
+        List<JAXBElement<Branding>> brandingElements = new ArrayList<>(AirlineIATA.values().length);
 
-        for (AirlineDesignator designator : AirlineDesignator.values()) {
+        for (AirlineIATA designator : AirlineIATA.values()) {
             String designatorName = designator.name().toUpperCase();
             JAXBElement<Operator> operatorElement = netexObjectFactory.createAirlineOperatorElement(designatorName);
             operatorElements.add(operatorElement);
@@ -103,7 +105,7 @@ public class CommonDataToNetexConverter {
                 netexObjectFactory.createResourceFrameElement(authorityElements, operatorElements, brandingElements)
         );
 
-        for (AirlineDesignator designator : AirlineDesignator.values()) {
+        for (AirlineIATA designator : AirlineIATA.values()) {
             String designatorName = designator.name().toUpperCase();
             Network network = netexObjectFactory.createNetwork(publicationTimestamp, designatorName, null);
             networks.add(network);

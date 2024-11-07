@@ -29,13 +29,9 @@ import org.rutebanken.netex.model.TimetableFrame;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import jakarta.xml.bind.JAXBElement;
-import java.time.DayOfWeek;
-import java.time.LocalDate;
+
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -45,7 +41,6 @@ import static no.rutebanken.extime.Constants.UNDERSCORE;
 import static no.rutebanken.extime.Constants.VERSION_ONE;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SuppressWarnings("unchecked")
 class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationTestBase {
 
     @Autowired
@@ -181,24 +176,6 @@ class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationTestBase
         }
     }
 
-    private List<LocalDate> generatePattern(LocalDate start, LocalDate end, Set<DayOfWeek> daysOfWeek, int... exclusionArray) {
-        List<LocalDate> patternDates = new ArrayList<>();
-        Set<Integer> exclusions = new HashSet<>();
-        if (exclusionArray != null) {
-            Arrays.stream(exclusionArray).forEach(exclusions::add);
-        }
-
-        LocalDate current = start;
-        int i = 0;
-        while (!current.isAfter(end)) {
-            if (!exclusions.contains(i++) && daysOfWeek.contains(current.getDayOfWeek())) {
-                patternDates.add(current);
-            }
-            current = current.plusDays(1);
-        }
-        return patternDates;
-    }
-
     private void assertValidPublicationDelivery(PublicationDeliveryStructure publicationDelivery, String lineName) {
         assertThat(publicationDelivery).isNotNull();
         assertThat(publicationDelivery.getVersion()).isEqualTo(NETEX_PROFILE_VERSION);
@@ -209,19 +186,10 @@ class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationTestBase
         assertThat(publicationDelivery.getDataObjects()).isNotNull();
     }
 
-/*
-    private void assertValidNetwork(Network network, String airlineIata) {
-        assertThat(network).isNotNull();
-        assertThat(network.getId()).isEqualTo(String.format("AVI:Network:%s", airlineIata));
-        assertThat(network.getName().getValue()).isEqualTo(LineDataSetFixture.getAirlineName(airlineIata));
-    }
-*/
-
     private void assertValidLine(Line line, LineDataSet lineDataSet) {
         assertThat(line.getId()).isEqualTo(String.format("AVI:Line:%s_%s", lineDataSet.getAirlineIata(), lineDataSet.getLineDesignation()));
         assertThat(line.getName().getValue()).isEqualTo(lineDataSet.getLineName());
         assertThat(line.getTransportMode()).isEqualTo(AllVehicleModesOfTransportEnumeration.AIR);
-       // assertThat(line.getPublicCode()).isEqualTo(lineDataSet.getLineDesignation());
         assertThat(line.getOperatorRef().getRef()).isEqualTo(String.format("AVI:Operator:%s", lineDataSet.getAirlineIata()));
         assertThat(line.getRepresentedByGroupRef().getRef()).isEqualTo(String.format("AVI:Network:%s", lineDataSet.getAirlineIata()));
 
@@ -238,13 +206,13 @@ class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationTestBase
         List<Route> routes = routeElements.stream()
                 .map(JAXBElement::getValue)
                 .map(route -> (Route) route)
-                .collect(Collectors.toList());
+                .toList();
         assertThat(routes).hasSize(lineDataSet.getFlightRoutes().size());
 
         assertThat(routes).extracting(Route::getId).containsAll(getRouteIds(lineDataSet));
 
         Set<String> routeNames = lineDataSet.getFlightRoutes().stream()
-                .map(FlightRoute::getRouteName)
+                .map(FlightRoute::routeName)
                 .collect(Collectors.toSet());
         assertThat(routes).extracting("name.value").containsAll(routeNames);
 
@@ -257,7 +225,7 @@ class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationTestBase
         List<JourneyPattern> journeyPatterns = journeyPatternElements.stream()
                 .map(JAXBElement::getValue)
                 .map(journeyPattern -> (JourneyPattern) journeyPattern)
-                .collect(Collectors.toList());
+                .toList();
         assertThat(journeyPatterns).hasSize(lineDataSet.getFlightRoutes().size());
 
         assertThat(journeyPatterns).extracting(JourneyPattern::getId).containsAll(getJourneyPatternIds(lineDataSet));
@@ -266,22 +234,12 @@ class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationTestBase
         for(JourneyPattern jp : journeyPatterns) {
         	StopPointInJourneyPattern stopPoint = (StopPointInJourneyPattern) jp.getPointsInSequence().getPointInJourneyPatternOrStopPointInJourneyPatternOrTimingPointInJourneyPattern().getFirst();
             assertThat(stopPoint).extracting("destinationDisplayRef.ref").isNotNull();
-        	//assertThat(stopPoint).extracting("destinationDisplayRef.ref").containsOnlyElementsOf(getDestinationDisplayIds(lineDataSet));
-            //assertThat(stopPoint).extracting("destinationDisplayRef.version").contains(VERSION_ONE);
-
         }
-
-
-        // TODO add assertions for points in sequence
-        /*
-        journeyPatterns.forEach(journeyPattern -> assertThat(journeyPattern.getPointsInSequence()
-                .getPointInJourneyPatternOrStopPointInJourneyPatternOrTimingPointInJourneyPattern()).hasSize(2));
-        */
     }
 
     private Set<String> getRouteIds(LineDataSet lineDataSet) {
         return lineDataSet.getFlightRoutes().stream()
-                .map(FlightRoute::getRouteDesignation)
+                .map(FlightRoute::routeDesignation)
                 .map(designation -> Joiner.on(UNDERSCORE).join(lineDataSet.getAirlineIata(), designation))
                 .map(objectId -> NetexObjectIdCreator.hashObjectId(objectId, 10))
                 .map(hashedId -> String.format("AVI:Route:%s", hashedId))
@@ -290,19 +248,10 @@ class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationTestBase
 
     private Set<String> getJourneyPatternIds(LineDataSet lineDataSet) {
         return lineDataSet.getFlightRoutes().stream()
-                .map(FlightRoute::getRouteDesignation)
+                .map(FlightRoute::routeDesignation)
                 .map(designation -> Joiner.on(UNDERSCORE).join(lineDataSet.getAirlineIata(), designation))
                 .map(objectId -> NetexObjectIdCreator.hashObjectId(objectId, 10))
                 .map(hashedId -> String.format("AVI:JourneyPattern:%s", hashedId))
-                .collect(Collectors.toSet());
-    }
-
-    private Set<String> getDestinationDisplayIds(LineDataSet lineDataSet) {
-        return lineDataSet.getFlightRoutes().stream()
-                .map(FlightRoute::getRouteDesignation)
-                .map(designation -> Joiner.on(UNDERSCORE).join(lineDataSet.getAirlineIata(), designation))
-                .map(objectId -> NetexObjectIdCreator.hashObjectId(objectId, 10))
-                .map(hashedId -> String.format("AVI:DestinationDisplay:%s", hashedId))
                 .collect(Collectors.toSet());
     }
 
