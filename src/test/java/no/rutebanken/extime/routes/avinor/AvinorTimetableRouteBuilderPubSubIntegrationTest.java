@@ -1,7 +1,9 @@
 package no.rutebanken.extime.routes.avinor;
 
+import com.google.cloud.spring.pubsub.core.PubSubTemplate;
 import com.google.pubsub.v1.PubsubMessage;
 import no.rutebanken.extime.ExtimeCamelRouteBuilderIntegrationTestBase;
+import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
 import org.apache.camel.Produce;
 import org.apache.camel.ProducerTemplate;
@@ -22,10 +24,8 @@ import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEA
         "avinor.timetable.scheduler.consumer=direct:start",
         "avinor.timetable.period.forward=14",
         "avinor.timetable.feed.endpoint=mock:timetableFeedEndpoint",
-        "avinor.airport.feed.endpoint=mock:airportFeedEndpoint",
         "avinor.airports.small=EVE,KRS,MOL,SOG,TOS",
         "avinor.airports.large=BGO,BOO,SVG,TRD",
-        "avinor.airline.feed.endpoint=mock:airlineFeedEndpoint",
         "netex.generated.output.path=target/netex-mock",
         "netex.compressed.output.path=target/marduk-mock",
         "avinor.timetable.dump.output.path=target/flights"
@@ -34,7 +34,6 @@ class AvinorTimetableRouteBuilderPubSubIntegrationTest extends ExtimeCamelRouteB
 
     @Value("${queue.upload.destination.name}")
     private String notificationQueue;
-
 
     @Produce("direct:compressNetexAndSendToStorage")
     protected ProducerTemplate compressNetexAndSendToStorageTemplate;

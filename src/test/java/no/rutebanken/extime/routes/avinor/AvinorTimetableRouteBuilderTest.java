@@ -1,10 +1,12 @@
 package no.rutebanken.extime.routes.avinor;
 
+import com.google.cloud.spring.pubsub.core.PubSubTemplate;
 import no.rutebanken.extime.ExtimeCamelRouteBuilderIntegrationTestBase;
 import no.rutebanken.extime.model.AirlineIATA;
 import no.rutebanken.extime.model.AirportIATA;
 import no.rutebanken.extime.model.FlightEvent;
 import no.rutebanken.extime.model.StopVisitType;
+import org.apache.camel.CamelContext;
 import org.apache.camel.EndpointInject;
 import org.apache.camel.builder.AdviceWith;
 import org.apache.camel.component.mock.MockEndpoint;
@@ -23,10 +25,8 @@ import static no.rutebanken.extime.converter.CommonDataToNetexConverter.PROPERTY
         "avinor.timetable.scheduler.consumer=direct:start",
         "avinor.timetable.period.forward=14",
         "avinor.timetable.feed.endpoint=mock:timetableFeedEndpoint",
-        "avinor.airport.feed.endpoint=mock:airportFeedEndpoint",
         "avinor.airports.small=EVE,KRS,MOL,SOG,TOS",
         "avinor.airports.large=BGO,BOO,SVG,TRD",
-        "avinor.airline.feed.endpoint=mock:airlineFeedEndpoint",
         "netex.generated.output.path=target/netex-mock",
         "netex.compressed.output.path=target/marduk-mock",
         "queue.upload.destination.name=MockMardukQueue",
@@ -50,9 +50,14 @@ class AvinorTimetableRouteBuilderTest extends ExtimeCamelRouteBuilderIntegration
             );
         });
 
+        AdviceWith.adviceWith(context, "CompressNetexAndSendToStorage", a ->
+            a.weaveByToUri("direct:notifyMarduk").replace().to("mock:notifyMarduk")
+        );
+
+        mockNotifyMarduk.expectedMessageCount(1);
         context.start();
         startTemplate.sendBody(null);
-
+        mockNotifyMarduk.assertIsSatisfied();
 
     }
 
