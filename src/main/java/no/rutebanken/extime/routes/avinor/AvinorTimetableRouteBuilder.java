@@ -13,7 +13,6 @@ import org.apache.camel.AggregationStrategy;
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.converter.jaxb.JaxbDataFormat;
-import org.apache.camel.processor.aggregate.zipfile.ZipAggregationStrategy;
 import org.rutebanken.netex.model.PublicationDeliveryStructure;
 import org.springframework.stereotype.Component;
 
@@ -23,6 +22,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.stream.Stream;
 
 import static no.rutebanken.extime.Constants.HEADER_MESSAGE_CORRELATION_ID;
 import static no.rutebanken.extime.Constants.HEADER_MESSAGE_FILE_HANDLE;
@@ -133,10 +133,16 @@ public class AvinorTimetableRouteBuilder extends BaseRouteBuilder {
             .log(LoggingLevel.INFO, "Converting common line data to NeTEx")
             .log(LoggingLevel.INFO, this.getClass().getName(), "Cleaning NeTEx output directory : ${properties:netex.generated.output.path}")
             .process(exchange ->
-                        Files.list(Paths.get(exchange.getContext().resolvePropertyPlaceholders("{{netex.generated.output.path}}")))
-                                .filter(Files::isRegularFile)
-                                .map(Path::toFile)
-                                .forEach(File::delete))
+             {
+                Path outputPath = Paths.get(exchange.getContext().resolvePropertyPlaceholders("{{netex.generated.output.path}}"));
+                Files.createDirectories(outputPath);
+                 try (Stream<Path> list = Files.list(outputPath)) {
+                     list
+                             .filter(Files::isRegularFile)
+                             .map(Path::toFile)
+                             .forEach(File::delete);
+                 }
+             })
             .id("CleanNetexOutputPathProcessor")
             .log(LoggingLevel.INFO, this.getClass().getName(), "Converting common aviation data to NeTEx")
             .bean(CommonDataToNetexConverter.class, "convertToNetex")
@@ -171,36 +177,6 @@ public class AvinorTimetableRouteBuilder extends BaseRouteBuilder {
                 .filter().method(ScheduledFlightConverter.class, "isKnownAirlineName")
                 .bean(ScheduledFlightConverter.class, "getKnownAirlineName");
 
-
-        from("file:{{netex.generated.output.path}}?noop=true&idempotent=true&antInclude=**/*.xml")
-            .routeId("CompressAndSendToStorage")
-            .autoStartup(false)
-            .aggregate(new ZipAggregationStrategy(false, true))
-                .constant(true)
-                .completionFromBatchConsumer()
-                .eagerCheckCompletion()
-                .setHeader(Exchange.FILE_NAME, simple("avinor-netex_${bean:dateUtils.timestamp()}.zip"))
-                .to("file:{{netex.compressed.output.path}}")
-                .log(LoggingLevel.INFO, this.getClass().getName(), "Done compressing all files to zip archive : ${header.CamelFileName}")
-                .process(exchange -> exchange.getIn().setHeader(HEADER_MESSAGE_CORRELATION_ID, UUID.randomUUID().toString()))
-                .log(LoggingLevel.INFO, this.getClass().getName(), "Done storage upload of file : ${header.CamelFileName}")
-                .setHeader(HEADER_MESSAGE_PROVIDER_ID, simple("${properties:blobstore.provider.id}", Long.class))
-                .setHeader(HEADER_MESSAGE_FILE_HANDLE, simple("${properties:blobstore.blob.path}${header.CamelFileName}"))
-                .setHeader(HEADER_MESSAGE_FILE_NAME, simple("${header.CamelFileName}"))
-                .setHeader(HEADER_MESSAGE_USERNAME, simple("Extime"))
-                .setBody(constant(""))
-                .to("direct:notifyMarduk")
-                .process(exchange -> {
-                    Thread stop = new Thread(() -> {
-                        try {
-                            exchange.getContext().getRouteController().stopRoute(exchange.getFromRouteId());
-                        } catch (Exception ignored) {
-                            // Ignore
-                        }
-                    });
-                    stop.start();
-                });
-
         from("direct:compressNetexAndSendToStorage")
             .routeId("CompressNetexAndSendToStorage")
             .log(LoggingLevel.INFO, "Compressing XML files and send to storage")
@@ -212,15 +188,14 @@ public class AvinorTimetableRouteBuilder extends BaseRouteBuilder {
             .bean(mardukExchangeBlobStoreService, "uploadBlob")
             .id("UploadZipToBlobStore")
             .log(LoggingLevel.INFO, this.getClass().getName(), "Done storage upload of file : ${header.CamelFileName}")
-            .setHeader(HEADER_MESSAGE_PROVIDER_ID, simple("${properties:blobstore.provider.id}", Long.class))
-            .setHeader(HEADER_MESSAGE_FILE_NAME, simple("${header.CamelFileName}"))
-            .setHeader(HEADER_MESSAGE_USERNAME, simple("Extime"))
-            .setBody(constant(""))
-            .log(LoggingLevel.INFO, this.getClass().getName(), "Notifying marduk queue about NeTEx export")
-            .to("google-pubsub:{{extime.pubsub.project.id}}:{{queue.upload.destination.name}}");
+            .to("direct:notifyMarduk");
 
         from("direct:notifyMarduk")
                 .log(LoggingLevel.INFO, this.getClass().getName(), "Notifying marduk queue about NeTEx export")
+                .setHeader(HEADER_MESSAGE_PROVIDER_ID, simple("${properties:blobstore.provider.id}", Long.class))
+                .setHeader(HEADER_MESSAGE_FILE_NAME, simple("${header.CamelFileName}"))
+                .setHeader(HEADER_MESSAGE_USERNAME, simple("Extime"))
+                .setBody(constant(""))
                 .to("google-pubsub:{{extime.pubsub.project.id}}:{{queue.upload.destination.name}}")
                 .routeId("NotifyMarduk");
 

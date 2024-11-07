@@ -9,13 +9,7 @@ public class TestUtils {
 
     public static final ZonedDateTime ZDT_2017_01_01_00_00 = ZonedDateTime.parse("2017-01-01T00:00:00Z");
 
-    public static final ZonedDateTime ZDT_2017_01_02_00_00 = ZonedDateTime.parse("2017-01-02T00:00:00Z");
-    public static final ZonedDateTime ZDT_2017_01_03_00_00 = ZonedDateTime.parse("2017-01-03T00:00:00Z");
-
     public static final ZonedDateTime ZDT_2017_01_01_23_59 = ZonedDateTime.parse("2017-01-01T23:59:00Z");
-
-    public static final ZonedDateTime ZDT_2017_01_02_23_59 = ZonedDateTime.parse("2017-01-02T23:59:00Z");
-    public static final ZonedDateTime ZDT_2017_01_03_23_59 = ZonedDateTime.parse("2017-01-03T23:59:00Z");
 
     public static final ZonedDateTime ZDT_2017_01_01_06_00 = ZonedDateTime.parse("2017-01-01T06:00:00Z");
     public static final ZonedDateTime ZDT_2017_01_01_06_30 = ZonedDateTime.parse("2017-01-01T06:30:00Z");
