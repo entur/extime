@@ -4,7 +4,7 @@ Extime fetches flights information provided by [Avinor](https://avinor.no), the 
 
 Avinor publishes flights information through its [flight data web service portal](https://avinor.no/konsern/tjenester/flydata), using a custom XML format.
 
-These dataset are downloaded, combined and converted into NeTEx timetables compliant with the [Nordic NeTEx Profile](https://enturas.atlassian.net/wiki/spaces/PUBLIC/pages/728891481/Nordic+NeTEx+Profile).
+These datasets are downloaded, combined and converted into NeTEx timetables compliant with the [Nordic NeTEx Profile](https://enturas.atlassian.net/wiki/spaces/PUBLIC/pages/728891481/Nordic+NeTEx+Profile).
 Ultimately the flight timetables are injected into the [Norwegian National Journey Planner](https://en-tur.no) and used to provide multi-modal journey planning. 
 
 # Dataflows
@@ -42,18 +42,19 @@ Main parameters:
 |-------------------------------------|:---------------------------------------------------------------:|
 | avinor.timetable.feed.endpoint      |                   Flights timetables endpoint                   |
 | avinor.timetable.scheduler.consumer | Configuration of the frequency of the Flight information import |
-| avinor.timetable.period.forward     |         Time window for which flight data are imported          |
+| avinor.timetable.period.forward     |      Time window for which future flight data are imported      |
+| avinor.timetable.period.back        |       Time window for which past flight data are imported       |
 
 ## Workflow overview
 - For each whitelisted airport, Extime sends a query to the Avinor REST API and retrieves all passenger flights over a given time period.
-- The API returns a list of Flight objects that represent either a departure or an arrival at a given airport.
-- The arrival and departure of a given flight are matched by their unique ID and mapped to a FlightLeg object.
-- A heuristic searches among all FlightLegs those that are part of a multi-leg flight:
+- The API returns a list of _Flight_ objects that represent either a departure or an arrival at a given airport.
+- The arrival and departure of a given flight are matched by their unique ID and mapped to a _FlightLeg_ object.
+- A heuristic searches among all _FlightLegs_ those that are part of a multi-leg flight:
   - they share the same airline and flight number,
   - a given leg arrives at the same airport as the one the next leg departs from,
   - the layover between the two legs is less than 3 hours.
-- Single-leg and multi-leg flights are mapped to ScheduledFlight objects.
-- ScheduledFlights are grouped together to build NeTEx ServiceJourneys, JourneyPatterns, Routes and Lines
+- Single-leg and multi-leg flights are mapped to _ScheduledFlight_ objects.
+- _ScheduledFlights_ are grouped together to build NeTEx ServiceJourneys, JourneyPatterns, Routes and Lines
 
 ## System integration
 
@@ -78,37 +79,17 @@ blobstore.local.folder=/path/to/local/directory
 spring.cloud.gcp.pubsub.emulatorHost=localhost:8085
 ```
 
-# Building and running
-
-* Build: `mvn clean install`
-* Local run, three different run modes are available: 
-    * Dump mode, used to dump remotely fetched data to file for later reuse.
-        * Enable dump mode in your local configuration file : `avinor.timetable.dump.output=true`
-        * Choose your local directory, used to save the dump file, in property : `avinor.timetable.dump.output.path=$HOME/dev/git/extime/target/dump`
-        * Configure the time window needed to fetch data for, starting from 00:01 AM the current date, by changing the property: `avinor.timetable.period.forward`, default is 14 days
-        * Run : `mvn spring-boot:run -Dspring.profiles.active=dev -Dspring.config.location=$HOME/config/extime_application.properties`
-    * Offline mode, uses a dump file, produced by above mode, instead of fetching from remote. Should only be used in dev environment. (Great for debugging!)
-        * N.B. To run this mode, the application expects the availability of a dump file, produced in dump mode.
-        * If you have dump mode enabled, disable in your local configuration file : `avinor.timetable.dump.output=false`
-        * Run : `mvn spring-boot:run -Dspring.profiles.active=dev -Dspring.config.location=$HOME/config/extime_application.properties -Davinor.timetable.dump.file=$HOME/dev/git/extime/target/dump/dump.xml`
-    * Normal mode, fetches all data from remote feed. This is the normal mode used in test and prod environment.
-        * Configure the time window needed to fetch data for, starting from 00:01 AM the current date, by changing the property: `avinor.timetable.period.forward`, default is 14 days 
-        * Run : `mvn spring-boot:run -Dspring.profiles.active=dev -Dspring.config.location=$HOME/config/extime_application.properties`
-* Local debug run with Maven, to enable maven debugging, add the following configuration to the `spring-boot-maven-plugin` plugin in pm.xml:
+# Local testing
+Use the following properties to capture the XML data sent by the Avinor REST API:
 ```
-<configuration>
-    <jvmArguments>-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005</jvmArguments>
-</configuration>
+avinor.timetable.dump.output=true
+avinor.timetable.dump.output.path=/home/user/extime/data/dump
 ```
-* Run the docker image in docker on dev machine:
-     * `docker run -it --name extime -e JAVA_OPTIONS="-Xmx1280m -Dspring.profiles.active=dev" rutebanken/extime:0.0.1-SNAPSHOT`
-* 
+Use the following properties to use the dumped data as input:
+```
+avinor.timetable.dump.input=true
+avinor.timetable.dump.input.path=/home/user/extime/data/input
+```
 # Readiness and liveness
+Readiness and liveness probes are provided by Spring Boot Actuator (/actuator/health/readiness, /actuator/health/liveness)
 
-For now, use the following health endpoint:
-
-```
-
-http://127.0.0.1:9001/health
-
-```

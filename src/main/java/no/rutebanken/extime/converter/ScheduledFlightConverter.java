@@ -83,6 +83,8 @@ public class ScheduledFlightConverter {
             }
         }
 
+        LOGGER.info("Converted {} scheduled flights", mergedScheduledFlights.size());
+
         List<LineDataSet> lineDataSets = new ArrayList<>();
 
         // group by airline iata and unique lines
