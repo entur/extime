@@ -23,7 +23,7 @@ jobs:
           wget https://raw.githubusercontent.com/entur/ror-maven-settings/master/.m2/settings.xml -O .github/workflows/settings.xml
       - uses: actions/setup-java@v4
         with:
-          java-version: 21.0.1+12
+          java-version: 21.0.5+11
           distribution: liberica
       - name: Cache Maven dependencies
         uses: actions/cache@v4
@@ -56,12 +56,12 @@ jobs:
                   -Dsonar.host.url=https://sonarcloud.io \
                   -Dsonar.token=${SONAR_TOKEN}
   docker-build:
+    if: github.repository_owner == 'entur' && github.event_name == 'push' && github.ref == 'refs/heads/master'
     needs: [maven-verify]
     uses: entur/gha-docker/.github/workflows/build.yml@v1
     with:
       build_artifact_name: artifact
       build_artifact_path: target
   docker-push:
-    if: github.repository_owner == 'entur' && github.event_name == 'push'
     needs: [docker-build]
     uses: entur/gha-docker/.github/workflows/push.yml@v1
