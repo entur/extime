@@ -1,4 +1,4 @@
-# extime [![CircleCI](https://circleci.com/gh/entur/extime/tree/master.svg?style=svg)](https://circleci.com/gh/rutebanken/extime/tree/master)
+# Extime
 
 Extime fetches flights information provided by [Avinor](https://avinor.no), the company operating most Norwegian airports, and converts them into NeTEx-compliant timetables.
 
@@ -11,7 +11,7 @@ Ultimately the flight timetables are injected into the [Norwegian National Journ
 
 ## Input
 Extime makes use of the following dataset provided by Avinor:
-- Flights timetables: https://asrv.avinor.no/XmlFeed/v1.0
+- Flights timetables: https://asrv.avinor.no/XmlFeedScheduled/v1.0
 
 ## Output
 Extimes converts the flight data into a set of NeTEx documents packaged as a zip file following the [Nordic NeTEx Profile delivery format](https://enturas.atlassian.net/wiki/spaces/PUBLIC/pages/728563782/General+information+NeTEx#Generalinformation:NeTEx-PublicationDeliveryExchanginginformation).
@@ -48,7 +48,7 @@ Main parameters:
 ## Workflow overview
 - For each whitelisted airport, Extime sends a query to the Avinor REST API and retrieves all departure for passenger flights over a given time period.
 - The API returns a list of _Flight_ objects that represent a single departure.
-- The _Flight_ objects are successively mapped to _FlightEvent_ and _FlightLeg_ object.
+- The _Flight_ objects are successively mapped to _FlightEvent_  and _FlightLeg_ object.
 - A heuristic searches among all _FlightLegs_ those that are part of a multi-leg flight:
   - they share the same airline and flight number,
   - a given leg arrives at the same airport as the one the next leg departs from,
