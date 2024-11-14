@@ -31,7 +31,10 @@ public class FlightEventMapper {
                 .filter(flight -> whitelistedAirports.contains(flight.getDepartureStation()))
                 .filter(flight -> whitelistedAirports.contains(flight.getArrivalStation()))
                 .filter(flight -> whitelistedAirlines.contains(flight.getAirlineDesignator()))
+                // keeping only scheduled passenger flights (not charter flights)
                 .filter(flight -> "J".equals(flight.getServiceType()) )
+                // filtering out invalid input data with departure airport == arrival airport
+                .filter(flight -> !flight.getDepartureStation().equals(flight.getArrivalStation()))
                 .map(FlightEventMapper::toFlightEvent)
                 .toList();
     }
