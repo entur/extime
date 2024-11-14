@@ -1,9 +1,12 @@
 package no.rutebanken.extime.model;
 
-public record FlightRequest(String uri, String airportName, long fromHour, long toHour) {
+import java.time.LocalDate;
+
+public record FlightRequest(String uri, String airportName, LocalDate fromDate, LocalDate toDate) {
 
     public String request() {
-        return "%s?airport=%s&TimeFrom=%s&TimeTo=%s&serviceType=J".formatted(uri, airportName, fromHour, toHour);
+        return "%s?airport=%s&PeriodFrom=%s&PeriodTo=%s&direction=D".formatted(uri, airportName, fromDate, toDate);
     }
 
 }
+

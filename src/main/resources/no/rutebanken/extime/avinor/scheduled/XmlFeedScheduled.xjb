@@ -3,5 +3,8 @@
                xmlns:xjc="http://java.sun.com/xml/ns/jaxb/xjc" jaxb:version="3.0" jaxb:extensionBindingPrefixes="xjc">
         <jaxb:globalBindings underscoreBinding="asCharInWord">
              <xjc:javaType name="java.time.ZonedDateTime" xmlType="xs:dateTime" adapter="io.github.threetenjaxb.core.ZonedDateTimeXmlAdapter" />
+             <xjc:javaType name="java.time.LocalTime" xmlType="xs:time" adapter="org.rutebanken.util.LocalTimeISO8601XmlAdapter"  />
+             <xjc:javaType name="java.time.ZonedDateTime" xmlType="xs:date" adapter="no.rutebanken.extime.xmladapter.ZonedDateTimeFromDateXmlAdapter" />
+			 <xjc:javaType name="java.time.Duration" xmlType="xs:duration" adapter="io.github.threetenjaxb.core.DurationXmlAdapter" />
         </jaxb:globalBindings>
 </jaxb:bindings>

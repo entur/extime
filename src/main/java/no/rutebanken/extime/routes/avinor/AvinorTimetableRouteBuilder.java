@@ -1,7 +1,7 @@
 package no.rutebanken.extime.routes.avinor;
 
 import com.google.common.collect.Lists;
-import no.avinor.flydata.xjc.model.scheduled.Airport;
+import no.avinor.flydata.xjc.model.scheduled.Flights;
 import no.rutebanken.extime.converter.CommonDataToNetexConverter;
 import no.rutebanken.extime.converter.LineDataToNetexConverter;
 import no.rutebanken.extime.converter.ScheduledFlightConverter;
@@ -62,7 +62,7 @@ public class AvinorTimetableRouteBuilder extends BaseRouteBuilder {
         netexJaxbDataFormat.setEncoding(DEFAULT_NETEX_CHARSET_NAME);
 
         JaxbDataFormat airportJaxbDataFormat = new JaxbDataFormat();
-        airportJaxbDataFormat.setContextPath(Airport.class.getPackage().getName());
+        airportJaxbDataFormat.setContextPath(Flights.class.getPackage().getName());
         airportJaxbDataFormat.setEncoding(DEFAULT_NETEX_CHARSET_NAME);
 
         from("{{avinor.timetable.scheduler.consumer}}")
@@ -88,7 +88,7 @@ public class AvinorTimetableRouteBuilder extends BaseRouteBuilder {
             .split(body(), new ScheduledFlightListAggregationStrategy())
                 .parallelProcessing()
                 .log(LoggingLevel.INFO, this.getClass().getName(),
-                        "Fetching flights for ${body.airportName} and hours range : [-${body.fromHour} , ${body.toHour}]")
+                        "Fetching flights for ${body.airportName} and date range : [${body.fromDate} , ${body.toDate}]")
                 .to("direct:fetchTimetableForAirport")
             .end()
             .routeId("FetchFlights");
@@ -110,7 +110,7 @@ public class AvinorTimetableRouteBuilder extends BaseRouteBuilder {
             .end()
             // convert using the charset retrieved from the HTTP response header that Camel sets in the property Exchange.CHARSET_NAME
             .unmarshal(airportJaxbDataFormat)
-            .setBody(exchange -> flightEventMapper.mapToFlightEvent(exchange.getIn().getBody(Airport.class)))
+            .setBody(exchange -> flightEventMapper.mapToFlightEvent(exchange.getIn().getBody(Flights.class)))
             .log(LoggingLevel.DEBUG, this.getClass().getName(), "Retrieved ${body.size} flight events")
             // remove the property Exchange.CHARSET_NAME after the conversion so that the JAXB formats can be overriden with a custom encoding
             .removeProperty(Exchange.CHARSET_NAME)

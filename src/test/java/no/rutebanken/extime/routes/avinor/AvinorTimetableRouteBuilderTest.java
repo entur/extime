@@ -4,7 +4,6 @@ import no.rutebanken.extime.ExtimeCamelRouteBuilderIntegrationTestBase;
 import no.rutebanken.extime.model.AirlineIATA;
 import no.rutebanken.extime.model.AirportIATA;
 import no.rutebanken.extime.model.FlightEvent;
-import no.rutebanken.extime.model.StopVisitType;
 import org.apache.camel.EndpointInject;
 import org.apache.camel.builder.AdviceWith;
 import org.apache.camel.component.mock.MockEndpoint;
@@ -14,8 +13,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import java.util.HashMap;
 import java.util.List;
 
-import static no.rutebanken.extime.TestUtils.ZDT_2017_01_01_00_00;
-import static no.rutebanken.extime.TestUtils.ZDT_2017_01_01_23_59;
+import static no.rutebanken.extime.TestUtils.*;
 import static no.rutebanken.extime.converter.CommonDataToNetexConverter.PROPERTY_NSR_QUAY_MAP;
 
 
@@ -59,11 +57,10 @@ class AvinorTimetableRouteBuilderTest extends ExtimeCamelRouteBuilderIntegration
 
     }
 
-
-    private List<FlightEvent> createDummyFlightEvents() {
+    private static List<FlightEvent> createDummyFlightEvents() {
         return List.of(
-                new FlightEvent(StopVisitType.DEPARTURE, 1L, "DY1", AirlineIATA.DY, AirportIATA.OSL, ZDT_2017_01_01_00_00),
-                new FlightEvent(StopVisitType.ARRIVAL, 1L, "DY1", AirlineIATA.DY, AirportIATA.BGO, ZDT_2017_01_01_23_59)
+                new FlightEvent(1L, "DY1", AirlineIATA.DY, AirportIATA.OSL, AirportIATA.BGO, ZDT_2017_01_01, LT_00_00, LT_01_00),
+                new FlightEvent(1L, "DY1", AirlineIATA.DY, AirportIATA.BGO, AirportIATA.TRD, ZDT_2017_01_01, LT_00_00, LT_01_00)
         );
 
     }
