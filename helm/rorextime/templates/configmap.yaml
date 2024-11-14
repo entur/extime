@@ -27,7 +27,7 @@ data:
     avinor.timetable.feed.endpoint=https://asrv.avinor.no/XmlFeedScheduled/v1.0
     avinor.timetable.scheduler.consumer=quartz://avinorTimetableScheduler?cron={{ .Values.avinorTimetableSchedulerCron }}
     avinor.timetable.dump.output.path=/tmp/extime/data/dump
-    avinor.timetable.period.forward=14d
+    avinor.timetable.period.forward=120d
     avinor.timetable.period.back=2d
     netex.compressed.output.path=/tmp/extime/data/zip
     netex.generated.output.path=/tmp/extime/data/netex
