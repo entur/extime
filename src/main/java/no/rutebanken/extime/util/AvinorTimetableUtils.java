@@ -1,7 +1,7 @@
 package no.rutebanken.extime.util;
 
 import com.google.common.collect.Maps;
-import no.avinor.flydata.xjc.model.scheduled.Airport;
+import no.avinor.flydata.xjc.model.scheduled.Flights;
 import no.rutebanken.extime.model.*;
 import org.apache.camel.Exchange;
 import org.apache.camel.Header;
@@ -77,10 +77,11 @@ public class AvinorTimetableUtils {
     }
 
     public List<FlightEvent> generateFlightEventsFromFeedDump(String inputDir) throws IOException {
+        FlightEventMapper flightEventMapper = new FlightEventMapper();
         try (Stream<Path> list = Files.list(Path.of(inputDir))) {
-            return list
-                    .map(path -> generateObjectsFromXml(path.toFile(), Airport.class))
-                    .map(airport -> new FlightEventMapper().mapToFlightEvent(airport))
+                    return list
+                    .map(path -> generateObjectsFromXml(path.toFile(), Flights.class))
+                    .map(flightEventMapper::mapToFlightEvent)
                     .flatMap(Collection::stream)
                     .toList();
         }

@@ -24,7 +24,7 @@ data:
     camel.springboot.useMdcLogging=true
     camel.springboot.messageHistory=true
     # Avinor data set import
-    avinor.timetable.feed.endpoint=https://asrv.avinor.no/XmlFeed/v1.0
+    avinor.timetable.feed.endpoint=https://asrv.avinor.no/XmlFeedScheduled/v1.0
     avinor.timetable.scheduler.consumer=quartz://avinorTimetableScheduler?cron={{ .Values.avinorTimetableSchedulerCron }}
     avinor.timetable.dump.output.path=/tmp/extime/data/dump
     avinor.timetable.period.forward=14d

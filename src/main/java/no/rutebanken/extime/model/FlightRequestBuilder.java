@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 
@@ -34,9 +35,14 @@ public class FlightRequestBuilder {
     }
 
     public List<FlightRequest> generateFlightRequests() {
-        long numHourForward = durationForward.toHours();
-        long numHourBack = durationBack.toHours();
-        return Arrays.stream(AirportIATA.values()).map(airportIATA -> new FlightRequest(uri, airportIATA.name(), numHourBack, numHourForward)).toList();
+        return generateFlightRequestsForDay(LocalDate.now());
+    }
+
+    List<FlightRequest> generateFlightRequestsForDay(LocalDate today) {
+        LocalDate from = today.minusDays(durationBack.toDays());
+        LocalDate to = today.plusDays(durationForward.toDays());
+        return Arrays.stream(AirportIATA.values()).map(airportIATA -> new FlightRequest(uri, airportIATA.name(), from, to)).toList();
 
     }
 }
+

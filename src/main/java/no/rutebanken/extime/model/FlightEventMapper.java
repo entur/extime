@@ -1,6 +1,5 @@
 package no.rutebanken.extime.model;
 
-import no.avinor.flydata.xjc.model.scheduled.Airport;
 import no.avinor.flydata.xjc.model.scheduled.Flight;
 import no.avinor.flydata.xjc.model.scheduled.Flights;
 
@@ -23,35 +22,31 @@ public class FlightEventMapper {
                 .collect(Collectors.toUnmodifiableSet());
     }
 
-    public List<FlightEvent> mapToFlightEvent(Airport airport) {
-        return airport.getContent()
-                .stream()
-                .filter(Flights.class::isInstance)
-                .map(Flights.class::cast)
-                .map(Flights::getFlight)
-                .flatMap(java.util.Collection::stream)
-                .filter(flight -> whitelistedAirports.contains(flight.getAirport()))
-                .filter(flight -> whitelistedAirlines.contains(flight.getAirline()))
-                .map(flight -> toFlightEvent(airport, flight))
+    public List<FlightEvent> mapToFlightEvent(Flights flightsInAirport) {
+        List<Flight> flights = flightsInAirport.getFlight();
+        if (flights == null) {
+            return List.of();
+        }
+        return flights.stream()
+                .filter(flight -> whitelistedAirports.contains(flight.getDepartureStation()))
+                .filter(flight -> whitelistedAirports.contains(flight.getArrivalStation()))
+                .filter(flight -> whitelistedAirlines.contains(flight.getAirlineDesignator()))
+                .filter(flight -> "J".equals(flight.getServiceType()) )
+                .map(FlightEventMapper::toFlightEvent)
                 .toList();
     }
 
-    private static FlightEvent toFlightEvent(Airport airport, Flight flight) {
+    private static FlightEvent toFlightEvent(Flight flight) {
+        AirlineIATA airline = AirlineIATA.valueOf(flight.getAirlineDesignator());
         return new FlightEvent(
-                getEventType(flight.getArr_Dep()),
-                flight.getUniqueID(),
-                flight.getFlight_Id(),
-                AirlineIATA.valueOf(flight.getAirline()),
-                AirportIATA.valueOf(airport.getName()),
-                flight.getSchedule_Time());
+                flight.getId().longValue(),
+                airline.name() + flight.getFlightNumber(),
+                airline,
+                        AirportIATA.valueOf(flight.getDepartureStation()),
+                        AirportIATA.valueOf(flight.getArrivalStation()),
+                        flight.getDateOfOperation(),
+                        flight.getStd(),
+                        flight.getSta()
+                );
     }
-
-    private static StopVisitType getEventType(String arrDep) {
-        return switch (arrDep) {
-            case "A" -> StopVisitType.ARRIVAL;
-            case "D" -> StopVisitType.DEPARTURE;
-            default -> throw new IllegalArgumentException("Unknown arrival/departure code: " + arrDep);
-        };
-    }
-
 }
