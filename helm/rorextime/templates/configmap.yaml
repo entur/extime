@@ -23,7 +23,10 @@ data:
     camel.springboot.shutdownTimeout=25
     camel.springboot.useMdcLogging=true
     camel.springboot.messageHistory=true
-    # Avinor data set import
+    camel.threadpool.pool-size=4
+    camel.threadpool.max-pool-size=4
+
+  # Avinor data set import
     avinor.timetable.feed.endpoint=https://asrv.avinor.no/XmlFeedScheduled/v1.0
     avinor.timetable.scheduler.consumer=quartz://avinorTimetableScheduler?cron={{ .Values.avinorTimetableSchedulerCron }}
     avinor.timetable.dump.output.path=/tmp/extime/data/dump

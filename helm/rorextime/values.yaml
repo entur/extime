@@ -8,7 +8,7 @@ common:
     internalPort: 8080
   container:
     image: <+artifacts.primary.image>
-    cpu: 0.5
+    cpu: 1
     memory: 800
     memoryLimit: 1000
     probes:
@@ -32,7 +32,7 @@ common:
     enabled: false
   configmap:
     data:
-      JDK_JAVA_OPTIONS: -server -Xmx512m -Dspring.config.additional-location=/etc/application-config/application.properties
+      JDK_JAVA_OPTIONS: -server -Xmx512m -XX:ActiveProcessorCount=1 -Dspring.config.additional-location=/etc/application-config/application.properties
         -Dfile.encoding=UTF-8
       TZ: Europe/Oslo
     enabled: true
