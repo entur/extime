@@ -58,15 +58,20 @@ public class FlightLeg {
         return flightNumber;
     }
 
+    /**
+     * Return true if this FlightLeg is the next leg of the given FlightLeg, in a multi-leg flight.
+     * <br>This is true if this leg:
+     * <ul>
+     *     <li>has the same flight number as the given FlightLeg,</li>
+     *     <li>departs from the airport where the given FlightLeg lands,</li>
+     *     <li>departs soon after the given FlightLeg lands.</li>
+     * </ul>
+     * Flight numbers are unique across all airlines since they are prefixed by the airline IATA code.
+     */
     public boolean isNextLegOf(FlightLeg other) {
-        return hasSameAirlineAs(other)
-                && hasSameFlightNumberAs(other)
+        return hasSameFlightNumberAs(other)
                 && departFromArrivalAirportOf(other)
                 && departSoonAfterArrivalOf(other);
-    }
-
-    boolean hasSameAirlineAs(FlightLeg other) {
-        return this.getAirlineDesignator().equals(other.getAirlineDesignator());
     }
 
     boolean hasSameFlightNumberAs(FlightLeg other) {
