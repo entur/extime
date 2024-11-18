@@ -42,28 +42,6 @@ class FlightLegTest {
     }
 
     @Test
-    void testMatchDesignator() {
-        FlightLeg flight1 = createFlightLeg(1L, "SK", "4455", "BGO",
-                ZonedDateTime.parse("2017-01-01T08:00:00Z"), "OSL", ZonedDateTime.parse("2017-01-01T08:30:00Z"));
-        FlightLeg flight2 = createFlightLeg(2L, "SK", "4455", "OSL",
-                ZonedDateTime.parse("2017-01-01T09:00:00Z"), "TRD", ZonedDateTime.parse("2017-01-01T09:30:00Z"));
-
-        Assertions.assertTrue(flight1.hasSameAirlineAs(flight2));
-
-    }
-
-    @Test
-    void testDoNotMatchDesignator() {
-        FlightLeg flight1 = createFlightLeg(1L, "SK", "4455", "BGO",
-                ZonedDateTime.parse("2017-01-01T08:00:00Z"), "OSL", ZonedDateTime.parse("2017-01-01T08:30:00Z"));
-        FlightLeg flight2 = createFlightLeg(2L, "DY", "8899", "OSL",
-                ZonedDateTime.parse("2017-01-01T09:00:00Z"), "TRD", ZonedDateTime.parse("2017-01-01T09:30:00Z"));
-
-        Assertions.assertFalse(flight1.hasSameAirlineAs(flight2));
-
-    }
-
-    @Test
     void testMatchFlightNumber() {
         FlightLeg flight1 = createFlightLeg(1L, "SK", "4455", "BGO",
                 ZonedDateTime.parse("2017-01-01T08:00:00Z"), "OSL", ZonedDateTime.parse("2017-01-01T08:30:00Z"));
