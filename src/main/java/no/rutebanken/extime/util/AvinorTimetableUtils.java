@@ -32,7 +32,6 @@ import java.text.StringCharacterIterator;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 @Component
@@ -146,23 +145,22 @@ public class AvinorTimetableUtils {
     }
 
     public void compressNetexFiles(Exchange exchange, @Header(Exchange.FILE_NAME) String compressedFileName) {
-        Path netexOutputPath = Paths.get(generatedOutputPath);
-        Path zipOutputPath = Paths.get(compressedOutputPath);
-        Path zipOutputFilePath = Paths.get(zipOutputPath.toString(), compressedFileName);
-        PathMatcher matcher = netexOutputPath.getFileSystem().getPathMatcher(XML_GLOB);
-        Predicate<Path> isRegularFile = path -> Files.isRegularFile(path, LinkOption.NOFOLLOW_LINKS);
-
-        if (!Files.exists(zipOutputPath)) {
-            try {
-                Files.createDirectory(zipOutputPath);
-            } catch (IOException e) {
-                throw new ExtimeException("Error while compressing NeTEx files", e);
-            }
+        Path netexOutputDirPath = Paths.get(generatedOutputPath);
+        Path zipOutputDirPath = Paths.get(compressedOutputPath);
+        try {
+            Files.createDirectories(netexOutputDirPath);
+            Files.createDirectories(zipOutputDirPath);
+        } catch (IOException e) {
+            throw new ExtimeException("Error while compressing NeTEx files", e);
         }
 
-        try (Stream<Path> stream = Files.list(netexOutputPath)) {
+        Path zipOutputFilePath = zipOutputDirPath.resolve(compressedFileName);
+        PathMatcher matcher = netexOutputDirPath.getFileSystem().getPathMatcher(XML_GLOB);
+
+        try (Stream<Path> stream = Files.list(netexOutputDirPath)) {
             File[] files = stream
-                    .filter(isRegularFile.and(path -> matcher.matches(path.getFileName())))
+                    .filter(path -> Files.isRegularFile(path, LinkOption.NOFOLLOW_LINKS))
+                    .filter(path -> matcher.matches(path.getFileName()))
                     .map(Path::toFile)
                     .toArray(File[]::new);
             ZipUtil.packEntries(files, zipOutputFilePath.toFile());
