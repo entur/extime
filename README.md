@@ -46,9 +46,9 @@ Main parameters:
 | avinor.timetable.period.back        |       Time window for which past flight data are imported       |
 
 ## Workflow overview
-- For each whitelisted airport, Extime sends a query to the Avinor REST API and retrieves all departure for passenger flights over a given time period.
+- For each whitelisted airport, Extime sends a query to the Avinor REST API and retrieves all departures for passenger flights over a given time period.
 - The API returns a list of _Flight_ objects that represent a single departure.
-- The _Flight_ objects are successively mapped to _FlightEvent_  and _FlightLeg_ object.
+- The _Flight_ objects are successively mapped to _FlightEvent_  and _FlightLeg_ objects.
 - A heuristic searches among all _FlightLegs_ those that are part of a multi-leg flight:
   - they share the same airline and flight number,
   - a given leg arrives at the same airport as the one the next leg departs from,

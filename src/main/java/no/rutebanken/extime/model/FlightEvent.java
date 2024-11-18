@@ -11,8 +11,8 @@ import java.time.LocalTime;
  * @param departureAirport the departure airport IATA code.
  * @param arrivalAirport the arrival airport IATA code.
  * @param dateOfOperation the scheduled date of operation.
- * @param departureTime the departure time in the time zone of the operation day.
- * @param arrivalTime the arrival time in the time zone of the operation day.
+ * @param departureTime the departure time in the time zone of the date of operation.
+ * @param arrivalTime the arrival time in the time zone of the date of operation.
  */
 public record FlightEvent(
         long flightId,
