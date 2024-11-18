@@ -85,7 +85,7 @@ public class AvinorTimetableRouteBuilder extends BaseRouteBuilder {
         from("direct:fetchFlights")
             .log(LoggingLevel.INFO, this.getClass().getName(), "Fetching data from feed")
             .bean(FlightRequestBuilder.class, "generateFlightRequests")
-            .split(body(), new ScheduledFlightListAggregationStrategy())
+            .split(body(), new FlightEventListAggregationStrategy())
                 .parallelProcessing()
                 .log(LoggingLevel.INFO, this.getClass().getName(),
                         "Fetching flights for ${body.airportName} and date range : [${body.fromDate} , ${body.toDate}]")
@@ -202,27 +202,27 @@ public class AvinorTimetableRouteBuilder extends BaseRouteBuilder {
     }
 
 
-    private static class ScheduledFlightListAggregationStrategy implements AggregationStrategy {
+    private static class FlightEventListAggregationStrategy implements AggregationStrategy {
         @Override
         @SuppressWarnings("unchecked")
         public Exchange aggregate(Exchange oldExchange, Exchange newExchange) {
             Object body = newExchange.getIn().getBody();
 
             if (oldExchange == null) {
-                List<FlightEvent> scheduledFlights = Lists.newArrayList();
+                List<FlightEvent> flightEvents = Lists.newArrayList();
 
                 if (isCollection(body)) {
-                    scheduledFlights.addAll((List<FlightEvent>) body);
+                    flightEvents.addAll((List<FlightEvent>) body);
                 }
 
-                newExchange.getIn().setBody(scheduledFlights);
+                newExchange.getIn().setBody(flightEvents);
                 return newExchange;
             } else {
-                List<FlightEvent> scheduledFlights = Collections.checkedList(
+                List<FlightEvent> flightEvents = Collections.checkedList(
                         oldExchange.getIn().getBody(List.class), FlightEvent.class);
 
                 if (isCollection(body)) {
-                    scheduledFlights.addAll((List<FlightEvent>) body);
+                    flightEvents.addAll((List<FlightEvent>) body);
                 }
 
                 return oldExchange;
