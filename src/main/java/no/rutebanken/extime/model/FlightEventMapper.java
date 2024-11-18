@@ -41,9 +41,10 @@ public class FlightEventMapper {
 
     private static FlightEvent toFlightEvent(Flight flight) {
         AirlineIATA airline = AirlineIATA.valueOf(flight.getAirlineDesignator());
+        String flightNumber = (airline.name() + flight.getFlightNumber()).intern();
         return new FlightEvent(
                 flight.getId().longValue(),
-                airline.name() + flight.getFlightNumber(),
+                flightNumber,
                 airline,
                         AirportIATA.valueOf(flight.getDepartureStation()),
                         AirportIATA.valueOf(flight.getArrivalStation()),
