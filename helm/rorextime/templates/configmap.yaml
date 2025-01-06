@@ -17,9 +17,9 @@ data:
     management.endpoints.web.exposure.include=health,prometheus
     management.endpoints.jmx.exposure.exclude=*
     # Camel
-    camel.springboot.name=extime
-    camel.springboot.streamCachingEnabled=false
-    camel.springboot.streamCachingSpoolEnabled=true
+    camel.main.name=extime
+    camel.main.stream-caching-enabled=false
+    camel.main.stream-caching-spool-enabled=true
     camel.springboot.shutdownTimeout=25
     camel.springboot.useMdcLogging=true
     camel.springboot.messageHistory=true
