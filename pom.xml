@@ -45,7 +45,7 @@
         <entur.google.pubsub.emulator.download.skip>false</entur.google.pubsub.emulator.download.skip>
 
         <netex-java-model.version>2.0.15</netex-java-model.version>
-        <netex-parser-java.version>3.1.36</netex-parser-java.version>
+        <netex-parser-java.version>3.1.37</netex-parser-java.version>
         <siri-java-model.version>1.28</siri-java-model.version>
 
         <!-- empty argLine property, the value is set up by Jacoco during unit tests execution -->
