@@ -3,13 +3,11 @@ package no.rutebanken.extime.services;
 import no.rutebanken.extime.Constants;
 import org.apache.camel.Exchange;
 import org.apache.camel.Header;
-import org.rutebanken.helper.storage.BlobStoreException;
 import org.rutebanken.helper.storage.repository.BlobStoreRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import java.io.InputStream;
 
 /**
  * Operations on blobs in the marduk exchange bucket.
@@ -24,13 +22,8 @@ public class MardukExchangeBlobStoreService extends AbstractBlobStoreService {
     }
 
     public void uploadBlob(@Header(Constants.HEADER_MESSAGE_FILE_HANDLE) String targetFile,
-                           @Header(Exchange.FILE_NAME_PRODUCED) String sourceFile
-                           ) {
-
-        try {
-            repository.uploadNewBlob(targetFile, new FileInputStream(sourceFile));
-        } catch (FileNotFoundException e) {
-            throw new BlobStoreException(e);
-        }
+                           @Header(Exchange.FILE_NAME_PRODUCED) InputStream sourceFile
+    ) {
+        repository.uploadNewBlob(targetFile, sourceFile);
     }
 }
