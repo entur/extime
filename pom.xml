@@ -46,7 +46,6 @@
 
         <netex-java-model.version>2.0.15</netex-java-model.version>
         <netex-parser-java.version>3.1.38</netex-parser-java.version>
-        <siri-java-model.version>1.28</siri-java-model.version>
 
         <!-- empty argLine property, the value is set up by Jacoco during unit tests execution -->
         <argLine/>
@@ -74,11 +73,6 @@
             <groupId>org.entur</groupId>
             <artifactId>netex-java-model</artifactId>
             <version>${netex-java-model.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.entur</groupId>
-            <artifactId>siri-java-model</artifactId>
-            <version>${siri-java-model.version}</version>
         </dependency>
         <dependency>
             <groupId>org.entur.ror.helpers</groupId>
