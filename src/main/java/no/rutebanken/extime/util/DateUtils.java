@@ -18,7 +18,7 @@ public class DateUtils {
     private final ZoneId exportZoneId;
 
 
-    public DateUtils(@Value("${avinor.timetable.period.forward}") Duration durationForward, @Value("${netex.export.time.zone.id:CET}") ZoneId exportZoneId) {
+    public DateUtils(@Value("${avinor.timetable.period.forward:14d}") Duration durationForward, @Value("${netex.export.time.zone.id:CET}") ZoneId exportZoneId) {
         this.durationForward = durationForward;
         this.exportZoneId = exportZoneId;
     }
