@@ -36,7 +36,7 @@
         <entur.helpers.version>5.6</entur.helpers.version>
 
         <threeten-jaxb-core.version>2.2.0</threeten-jaxb-core.version>
-        <jaxb-maven-plugin-version>4.0.8</jaxb-maven-plugin-version>
+        <jaxb-maven-plugin-version>4.0.9</jaxb-maven-plugin-version>
 
         <commons-io.version>2.18.0</commons-io.version>
         <zt-zip.version>1.17</zt-zip.version>
