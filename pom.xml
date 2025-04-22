@@ -40,7 +40,7 @@
 
         <commons-io.version>2.19.0</commons-io.version>
         <zt-zip.version>1.17</zt-zip.version>
-        <commons-collections4.version>4.4</commons-collections4.version>
+        <commons-collections4.version>4.5.0</commons-collections4.version>
 
         <entur.google.pubsub.emulator.download.skip>false</entur.google.pubsub.emulator.download.skip>
 
