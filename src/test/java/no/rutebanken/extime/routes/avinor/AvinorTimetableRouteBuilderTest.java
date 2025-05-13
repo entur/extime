@@ -1,14 +1,16 @@
 package no.rutebanken.extime.routes.avinor;
 
-import no.rutebanken.extime.ExtimeCamelRouteBuilderIntegrationTestBase;
+import no.rutebanken.extime.ExtimeRouteBuilderIntegrationTestBase;
 import no.rutebanken.extime.model.AirlineIATA;
 import no.rutebanken.extime.model.AirportIATA;
 import no.rutebanken.extime.model.FlightEvent;
 import org.apache.camel.EndpointInject;
 import org.apache.camel.builder.AdviceWith;
 import org.apache.camel.component.mock.MockEndpoint;
+import org.apache.camel.test.spring.junit5.UseAdviceWith;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
 
 import java.util.HashMap;
 import java.util.List;
@@ -28,10 +30,14 @@ import static no.rutebanken.extime.converter.CommonDataToNetexConverter.PROPERTY
         "queue.upload.destination.name=MockMardukQueue",
         "avinor.timetable.dump.output.path=target/flights"
 })
-class AvinorTimetableRouteBuilderTest extends ExtimeCamelRouteBuilderIntegrationTestBase {
+@UseAdviceWith
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+class AvinorTimetableRouteBuilderTest extends ExtimeRouteBuilderIntegrationTestBase {
 
     @EndpointInject("mock:notifyMarduk")
     protected MockEndpoint mockNotifyMarduk;
+
+
 
     @Test
     void testTimetableScheduler() throws Exception {
