@@ -33,7 +33,7 @@
     <properties>
         <java.version>21</java.version>
         <camel.version>4.10.4</camel.version>
-        <entur.helpers.version>5.10</entur.helpers.version>
+        <entur.helpers.version>5.11</entur.helpers.version>
 
         <threeten-jaxb-core.version>2.2.0</threeten-jaxb-core.version>
         <jaxb-maven-plugin-version>4.0.9</jaxb-maven-plugin-version>
