@@ -42,8 +42,6 @@
         <zt-zip.version>1.17</zt-zip.version>
         <commons-collections4.version>4.5.0</commons-collections4.version>
 
-        <entur.google.pubsub.emulator.download.skip>true</entur.google.pubsub.emulator.download.skip>
-
         <netex-java-model.version>2.0.15</netex-java-model.version>
         <netex-parser-java.version>3.1.52</netex-parser-java.version>
 
