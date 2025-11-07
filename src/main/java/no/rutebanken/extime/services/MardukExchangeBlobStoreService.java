@@ -7,7 +7,10 @@ import org.rutebanken.helper.storage.repository.BlobStoreRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 /**
  * Operations on blobs in the marduk exchange bucket.
@@ -22,8 +25,10 @@ public class MardukExchangeBlobStoreService extends AbstractBlobStoreService {
     }
 
     public void uploadBlob(@Header(Constants.HEADER_MESSAGE_FILE_HANDLE) String targetFile,
-                           @Header(Exchange.FILE_NAME_PRODUCED) InputStream sourceFile
-    ) {
-        repository.uploadNewBlob(targetFile, sourceFile);
+                           @Header(Exchange.FILE_NAME_PRODUCED) Path sourceFile
+    ) throws IOException {
+        try (InputStream inputStream = Files.newInputStream(sourceFile)) {
+            repository.uploadNewBlob(targetFile, inputStream);
+        }
     }
 }
