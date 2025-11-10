@@ -1,11 +1,12 @@
 package no.rutebanken.extime.routes.avinor;
 
+import com.google.pubsub.v1.PubsubMessage;
 import no.rutebanken.extime.ExtimeRouteBuilderIntegrationTestBase;
-import org.apache.camel.EndpointInject;
+import org.apache.camel.Exchange;
 import org.apache.camel.builder.AdviceWith;
-import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.test.spring.junit5.UseAdviceWith;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 
@@ -14,8 +15,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
+import static no.rutebanken.extime.Constants.HEADER_MESSAGE_FILE_HANDLE;
 import static no.rutebanken.extime.converter.CommonDataToNetexConverter.PROPERTY_NSR_QUAY_MAP;
+import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEADER_MESSAGE_FILE_NAME;
+import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEADER_MESSAGE_PROVIDER_ID;
+import static no.rutebanken.extime.routes.avinor.AvinorTimetableRouteBuilder.HEADER_MESSAGE_USERNAME;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -31,7 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *   <li>Flight events are mapped and converted to NeTEx format</li>
  *   <li>NeTEx XML files are generated in the output directory</li>
  *   <li>Files are compressed into a zip archive for delivery</li>
- *   <li>Marduk notification is triggered upon completion</li>
+ *   <li>PubSub notification is sent to Marduk with expected headers</li>
  * </ul>
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = {AvinorTimetableRouteBuilder.class}, properties = {
@@ -49,8 +58,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class AvinorTimetableDumpInputIntegrationTest extends ExtimeRouteBuilderIntegrationTestBase {
 
-    @EndpointInject("mock:notifyMarduk")
-    protected MockEndpoint mockNotifyMarduk;
+    @Value("${queue.upload.destination.name}")
+    private String notificationQueue;
 
     @Test
     void testTimetableProcessingFromDumpInput() throws Exception {
@@ -61,14 +70,8 @@ class AvinorTimetableDumpInputIntegrationTest extends ExtimeRouteBuilderIntegrat
             );
         });
 
-        AdviceWith.adviceWith(context, "CompressNetexAndSendToStorage", a ->
-            a.weaveByToUri("direct:notifyMarduk").replace().to("mock:notifyMarduk")
-        );
-
-        mockNotifyMarduk.expectedMinimumMessageCount(1);
         context.start();
         startTemplate.sendBody(null);
-        mockNotifyMarduk.assertIsSatisfied();
 
         // Verify that NeTEx files were generated
         Path netexOutputPath = Paths.get("target/netex-dump-test");
@@ -81,5 +84,19 @@ class AvinorTimetableDumpInputIntegrationTest extends ExtimeRouteBuilderIntegrat
         // Verify at least one zip file was created
         File[] zipFiles = compressedOutputPath.toFile().listFiles((dir, name) -> name.endsWith(".zip"));
         assertTrue(zipFiles != null && zipFiles.length > 0, "At least one NeTEx zip file should be generated");
+
+        // Verify PubSub notification was sent with expected headers
+        List<PubsubMessage> messages = pubSubTemplate.pullAndAck(notificationQueue, 1, false);
+        assertEquals(1, messages.size(), "Expected exactly one PubSub message");
+        
+        PubsubMessage pubsubMessage = messages.getFirst();
+        assertTrue(pubsubMessage.getData().isEmpty(), "PubSub message body should be empty");
+        
+        Map<String, String> headers = pubsubMessage.getAttributesMap();
+        assertNotNull(headers.get(Exchange.FILE_NAME), "FILE_NAME header should be present");
+        assertNotNull(headers.get(HEADER_MESSAGE_PROVIDER_ID), "Provider ID header should be present");
+        assertNotNull(headers.get(HEADER_MESSAGE_FILE_HANDLE), "File handle header should be present");
+        assertNotNull(headers.get(HEADER_MESSAGE_FILE_NAME), "File name header should be present");
+        assertNotNull(headers.get(HEADER_MESSAGE_USERNAME), "Username header should be present");
     }
 }
