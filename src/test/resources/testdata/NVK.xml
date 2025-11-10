@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<flights xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://flydata.avinor.no/XmlFeedScheduled.xsd"
+ airport="NVK" time="2024-11-14T11:09:56Z">
+</flights>
