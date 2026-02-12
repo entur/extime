@@ -32,7 +32,7 @@
 
     <properties>
         <java.version>21</java.version>
-        <camel.version>4.10.8</camel.version>
+        <camel.version>4.10.9</camel.version>
         <entur.helpers.version>5.50.0</entur.helpers.version>
 
         <threeten-jaxb-core.version>2.2.0</threeten-jaxb-core.version>
