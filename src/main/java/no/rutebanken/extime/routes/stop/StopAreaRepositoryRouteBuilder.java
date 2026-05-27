@@ -78,11 +78,17 @@ public class StopAreaRepositoryRouteBuilder extends BaseRouteBuilder {
 
         NetexEntitiesIndex index = exchange.getIn().getBody(NetexEntitiesIndex.class);
 
-        Function<Quay, String> findAvinorLocalReference = quay -> quay.getKeyList().getKeyValue().stream()
-                .filter(keyValueStructure -> keyValueStructure.getKey().equals("imported-id"))
-                .map(KeyValueStructure::getValue)
-                .findFirst()
-                .orElseThrow();
+        Function<Quay, String> findAvinorLocalReference = quay -> {
+            if (quay.getKeyList() == null) {
+                return null;
+            }
+            return quay.getKeyList().getKeyValue().stream()
+                    .filter(keyValueStructure -> keyValueStructure.getKey().equals("imported-id"))
+                    .map(KeyValueStructure::getValue)
+                    .filter(value -> value != null && !value.isBlank())
+                    .findFirst()
+                    .orElse(null);
+        };
 
         // Building Map like ["AVI:Quay:234" -> Quay]
         exchange.setProperty(PROPERTY_NSR_QUAY_MAP,
@@ -90,6 +96,14 @@ public class StopAreaRepositoryRouteBuilder extends BaseRouteBuilder {
                         .keySet()
                         .stream()
                         .map(quays -> index.getQuayIndex().getLatestVersion(quays))
+                        .filter(quay -> {
+                            String localReference = findAvinorLocalReference.apply(quay);
+                            if (localReference == null) {
+                                LOGGER.warn("Skipping quay {} with blank or missing imported-id", quay.getId());
+                                return false;
+                            }
+                            return true;
+                        })
                         .collect(Collectors.toMap(findAvinorLocalReference, Function.identity()))
         );
     }
