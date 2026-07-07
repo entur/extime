@@ -39,7 +39,7 @@
         <jaxb-maven-plugin-version>4.0.12</jaxb-maven-plugin-version>
 
         <commons-io.version>2.21.0</commons-io.version>
-        <zt-zip.version>1.17</zt-zip.version>
+        <zt-zip.version>1.18.2</zt-zip.version>
         <commons-collections4.version>4.5.0</commons-collections4.version>
 
         <netex-java-model.version>2.0.16</netex-java-model.version>
