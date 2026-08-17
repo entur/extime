@@ -379,12 +379,15 @@ public class ScheduledFlightConverter {
     private record AirportWithSize(AirportIATA airportIata, int size) {
     }
 
-    public boolean isKnownAirlineName(String airlineIata) {
-        return netexStaticDataSet.getOrganisations().containsKey(airlineIata.toLowerCase());
-    }
-
-    public String getKnownAirlineName(String airlineIata) {
-        return netexStaticDataSet.getOrganisations().get(airlineIata.toLowerCase()).getName();
+    /**
+     * @return the airline's name from the static data set, or the IATA designator when it has no entry.
+     * Falling back to the designator is what the {@code direct:enrichWithAirlineName} route did: its
+     * filter left the designator in the message body, and the enricher copied that into the name.
+     */
+    public String resolveAirlineName(String airlineIata) {
+        NetexStaticDataSet.OrganisationDataSet organisation =
+                netexStaticDataSet.getOrganisations().get(airlineIata.toLowerCase());
+        return organisation != null ? organisation.getName() : airlineIata;
     }
 
 }

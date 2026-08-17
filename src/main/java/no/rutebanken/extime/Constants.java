@@ -29,6 +29,23 @@ public final class Constants {
     
     public static final String DEFAULT_ID_SEPARATOR = ":";
 
+    // PubSub message attributes on MardukInboundQueue. Marduk matches on these by name, so they are a
+    // wire contract, not internal naming. WireContractTest pins the literals.
     public static final String HEADER_MESSAGE_CORRELATION_ID = "RutebankenCorrelationId";
     public static final String HEADER_MESSAGE_FILE_HANDLE = "RutebankenFileHandle";
+    public static final String HEADER_MESSAGE_PROVIDER_ID = "RutebankenProviderId";
+    public static final String HEADER_MESSAGE_FILE_NAME = "RutebankenFileName";
+    public static final String HEADER_MESSAGE_USERNAME = "RutebankenUsername";
+
+    /**
+     * Camel's file name header, which the Camel-based version of this service leaked onto every PubSub
+     * message because it copied all exchange headers into the attributes. Marduk overwrites it from
+     * {@link #HEADER_MESSAGE_FILE_NAME} on arrival and so demonstrably does not need it, but it is kept
+     * on the wire because the release that removes the framework should not also change the contract.
+     * Drop it in a later release.
+     */
+    public static final String HEADER_LEGACY_CAMEL_FILE_NAME = "CamelFileName";
+
+    /** Identifies extime as the producer to marduk. */
+    public static final String EXTIME_USERNAME = "Extime";
 }

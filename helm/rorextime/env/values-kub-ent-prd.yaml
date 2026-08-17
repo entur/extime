@@ -4,7 +4,9 @@ common:
   container:
     forceReplicas: 1
 
-avinorTimetableSchedulerCron: 0+58+2+*+*+?
+# Keep this outside 02:00-03:00, the hour Europe/Oslo repeats on the DST fall-back night. Spring's cron
+# fires twice inside it, where quartz fired once, which would export and notify marduk twice.
+avinorTimetableSchedulerCron: 0+58+3+*+*+?
 gcp:
   bucketName:
     marduk: marduk-production

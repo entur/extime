@@ -1,13 +1,12 @@
 package no.rutebanken.extime.util;
 
 import no.rutebanken.extime.model.FlightLeg;
-import no.rutebanken.extime.ExtimeRouteBuilderIntegrationTestBase;
 import no.rutebanken.extime.model.FlightLegBuilder;
 import no.rutebanken.extime.model.StopVisitType;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-class AvinorTimetableUtilsTest  extends ExtimeRouteBuilderIntegrationTestBase {
+class AvinorTimetableUtilsTest {
 
     @Test
     void testIsValidFlight() {

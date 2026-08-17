@@ -3,7 +3,7 @@ package no.rutebanken.extime.converter;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import no.rutebanken.extime.Constants;
-import no.rutebanken.extime.ExtimeRouteBuilderIntegrationTestBase;
+import no.rutebanken.extime.ExtimeSpringBootTestBase;
 import no.rutebanken.extime.fixtures.LineDataSetFixture;
 import no.rutebanken.extime.model.FlightRoute;
 import no.rutebanken.extime.model.LineDataSet;
@@ -41,7 +41,7 @@ import static no.rutebanken.extime.Constants.UNDERSCORE;
 import static no.rutebanken.extime.Constants.VERSION_ONE;
 import static org.assertj.core.api.Assertions.assertThat;
 
-class LineDataToNetexConverterTest extends ExtimeRouteBuilderIntegrationTestBase {
+class LineDataToNetexConverterTest extends ExtimeSpringBootTestBase {
 
     @Autowired
     private LineDataToNetexConverter netexConverter;
