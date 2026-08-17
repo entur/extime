@@ -18,87 +18,62 @@
 
 package no.rutebanken.extime.actuator;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-import no.rutebanken.extime.TestApp;
+import no.rutebanken.extime.App;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.PubSubEmulatorContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.utility.DockerImageName;
+import org.springframework.web.client.RestClient;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * The main purpose of this test is to check that the HTTP server is up and running.
  */
-@SpringBootTest(
-  classes = TestApp.class,
-  webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-  properties = {
-    "avinor.timetable.scheduler.consumer=direct:start"
-  }
-)
-@ActiveProfiles(
-  { "test", "default", "in-memory-blobstore", "google-pubsub-autocreate" }
-)
-@Testcontainers
+@SpringBootTest(classes = App.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ActiveProfiles({ "default", "in-memory-blobstore" })
 class ActuatorHealthEndpointIntegrationTest {
 
-  @Container
-  private static final PubSubEmulatorContainer pubsubEmulator =
-    new PubSubEmulatorContainer(
-      DockerImageName.parse(
-        "gcr.io/google.com/cloudsdktool/cloud-sdk:emulators"
-      )
-    );
+    @DynamicPropertySource
+    static void actuatorProperties(DynamicPropertyRegistry registry) {
+        registry.add("management.endpoints.web.exposure.include", () -> "health");
+        registry.add("management.endpoints.web.exposure.exclude", () -> "");
+        registry.add("management.endpoint.health.enabled", () -> "true");
+        registry.add("management.endpoint.health.show-details", () -> "always");
+    }
 
-  @DynamicPropertySource
-  static void emulatorProperties(DynamicPropertyRegistry registry) {
-    registry.add(
-      "spring.cloud.gcp.pubsub.emulator-host",
-      pubsubEmulator::getEmulatorEndpoint
-    );
-    registry.add(
-      "camel.component.google-pubsub.endpoint",
-      pubsubEmulator::getEmulatorEndpoint
-    );
-    registry.add("management.endpoints.web.exposure.include", () -> "health");
-    registry.add("management.endpoints.web.exposure.exclude", () -> "");
-    registry.add("management.endpoint.health.enabled", () -> "true");
-    registry.add("management.endpoint.health.show-details", () -> "always");
-  }
+    @LocalServerPort
+    private int port;
 
-  @Autowired
-  private TestRestTemplate restTemplate;
+    @Test
+    void testHealthEndpointIsAccessible() {
+        ResponseEntity<String> response = getHealth();
 
-  @Test
-  void testHealthEndpointIsAccessible() {
-    ResponseEntity<String> response = restTemplate.getForEntity(
-      "/actuator/health",
-      String.class
-    );
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+    }
 
-    assertEquals(HttpStatus.OK, response.getStatusCode());
-    assertNotNull(response.getBody());
-  }
+    @Test
+    void testHealthEndpointReturnsUpStatus() {
+        ResponseEntity<String> response = getHealth();
 
-  @Test
-  void testHealthEndpointReturnsUpStatus() {
-    ResponseEntity<String> response = restTemplate.getForEntity(
-      "/actuator/health",
-      String.class
-    );
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        String body = response.getBody();
+        assertNotNull(body);
+        assertTrue(body.contains("\"status\":\"UP\""));
+    }
 
-    assertEquals(HttpStatus.OK, response.getStatusCode());
-    String body = response.getBody();
-    assertNotNull(body);
-    assertTrue(body.contains("\"status\":\"UP\""));
-  }
+    private ResponseEntity<String> getHealth() {
+        return RestClient.create()
+                .get()
+                .uri("http://localhost:%d/actuator/health".formatted(port))
+                .retrieve()
+                .toEntity(String.class);
+    }
 }

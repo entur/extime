@@ -38,12 +38,13 @@ General application configuration parameters are set in the Spring Boot configur
 
 Main parameters:
 
-| Parameter name                      |                           Description                           | 
-|-------------------------------------|:---------------------------------------------------------------:|
-| avinor.timetable.feed.endpoint      |                   Flights timetables endpoint                   |
-| avinor.timetable.scheduler.consumer | Configuration of the frequency of the Flight information import |
-| avinor.timetable.period.forward     |      Time window for which future flight data are imported      |
-| avinor.timetable.period.back        |       Time window for which past flight data are imported       |
+| Parameter name                    |                           Description                            | 
+|-----------------------------------|:----------------------------------------------------------------:|
+| avinor.timetable.feed.endpoint    |                   Flights timetables endpoint                    |
+| extime.timetable.scheduler.cron   | Cron expression for the Flight information import, `-` to disable |
+| extime.timetable.fetch.threads    |            Airports fetched from Avinor in parallel              |
+| avinor.timetable.period.forward   |      Time window for which future flight data are imported       |
+| avinor.timetable.period.back      |       Time window for which past flight data are imported        |
 
 ## Workflow overview
 - For each whitelisted airport, Extime sends a query to the Avinor REST API and retrieves all departures for passenger flights over a given time period.

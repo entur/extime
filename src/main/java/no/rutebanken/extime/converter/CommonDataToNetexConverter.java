@@ -5,7 +5,6 @@ import no.rutebanken.extime.model.AirlineIATA;
 import no.rutebanken.extime.model.AirportIATA;
 import no.rutebanken.extime.util.DateUtils;
 import no.rutebanken.extime.util.NetexObjectFactory;
-import org.apache.camel.ExchangeProperty;
 import org.rutebanken.netex.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,8 +24,6 @@ public class CommonDataToNetexConverter {
 
     private static final Logger logger = LoggerFactory.getLogger(CommonDataToNetexConverter.class);
 
-    public static final String PROPERTY_NSR_QUAY_MAP = "NsrQuayMap";
-
     private final ObjectFactory objectFactory;
 
     private final NetexObjectFactory netexObjectFactory;
@@ -42,8 +39,7 @@ public class CommonDataToNetexConverter {
         this.dateUtils = dateUtils;
     }
 
-    public JAXBElement<PublicationDeliveryStructure> convertToNetex(
-            @ExchangeProperty(PROPERTY_NSR_QUAY_MAP) Map<String, Quay> nsrQuayMap) {
+    public JAXBElement<PublicationDeliveryStructure> convertToNetex(Map<String, Quay> nsrQuayMap) {
 
         logger.info("Converting common data to NeTEx");
         Instant publicationTimestamp = Instant.now();

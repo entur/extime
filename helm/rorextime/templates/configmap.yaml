@@ -17,6 +17,8 @@ data:
     management.endpoints.web.exposure.include=health,prometheus
     management.endpoints.jmx.exposure.exclude=*
     # Camel
+    # Read by the previous release only. Kept so that a pod running it can still boot from this
+    # ConfigMap during and after the rollout; delete in a later release.
     camel.main.name=extime
     camel.main.stream-caching-enabled=false
     camel.main.stream-caching-spool-enabled=true
@@ -25,10 +27,14 @@ data:
     camel.springboot.messageHistory=true
     camel.threadpool.pool-size=4
     camel.threadpool.max-pool-size=4
+    avinor.timetable.scheduler.consumer=quartz://avinorTimetableScheduler?cron={{ .Values.avinorTimetableSchedulerCron }}
 
     # Avinor data set import
     avinor.timetable.feed.endpoint=https://asrv.avinor.no/XmlFeedScheduled/v1.0
-    avinor.timetable.scheduler.consumer=quartz://avinorTimetableScheduler?cron={{ .Values.avinorTimetableSchedulerCron }}
+    # The same expression as avinor.timetable.scheduler.consumer above, with the spaces the Camel URI
+    # had to escape as '+' restored. Spring's cron parser reads the six-field Quartz form.
+    extime.timetable.scheduler.cron={{ .Values.avinorTimetableSchedulerCron | replace "+" " " }}
+    extime.timetable.fetch.threads=4
     avinor.timetable.dump.output.path=/tmp/extime/data/dump
     avinor.timetable.period.forward=120d
     avinor.timetable.period.back=2d
@@ -41,8 +47,12 @@ data:
     blobstore.blob.path=inbound/received/avi/
     blobstore.gcs.project.id={{ .Values.gcp.blobstoreProjectId }}
     # Google PubSub
-    # project id and credential location are not set, they are retrieved automatically through the GOOGLE_APPLICATION_CREDENTIALS environment variable
+    # Credentials are retrieved automatically through the GOOGLE_APPLICATION_CREDENTIALS environment
+    # variable. The project id has to be set explicitly: the queue lives in marduk's project, not in
+    # extime's, so the default provider would resolve the wrong one from the metadata server.
     extime.pubsub.project.id={{ .Values.gcp.pubsubProjectId }}
+    spring.cloud.gcp.project-id={{ .Values.gcp.pubsubProjectId }}
+    spring.cloud.gcp.pubsub.project-id={{ .Values.gcp.pubsubProjectId }}
     queue.upload.destination.name=MardukInboundQueue
 
 kind: ConfigMap

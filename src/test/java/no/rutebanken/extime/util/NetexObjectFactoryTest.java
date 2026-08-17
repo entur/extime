@@ -1,6 +1,6 @@
 package no.rutebanken.extime.util;
 
-import no.rutebanken.extime.ExtimeRouteBuilderIntegrationTestBase;
+import no.rutebanken.extime.ExtimeSpringBootTestBase;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.rutebanken.netex.model.DayTypeRefStructure;
@@ -21,7 +21,7 @@ import java.math.BigInteger;
 
 import static no.rutebanken.extime.Constants.VERSION_ONE;
 
-class NetexObjectFactoryTest extends ExtimeRouteBuilderIntegrationTestBase {
+class NetexObjectFactoryTest extends ExtimeSpringBootTestBase {
 
     @Autowired
     private NetexObjectFactory netexObjectFactory;

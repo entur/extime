@@ -7,12 +7,11 @@ Extime is a Java-based Spring Boot application developed by Entur that converts 
 The application enables multi-modal journey planning by incorporating flight schedules into public transportation data, allowing travelers to plan trips that combine flights with other transport modes.
 
 ## Technical Stack
-- **Language**: Java 21
-- **Framework**: Spring Boot with Apache Camel 4.10.7
+- **Language**: Java 25
+- **Framework**: Spring Boot
 - **Build Tool**: Maven
 - **Key Libraries**:
-  - NeTEx Java Model (2.0.15) - for NeTEx format handling
-  - Apache Camel - for routing and integration patterns
+  - NeTEx Java Model - for NeTEx format handling
   - Google Cloud libraries - for storage (GCS) and messaging (PubSub)
   - JAXB - for XML processing
 
@@ -29,12 +28,16 @@ The application enables multi-modal journey planning by incorporating flight sch
 3. **Output**: Produces NeTEx-compliant XML timetables packaged as ZIP files following the Nordic NeTEx Profile
 
 ### Key Components
-- **Routes**: Apache Camel route builders for orchestrating data flow
-  - `AvinorTimetableRouteBuilder` - main timetable processing
-  - `MardukBlobStoreRoute` - storage integration
-  - `StopAreaRepositoryRouteBuilder` - stop place management
+- **Job**: `TimetableExportJob` runs the whole export end to end, triggered daily by
+  `TimetableExportScheduler` (`@Scheduled`, cron in `extime.timetable.scheduler.cron`)
+- **Avinor**: `FlightEventFetcher` fans out over the whitelisted airports, `AvinorFeedClient` fetches
+  and parses one airport's feed
+- **Converters**: flight events to line-centric data sets, then to NeTEx
+- **Stop**: `StopAreaRepository` loads the NeTEx stop dataset and indexes quays by Avinor id
+- **PubSub**: `MardukNotifier` publishes the delivery notification; the attribute names are a wire
+  contract with marduk, pinned by `WireContractTest`
 - **Models**: Domain objects representing flights, legs, airports, and airlines
-- **Config**: Spring configuration for storage, PubSub, and NeTEx generation
+- **Config**: Spring configuration for storage, PubSub, scheduling, retries and NeTEx generation
 
 ### Filtering
 Only processes flights matching:

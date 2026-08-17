@@ -3,8 +3,6 @@ package no.rutebanken.extime.util;
 import com.google.common.collect.Maps;
 import no.avinor.flydata.xjc.model.scheduled.Flights;
 import no.rutebanken.extime.model.*;
-import org.apache.camel.Exchange;
-import org.apache.camel.Header;
 import org.apache.commons.lang3.EnumUtils;
 import org.rutebanken.netex.model.CompositeFrame;
 import org.rutebanken.netex.model.Line;
@@ -86,10 +84,7 @@ public class AvinorTimetableUtils {
         }
     }
 
-    public String generateFilename(Exchange exchange) {
-        @SuppressWarnings("unchecked")
-        JAXBElement<PublicationDeliveryStructure> publicationDelivery = (JAXBElement<PublicationDeliveryStructure>) exchange.getIn().getBody();
-
+    public String generateFilename(JAXBElement<PublicationDeliveryStructure> publicationDelivery) {
         List<ServiceFrame> collect = publicationDelivery.getValue().getDataObjects().getCompositeFrameOrCommonFrame().stream()
                 .map(JAXBElement::getValue)
                 .filter(CompositeFrame.class::isInstance)
@@ -144,7 +139,10 @@ public class AvinorTimetableUtils {
         return Character.toString(ch);
     }
 
-    public void compressNetexFiles(Exchange exchange, @Header(Exchange.FILE_NAME) String compressedFileName) {
+    /**
+     * @return the path of the archive.
+     */
+    public Path compressNetexFiles(String compressedFileName) {
         Path netexOutputDirPath = Paths.get(generatedOutputPath);
         Path zipOutputDirPath = Paths.get(compressedOutputPath);
         try {
@@ -168,7 +166,7 @@ public class AvinorTimetableUtils {
             throw new ExtimeException("Error while compressing NeTEx files", e);
         }
 
-        exchange.getIn().setHeader(Exchange.FILE_NAME_PRODUCED, zipOutputFilePath.toAbsolutePath());
+        return zipOutputFilePath;
     }
 
 

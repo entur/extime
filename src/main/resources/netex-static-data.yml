@@ -186,7 +186,7 @@ netex-data-sets:
   # be divided into actual gates at the airport, that will map directly to the Quay type in NeTEx.
 
   # TODO: consider recording the actual city which the airport is connected to, which will be the destination/arrival
-  # TODO: if we record this name, we can skip the all too complex enrichment in the camel route
+  # TODO: if we record this name, we can skip the airline name lookup when converting line data sets
 
   stop-places:
     aes:

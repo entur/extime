@@ -4,7 +4,7 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
 import jakarta.xml.bind.JAXBElement;
 import no.rutebanken.extime.Constants;
-import no.rutebanken.extime.ExtimeRouteBuilderIntegrationTestBase;
+import no.rutebanken.extime.ExtimeSpringBootTestBase;
 import no.rutebanken.extime.model.AirportIATA;
 import no.rutebanken.extime.util.NetexObjectIdTypes;
 import org.apache.commons.lang3.StringUtils;
@@ -20,7 +20,7 @@ import java.util.Map;
 import static no.rutebanken.extime.Constants.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
-class CommonDataWithoutSiteToNetexConverterTest extends ExtimeRouteBuilderIntegrationTestBase {
+class CommonDataWithoutSiteToNetexConverterTest extends ExtimeSpringBootTestBase {
 
     @Autowired
     private CommonDataToNetexConverter netexConverter;
