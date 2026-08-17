@@ -25,7 +25,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -130,14 +129,20 @@ public class TimetableExportJob {
         }
     }
 
+    /**
+     * The archive is built by globbing this directory, so a file left behind from an earlier run ships as
+     * part of today's dataset. If it belongs to a line that no longer exists, nothing overwrites it and
+     * nothing notices. {@code Files.delete} therefore reports a failure rather than returning false into
+     * the void, as the Camel processor this replaces did.
+     */
     private void cleanOutputDirectory() {
         LOGGER.info("Cleaning NeTEx output directory : {}", generatedOutputPath);
         try {
             Files.createDirectories(generatedOutputPath);
-            try (Stream<Path> list = Files.list(generatedOutputPath)) {
-                list.filter(Files::isRegularFile)
-                        .map(Path::toFile)
-                        .forEach(File::delete);
+            try (Stream<Path> netexFiles = Files.list(generatedOutputPath)) {
+                for (Path netexFile : netexFiles.filter(Files::isRegularFile).toList()) {
+                    Files.delete(netexFile);
+                }
             }
         } catch (IOException e) {
             throw new ExtimeException("Could not clean the NeTEx output directory " + generatedOutputPath, e);

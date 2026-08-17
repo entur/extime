@@ -114,7 +114,8 @@ public class FlightEventFetcher {
      * {@code ExecutorService.close()} above, and every export after it. Camel had the same exposure
      * covered by Apache HttpClient's three-minute socket timeout.
      */
-    private List<FlightEvent> collect(Map<FlightRequest, Future<List<FlightEvent>>> pending, Instant deadline) {
+    // Package-private so that the deadline can be tested without making it a production knob.
+    List<FlightEvent> collect(Map<FlightRequest, Future<List<FlightEvent>>> pending, Instant deadline) {
         List<FlightEvent> flightEvents = new ArrayList<>();
         List<String> failedAirports = new ArrayList<>();
 

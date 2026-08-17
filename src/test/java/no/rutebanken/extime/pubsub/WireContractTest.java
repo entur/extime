@@ -7,14 +7,19 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
- * Pins every string extime is matched on from outside this repository.
- *
- * <p>Marduk reads the PubSub attributes by name and fetches the archive by its blob path, so changing
- * anything here is a coordinated release with marduk, not a refactor.
+ * Pins the part of extime's wire contract that lives in this repository's source: the PubSub attribute
+ * names marduk reads, and the producer name it records. Changing any of them is a coordinated release
+ * with marduk, not a refactor.
  *
  * <p>The expected values are written out as literals rather than read through the constants, which is
  * the whole point of this class: an assertion that takes the key from the same constant it means to pin
  * holds whatever the constant says.
+ *
+ * <p>The rest of the contract is deployment configuration, not source, and this test cannot reach it:
+ * the topic name ({@code queue.upload.destination.name}), the blob path prefix
+ * ({@code blobstore.blob.path}) and the provider id all come from the ConfigMap. The assertions on those
+ * elsewhere in the suite read the test properties, so they pin the code's use of the values, not the
+ * values themselves.
  */
 class WireContractTest {
 

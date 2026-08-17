@@ -8,6 +8,7 @@ import no.rutebanken.extime.util.RetrySettings;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -72,6 +73,28 @@ class AvinorFeedClientTest {
                 .isInstanceOf(ExtimeException.class);
     }
 
+    @Test
+    void writesTheRawResponseToDiskWhenDumpingIsOn(@TempDir Path dumpDir) throws IOException {
+        respondWith(200, Files.readAllBytes(Path.of("src/test/resources/testdata/SOG.xml")));
+
+        assertThat(dumpingClient(dumpDir.toString()).fetchFlightEvents(request())).isNotEmpty();
+
+        // The raw bytes, so a dump can be replayed through avinor.timetable.dump.input.
+        assertThat(dumpDir.resolve("SOG.xml"))
+                .isRegularFile()
+                .hasSameBinaryContentAs(Path.of("src/test/resources/testdata/SOG.xml"));
+    }
+
+    @Test
+    void failsWhenDumpingIsOnWithNowhereToWrite() throws IOException {
+        respondWith(200, Files.readAllBytes(Path.of("src/test/resources/testdata/SOG.xml")));
+
+        assertThatThrownBy(() -> dumpingClient("").fetchFlightEvents(request()))
+                .isInstanceOf(ExtimeException.class)
+                .hasRootCauseMessage(
+                        "avinor.timetable.dump.output is enabled but avinor.timetable.dump.output.path is not set");
+    }
+
     private void respondWith(int status, byte[] body) {
         response.set(new Response(status, body));
     }
@@ -85,13 +108,21 @@ class AvinorFeedClientTest {
     }
 
     private AvinorFeedClient client() {
+        return newClient(false, "");
+    }
+
+    private AvinorFeedClient dumpingClient(String dumpOutputPath) {
+        return newClient(true, dumpOutputPath);
+    }
+
+    private AvinorFeedClient newClient(boolean dumpOutput, String dumpOutputPath) {
         return new AvinorFeedClient(
                 new RetrySettings(0, Duration.ofMillis(1), 1),
                 Duration.ofSeconds(5),
                 Duration.ofSeconds(5),
                 Duration.ZERO,
-                false,
-                "");
+                dumpOutput,
+                dumpOutputPath);
     }
 
     private FlightRequest request() {

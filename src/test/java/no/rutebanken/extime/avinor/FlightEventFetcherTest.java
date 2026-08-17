@@ -5,14 +5,18 @@ import no.rutebanken.extime.model.AirportIATA;
 import no.rutebanken.extime.model.FlightEvent;
 import no.rutebanken.extime.model.FlightRequest;
 import no.rutebanken.extime.model.FlightRequestBuilder;
+import no.rutebanken.extime.util.AvinorTimetableUtils;
 import no.rutebanken.extime.util.ExtimeException;
 import org.junit.jupiter.api.Test;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 import static no.rutebanken.extime.Constants.DEFAULT_ZONE_ID;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -45,6 +49,34 @@ class FlightEventFetcherTest {
         FlightEventFetcher fetcher = fetcherFor(request("OSL"), request("TRD"));
 
         assertThat(fetcher.fetchFlightEvents()).hasSize(2);
+    }
+
+    /**
+     * A request that never completes must not wedge the export. Nothing else bounds one: the JDK client's
+     * request timeout does not cover the response body, so a peer that sends headers and then stalls
+     * would otherwise block this thread, the executor's close, and every export after it.
+     */
+    @Test
+    void aRequestThatNeverCompletesIsAbandonedAtTheDeadline() {
+        CompletableFuture<List<FlightEvent>> neverCompletes = new CompletableFuture<>();
+        FlightEventFetcher fetcher = fetcherFor(request("OSL"));
+
+        assertThatThrownBy(() -> fetcher.collect(Map.of(request("OSL"), neverCompletes), Instant.now()))
+                .isInstanceOf(ExtimeException.class)
+                .hasMessageContaining("OSL");
+
+        assertThat(neverCompletes).as("the fetch thread is released, not left blocked").isCancelled();
+    }
+
+    @Test
+    void failsWhenTheDumpDirectoryDoesNotExist() {
+        FlightEventFetcher fetcher = new FlightEventFetcher(
+                mock(FlightRequestBuilder.class), mock(AvinorFeedClient.class), new AvinorTimetableUtils(),
+                1, true, "target/no-such-dump-directory");
+
+        assertThatThrownBy(fetcher::fetchFlightEvents)
+                .isInstanceOf(ExtimeException.class)
+                .hasMessageContaining("target/no-such-dump-directory");
     }
 
     /** BGO is the airport the stubbed feed refuses to serve. */

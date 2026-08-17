@@ -1,8 +1,10 @@
 package no.rutebanken.extime.job;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import no.rutebanken.extime.ExtimeSpringBootTestBase;
 import no.rutebanken.extime.pubsub.MardukNotifier;
 import no.rutebanken.extime.stop.StopAreaRepository;
+import no.rutebanken.extime.util.ExtimeException;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +21,9 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 /**
@@ -51,11 +55,19 @@ class TimetableExportJobTest extends ExtimeSpringBootTestBase {
     @Autowired
     private Map<String, Map<String, byte[]>> blobsInContainers;
 
+    @Autowired
+    private MeterRegistry meterRegistry;
+
     @Test
     void exportsTheArchiveAndNotifiesMarduk() throws Exception {
         when(stopAreaRepository.loadQuayMap()).thenReturn(Map.of());
+        Path stale = staleFileFromAnEarlierRun();
 
         timetableExportJob.export();
+
+        assertThat(stale)
+                .as("a leftover line file would be globbed into the archive and shipped as today's data")
+                .doesNotExist();
 
         Path netexOutputPath = Path.of("target/netex-dump-test");
         assertThat(netexOutputPath).isDirectory();
@@ -84,6 +96,27 @@ class TimetableExportJobTest extends ExtimeSpringBootTestBase {
                 .as("marduk replaces the previous dataset with this archive, so it must hold every generated file")
                 .hasSize((int) generatedFiles)
                 .contains("_avinor_common_elements.xml");
+    }
+
+    /**
+     * A failed export must be visible. Nothing downstream notices a missing archive on its own, so the
+     * counter and the rethrow are the whole signal.
+     */
+    @Test
+    void aFailedExportIsCountedAndRethrown() {
+        when(stopAreaRepository.loadQuayMap()).thenThrow(new ExtimeException("NeTEx Stopfile not found"));
+
+        assertThatThrownBy(() -> timetableExportJob.export()).isInstanceOf(ExtimeException.class);
+
+        assertThat(meterRegistry.counter("extime.timetable.export.result", "result", "failure").count())
+                .isEqualTo(1);
+        verifyNoInteractions(mardukNotifier);
+    }
+
+    /** A NeTEx file for a line that no longer exists, which nothing in this run would overwrite. */
+    private static Path staleFileFromAnEarlierRun() throws Exception {
+        Path netexOutputPath = Files.createDirectories(Path.of("target/netex-dump-test"));
+        return Files.writeString(netexOutputPath.resolve("WF-discontinued-line.xml"), "<stale/>");
     }
 
     private static List<String> entryNamesOf(byte[] archive) throws Exception {

@@ -25,6 +25,11 @@ import java.util.stream.Collectors;
  * <p>Replaces {@code direct:refreshStops}, {@code direct:downloadNetexStopDataset} and
  * {@code direct:getMardukBlob}. Camel passed the resulting map to the converter as an exchange property;
  * it is now a return value.
+ *
+ * <p><strong>A missing stop dataset is now a failure.</strong> Camel logged it and called {@code stop()},
+ * which abandoned the exchange: the export produced nothing and the run reported success, so the only
+ * signal was the absence of an archive nobody was watching for. It is retried first, because a dataset
+ * that is missing because tiamat is mid-upload is genuinely transient, and then fails the export.
  */
 @Component
 public class StopAreaRepository {
@@ -63,8 +68,6 @@ public class StopAreaRepository {
         LOGGER.info("Downloading NeTEx Stop dataset {}", airportsExportFilename);
         try (InputStream stopDataset = mardukBlobStoreService.getBlob(airportsExportFilename)) {
             if (stopDataset == null) {
-                // Camel's stop() abandoned the exchange here, so the export produced nothing and reported
-                // success. Same outcome, but now with a failure to alert on.
                 throw new ExtimeException("NeTEx Stopfile not found: " + airportsExportFilename);
             }
             LOGGER.info("Loading NeTEx entries index for airports");
