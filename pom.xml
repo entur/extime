@@ -31,15 +31,15 @@
     </licenses>
 
     <properties>
-        <entur.helpers.version>7.2.0</entur.helpers.version>
+        <entur.helpers.version>7.3.0</entur.helpers.version>
         <spring-cloud-gcp-dependencies.version>8.1.0</spring-cloud-gcp-dependencies.version>
 
         <threeten-jaxb-core.version>2.2.0</threeten-jaxb-core.version>
         <jaxb-maven-plugin-version>4.0.16</jaxb-maven-plugin-version>
 
-        <commons-io.version>2.21.0</commons-io.version>
-        <zt-zip.version>1.17</zt-zip.version>
-        <commons-collections4.version>4.5.0</commons-collections4.version>
+        <commons-io.version>2.22.0</commons-io.version>
+        <zt-zip.version>1.18.2</zt-zip.version>
+        <commons-collections4.version>4.6.0</commons-collections4.version>
 
         <netex-java-model.version>2.0.16</netex-java-model.version>
         <netex-parser-java.version>3.1.82</netex-parser-java.version>
