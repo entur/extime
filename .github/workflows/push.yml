@@ -74,7 +74,7 @@ jobs:
       environment: dev
       image: ${{ needs.docker-push.outputs.image_name }}:${{ needs.docker-push.outputs.image_tag}}
       chart: helm/extime
-      namespace: extime
+      namespace: rorextime
       release_name: extime
     secrets: inherit
 
@@ -97,7 +97,7 @@ jobs:
       environment: tst
       image: ${{ needs.docker-push.outputs.image_name }}:${{ needs.docker-push.outputs.image_tag}}
       chart: helm/extime
-      namespace: extime
+      namespace: rorextime
       release_name: extime
     secrets: inherit
 
@@ -120,6 +120,6 @@ jobs:
       environment: prd
       image: ${{ needs.docker-push.outputs.image_name }}:${{ needs.docker-push.outputs.image_tag}}
       chart: helm/extime
-      namespace: extime
+      namespace: rorextime
       release_name: extime
     secrets: inherit
