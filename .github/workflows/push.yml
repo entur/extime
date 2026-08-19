@@ -59,3 +59,67 @@ jobs:
   docker-push:
     needs: [docker-build]
     uses: entur/gha-docker/.github/workflows/push.yml@v1.11.0
+
+  helm-lint:
+    uses: entur/gha-helm/.github/workflows/lint.yml@v1.7.0
+    with:
+      environment: dev
+
+
+  deploy-dev:
+    if: ${{ github.ref == 'refs/heads/master' && github.event_name != 'pull_request' }}
+    needs: [ helm-lint, docker-push ]
+    uses: entur/gha-helm/.github/workflows/deploy.yml@v1.7.0
+    with:
+      environment: dev
+      image: ${{ needs.docker-push.outputs.image_name }}:${{ needs.docker-push.outputs.image_tag}}
+      chart: helm/extime
+      namespace: extime
+      release_name: extime
+    secrets: inherit
+
+  approval-tst:
+    if: ${{ github.ref == 'refs/heads/master' }}
+    needs: deploy-dev
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: Approve
+    steps:
+      - name: Manual approval
+        shell: bash
+        run: echo "Approve TST deployment"
+
+  deploy-tst:
+    if: ${{ github.ref == 'refs/heads/master' }}
+    needs: [ docker-push, approval-tst ]
+    uses: entur/gha-helm/.github/workflows/deploy.yml@v1.7.0
+    with:
+      environment: tst
+      image: ${{ needs.docker-push.outputs.image_name }}:${{ needs.docker-push.outputs.image_tag}}
+      chart: helm/extime
+      namespace: extime
+      release_name: extime
+    secrets: inherit
+
+  approval-prd:
+    if: ${{ github.ref == 'refs/heads/master' }}
+    needs: deploy-tst
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: Approve
+    steps:
+      - name: Manual approval
+        shell: bash
+        run: echo "Approve PRD deployment"
+
+  deploy-prd:
+    if: ${{ github.ref == 'refs/heads/master' }}
+    needs: [ docker-push, approval-prd ]
+    uses: entur/gha-helm/.github/workflows/deploy.yml@v1.7.0
+    with:
+      environment: prd
+      image: ${{ needs.docker-push.outputs.image_name }}:${{ needs.docker-push.outputs.image_tag}}
+      chart: helm/extime
+      namespace: extime
+      release_name: extime
+    secrets: inherit
