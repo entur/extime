@@ -7,6 +7,8 @@ import no.rutebanken.extime.stop.StopAreaRepository;
 import no.rutebanken.extime.util.ExtimeException;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.stubbing.Answer;
+import org.rutebanken.netex.model.Quay;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -17,6 +19,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -111,6 +114,39 @@ class TimetableExportJobTest extends ExtimeSpringBootTestBase {
         assertThat(meterRegistry.counter("extime.timetable.export.result", "result", "failure").count())
                 .isEqualTo(1);
         verifyNoInteractions(mardukNotifier);
+    }
+
+    /**
+     * Two exports share one output directory, and the archive is built by globbing it, so an overlapping
+     * run would package the other's half-written files.
+     *
+     * <p>Provoked without threads: the second call is made from inside the first, which the flag rejects
+     * exactly as it would a request thread arriving mid-cron. The outer export then finishing, and a
+     * later one succeeding, is what shows the flag is released rather than stuck.
+     */
+    @Test
+    void anOverlappingExportIsRejectedAndTheGuardIsReleased() {
+        when(stopAreaRepository.loadQuayMap()).thenAnswer(onlyOnTheOutermostExport(() ->
+                assertThatThrownBy(() -> timetableExportJob.export())
+                        .isInstanceOf(ExportAlreadyRunningException.class)));
+
+        assertThat(timetableExportJob.export()).as("the export that holds the guard still finishes").isNotBlank();
+        assertThat(timetableExportJob.export()).as("and the next one is not blocked").isNotBlank();
+    }
+
+    /**
+     * Runs the assertion on the first call only. Without that, an unguarded {@code export()} would recurse
+     * until the stack blew, and the mutation would fail as a StackOverflowError instead of as the
+     * assertion it is meant to trip.
+     */
+    private static Answer<Map<String, Quay>> onlyOnTheOutermostExport(Runnable assertion) {
+        AtomicBoolean alreadyRun = new AtomicBoolean();
+        return invocation -> {
+            if (alreadyRun.compareAndSet(false, true)) {
+                assertion.run();
+            }
+            return Map.of();
+        };
     }
 
     /** A NeTEx file for a line that no longer exists, which nothing in this run would overwrite. */

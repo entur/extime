@@ -46,6 +46,25 @@ Main parameters:
 | avinor.timetable.period.forward   |      Time window for which future flight data are imported       |
 | avinor.timetable.period.back      |       Time window for which past flight data are imported        |
 
+## Triggering an export by hand
+
+The export normally runs on the cron in `extime.timetable.scheduler.cron`. To run one immediately:
+
+```sh
+kubectl -n rorextime port-forward deployment/extime 8080:8080
+curl -X POST http://localhost:8080/services/timetable/export
+```
+
+It blocks until the export finishes and answers with the correlation id, which is also the
+`RutebankenCorrelationId` attribute marduk records. `409` means an export is already running.
+
+This is a real export, not a dry run: it uploads to the marduk exchange bucket and notifies marduk,
+which replaces the current dataset.
+
+The endpoint has no authentication. There is no ingress, so calling it needs cluster access, but note the
+chart does render a `rorextime` ClusterIP service on port 80 and there is no NetworkPolicy, so any pod in
+the cluster can reach it. Adding an ingress would require an authorization check first.
+
 ## Workflow overview
 - For each whitelisted airport, Extime sends a query to the Avinor REST API and retrieves all departures for passenger flights over a given time period.
 - The API returns a list of _Flight_ objects that represent a single departure.

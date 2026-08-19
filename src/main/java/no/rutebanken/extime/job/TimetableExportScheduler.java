@@ -36,6 +36,10 @@ public class TimetableExportScheduler {
     void exportTimetable() {
         try {
             timetableExportJob.export();
+        } catch (ExportAlreadyRunningException e) {
+            // Only reachable when someone triggered an export by hand that is still running. Benign, and
+            // deliberately not an ERROR: the next cron catches up.
+            LOGGER.warn("Skipped the scheduled export: one is already running");
         } catch (RuntimeException e) {
             // Left to Spring, the failure is logged by TaskUtils under its own name, which is not where
             // anyone looks for extime's errors. Reported here instead; the next run is unaffected either

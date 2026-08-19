@@ -32,6 +32,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
 /**
@@ -65,6 +66,7 @@ public class TimetableExportJob {
     private final String blobPath;
     private final Timer exportTimer;
     private final MeterRegistry meterRegistry;
+    private final AtomicBoolean running = new AtomicBoolean();
 
     @SuppressWarnings("java:S107") // the job is the seam where every collaborator meets
     public TimetableExportJob(
@@ -101,7 +103,30 @@ public class TimetableExportJob {
                 .register(meterRegistry);
     }
 
-    public void export() {
+    /**
+     * Runs one export, and only one at a time.
+     *
+     * <p>The cron cannot overlap itself: {@code @Scheduled} runs it on a single-threaded scheduler. A
+     * manual trigger arrives on a request thread and can, and two exports sharing one output directory
+     * would build the archive from each other's half-written files.
+     *
+     * @return the correlation id, which is also the attribute marduk joins its import to.
+     * @throws ExportAlreadyRunningException if an export is in progress.
+     */
+    public String export() {
+        if (!running.compareAndSet(false, true)) {
+            throw new ExportAlreadyRunningException();
+        }
+        try {
+            return runExport();
+        } finally {
+            // Released whatever happened, including an Error: a held flag would block every later export
+            // with nothing to show why.
+            running.set(false);
+        }
+    }
+
+    private String runExport() {
         Timer.Sample sample = Timer.start(meterRegistry);
         String correlationId = UUID.randomUUID().toString();
         LOGGER.info("Starting the Avinor timetable export, correlationId={}", correlationId);
@@ -120,6 +145,7 @@ public class TimetableExportJob {
 
             meterRegistry.counter("extime.timetable.export.result", "result", "success").increment();
             LOGGER.info("Finished the Avinor timetable export, correlationId={}", correlationId);
+            return correlationId;
         } catch (RuntimeException e) {
             meterRegistry.counter("extime.timetable.export.result", "result", "failure").increment();
             LOGGER.error("The Avinor timetable export failed, correlationId={}", correlationId, e);
