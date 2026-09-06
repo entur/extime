@@ -32,7 +32,7 @@
 
     <properties>
         <entur.helpers.version>7.3.0</entur.helpers.version>
-        <spring-cloud-gcp-dependencies.version>8.1.0</spring-cloud-gcp-dependencies.version>
+        <spring-cloud-gcp-dependencies.version>8.1.1</spring-cloud-gcp-dependencies.version>
 
         <threeten-jaxb-core.version>2.2.0</threeten-jaxb-core.version>
         <jaxb-maven-plugin-version>4.0.16</jaxb-maven-plugin-version>
