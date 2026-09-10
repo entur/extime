@@ -1,0 +1,62 @@
+# publiccode.yml metadata, see https://yml.publiccode.tools/
+publiccodeYmlVersion: "0.7.0"
+
+name: Extime
+url: https://github.com/entur/extime
+
+platforms:
+  - linux
+
+categories:
+  - data-collection
+
+developmentStatus: stable
+softwareType: standalone/backend
+
+organisation:
+  name: Entur AS
+  uri: https://entur.no
+
+usedBy:
+  - Norway (nationwide), Entur AS
+
+intendedAudience:
+  scope:
+    - transportation
+  countries:
+    - "NO"
+
+description:
+  en:
+    localisedName: Extime
+    shortDescription: Converts Avinor flight schedules into NeTEx-compliant timetables.
+    longDescription: >
+      Extime fetches flight information from Avinor, the company that operates most Norwegian airports, and
+      converts it into timetables that comply with the Nordic NeTEx Profile. The source data is published by
+      Avinor in a custom XML format through its flight data web service portal; Extime downloads the scheduled
+      flight feeds, combines them and writes a set of NeTEx documents packaged as a zip file.
+      The generated timetables reference airports as NeTEx stop places and quays from the Norwegian National Stop
+      Place Register, and they are injected into the Norwegian national journey planner so that flights can be
+      part of multi-modal journey planning. Airports and airlines are filtered through configurable allow lists.
+    documentation: https://github.com/entur/extime/blob/master/README.md
+    features:
+      - Scheduled import of Avinor flight timetables
+      - Conversion to the Nordic NeTEx Profile delivery format
+      - Configurable airport and airline allow lists
+      - References airports as NeTEx stop places and quays
+      - Cron-driven, runs unattended as a Spring Boot service
+
+legal:
+  license: EUPL-1.2
+  mainCopyrightOwner: Entur AS
+
+maintenance:
+  type: internal
+  contacts:
+    - name: Entur ROR (Open Data and Journey Planning)
+      email: kollektivdata@entur.org
+
+localisation:
+  localisationReady: false
+  availableLanguages:
+    - en
