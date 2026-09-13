@@ -41,8 +41,8 @@
         <zt-zip.version>1.18.2</zt-zip.version>
         <commons-collections4.version>4.6.0</commons-collections4.version>
 
-        <netex-java-model.version>2.0.16</netex-java-model.version>
-        <netex-parser-java.version>3.1.84</netex-parser-java.version>
+        <netex-java-model.version>2.0.16.1</netex-java-model.version>
+        <netex-parser-java.version>3.1.86</netex-parser-java.version>
 
         <!-- empty argLine property, the value is set up by Jacoco during unit tests execution -->
         <argLine/>
