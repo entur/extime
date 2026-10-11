@@ -32,7 +32,7 @@
 
     <properties>
         <entur.helpers.version>7.4.0</entur.helpers.version>
-        <spring-cloud-gcp-dependencies.version>8.2.1</spring-cloud-gcp-dependencies.version>
+        <spring-cloud-gcp-dependencies.version>8.2.2</spring-cloud-gcp-dependencies.version>
 
         <threeten-jaxb-core.version>2.2.0</threeten-jaxb-core.version>
         <jaxb-maven-plugin-version>4.0.16</jaxb-maven-plugin-version>
@@ -42,7 +42,7 @@
         <commons-collections4.version>4.6.0</commons-collections4.version>
 
         <netex-java-model.version>2.0.16.2</netex-java-model.version>
-        <netex-parser-java.version>4.0.14</netex-parser-java.version>
+        <netex-parser-java.version>4.0.17</netex-parser-java.version>
 
         <!-- empty argLine property, the value is set up by Jacoco during unit tests execution -->
         <argLine/>
