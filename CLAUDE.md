@@ -64,7 +64,12 @@ Key configuration files:
 - Environment-specific blob store and PubSub settings
 
 ## Deployment
-- Containerized with Docker
+- Containerized via the multi-stage `Dockerfile`: a Liberica JRE builder stage extracts the Spring
+  Boot layered jar, and the runtime stage is `gcr.io/distroless/java25-debian13:nonroot` (Temurin
+  JRE, no shell, no package manager, uid 65532). JVM flags are passed with `JDK_JAVA_OPTIONS`, which
+  the `java` launcher reads itself. There is no shell in the image: to inspect it, temporarily build
+  with the `debug-nonroot` tag of the same base image, or use `kubectl debug` with an ephemeral
+  container in the cluster.
 - Kubernetes/Helm charts available in `helm/` directory
 - Terraform infrastructure definitions in `terraform/` directory
 
